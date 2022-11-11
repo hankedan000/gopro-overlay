@@ -1,5 +1,5 @@
-# cmakeexe-template
-Template repo for making C++ applications with a CMake build system.
+# GoPro Overlay
+Tools for overlaying telemetry data onto GoPro footage.
 
 # Building
 ```bash
