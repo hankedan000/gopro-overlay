@@ -1,0 +1,1 @@
+directory to store project's *.cmake files (macros, find packages, etc.)
