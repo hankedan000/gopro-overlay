@@ -5,6 +5,7 @@
 #include <unistd.h>// sleep
 #include <time.h>
 
+#include <GoProTelem/GoProTelem.h>
 #include <MultiStopwatch.h>
 
 const char *PROG_NAME = "gopro_overlay";
@@ -93,6 +94,10 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	gpt::MP4_Source mp4;
+	mp4.open(argv[1]);
+	auto telemData = gpt::getCombinedSamples(mp4);
+
 	MultiStopwatch msw;
 	msw.enabled(false);
 	auto SW_RECORD_READ = msw.addRecord("ImageRead",10000);
@@ -116,6 +121,7 @@ int main(int argc, char *argv[])
 	cv::Mat out_frame;
 	char frame_idx_str[1024];
 	char frame_time_str[1024];
+	char accl_str[1024];
 	double time_offset_sec = 0.0;
 	uint64_t prev_frame_start_usec = 0;
 	int64_t frame_time_err_usec = 0;// (+) means measured frame time was longer than targeted FPS
@@ -159,6 +165,16 @@ int main(int argc, char *argv[])
 				TEXT_COLOR, //font color
 				1);// thickness
 
+			sprintf(accl_str,"accl: %s",telemData.at(frame_idx).accl.toString().c_str());
+			cv::putText(
+				out_frame, //target image
+				accl_str, //text
+				cv::Point(10, 30 * 3), //top-left position
+				TEXT_FONT,// font face
+				1.0,// font scale
+				TEXT_COLOR, //font color
+				1);// thickness
+
 			// Display the resulting frame
 			msw.start(SW_RECORD_SHOW);
 			cv::imshow("Video", out_frame);
@@ -167,6 +183,11 @@ int main(int argc, char *argv[])
 
 			double usec_of_processing = get_ticks_usec() - frame_start_usec;
 			int ms_to_wait = std::round((frame_time_usec - usec_of_processing) / 1000.0);
+			if (ms_to_wait <= 0) {
+				// processing is so slow that it ate up all out frame time
+				// need to wait at least a little for the OpenCV to do it's drawing
+				ms_to_wait = 1;
+			}
 			if (ms_to_wait > 0) {
 				// Press Q on keyboard to exit
 				msw.start(SW_RECORD_WAITKEY);
