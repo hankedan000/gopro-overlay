@@ -3,4 +3,5 @@ add_executable(gopro_overlay
 
 target_link_libraries(gopro_overlay
 	${OpenCV_LIBS} 
-	Stopwatch)
+	Stopwatch
+	GoProTelem::GoProTelem)

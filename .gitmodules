@@ -1,0 +1,3 @@
+[submodule "extern/gopro-telem"]
+	path = extern/gopro-telem
+	url = https://github.com/hankedan000/gopro-telem.git
