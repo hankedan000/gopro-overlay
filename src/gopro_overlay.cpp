@@ -79,6 +79,53 @@ parse_args(
 	}
 }
 
+void
+drawG_Circle(
+	cv::Mat &image,
+	cv::Point gCenter,
+	int gRadius,
+	const std::vector<cv::Point_<double>> &gPoints)
+{
+	// draw outer circle
+	cv::circle(image,gCenter,gRadius,CV_RGB(2, 155, 250),4);
+
+	// draw trail
+	for (size_t i=0; i<gPoints.size(); i++)
+	{
+		bool isLast = i == gPoints.size()-1;
+		auto color = (isLast ? CV_RGB(2, 155, 250) : CV_RGB(247, 162, 2));
+		int dotRadius = (isLast ? 10 : 3);
+		int thickness = (isLast ? 3 : 3);
+		const auto &point = gPoints.at(i);
+
+		auto drawPoint = cv::Point(
+			(point.x / -9.8) * gRadius + gCenter.x,
+			(point.y / 9.8) * gRadius + gCenter.y);
+		cv::circle(image,drawPoint,dotRadius,color,thickness);
+	}
+}
+
+void
+addG_CirclePoint(
+	std::vector<cv::Point_<double>> &gPoints,
+	size_t length,
+	const gpt::AcclSample &acclSample)
+{
+	auto newPoint = cv::Point_<double>(acclSample.x,acclSample.z);
+	if (length > 1 && gPoints.size() == length)
+	{
+		for (size_t i=0; i<gPoints.size()-1; i++)
+		{
+			gPoints[i] = gPoints[i+1];
+		}
+		gPoints[length-1] = newPoint;
+	}
+	else
+	{
+		gPoints.push_back(newPoint);
+	}
+}
+
 int main(int argc, char *argv[])
 {
 	signal(SIGINT, handle_sigint);// ctrl+c to stop application
@@ -108,10 +155,16 @@ int main(int argc, char *argv[])
 	const auto OUT_VIDEO_SIZE = cv::Size(1280,720);
 	const auto TEXT_FONT = cv::FONT_HERSHEY_DUPLEX;
 	const auto TEXT_COLOR = CV_RGB(118, 185, 0);
+	const double G_CIRCLE_HISTORY_SEC = 1.0;
+	const int G_CIRCLE_RADIUS = 100;
+	const auto G_CIRCLE_CENTER = cv::Point(
+		OUT_VIDEO_SIZE.width - G_CIRCLE_RADIUS - 50,
+		OUT_VIDEO_SIZE.height - G_CIRCLE_RADIUS - 50);
 	double frames_count = vcap.get(cv::CAP_PROP_FRAME_COUNT);
 	double fps = vcap.get(cv::CAP_PROP_FPS);
 	double frame_time_sec = 1.0 / fps;
 	double frame_time_usec = 1.0e6 / fps;
+	int gPointSize = G_CIRCLE_HISTORY_SEC * fps;
 	int frame_time_ms = std::round(1.0e3 / fps);
 	printf("frames_count = %f\n", frames_count);
 	printf("fps = %f\n", fps);
@@ -123,6 +176,7 @@ int main(int argc, char *argv[])
 	char frame_time_str[1024];
 	char accl_str[1024];
 	double time_offset_sec = 0.0;
+	std::vector<cv::Point_<double>> gPoints;
 	uint64_t prev_frame_start_usec = 0;
 	int64_t frame_time_err_usec = 0;// (+) means measured frame time was longer than targeted FPS
 	for (size_t frame_idx=0; ! stop_app && frame_idx<frames_count; frame_idx++)
@@ -165,7 +219,9 @@ int main(int argc, char *argv[])
 				TEXT_COLOR, //font color
 				1);// thickness
 
-			sprintf(accl_str,"accl: %s",telemData.at(frame_idx).accl.toString().c_str());
+			auto &telemSamp = telemData.at(frame_idx);
+			printf("%s\n",telemSamp.toString().c_str());
+			sprintf(accl_str,"accl: %s",telemSamp.accl.toString().c_str());
 			cv::putText(
 				out_frame, //target image
 				accl_str, //text
@@ -174,6 +230,9 @@ int main(int argc, char *argv[])
 				1.0,// font scale
 				TEXT_COLOR, //font color
 				1);// thickness
+
+			addG_CirclePoint(gPoints,gPointSize,telemSamp.accl);
+			drawG_Circle(out_frame,G_CIRCLE_CENTER,G_CIRCLE_RADIUS,gPoints);
 
 			// Display the resulting frame
 			msw.start(SW_RECORD_SHOW);
