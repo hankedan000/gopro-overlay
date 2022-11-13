@@ -172,9 +172,7 @@ int main(int argc, char *argv[])
 
 	cv::Mat frame;
 	cv::Mat out_frame;
-	char frame_idx_str[1024];
-	char frame_time_str[1024];
-	char accl_str[1024];
+	char tmpStr[1024];
 	double time_offset_sec = 0.0;
 	std::vector<cv::Point_<double>> gPoints;
 	uint64_t prev_frame_start_usec = 0;
@@ -189,6 +187,9 @@ int main(int argc, char *argv[])
 			printf("frame_time_err_usec = %ld\n",frame_time_err_usec);
 		}
 
+		auto &telemSamp = telemData.at(frame_idx);
+		printf("%s\n",telemSamp.toString().c_str());
+
 		// Capture frame-by-frame
 		msw.start(SW_RECORD_READ);
 		bool read_okay = vcap.read(frame);
@@ -199,37 +200,46 @@ int main(int argc, char *argv[])
 			cv::resize(frame,out_frame,OUT_VIDEO_SIZE);
 			msw.stop(SW_RECORD_RESIZE);
 
-			sprintf(frame_idx_str,"frame_idx: %ld",frame_idx);
+			sprintf(tmpStr,"frame_idx: %ld",frame_idx);
 			cv::putText(
 				out_frame, //target image
-				frame_idx_str, //text
+				tmpStr, //text
 				cv::Point(10, 30), //top-left position
 				TEXT_FONT,// font face
 				1.0,// font scale
 				TEXT_COLOR, //font color
 				1);// thickness
 
-			sprintf(frame_time_str,"time_offset: %0.3fs",time_offset_sec);
+			sprintf(tmpStr,"time_offset: %0.3fs",time_offset_sec);
 			cv::putText(
 				out_frame, //target image
-				frame_time_str, //text
+				tmpStr, //text
 				cv::Point(10, 30 * 2), //top-left position
 				TEXT_FONT,// font face
 				1.0,// font scale
 				TEXT_COLOR, //font color
 				1);// thickness
 
-			auto &telemSamp = telemData.at(frame_idx);
-			printf("%s\n",telemSamp.toString().c_str());
-			sprintf(accl_str,"accl: %s",telemSamp.accl.toString().c_str());
+			sprintf(tmpStr,"accl: %s",telemSamp.accl.toString().c_str());
 			cv::putText(
 				out_frame, //target image
-				accl_str, //text
+				tmpStr, //text
 				cv::Point(10, 30 * 3), //top-left position
 				TEXT_FONT,// font face
 				1.0,// font scale
 				TEXT_COLOR, //font color
 				1);// thickness
+
+			int speedMPH = round(telemSamp.gps.speed2D * 2.23694);// m/s to mph
+			sprintf(tmpStr,"%2dmph",speedMPH);
+			cv::putText(
+				out_frame, //target image
+				tmpStr, //text
+				cv::Point(10, OUT_VIDEO_SIZE.height - 30), //top-left position
+				TEXT_FONT,// font face
+				2.0,// font scale
+				TEXT_COLOR, //font color
+				2);// thickness
 
 			addG_CirclePoint(gPoints,gPointSize,telemSamp.accl);
 			drawG_Circle(out_frame,G_CIRCLE_CENTER,G_CIRCLE_RADIUS,gPoints);
