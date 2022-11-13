@@ -6,7 +6,6 @@
 #include <time.h>
 
 #include <GoProTelem/GoProTelem.h>
-#include <MultiStopwatch.h>
 
 const char *PROG_NAME = "gopro_overlay";
 bool stop_app = false;
@@ -145,13 +144,7 @@ int main(int argc, char *argv[])
 	mp4.open(argv[1]);
 	auto telemData = gpt::getCombinedSamples(mp4);
 
-	MultiStopwatch msw;
-	msw.enabled(false);
-	auto SW_RECORD_READ = msw.addRecord("ImageRead",10000);
-	auto SW_RECORD_RESIZE = msw.addRecord("ImageResize",10000);
-	auto SW_RECORD_SHOW = msw.addRecord("ImageShow",10000);
-	auto SW_RECORD_WAITKEY = msw.addRecord("WaitKey",10000);
-
+	const bool SHOW_LIVE_VIDEO = true;
 	const auto OUT_VIDEO_SIZE = cv::Size(1280,720);
 	const auto TEXT_FONT = cv::FONT_HERSHEY_DUPLEX;
 	const auto TEXT_COLOR = CV_RGB(118, 185, 0);
@@ -172,6 +165,12 @@ int main(int argc, char *argv[])
 
 	cv::Mat frame;
 	cv::Mat out_frame;
+	cv::VideoWriter vWriter(
+		"render.mp4",
+		cv::VideoWriter::fourcc('M','P','4','V'),
+		fps,
+		OUT_VIDEO_SIZE,
+		true);
 	char tmpStr[1024];
 	double time_offset_sec = 0.0;
 	std::vector<cv::Point_<double>> gPoints;
@@ -191,14 +190,10 @@ int main(int argc, char *argv[])
 		printf("%s\n",telemSamp.toString().c_str());
 
 		// Capture frame-by-frame
-		msw.start(SW_RECORD_READ);
 		bool read_okay = vcap.read(frame);
-		msw.stop(SW_RECORD_READ);
 		if (read_okay)
 		{
-			msw.start(SW_RECORD_RESIZE);
 			cv::resize(frame,out_frame,OUT_VIDEO_SIZE);
-			msw.stop(SW_RECORD_RESIZE);
 
 			sprintf(tmpStr,"frame_idx: %ld",frame_idx);
 			cv::putText(
@@ -244,28 +239,30 @@ int main(int argc, char *argv[])
 			addG_CirclePoint(gPoints,gPointSize,telemSamp.accl);
 			drawG_Circle(out_frame,G_CIRCLE_CENTER,G_CIRCLE_RADIUS,gPoints);
 
-			// Display the resulting frame
-			msw.start(SW_RECORD_SHOW);
-			cv::imshow("Video", out_frame);
-			msw.stop(SW_RECORD_SHOW);
+			// write frame to video file
+			vWriter.write(out_frame);
 
-
-			double usec_of_processing = get_ticks_usec() - frame_start_usec;
-			int ms_to_wait = std::round((frame_time_usec - usec_of_processing) / 1000.0);
-			if (ms_to_wait <= 0) {
-				// processing is so slow that it ate up all out frame time
-				// need to wait at least a little for the OpenCV to do it's drawing
-				ms_to_wait = 1;
-			}
-			if (ms_to_wait > 0) {
-				// Press Q on keyboard to exit
-				msw.start(SW_RECORD_WAITKEY);
-				auto keycode = cv::waitKey(ms_to_wait);
-				msw.stop(SW_RECORD_WAITKEY);
-				if (keycode & 0xFF == 'q')
+			// Display the frame live
+			if (SHOW_LIVE_VIDEO)
+			{
+				cv::imshow("Video", out_frame);
+				double usec_of_processing = get_ticks_usec() - frame_start_usec;
+				int ms_to_wait = std::round((frame_time_usec - usec_of_processing) / 1000.0);
+				if (ms_to_wait <= 0)
 				{
-					printf("Quit video playback!\n");
-					break;
+					// processing is so slow that it ate up all out frame time
+					// need to wait at least a little for the OpenCV to do it's drawing
+					ms_to_wait = 1;
+				}
+				if (ms_to_wait > 0)
+				{
+					// Press Q on keyboard to exit
+					auto keycode = cv::waitKey(ms_to_wait);
+					if (keycode & 0xFF == 'q')
+					{
+						printf("Quit video playback!\n");
+						break;
+					}
 				}
 			}
 
@@ -274,17 +271,13 @@ int main(int argc, char *argv[])
 		}
 		else
 		{
-			// Break the loop
 			// i'm seeing GoPro videos do this about 1s into the clip.
 			// i wonder if they're encoder some metadata or something.
 			printf("frame %ld is bad?\n", frame_idx);
 		}
 	}
 
-	if (msw.enabled())
-	{
-		printf("%s\n",msw.getSummary().c_str());
-	}
+	vWriter.release();// close video file
 
 	return 0;
 }
