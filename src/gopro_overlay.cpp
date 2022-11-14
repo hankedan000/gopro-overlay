@@ -12,26 +12,26 @@
 const char *PROG_NAME = "gopro_overlay";
 bool stop_app = false;
 
-struct prog_options
+struct ProgOptions
 {
 };
 
 void
-handle_sigint(
+handleSIGINT(
 	int signal)
 {
 	stop_app = true;
 }
 
 void
-display_usage()
+displayUsage()
 {
 	printf("usage: %s videofile [options]\n",PROG_NAME);
 	printf(" -h,--help        : display this menu\n");
 }
 
 uint64_t
-get_ticks_usec()
+getTicks_usec()
 {
 	timespec ts;
 	clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -39,10 +39,10 @@ get_ticks_usec()
 }
 
 void
-parse_args(
+parseArgs(
 	int argc,
 	char *argv[],
-	prog_options &opts)
+	ProgOptions &opts)
 {
 	static struct option long_options[] =
 	{
@@ -73,7 +73,7 @@ parse_args(
 			case 'h':
 			case '?':
 			default:
-				display_usage();
+				displayUsage();
 				exit(0);
 				break;
 		}
@@ -128,14 +128,14 @@ addG_CirclePoint(
 
 int main(int argc, char *argv[])
 {
-	signal(SIGINT, handle_sigint);// ctrl+c to stop application
+	signal(SIGINT, handleSIGINT);// ctrl+c to stop application
 
-	prog_options opts;
-	parse_args(argc,argv,opts);
+	ProgOptions opts;
+	parseArgs(argc,argv,opts);
 
 	printf("openening %s\n", argv[1]);
-	cv::VideoCapture vcap(argv[1]);
-	if ( ! vcap.isOpened())
+	cv::VideoCapture vCap(argv[1]);
+	if ( ! vCap.isOpened())
 	{
 		printf("No image data\n");
 		return -1;
@@ -154,18 +154,18 @@ int main(int argc, char *argv[])
 	const auto G_CIRCLE_CENTER = cv::Point(
 		OUT_VIDEO_SIZE.width - G_CIRCLE_RADIUS - 50,
 		OUT_VIDEO_SIZE.height - G_CIRCLE_RADIUS - 50);
-	double frames_count = vcap.get(cv::CAP_PROP_FRAME_COUNT);
-	double fps = vcap.get(cv::CAP_PROP_FPS);
-	double frame_time_sec = 1.0 / fps;
-	double frame_time_usec = 1.0e6 / fps;
+	double frameCount = vCap.get(cv::CAP_PROP_FRAME_COUNT);
+	double fps = vCap.get(cv::CAP_PROP_FPS);
+	double frameTime_sec = 1.0 / fps;
+	double frameTime_usec = 1.0e6 / fps;
 	int gPointSize = G_CIRCLE_HISTORY_SEC * fps;
-	int frame_time_ms = std::round(1.0e3 / fps);
-	printf("frames_count = %f\n", frames_count);
+	int frameTime_ms = std::round(1.0e3 / fps);
+	printf("frameCount = %f\n", frameCount);
 	printf("fps = %f\n", fps);
-	printf("frame_time_ms = %d\n", frame_time_ms);
+	printf("frameTime_ms = %d\n", frameTime_ms);
 
 	cv::Mat frame;
-	cv::Mat out_frame;
+	cv::Mat outFrame;
 	gpo::TrackMapObject trackMap(400,400);
 	trackMap.initMap(telemData);
 	cv::VideoWriter vWriter(
@@ -175,34 +175,33 @@ int main(int argc, char *argv[])
 		OUT_VIDEO_SIZE,
 		true);
 	char tmpStr[1024];
-	double time_offset_sec = 0.0;
+	double timeOffset_sec = 0.0;
 	std::vector<cv::Point_<double>> gPoints;
-	uint64_t prev_frame_start_usec = 0;
-	int64_t frame_time_err_usec = 0;// (+) means measured frame time was longer than targeted FPS
-	size_t initFrameIdx = 0;//frames_count / 2;
-	vcap.set(cv::CAP_PROP_POS_FRAMES, initFrameIdx);
-	for (size_t frame_idx=initFrameIdx; ! stop_app && frame_idx<frames_count; frame_idx++)
+	uint64_t prevFrameStart_usec = 0;
+	int64_t frameTimeErr_usec = 0;// (+) means measured frame time was longer than targeted FPS
+	size_t initFrameIdx = 0;//frameCount / 2;
+	vCap.set(cv::CAP_PROP_POS_FRAMES, initFrameIdx);
+	for (size_t frameIdx=initFrameIdx; ! stop_app && frameIdx<frameCount; frameIdx++)
 	{
-		uint64_t frame_start_usec = get_ticks_usec();
-		if (prev_frame_start_usec != 0)
+		uint64_t frameStart_usec = getTicks_usec();
+		if (prevFrameStart_usec != 0)
 		{
-			int64_t meas_frame_time_usec = frame_start_usec - prev_frame_start_usec;
-			frame_time_err_usec = meas_frame_time_usec - frame_time_usec;
-			// printf("frame_time_err_usec = %ld\n",frame_time_err_usec);
+			int64_t meas_frameTime_usec = frameStart_usec - prevFrameStart_usec;
+			frameTimeErr_usec = meas_frameTime_usec - frameTime_usec;
+			// printf("frameTimeErr_usec = %ld\n",frameTimeErr_usec);
 		}
 
-		auto &telemSamp = telemData.at(frame_idx);
+		auto &telemSamp = telemData.at(frameIdx);
 		// printf("%s\n",telemSamp.toString().c_str());
 
 		// Capture frame-by-frame
-		bool read_okay = vcap.read(frame);
-		if (read_okay)
+		if (vCap.read(frame))
 		{
-			cv::resize(frame,out_frame,OUT_VIDEO_SIZE);
+			cv::resize(frame,outFrame,OUT_VIDEO_SIZE);
 
-			sprintf(tmpStr,"frame_idx: %ld",frame_idx);
+			sprintf(tmpStr,"frameIdx: %ld",frameIdx);
 			cv::putText(
-				out_frame, //target image
+				outFrame, //target image
 				tmpStr, //text
 				cv::Point(10, 30), //top-left position
 				TEXT_FONT,// font face
@@ -210,9 +209,9 @@ int main(int argc, char *argv[])
 				TEXT_COLOR, //font color
 				1);// thickness
 
-			sprintf(tmpStr,"time_offset: %0.3fs",time_offset_sec);
+			sprintf(tmpStr,"time_offset: %0.3fs",timeOffset_sec);
 			cv::putText(
-				out_frame, //target image
+				outFrame, //target image
 				tmpStr, //text
 				cv::Point(10, 30 * 2), //top-left position
 				TEXT_FONT,// font face
@@ -222,7 +221,7 @@ int main(int argc, char *argv[])
 
 			sprintf(tmpStr,"accl: %s",telemSamp.accl.toString().c_str());
 			cv::putText(
-				out_frame, //target image
+				outFrame, //target image
 				tmpStr, //text
 				cv::Point(10, 30 * 3), //top-left position
 				TEXT_FONT,// font face
@@ -233,7 +232,7 @@ int main(int argc, char *argv[])
 			int speedMPH = round(telemSamp.gps.speed2D * 2.23694);// m/s to mph
 			sprintf(tmpStr,"%2dmph",speedMPH);
 			cv::putText(
-				out_frame, //target image
+				outFrame, //target image
 				tmpStr, //text
 				cv::Point(10, OUT_VIDEO_SIZE.height - 30), //top-left position
 				TEXT_FONT,// font face
@@ -242,30 +241,30 @@ int main(int argc, char *argv[])
 				2);// thickness
 
 			addG_CirclePoint(gPoints,gPointSize,telemSamp.accl);
-			drawG_Circle(out_frame,G_CIRCLE_CENTER,G_CIRCLE_RADIUS,gPoints);
+			drawG_Circle(outFrame,G_CIRCLE_CENTER,G_CIRCLE_RADIUS,gPoints);
 
 			trackMap.setLocation(telemSamp.gps.coord);
-			trackMap.render(out_frame,out_frame.cols - 400,0);
+			trackMap.render(outFrame,outFrame.cols - 400,0);
 
 			// write frame to video file
-			vWriter.write(out_frame);
+			vWriter.write(outFrame);
 
 			// Display the frame live
 			if (SHOW_LIVE_VIDEO)
 			{
-				cv::imshow("Video", out_frame);
-				double usec_of_processing = get_ticks_usec() - frame_start_usec;
-				int ms_to_wait = std::round((frame_time_usec - usec_of_processing) / 1000.0);
-				if (ms_to_wait <= 0)
+				cv::imshow("Video", outFrame);
+				double processingTime_usec = getTicks_usec() - frameStart_usec;
+				int waitTime_ms = std::round((frameTime_usec - processingTime_usec) / 1000.0);
+				if (waitTime_ms <= 0)
 				{
 					// processing is so slow that it ate up all out frame time
 					// need to wait at least a little for the OpenCV to do it's drawing
-					ms_to_wait = 1;
+					waitTime_ms = 1;
 				}
-				if (ms_to_wait > 0)
+				if (waitTime_ms > 0)
 				{
 					// Press Q on keyboard to exit
-					auto keycode = cv::waitKey(ms_to_wait);
+					auto keycode = cv::waitKey(waitTime_ms);
 					if (keycode & 0xFF == 'q')
 					{
 						printf("Quit video playback!\n");
@@ -274,14 +273,14 @@ int main(int argc, char *argv[])
 				}
 			}
 
-			time_offset_sec += frame_time_sec;
-			prev_frame_start_usec = frame_start_usec;
+			timeOffset_sec += frameTime_sec;
+			prevFrameStart_usec = frameStart_usec;
 		}
 		else
 		{
 			// i'm seeing GoPro videos do this about 1s into the clip.
 			// i wonder if they're encoder some metadata or something.
-			printf("frame %ld is bad?\n", frame_idx);
+			printf("frame %ld is bad?\n", frameIdx);
 		}
 	}
 
