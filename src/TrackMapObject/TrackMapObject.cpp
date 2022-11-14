@@ -5,8 +5,8 @@ namespace gpo
 	TrackMapObject::TrackMapObject(
 		int width,
 		int height)
-	 : outImg_(height,width,CV_8UC3,cv::Scalar(0,0,0,255))
-	 , outlineImg_(height,width,CV_8UC3,cv::Scalar(0,0,0,100))
+	 : outImg_(height,width,CV_8UC4,cv::Scalar(0,0,0,0))
+	 , outlineImg_(height,width,CV_8UC4,cv::Scalar(0,0,0,0))
 	 , ulCoord_()
 	 , lrCoord_()
 	 , pxPerDeg_(1.0)
@@ -84,13 +84,14 @@ namespace gpo
 					outlineImg_,
 					prevPoint,
 					currPoint,
-					cv::Scalar(255,255,255),
+					cv::Scalar(255,255,255,255),
 					2,
 					cv::LINE_4);
 			}
 
 			prevPoint = currPoint;
 		}
+		cv::imwrite("outlineImg_.png",outlineImg_);
 
 		return true;
 	}
@@ -117,11 +118,27 @@ namespace gpo
 		outlineImg_.copyTo(outImg_);
 
 		auto dotPoint = coordToPoint(currLocation_);
-		cv::circle(outImg_,dotPoint,5,CV_RGB(255, 0, 0),cv::FILLED);
+		cv::circle(outImg_,dotPoint,5,cv::Scalar(255,0,0,255),cv::FILLED);
 
 		// draw final output to user image
-		cv::Rect roi(cv::Point(originX,originY), outImg_.size());
-		outImg_.copyTo(intoImg(roi));
+		cv::Rect rect(cv::Point(originX,originY), outImg_.size());
+		cv::Mat3b roi = intoImg(rect);
+		double alpha = 1.0; // alpha in [0,1]
+		for (int r = 0; r < roi.rows; ++r)
+		{
+			for (int c = 0; c < roi.cols; ++c)
+			{
+				auto vf = outImg_.at<cv::Vec4b>(r,c);
+				// Blending
+				if (vf[3] > 0)
+				{
+					cv::Vec3b &vb = roi(r,c);// GBR
+					vb[2] = alpha * vf[0] + (1 - alpha) * vb[2];
+					vb[0] = alpha * vf[1] + (1 - alpha) * vb[0];
+					vb[1] = alpha * vf[2] + (1 - alpha) * vb[1];
+				}
+			}
+		}
 	}
 
 	int
