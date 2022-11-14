@@ -7,6 +7,8 @@
 
 #include <GoProTelem/GoProTelem.h>
 
+#include "TrackMapObject.h"
+
 const char *PROG_NAME = "gopro_overlay";
 bool stop_app = false;
 
@@ -94,13 +96,12 @@ drawG_Circle(
 		bool isLast = i == gPoints.size()-1;
 		auto color = (isLast ? CV_RGB(2, 155, 250) : CV_RGB(247, 162, 2));
 		int dotRadius = (isLast ? 10 : 3);
-		int thickness = (isLast ? 3 : 3);
 		const auto &point = gPoints.at(i);
 
 		auto drawPoint = cv::Point(
 			(point.x / -9.8) * gRadius + gCenter.x,
 			(point.y / 9.8) * gRadius + gCenter.y);
-		cv::circle(image,drawPoint,dotRadius,color,thickness);
+		cv::circle(image,drawPoint,dotRadius,color,cv::FILLED);
 	}
 }
 
@@ -147,7 +148,7 @@ int main(int argc, char *argv[])
 	const bool SHOW_LIVE_VIDEO = true;
 	const auto OUT_VIDEO_SIZE = cv::Size(1280,720);
 	const auto TEXT_FONT = cv::FONT_HERSHEY_DUPLEX;
-	const auto TEXT_COLOR = CV_RGB(118, 185, 0);
+	const auto TEXT_COLOR = CV_RGB(0, 255, 0);
 	const double G_CIRCLE_HISTORY_SEC = 1.0;
 	const int G_CIRCLE_RADIUS = 100;
 	const auto G_CIRCLE_CENTER = cv::Point(
@@ -165,6 +166,8 @@ int main(int argc, char *argv[])
 
 	cv::Mat frame;
 	cv::Mat out_frame;
+	gpo::TrackMapObject trackMap(400,400);
+	trackMap.initMap(telemData);
 	cv::VideoWriter vWriter(
 		"render.mp4",
 		cv::VideoWriter::fourcc('M','P','4','V'),
@@ -176,18 +179,20 @@ int main(int argc, char *argv[])
 	std::vector<cv::Point_<double>> gPoints;
 	uint64_t prev_frame_start_usec = 0;
 	int64_t frame_time_err_usec = 0;// (+) means measured frame time was longer than targeted FPS
-	for (size_t frame_idx=0; ! stop_app && frame_idx<frames_count; frame_idx++)
+	size_t initFrameIdx = 0;//frames_count / 2;
+	vcap.set(cv::CAP_PROP_POS_FRAMES, initFrameIdx);
+	for (size_t frame_idx=initFrameIdx; ! stop_app && frame_idx<frames_count; frame_idx++)
 	{
 		uint64_t frame_start_usec = get_ticks_usec();
 		if (prev_frame_start_usec != 0)
 		{
 			int64_t meas_frame_time_usec = frame_start_usec - prev_frame_start_usec;
 			frame_time_err_usec = meas_frame_time_usec - frame_time_usec;
-			printf("frame_time_err_usec = %ld\n",frame_time_err_usec);
+			// printf("frame_time_err_usec = %ld\n",frame_time_err_usec);
 		}
 
 		auto &telemSamp = telemData.at(frame_idx);
-		printf("%s\n",telemSamp.toString().c_str());
+		// printf("%s\n",telemSamp.toString().c_str());
 
 		// Capture frame-by-frame
 		bool read_okay = vcap.read(frame);
@@ -238,6 +243,9 @@ int main(int argc, char *argv[])
 
 			addG_CirclePoint(gPoints,gPointSize,telemSamp.accl);
 			drawG_Circle(out_frame,G_CIRCLE_CENTER,G_CIRCLE_RADIUS,gPoints);
+
+			trackMap.setLocation(telemSamp.gps.coord);
+			trackMap.render(out_frame,out_frame.cols - 400,0);
 
 			// write frame to video file
 			vWriter.write(out_frame);
