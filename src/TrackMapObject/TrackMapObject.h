@@ -3,9 +3,11 @@
 #include <GoProTelem/SampleTypes.h>
 #include <opencv2/opencv.hpp>
 
+#include "RenderedObject.h"
+
 namespace gpo
 {
-	class TrackMapObject
+	class TrackMapObject : public RenderedObject
 	{
 	public:
 		TrackMapObject(
@@ -18,24 +20,16 @@ namespace gpo
 			int trackStartIdx = 0,
 			int trackEndIdx = -1);
 
-		const cv::Mat &
-		getImage() const;
-
 		void
 		setLocation(
 			const gpt::CoordLL &loc);
 
+		virtual
 		void
 		render(
 			cv::Mat &intoImg,
 			int originX, int originY,
 			float scale = 1.0);
-
-		int
-		getWidth() const;
-
-		int
-		getHeight() const;
 
 	private:
 		cv::Point
@@ -44,9 +38,6 @@ namespace gpo
 
 	private:
 		const int PX_MARGIN = 20;
-
-		// final rendered image
-		cv::Mat outImg_;
 
 		// map outline
 		cv::Mat outlineImg_;

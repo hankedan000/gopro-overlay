@@ -6,5 +6,6 @@ target_include_directories(TrackMapObject
 		"${CMAKE_CURRENT_SOURCE_DIR}")
 
 target_link_libraries(TrackMapObject
-	${OpenCV_LIBS} 
-	GoProTelem::GoProTelem)
+	${OpenCV_LIBS}
+	GoProTelem::GoProTelem
+	RenderedObject)

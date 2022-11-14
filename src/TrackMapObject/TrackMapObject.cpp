@@ -5,7 +5,7 @@ namespace gpo
 	TrackMapObject::TrackMapObject(
 		int width,
 		int height)
-	 : outImg_(height,width,CV_8UC4,cv::Scalar(0,0,0,0))
+	 : RenderedObject(width,height)
 	 , outlineImg_(height,width,CV_8UC4,cv::Scalar(0,0,0,0))
 	 , ulCoord_()
 	 , lrCoord_()
@@ -96,12 +96,6 @@ namespace gpo
 		return true;
 	}
 
-	const cv::Mat &
-	TrackMapObject::getImage() const
-	{
-		return outImg_;
-	}
-
 	void
 	TrackMapObject::setLocation(
 		const gpt::CoordLL &loc)
@@ -120,37 +114,8 @@ namespace gpo
 		auto dotPoint = coordToPoint(currLocation_);
 		cv::circle(outImg_,dotPoint,5,cv::Scalar(255,0,0,255),cv::FILLED);
 
-		// draw final output to user image
-		cv::Rect rect(cv::Point(originX,originY), outImg_.size());
-		cv::Mat3b roi = intoImg(rect);
-		double alpha = 1.0; // alpha in [0,1]
-		for (int r = 0; r < roi.rows; ++r)
-		{
-			for (int c = 0; c < roi.cols; ++c)
-			{
-				auto vf = outImg_.at<cv::Vec4b>(r,c);
-				// Blending
-				if (vf[3] > 0)
-				{
-					cv::Vec3b &vb = roi(r,c);// GBR
-					vb[2] = alpha * vf[0] + (1 - alpha) * vb[2];
-					vb[0] = alpha * vf[1] + (1 - alpha) * vb[0];
-					vb[1] = alpha * vf[2] + (1 - alpha) * vb[1];
-				}
-			}
-		}
-	}
-
-	int
-	TrackMapObject::getWidth() const
-	{
-		return outImg_.cols;
-	}
-
-	int
-	TrackMapObject::getHeight() const
-	{
-		return outImg_.rows;
+		// render result into final image
+		RenderedObject::render(intoImg,originX,originY,scale);
 	}
 
 	cv::Point

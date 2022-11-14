@@ -1,3 +1,4 @@
+add_subdirectory(RenderedObject)
 add_subdirectory(TrackMapObject)
 
 add_executable(gopro_overlay
