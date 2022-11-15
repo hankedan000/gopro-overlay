@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
 
 	cv::Mat frame;
 	cv::Mat outFrame;
-	gpo::TrackMapObject trackMap(400,400);
+	gpo::TrackMapObject trackMap(300,300);
 	trackMap.initMap(telemData);
 	gpo::FrictionCircleObject frictionCircle(F_CIRCLE_RADIUS,20);
 	frictionCircle.init();
@@ -210,11 +210,11 @@ int main(int argc, char *argv[])
 			frictionCircle.updateTail(telemData,frameIdx,fcTailLength);
 			frictionCircle.render(
 				outFrame,
-				outFrame.cols - F_CIRCLE_RADIUS * 2 - 50,
-				outFrame.rows - F_CIRCLE_RADIUS * 2 - 50);
+				outFrame.cols - frictionCircle.getWidth(),
+				outFrame.rows - frictionCircle.getHeight());
 
 			trackMap.setLocation(telemSamp.gps.coord);
-			trackMap.render(outFrame,outFrame.cols - 400,0);
+			trackMap.render(outFrame,0,0);
 
 			// write frame to video file
 			vWriter.write(outFrame);
