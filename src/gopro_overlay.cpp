@@ -17,6 +17,7 @@ bool stop_app = false;
 struct ProgOptions
 {
 	std::string inputFile;
+	std::string outputFile = "render.mp4";
 	int showPreview = 0;
 	int renderDebugInfo = 0;
 };
@@ -33,6 +34,7 @@ displayUsage()
 {
 	printf("usage: %s -i <video_file> [options]\n",PROG_NAME);
 	printf(" -i,--inputFile      : the input video file\n");
+	printf(" -o,--outputFile     : the render output video file\n");
 	printf(" --showPreview       : display live render preview\n");
 	printf(" --renderDebugInfo   : render debug information to video\n");
 	printf(" -h,--help           : display this menu\n");
@@ -55,6 +57,7 @@ parseArgs(
 	static struct option long_options[] =
 	{
 		{"inputFile"          , required_argument , 0                      , 'i' },
+		{"outputFile"         , required_argument , 0                      , 'o' },
 		{"showPreview"        , no_argument       , &opts.showPreview      , 1   },
 		{"renderDebugInfo"    , no_argument       , &opts.renderDebugInfo  , 1   },
 		{"help"               , no_argument       , 0                      , 'h' },
@@ -67,7 +70,7 @@ parseArgs(
 		int c = getopt_long(
 			argc,
 			argv,
-			"hi:",
+			"hi:o:",
 			long_options,
 			&option_index);
 
@@ -84,6 +87,9 @@ parseArgs(
 				break;
 			case 'i':
 				opts.inputFile = optarg;
+				break;
+			case 'o':
+				opts.outputFile = optarg;
 				break;
 			case 'h':
 			case '?':
@@ -140,7 +146,7 @@ int main(int argc, char *argv[])
 	gpo::FrictionCircleObject frictionCircle(F_CIRCLE_RADIUS,20);
 	frictionCircle.init();
 	cv::VideoWriter vWriter(
-		"render.mp4",
+		opts.outputFile,
 		cv::VideoWriter::fourcc('M','P','4','V'),
 		fps,
 		OUT_VIDEO_SIZE,
