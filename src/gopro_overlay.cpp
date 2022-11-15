@@ -16,6 +16,9 @@ bool stop_app = false;
 
 struct ProgOptions
 {
+	std::string inputFile;
+	int showPreview = 0;
+	int renderDebugInfo = 0;
 };
 
 void
@@ -28,8 +31,11 @@ handleSIGINT(
 void
 displayUsage()
 {
-	printf("usage: %s videofile [options]\n",PROG_NAME);
-	printf(" -h,--help        : display this menu\n");
+	printf("usage: %s -i <video_file> [options]\n",PROG_NAME);
+	printf(" -i,--inputFile      : the input video file\n");
+	printf(" --showPreview       : display live render preview\n");
+	printf(" --renderDebugInfo   : render debug information to video\n");
+	printf(" -h,--help           : display this menu\n");
 }
 
 uint64_t
@@ -48,6 +54,10 @@ parseArgs(
 {
 	static struct option long_options[] =
 	{
+		{"inputFile"          , required_argument , 0                      , 'i' },
+		{"showPreview"        , no_argument       , &opts.showPreview      , 1   },
+		{"renderDebugInfo"    , no_argument       , &opts.renderDebugInfo  , 1   },
+		{"help"               , no_argument       , 0                      , 'h' },
 		{0, 0, 0, 0}
 	};
 
@@ -57,7 +67,7 @@ parseArgs(
 		int c = getopt_long(
 			argc,
 			argv,
-			"h",
+			"hi:",
 			long_options,
 			&option_index);
 
@@ -71,6 +81,9 @@ parseArgs(
 		{
 			case 0:
 				// flag setting
+				break;
+			case 'i':
+				opts.inputFile = optarg;
 				break;
 			case 'h':
 			case '?':
@@ -89,8 +102,15 @@ int main(int argc, char *argv[])
 	ProgOptions opts;
 	parseArgs(argc,argv,opts);
 
-	printf("openening %s\n", argv[1]);
-	cv::VideoCapture vCap(argv[1]);
+	if (opts.inputFile.empty())
+	{
+		printf("no input video file provided.\n");
+		displayUsage();
+		exit(0);
+	}
+
+	printf("opening %s\n", opts.inputFile.c_str());
+	cv::VideoCapture vCap(opts.inputFile);
 	if ( ! vCap.isOpened())
 	{
 		printf("No image data\n");
@@ -98,11 +118,9 @@ int main(int argc, char *argv[])
 	}
 
 	gpt::MP4_Source mp4;
-	mp4.open(argv[1]);
+	mp4.open(opts.inputFile);
 	auto telemData = gpt::getCombinedSamples(mp4);
 
-	const bool SHOW_LIVE_VIDEO = true;
-	const bool RENDER_DEBUG_INFO = false;
 	const auto OUT_VIDEO_SIZE = cv::Size(1280,720);
 	const auto TEXT_FONT = cv::FONT_HERSHEY_DUPLEX;
 	const auto TEXT_COLOR = CV_RGB(0, 255, 0);
@@ -114,9 +132,6 @@ int main(int argc, char *argv[])
 	double frameTime_usec = 1.0e6 / fps;
 	int fcTailLength = F_CIRCLE_HISTORY_SEC * fps;
 	int frameTime_ms = std::round(1.0e3 / fps);
-	printf("frameCount = %f\n", frameCount);
-	printf("fps = %f\n", fps);
-	printf("frameTime_ms = %d\n", frameTime_ms);
 
 	cv::Mat frame;
 	cv::Mat outFrame;
@@ -148,7 +163,7 @@ int main(int argc, char *argv[])
 		}
 
 		// show render progress
-		if ( ! SHOW_LIVE_VIDEO)
+		if ( ! opts.showPreview)
 		{
 			auto total = frameCount - initFrameIdx;
 			auto curr = frameIdx - initFrameIdx;
@@ -163,7 +178,7 @@ int main(int argc, char *argv[])
 		{
 			cv::resize(frame,outFrame,OUT_VIDEO_SIZE);
 
-			if (RENDER_DEBUG_INFO)
+			if (opts.renderDebugInfo)
 			{
 				sprintf(tmpStr,"frameIdx: %ld",frameIdx);
 				cv::putText(
@@ -220,7 +235,7 @@ int main(int argc, char *argv[])
 			vWriter.write(outFrame);
 
 			// Display the frame live
-			if (SHOW_LIVE_VIDEO)
+			if (opts.showPreview)
 			{
 				cv::imshow("Video", outFrame);
 				double processingTime_usec = getTicks_usec() - frameStart_usec;
@@ -249,12 +264,12 @@ int main(int argc, char *argv[])
 		else
 		{
 			// i'm seeing GoPro videos do this about 1s into the clip.
-			// i wonder if they're encoder some metadata or something.
+			// i wonder if they're encoding some metadata or something.
 			printf("frame %ld is bad?\n", frameIdx);
 		}
 	}
 
-	if ( ! SHOW_LIVE_VIDEO)
+	if ( ! opts.showPreview)
 	{
 		bar.finish();
 	}
