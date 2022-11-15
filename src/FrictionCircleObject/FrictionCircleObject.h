@@ -31,5 +31,8 @@ namespace gpo
 		int margin_px_;
 		cv::Point center_;
 
+		cv::Scalar borderColor_;
+		cv::Scalar currentDotColor_;
+
 	};
 }

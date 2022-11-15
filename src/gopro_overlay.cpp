@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
 	std::vector<cv::Point_<double>> gPoints;
 	uint64_t prevFrameStart_usec = 0;
 	int64_t frameTimeErr_usec = 0;// (+) means measured frame time was longer than targeted FPS
-	size_t initFrameIdx = 0;//frameCount / 2;
+	size_t initFrameIdx = frameCount / 2;
 	vCap.set(cv::CAP_PROP_POS_FRAMES, initFrameIdx);
 	for (size_t frameIdx=initFrameIdx; ! stop_app && frameIdx<frameCount; frameIdx++)
 	{
@@ -190,12 +190,12 @@ int main(int argc, char *argv[])
 			int speedMPH = round(telemSamp.gps.speed2D * 2.23694);// m/s to mph
 			sprintf(tmpStr,"%2dmph",speedMPH);
 			cv::putText(
-				outFrame, //target image
-				tmpStr, //text
-				cv::Point(10, OUT_VIDEO_SIZE.height - 30), //bottom-left position
+				outFrame, // target image
+				tmpStr, // text
+				cv::Point(10, OUT_VIDEO_SIZE.height - 30), // bottom-left position
 				TEXT_FONT,// font face
 				2.0,// font scale
-				TEXT_COLOR, //font color
+				CV_RGB(2,155,250), // font color
 				2);// thickness
 
 			frictionCircle.updateTail(telemData,frameIdx,fcTailLength);

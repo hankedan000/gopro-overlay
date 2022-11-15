@@ -11,6 +11,8 @@ namespace gpo
 	 , radius_px_(radius_px)
 	 , margin_px_(margin_px)
 	 , center_(radius_px+margin_px,radius_px+margin_px)
+	 , borderColor_(RGBA_COLOR(2,155,250,255))
+	 , currentDotColor_(RGBA_COLOR(255,255,255,255))
 	{
 	}
 
@@ -18,7 +20,16 @@ namespace gpo
 	FrictionCircleObject::init()
 	{
 		// draw outer circle
-		cv::circle(outlineImg_,center_,radius_px_,RGBA_COLOR(2,155,250,255),4);
+		cv::circle(outlineImg_,center_,radius_px_,borderColor_,4);
+
+		cv::putText(
+			outlineImg_, // target image
+			"1.0g", // text
+			cv::Point(center_.x+(radius_px_+10)*0.707,center_.y-(radius_px_+10)*0.707),// bottom-right (0.707 is sin(45deg))
+			cv::FONT_HERSHEY_DUPLEX,// font face
+			0.5,// font scale
+			borderColor_, //font color
+			1);// thickness
 
 		return true;
 	}
@@ -40,7 +51,7 @@ namespace gpo
 		for (size_t i=startIdx; i<=currentIndex && i<samples.size(); i++)
 		{
 			bool isLast = i == currentIndex;
-			auto color = (isLast ? RGBA_COLOR(2,155,250,255) : RGBA_COLOR(247,162,2,255));
+			auto color = (isLast ? currentDotColor_ : RGBA_COLOR(247,162,2,255));
 			int dotRadius = (isLast ? 10 : 3);
 			const auto &accl = samples.at(i).accl;
 
@@ -48,6 +59,21 @@ namespace gpo
 				(accl.x / -9.8) * radius_px_ + center_.x,
 				(accl.z / 9.8) * radius_px_ + center_.y);
 			cv::circle(outImg_,drawPoint,dotRadius,color,cv::FILLED);
+
+			if (isLast)
+			{
+				double netG = std::sqrt((accl.x*accl.x) + (accl.z*accl.z)) / 9.8;
+				char tmpStr[1024];
+				sprintf(tmpStr,"%.1fg",netG);
+				cv::putText(
+					outImg_, // target image
+					tmpStr, // text
+					cv::Point(center_.x+(radius_px_+10)*0.707,center_.y+(radius_px_+15)*0.707),// bottom-right (0.707 is sin(45deg))
+					cv::FONT_HERSHEY_DUPLEX,// font face
+					0.5,// font scale
+					currentDotColor_, // font color
+					1);// thickness
+			}
 		}
 	}
 
