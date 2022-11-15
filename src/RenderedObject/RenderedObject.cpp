@@ -7,6 +7,7 @@ namespace gpo
 		int height)
 	 : outImg_(height,width,CV_8UC4,cv::Scalar(0,0,0,0))
 	 , visible_(true)
+	 , boundingBoxVisible_(false)
 	{
 	}
 
@@ -41,16 +42,21 @@ namespace gpo
 				}
 			}
 		}
+
+		if (boundingBoxVisible_)
+		{
+			cv::rectangle(intoImg,rect,CV_RGB(255,255,255));
+		}
 	}
 
 	int
-	RenderedObject::getWidth() const
+	RenderedObject::getRenderedWidth() const
 	{
 		return outImg_.cols;
 	}
 
 	int
-	RenderedObject::getHeight() const
+	RenderedObject::getRenderedHeight() const
 	{
 		return outImg_.rows;
 	}
@@ -66,6 +72,19 @@ namespace gpo
 	RenderedObject::isVisible() const
 	{
 		return visible_;
+	}
+
+	void
+	RenderedObject::setBoundingBoxVisible(
+		bool visible)
+	{
+		boundingBoxVisible_ = visible;
+	}
+
+	bool
+	RenderedObject::isBoundingBoxVisible() const
+	{
+		return boundingBoxVisible_;
 	}
 
 }

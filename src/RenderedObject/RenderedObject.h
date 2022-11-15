@@ -24,10 +24,10 @@ namespace gpo
 			float scale = 1.0);
 
 		int
-		getWidth() const;
+		getRenderedWidth() const;
 
 		int
-		getHeight() const;
+		getRenderedHeight() const;
 
 		void
 		setVisible(
@@ -36,11 +36,19 @@ namespace gpo
 		bool
 		isVisible() const;
 
+		void
+		setBoundingBoxVisible(
+			bool visible);
+
+		bool
+		isBoundingBoxVisible() const;
+
 	protected:
 		// final rendered image
 		cv::Mat outImg_;
 
 		bool visible_;
+		bool boundingBoxVisible_;
 
 	};
 }

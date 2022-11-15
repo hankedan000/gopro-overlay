@@ -64,12 +64,12 @@ namespace gpo
 		if (deltaLat > deltaLon)
 		{
 			// track is taller than it is wide
-			pxPerDeg_ = (getHeight() - PX_MARGIN * 2) / deltaLat;
+			pxPerDeg_ = (getRenderedHeight() - PX_MARGIN * 2) / deltaLat;
 		}
 		else
 		{
 			// track is wider than it is tall
-			pxPerDeg_ = (getWidth() - PX_MARGIN * 2) / deltaLon;
+			pxPerDeg_ = (getRenderedWidth() - PX_MARGIN * 2) / deltaLon;
 		}
 
 		cv::Point prevPoint;

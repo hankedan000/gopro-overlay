@@ -231,8 +231,8 @@ int main(int argc, char *argv[])
 			frictionCircle.updateTail(telemData,frameIdx,fcTailLength);
 			frictionCircle.render(
 				outFrame,
-				outFrame.cols - frictionCircle.getWidth(),
-				outFrame.rows - frictionCircle.getHeight());
+				outFrame.cols - frictionCircle.getRenderedWidth(),
+				outFrame.rows - frictionCircle.getRenderedHeight());
 
 			trackMap.setLocation(telemSamp.gps.coord);
 			trackMap.render(outFrame,0,0);
