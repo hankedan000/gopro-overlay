@@ -4,6 +4,8 @@
 
 namespace gpo
 {
+	#define RGBA_COLOR(R,G,B,A) cv::Scalar(B,G,R,A)
+
 	class RenderedObject
 	{
 	public:
@@ -27,9 +29,18 @@ namespace gpo
 		int
 		getHeight() const;
 
+		void
+		setVisible(
+			bool visible);
+
+		bool
+		isVisible() const;
+
 	protected:
 		// final rendered image
 		cv::Mat outImg_;
+
+		bool visible_;
 
 	};
 }

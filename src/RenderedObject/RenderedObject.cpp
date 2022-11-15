@@ -6,6 +6,7 @@ namespace gpo
 		int width,
 		int height)
 	 : outImg_(height,width,CV_8UC4,cv::Scalar(0,0,0,0))
+	 , visible_(true)
 	{
 	}
 
@@ -33,10 +34,10 @@ namespace gpo
 				// Blending
 				if (vf[3] > 0)
 				{
-					cv::Vec3b &vb = roi(r,c);// GBR
-					vb[2] = alpha * vf[0] + (1 - alpha) * vb[2];
-					vb[0] = alpha * vf[1] + (1 - alpha) * vb[0];
-					vb[1] = alpha * vf[2] + (1 - alpha) * vb[1];
+					cv::Vec3b &vb = roi(r,c);
+					vb[0] = alpha * vf[0] + (1 - alpha) * vb[0];
+					vb[1] = alpha * vf[1] + (1 - alpha) * vb[1];
+					vb[2] = alpha * vf[2] + (1 - alpha) * vb[2];
 				}
 			}
 		}
@@ -52,6 +53,19 @@ namespace gpo
 	RenderedObject::getHeight() const
 	{
 		return outImg_.rows;
+	}
+
+	void
+	RenderedObject::setVisible(
+		bool visible)
+	{
+		visible_ = visible;
+	}
+
+	bool
+	RenderedObject::isVisible() const
+	{
+		return visible_;
 	}
 
 }

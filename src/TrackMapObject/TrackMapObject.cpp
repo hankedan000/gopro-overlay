@@ -6,7 +6,7 @@ namespace gpo
 		int width,
 		int height)
 	 : RenderedObject(width,height)
-	 , outlineImg_(height,width,CV_8UC4,cv::Scalar(0,0,0,0))
+	 , outlineImg_(height,width,CV_8UC4,RGBA_COLOR(0,0,0,0))
 	 , ulCoord_()
 	 , lrCoord_()
 	 , pxPerDeg_(1.0)
@@ -84,14 +84,13 @@ namespace gpo
 					outlineImg_,
 					prevPoint,
 					currPoint,
-					cv::Scalar(255,255,255,255),
+					RGBA_COLOR(255,255,255,255),
 					2,
 					cv::LINE_4);
 			}
 
 			prevPoint = currPoint;
 		}
-		cv::imwrite("outlineImg_.png",outlineImg_);
 
 		return true;
 	}
@@ -112,7 +111,7 @@ namespace gpo
 		outlineImg_.copyTo(outImg_);
 
 		auto dotPoint = coordToPoint(currLocation_);
-		cv::circle(outImg_,dotPoint,5,cv::Scalar(255,0,0,255),cv::FILLED);
+		cv::circle(outImg_,dotPoint,5,RGBA_COLOR(255,0,0,255),cv::FILLED);
 
 		// render result into final image
 		RenderedObject::render(intoImg,originX,originY,scale);

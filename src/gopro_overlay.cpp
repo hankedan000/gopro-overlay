@@ -7,6 +7,7 @@
 
 #include <GoProTelem/GoProTelem.h>
 
+#include "FrictionCircleObject.h"
 #include "TrackMapObject.h"
 
 const char *PROG_NAME = "gopro_overlay";
@@ -80,52 +81,6 @@ parseArgs(
 	}
 }
 
-void
-drawG_Circle(
-	cv::Mat &image,
-	cv::Point gCenter,
-	int gRadius,
-	const std::vector<cv::Point_<double>> &gPoints)
-{
-	// draw outer circle
-	cv::circle(image,gCenter,gRadius,CV_RGB(2, 155, 250),4);
-
-	// draw trail
-	for (size_t i=0; i<gPoints.size(); i++)
-	{
-		bool isLast = i == gPoints.size()-1;
-		auto color = (isLast ? CV_RGB(2, 155, 250) : CV_RGB(247, 162, 2));
-		int dotRadius = (isLast ? 10 : 3);
-		const auto &point = gPoints.at(i);
-
-		auto drawPoint = cv::Point(
-			(point.x / -9.8) * gRadius + gCenter.x,
-			(point.y / 9.8) * gRadius + gCenter.y);
-		cv::circle(image,drawPoint,dotRadius,color,cv::FILLED);
-	}
-}
-
-void
-addG_CirclePoint(
-	std::vector<cv::Point_<double>> &gPoints,
-	size_t length,
-	const gpt::AcclSample &acclSample)
-{
-	auto newPoint = cv::Point_<double>(acclSample.x,acclSample.z);
-	if (length > 1 && gPoints.size() == length)
-	{
-		for (size_t i=0; i<gPoints.size()-1; i++)
-		{
-			gPoints[i] = gPoints[i+1];
-		}
-		gPoints[length-1] = newPoint;
-	}
-	else
-	{
-		gPoints.push_back(newPoint);
-	}
-}
-
 int main(int argc, char *argv[])
 {
 	signal(SIGINT, handleSIGINT);// ctrl+c to stop application
@@ -146,19 +101,17 @@ int main(int argc, char *argv[])
 	auto telemData = gpt::getCombinedSamples(mp4);
 
 	const bool SHOW_LIVE_VIDEO = true;
+	const bool RENDER_DEBUG_INFO = false;
 	const auto OUT_VIDEO_SIZE = cv::Size(1280,720);
 	const auto TEXT_FONT = cv::FONT_HERSHEY_DUPLEX;
 	const auto TEXT_COLOR = CV_RGB(0, 255, 0);
-	const double G_CIRCLE_HISTORY_SEC = 1.0;
-	const int G_CIRCLE_RADIUS = 100;
-	const auto G_CIRCLE_CENTER = cv::Point(
-		OUT_VIDEO_SIZE.width - G_CIRCLE_RADIUS - 50,
-		OUT_VIDEO_SIZE.height - G_CIRCLE_RADIUS - 50);
+	const double F_CIRCLE_HISTORY_SEC = 1.0;
+	const int F_CIRCLE_RADIUS = 100;
 	double frameCount = vCap.get(cv::CAP_PROP_FRAME_COUNT);
 	double fps = vCap.get(cv::CAP_PROP_FPS);
 	double frameTime_sec = 1.0 / fps;
 	double frameTime_usec = 1.0e6 / fps;
-	int gPointSize = G_CIRCLE_HISTORY_SEC * fps;
+	int fcTailLength = F_CIRCLE_HISTORY_SEC * fps;
 	int frameTime_ms = std::round(1.0e3 / fps);
 	printf("frameCount = %f\n", frameCount);
 	printf("fps = %f\n", fps);
@@ -168,6 +121,8 @@ int main(int argc, char *argv[])
 	cv::Mat outFrame;
 	gpo::TrackMapObject trackMap(400,400);
 	trackMap.initMap(telemData);
+	gpo::FrictionCircleObject frictionCircle(F_CIRCLE_RADIUS,20);
+	frictionCircle.init();
 	cv::VideoWriter vWriter(
 		"render.mp4",
 		cv::VideoWriter::fourcc('M','P','4','V'),
@@ -199,49 +154,55 @@ int main(int argc, char *argv[])
 		{
 			cv::resize(frame,outFrame,OUT_VIDEO_SIZE);
 
-			sprintf(tmpStr,"frameIdx: %ld",frameIdx);
-			cv::putText(
-				outFrame, //target image
-				tmpStr, //text
-				cv::Point(10, 30), //top-left position
-				TEXT_FONT,// font face
-				1.0,// font scale
-				TEXT_COLOR, //font color
-				1);// thickness
+			if (RENDER_DEBUG_INFO)
+			{
+				sprintf(tmpStr,"frameIdx: %ld",frameIdx);
+				cv::putText(
+					outFrame, //target image
+					tmpStr, //text
+					cv::Point(10, 30), //top-left position
+					TEXT_FONT,// font face
+					1.0,// font scale
+					TEXT_COLOR, //font color
+					1);// thickness
 
-			sprintf(tmpStr,"time_offset: %0.3fs",timeOffset_sec);
-			cv::putText(
-				outFrame, //target image
-				tmpStr, //text
-				cv::Point(10, 30 * 2), //top-left position
-				TEXT_FONT,// font face
-				1.0,// font scale
-				TEXT_COLOR, //font color
-				1);// thickness
+				sprintf(tmpStr,"time_offset: %0.3fs",timeOffset_sec);
+				cv::putText(
+					outFrame, //target image
+					tmpStr, //text
+					cv::Point(10, 30 * 2), //top-left position
+					TEXT_FONT,// font face
+					1.0,// font scale
+					TEXT_COLOR, //font color
+					1);// thickness
 
-			sprintf(tmpStr,"accl: %s",telemSamp.accl.toString().c_str());
-			cv::putText(
-				outFrame, //target image
-				tmpStr, //text
-				cv::Point(10, 30 * 3), //top-left position
-				TEXT_FONT,// font face
-				1.0,// font scale
-				TEXT_COLOR, //font color
-				1);// thickness
+				sprintf(tmpStr,"accl: %s",telemSamp.accl.toString().c_str());
+				cv::putText(
+					outFrame, //target image
+					tmpStr, //text
+					cv::Point(10, 30 * 3), //top-left position
+					TEXT_FONT,// font face
+					1.0,// font scale
+					TEXT_COLOR, //font color
+					1);// thickness
+			}
 
 			int speedMPH = round(telemSamp.gps.speed2D * 2.23694);// m/s to mph
 			sprintf(tmpStr,"%2dmph",speedMPH);
 			cv::putText(
 				outFrame, //target image
 				tmpStr, //text
-				cv::Point(10, OUT_VIDEO_SIZE.height - 30), //top-left position
+				cv::Point(10, OUT_VIDEO_SIZE.height - 30), //bottom-left position
 				TEXT_FONT,// font face
 				2.0,// font scale
 				TEXT_COLOR, //font color
 				2);// thickness
 
-			addG_CirclePoint(gPoints,gPointSize,telemSamp.accl);
-			drawG_Circle(outFrame,G_CIRCLE_CENTER,G_CIRCLE_RADIUS,gPoints);
+			frictionCircle.updateTail(telemData,frameIdx,fcTailLength);
+			frictionCircle.render(
+				outFrame,
+				outFrame.cols - F_CIRCLE_RADIUS * 2 - 50,
+				outFrame.rows - F_CIRCLE_RADIUS * 2 - 50);
 
 			trackMap.setLocation(telemSamp.gps.coord);
 			trackMap.render(outFrame,outFrame.cols - 400,0);
