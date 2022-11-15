@@ -9,6 +9,7 @@
 
 #include "FrictionCircleObject.h"
 #include "TrackMapObject.h"
+#include "tqdm.h"
 
 const char *PROG_NAME = "gopro_overlay";
 bool stop_app = false;
@@ -131,10 +132,10 @@ int main(int argc, char *argv[])
 		true);
 	char tmpStr[1024];
 	double timeOffset_sec = 0.0;
-	std::vector<cv::Point_<double>> gPoints;
+	tqdm bar;// for render progress
 	uint64_t prevFrameStart_usec = 0;
 	int64_t frameTimeErr_usec = 0;// (+) means measured frame time was longer than targeted FPS
-	size_t initFrameIdx = frameCount / 2;
+	size_t initFrameIdx = 0;
 	vCap.set(cv::CAP_PROP_POS_FRAMES, initFrameIdx);
 	for (size_t frameIdx=initFrameIdx; ! stop_app && frameIdx<frameCount; frameIdx++)
 	{
@@ -144,6 +145,14 @@ int main(int argc, char *argv[])
 			int64_t meas_frameTime_usec = frameStart_usec - prevFrameStart_usec;
 			frameTimeErr_usec = meas_frameTime_usec - frameTime_usec;
 			// printf("frameTimeErr_usec = %ld\n",frameTimeErr_usec);
+		}
+
+		// show render progress
+		if ( ! SHOW_LIVE_VIDEO)
+		{
+			auto total = frameCount - initFrameIdx;
+			auto curr = frameIdx - initFrameIdx;
+			bar.progress(curr,total);
 		}
 
 		auto &telemSamp = telemData.at(frameIdx);
@@ -243,6 +252,11 @@ int main(int argc, char *argv[])
 			// i wonder if they're encoder some metadata or something.
 			printf("frame %ld is bad?\n", frameIdx);
 		}
+	}
+
+	if ( ! SHOW_LIVE_VIDEO)
+	{
+		bar.finish();
 	}
 
 	vWriter.release();// close video file

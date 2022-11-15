@@ -9,4 +9,5 @@ target_link_libraries(gopro_overlay
 	${OpenCV_LIBS} 
 	FrictionCircleObject
 	GoProTelem::GoProTelem
-	TrackMapObject)
+	TrackMapObject
+	tqdm)
