@@ -128,11 +128,11 @@ int main(int argc, char *argv[])
 	mp4.open(opts.inputFile);
 	auto telemData = gpt::getCombinedSamples(mp4);
 
-	const auto OUT_VIDEO_SIZE = cv::Size(1280,720);
+	const auto RENDERED_VIDEO_SIZE = cv::Size(2704,1520);
+	const auto PREVIEW_VIDEO_SIZE = cv::Size(1280,720);
 	const auto TEXT_FONT = cv::FONT_HERSHEY_DUPLEX;
 	const auto TEXT_COLOR = CV_RGB(0, 255, 0);
 	const double F_CIRCLE_HISTORY_SEC = 1.0;
-	const int F_CIRCLE_RADIUS = 100;
 	double frameCount = vCap.get(cv::CAP_PROP_FRAME_COUNT);
 	double fps = vCap.get(cv::CAP_PROP_FPS);
 	double frameTime_sec = 1.0 / fps;
@@ -141,10 +141,11 @@ int main(int argc, char *argv[])
 	int frameTime_ms = std::round(1.0e3 / fps);
 
 	cv::Mat frame;
-	cv::Mat outFrame;
-	gpo::TrackMapObject trackMap(300,300);
+	cv::Mat rFrame;// rendered frame
+	cv::Mat pFrame;// preview frame
+	gpo::TrackMapObject trackMap;
 	trackMap.initMap(telemData);
-	gpo::FrictionCircleObject frictionCircle(F_CIRCLE_RADIUS,20);
+	gpo::FrictionCircleObject frictionCircle;
 	frictionCircle.init();
 	gpo::LapTimerObject lapTimer;
 	lapTimer.init(0,telemData.size()-1);
@@ -152,7 +153,7 @@ int main(int argc, char *argv[])
 		opts.outputFile,
 		cv::VideoWriter::fourcc('M','P','4','V'),
 		fps,
-		OUT_VIDEO_SIZE,
+		RENDERED_VIDEO_SIZE,
 		true);
 	char tmpStr[1024];
 	double timeOffset_sec = 0.0;
@@ -185,13 +186,13 @@ int main(int argc, char *argv[])
 		// Capture frame-by-frame
 		if (vCap.read(frame))
 		{
-			cv::resize(frame,outFrame,OUT_VIDEO_SIZE);
+			cv::resize(frame,rFrame,RENDERED_VIDEO_SIZE);
 
 			if (opts.renderDebugInfo)
 			{
 				sprintf(tmpStr,"frameIdx: %ld",frameIdx);
 				cv::putText(
-					outFrame, //target image
+					rFrame, //target image
 					tmpStr, //text
 					cv::Point(10, 30), //top-left position
 					TEXT_FONT,// font face
@@ -201,7 +202,7 @@ int main(int argc, char *argv[])
 
 				sprintf(tmpStr,"time_offset: %0.3fs",timeOffset_sec);
 				cv::putText(
-					outFrame, //target image
+					rFrame, //target image
 					tmpStr, //text
 					cv::Point(10, 30 * 2), //top-left position
 					TEXT_FONT,// font face
@@ -211,7 +212,7 @@ int main(int argc, char *argv[])
 
 				sprintf(tmpStr,"accl: %s",telemSamp.accl.toString().c_str());
 				cv::putText(
-					outFrame, //target image
+					rFrame, //target image
 					tmpStr, //text
 					cv::Point(10, 30 * 3), //top-left position
 					TEXT_FONT,// font face
@@ -223,33 +224,34 @@ int main(int argc, char *argv[])
 			int speedMPH = round(telemSamp.gps.speed2D * 2.23694);// m/s to mph
 			sprintf(tmpStr,"%2dmph",speedMPH);
 			cv::putText(
-				outFrame, // target image
+				rFrame, // target image
 				tmpStr, // text
-				cv::Point(10, OUT_VIDEO_SIZE.height - 30), // bottom-left position
+				cv::Point(10, rFrame.rows - 30), // bottom-left position
 				TEXT_FONT,// font face
-				2.0,// font scale
+				2.0 * 2,// font scale
 				CV_RGB(2,155,250), // font color
-				2);// thickness
+				2 * 2);// thickness
 
 			frictionCircle.updateTail(telemData,frameIdx,fcTailLength);
 			frictionCircle.render(
-				outFrame,
-				outFrame.cols - frictionCircle.getRenderedWidth(),
-				outFrame.rows - frictionCircle.getRenderedHeight());
+				rFrame,
+				rFrame.cols - frictionCircle.getRenderedWidth(),
+				rFrame.rows - frictionCircle.getRenderedHeight());
 
 			trackMap.setLocation(telemSamp.gps.coord);
-			trackMap.render(outFrame,0,0);
+			trackMap.render(rFrame,0,0);
 
 			lapTimer.updateTimer(telemData,frameIdx);
-			lapTimer.render(outFrame,outFrame.cols/2,0);
+			lapTimer.render(rFrame,rFrame.cols/2,0);
 
 			// write frame to video file
-			vWriter.write(outFrame);
+			vWriter.write(rFrame);
 
 			// Display the frame live
 			if (opts.showPreview)
 			{
-				cv::imshow("Video", outFrame);
+				cv::resize(rFrame,pFrame,PREVIEW_VIDEO_SIZE);
+				cv::imshow("Preview", pFrame);
 				double processingTime_usec = getTicks_usec() - frameStart_usec;
 				int waitTime_ms = std::round((frameTime_usec - processingTime_usec) / 1000.0);
 				if (waitTime_ms <= 0)

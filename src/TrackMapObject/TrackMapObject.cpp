@@ -2,14 +2,17 @@
 
 namespace gpo
 {
-	TrackMapObject::TrackMapObject(
-		int width,
-		int height)
-	 : RenderedObject(width,height)
-	 , outlineImg_(height,width,CV_8UC4,RGBA_COLOR(0,0,0,0))
+	const int TRACK_MAP_RENDER_WIDTH = 600;
+	const int TRACK_MAP_RENDER_HEIGHT = 600;
+
+	TrackMapObject::TrackMapObject()
+	 : RenderedObject(TRACK_MAP_RENDER_WIDTH,TRACK_MAP_RENDER_HEIGHT)
+	 , outlineImg_(TRACK_MAP_RENDER_HEIGHT,TRACK_MAP_RENDER_WIDTH,CV_8UC4,RGBA_COLOR(0,0,0,0))
 	 , ulCoord_()
 	 , lrCoord_()
 	 , pxPerDeg_(1.0)
+	 , trackThickness_px_(DEFAULT_TRACK_THICKNESS_RATIO * TRACK_MAP_RENDER_WIDTH)
+	 , dotRadius_px_(DEFAULT_DOT_RADIUS_RATIO * TRACK_MAP_RENDER_WIDTH)
 	{
 	}
 
@@ -85,7 +88,7 @@ namespace gpo
 					prevPoint,
 					currPoint,
 					RGBA_COLOR(255,255,255,255),
-					2,
+					trackThickness_px_,
 					cv::LINE_4);
 			}
 
@@ -111,7 +114,7 @@ namespace gpo
 		outlineImg_.copyTo(outImg_);
 
 		auto dotPoint = coordToPoint(currLocation_);
-		cv::circle(outImg_,dotPoint,5,RGBA_COLOR(255,0,0,255),cv::FILLED);
+		cv::circle(outImg_,dotPoint,dotRadius_px_,RGBA_COLOR(255,0,0,255),cv::FILLED);
 
 		// render result into final image
 		RenderedObject::render(intoImg,originX,originY,scale);

@@ -10,9 +10,7 @@ namespace gpo
 	class TrackMapObject : public RenderedObject
 	{
 	public:
-		TrackMapObject(
-			int width,
-			int height);
+		TrackMapObject();
 
 		bool
 		initMap(
@@ -49,6 +47,12 @@ namespace gpo
 		gpt::CoordLL currLocation_;
 
 		double pxPerDeg_;
+
+		const double DEFAULT_TRACK_THICKNESS_RATIO = 2.0 / 300.0;// 'line thickness' over 'rendered trackmap width'
+		int trackThickness_px_;
+
+		const double DEFAULT_DOT_RADIUS_RATIO = 5.0 / 300.0;// 'dot radius' over 'rendered trackmap width'
+		int dotRadius_px_;
 
 	};
 }

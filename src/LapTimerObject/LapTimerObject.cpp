@@ -3,9 +3,12 @@
 namespace gpo
 {
 
+	const int LAPTIMER_RENDERED_WIDTH = 600;
+	const int LAPTIMER_RENDERED_HEIGHT = 200;
+
 	LapTimerObject::LapTimerObject()
-	 : RenderedObject(400,200)
-	 , bgImg_(200,400,CV_8UC4,RGBA_COLOR(0,0,0,0))
+	 : RenderedObject(LAPTIMER_RENDERED_WIDTH,LAPTIMER_RENDERED_HEIGHT)
+	 , bgImg_(LAPTIMER_RENDERED_HEIGHT,LAPTIMER_RENDERED_WIDTH,CV_8UC4,RGBA_COLOR(0,0,0,0))
 	 , textColor_(RGBA_COLOR(255,255,255,255))
 	 , startIdx_(-1)
 	 , finishIdx_(-1)
@@ -62,11 +65,11 @@ namespace gpo
 		cv::putText(
 			outImg_, // target image
 			lapTimeStr, // text
-			cv::Point(0,30),
+			cv::Point(0,60),
 			cv::FONT_HERSHEY_DUPLEX,// font face
-			1.0,// font scale
+			2.0,// font scale
 			textColor_, //font color
-			1);// thickness
+			2);// thickness
 	}
 
 }

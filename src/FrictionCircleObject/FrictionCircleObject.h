@@ -10,9 +10,7 @@ namespace gpo
 	class FrictionCircleObject : public RenderedObject
 	{
 	public:
-		FrictionCircleObject(
-			int radius_px,
-			int margin_px);
+		FrictionCircleObject();
 
 		bool
 		init();

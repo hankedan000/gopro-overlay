@@ -3,14 +3,15 @@
 namespace gpo
 {
 
-	FrictionCircleObject::FrictionCircleObject(
-		int radius_px,
-		int margin_px)
-	 : RenderedObject((radius_px+margin_px)*2,(radius_px+margin_px)*2)
-	 , outlineImg_((radius_px+margin_px)*2,(radius_px+margin_px)*2,CV_8UC4,RGBA_COLOR(0,0,0,0))
-	 , radius_px_(radius_px)
-	 , margin_px_(margin_px)
-	 , center_(radius_px+margin_px,radius_px+margin_px)
+	const int F_CIRCLE_RENDER_WIDTH = 480;
+	const int F_CIRCLE_RENDER_HEIGHT = 480;
+
+	FrictionCircleObject::FrictionCircleObject()
+	 : RenderedObject(F_CIRCLE_RENDER_WIDTH,F_CIRCLE_RENDER_HEIGHT)
+	 , outlineImg_(F_CIRCLE_RENDER_HEIGHT,F_CIRCLE_RENDER_WIDTH,CV_8UC4,RGBA_COLOR(0,0,0,0))
+	 , radius_px_(200)
+	 , margin_px_(40)
+	 , center_(radius_px_+margin_px_,radius_px_+margin_px_)
 	 , borderColor_(RGBA_COLOR(2,155,250,255))
 	 , currentDotColor_(RGBA_COLOR(255,255,255,255))
 	{
@@ -20,16 +21,16 @@ namespace gpo
 	FrictionCircleObject::init()
 	{
 		// draw outer circle
-		cv::circle(outlineImg_,center_,radius_px_,borderColor_,4);
+		cv::circle(outlineImg_,center_,radius_px_,borderColor_,8);
 
 		cv::putText(
 			outlineImg_, // target image
 			"1.0g", // text
-			cv::Point(center_.x+(radius_px_+10)*0.707,center_.y-(radius_px_+10)*0.707),// bottom-right (0.707 is sin(45deg))
+			cv::Point(center_.x+(radius_px_+20)*0.707,center_.y-(radius_px_+20)*0.707),// bottom-right (0.707 is sin(45deg))
 			cv::FONT_HERSHEY_DUPLEX,// font face
-			0.5,// font scale
-			borderColor_, //font color
-			1);// thickness
+			1.0,// font scale
+			borderColor_, // font color
+			2);// thickness
 
 		return true;
 	}
@@ -52,7 +53,7 @@ namespace gpo
 		{
 			bool isLast = i == currentIndex;
 			auto color = (isLast ? currentDotColor_ : RGBA_COLOR(247,162,2,255));
-			int dotRadius = (isLast ? 10 : 3);
+			int dotRadius = (isLast ? 20 : 6);
 			const auto &accl = samples.at(i).accl;
 
 			auto drawPoint = cv::Point(
@@ -68,11 +69,11 @@ namespace gpo
 				cv::putText(
 					outImg_, // target image
 					tmpStr, // text
-					cv::Point(center_.x+(radius_px_+10)*0.707,center_.y+(radius_px_+15)*0.707),// bottom-right (0.707 is sin(45deg))
+					cv::Point(center_.x+(radius_px_+20)*0.707,center_.y+(radius_px_+30)*0.707),// bottom-right (0.707 is sin(45deg))
 					cv::FONT_HERSHEY_DUPLEX,// font face
-					0.5,// font scale
+					1.0,// font scale
 					currentDotColor_, // font color
-					1);// thickness
+					2);// thickness
 			}
 		}
 	}
