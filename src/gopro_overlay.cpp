@@ -8,6 +8,7 @@
 #include <GoProTelem/GoProTelem.h>
 
 #include "FrictionCircleObject.h"
+#include "LapTimerObject.h"
 #include "TrackMapObject.h"
 #include "tqdm.h"
 
@@ -145,6 +146,8 @@ int main(int argc, char *argv[])
 	trackMap.initMap(telemData);
 	gpo::FrictionCircleObject frictionCircle(F_CIRCLE_RADIUS,20);
 	frictionCircle.init();
+	gpo::LapTimerObject lapTimer;
+	lapTimer.init(0,telemData.size()-1);
 	cv::VideoWriter vWriter(
 		opts.outputFile,
 		cv::VideoWriter::fourcc('M','P','4','V'),
@@ -236,6 +239,9 @@ int main(int argc, char *argv[])
 
 			trackMap.setLocation(telemSamp.gps.coord);
 			trackMap.render(outFrame,0,0);
+
+			lapTimer.updateTimer(telemData,frameIdx);
+			lapTimer.render(outFrame,outFrame.cols/2,0);
 
 			// write frame to video file
 			vWriter.write(outFrame);
