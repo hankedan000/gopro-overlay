@@ -144,10 +144,13 @@ int main(int argc, char *argv[])
 	cv::Mat rFrame;// rendered frame
 	cv::Mat pFrame;// preview frame
 	gpo::TrackMapObject trackMap;
+	cv::Size tmRenderSize = trackMap.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
 	trackMap.initMap(telemData);
 	gpo::FrictionCircleObject frictionCircle;
+	cv::Size fcRenderSize = frictionCircle.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
 	frictionCircle.init();
 	gpo::LapTimerObject lapTimer;
+	cv::Size ltRenderSize = lapTimer.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 10.0);
 	lapTimer.init(0,telemData.size()-1);
 	cv::VideoWriter vWriter(
 		opts.outputFile,
@@ -235,14 +238,15 @@ int main(int argc, char *argv[])
 			frictionCircle.updateTail(telemData,frameIdx,fcTailLength);
 			frictionCircle.render(
 				rFrame,
-				rFrame.cols - frictionCircle.getRenderedWidth(),
-				rFrame.rows - frictionCircle.getRenderedHeight());
+				rFrame.cols - fcRenderSize.width,
+				rFrame.rows - fcRenderSize.height,
+				fcRenderSize);
 
 			trackMap.setLocation(telemSamp.gps.coord);
-			trackMap.render(rFrame,0,0);
+			trackMap.render(rFrame,0,0,tmRenderSize);
 
 			lapTimer.updateTimer(telemData,frameIdx);
-			lapTimer.render(rFrame,rFrame.cols/2,0);
+			lapTimer.render(rFrame,rFrame.cols/2,0,ltRenderSize);
 
 			// write frame to video file
 			vWriter.write(rFrame);

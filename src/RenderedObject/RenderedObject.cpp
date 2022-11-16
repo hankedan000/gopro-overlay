@@ -20,18 +20,33 @@ namespace gpo
 	void
 	RenderedObject::render(
 		cv::Mat &intoImg,
-		int originX, int originY,
-		float scale)
+		int originX, int originY)
 	{
+		render(intoImg,originX,originY,outImg_.size());
+	}
+
+	void
+	RenderedObject::render(
+		cv::Mat &intoImg,
+		int originX, int originY,
+		cv::Size renderSize)
+	{
+		cv::Mat *imgToRender = &outImg_;
+		if (renderSize.width != getNativeWidth() || renderSize.height != getNativeHeight())
+		{
+			ALPHA_SAFE_RESIZE(outImg_,scaledImg_,renderSize);
+			imgToRender = &scaledImg_;
+		}
+
 		// draw final output to user image
-		cv::Rect rect(cv::Point(originX,originY), outImg_.size());
+		cv::Rect rect(cv::Point(originX,originY), imgToRender->size());
 		cv::Mat3b roi = intoImg(rect);
 		double alpha = 1.0; // alpha in [0,1]
 		for (int r = 0; r < roi.rows; ++r)
 		{
 			for (int c = 0; c < roi.cols; ++c)
 			{
-				auto vf = outImg_.at<cv::Vec4b>(r,c);
+				auto vf = imgToRender->at<cv::Vec4b>(r,c);
 				// Blending
 				if (vf[3] > 0)
 				{
@@ -50,15 +65,29 @@ namespace gpo
 	}
 
 	int
-	RenderedObject::getRenderedWidth() const
+	RenderedObject::getNativeWidth() const
 	{
 		return outImg_.cols;
 	}
 
 	int
-	RenderedObject::getRenderedHeight() const
+	RenderedObject::getNativeHeight() const
 	{
 		return outImg_.rows;
+	}
+
+	cv::Size
+	RenderedObject::getNativeSize() const
+	{
+		return outImg_.size();
+	}
+
+	cv::Size
+	RenderedObject::getScaledSizeFromTargetHeight(
+		int targetHeight_px) const
+	{
+		double scale = (double)(targetHeight_px) / getNativeHeight();
+		return cv::Size(getNativeWidth()*scale,getNativeHeight()*scale);
 	}
 
 	void

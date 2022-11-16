@@ -26,8 +26,14 @@ namespace gpo
 		void
 		render(
 			cv::Mat &intoImg,
+			int originX, int originY);
+
+		virtual
+		void
+		render(
+			cv::Mat &intoImg,
 			int originX, int originY,
-			float scale = 1.0);
+			cv::Size renderSize);
 
 	private:
 		cv::Point

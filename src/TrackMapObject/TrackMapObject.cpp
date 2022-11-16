@@ -67,12 +67,12 @@ namespace gpo
 		if (deltaLat > deltaLon)
 		{
 			// track is taller than it is wide
-			pxPerDeg_ = (getRenderedHeight() - PX_MARGIN * 2) / deltaLat;
+			pxPerDeg_ = (getNativeHeight() - PX_MARGIN * 2) / deltaLat;
 		}
 		else
 		{
 			// track is wider than it is tall
-			pxPerDeg_ = (getRenderedWidth() - PX_MARGIN * 2) / deltaLon;
+			pxPerDeg_ = (getNativeWidth() - PX_MARGIN * 2) / deltaLon;
 		}
 
 		cv::Point prevPoint;
@@ -108,8 +108,16 @@ namespace gpo
 	void
 	TrackMapObject::render(
 		cv::Mat &intoImg,
+		int originX, int originY)
+	{
+		render(intoImg,originX,originY,outImg_.size());
+	}
+
+	void
+	TrackMapObject::render(
+		cv::Mat &intoImg,
 		int originX, int originY,
-		float scale)
+		cv::Size renderSize)
 	{
 		outlineImg_.copyTo(outImg_);
 
@@ -117,7 +125,7 @@ namespace gpo
 		cv::circle(outImg_,dotPoint,dotRadius_px_,RGBA_COLOR(255,0,0,255),cv::FILLED);
 
 		// render result into final image
-		RenderedObject::render(intoImg,originX,originY,scale);
+		RenderedObject::render(intoImg,originX,originY,renderSize);
 	}
 
 	cv::Point
