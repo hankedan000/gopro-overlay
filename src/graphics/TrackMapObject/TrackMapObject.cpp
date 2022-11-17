@@ -6,7 +6,7 @@ namespace gpo
 	const int TRACK_MAP_RENDER_HEIGHT = 600;
 
 	TrackMapObject::TrackMapObject()
-	 : RenderedObject(TRACK_MAP_RENDER_WIDTH,TRACK_MAP_RENDER_HEIGHT)
+	 : TelemetryObject(TRACK_MAP_RENDER_WIDTH,TRACK_MAP_RENDER_HEIGHT)
 	 , outlineImg_(TRACK_MAP_RENDER_HEIGHT,TRACK_MAP_RENDER_WIDTH,CV_8UC4,RGBA_COLOR(0,0,0,0))
 	 , ulCoord_()
 	 , lrCoord_()
@@ -18,14 +18,16 @@ namespace gpo
 
 	bool
 	TrackMapObject::initMap(
-		const std::vector<gpt::CombinedSample> &samples,
 		int trackStartIdx,
 		int trackEndIdx)
 	{
-		if (samples.empty())
+		if (sources_.empty())
 		{
 			return true;
 		}
+
+		// use first source as the basis for the track map outline
+		auto telemSrc = sources_.front();
 
 		if (trackStartIdx < 0)
 		{
@@ -33,7 +35,7 @@ namespace gpo
 		}
 		if (trackEndIdx < 0)
 		{
-			trackEndIdx = samples.size();
+			trackEndIdx = telemSrc->size();
 		}
 
 		ulCoord_.lat = -10000;
@@ -42,7 +44,7 @@ namespace gpo
 		lrCoord_.lon = -10000;
 		for (size_t i=trackStartIdx; i<trackEndIdx; i++)
 		{
-			auto &samp = samples.at(i);
+			auto &samp = telemSrc->at(i).gpSamp;
 			if (samp.gps.coord.lat > ulCoord_.lat)
 			{
 				ulCoord_.lat = samp.gps.coord.lat;
@@ -78,7 +80,7 @@ namespace gpo
 		cv::Point prevPoint;
 		for (size_t i=trackStartIdx; i<trackEndIdx; i++)
 		{
-			auto &samp = samples.at(i);
+			auto &samp = telemSrc->at(i).gpSamp;
 			auto currPoint = coordToPoint(samp.gps.coord);
 
 			if (i != trackStartIdx)
@@ -99,21 +101,6 @@ namespace gpo
 	}
 
 	void
-	TrackMapObject::setLocation(
-		const gpt::CoordLL &loc)
-	{
-		currLocation_ = loc;
-	}
-
-	void
-	TrackMapObject::render(
-		cv::Mat &intoImg,
-		int originX, int originY)
-	{
-		render(intoImg,originX,originY,outImg_.size());
-	}
-
-	void
 	TrackMapObject::render(
 		cv::Mat &intoImg,
 		int originX, int originY,
@@ -121,11 +108,20 @@ namespace gpo
 	{
 		outlineImg_.copyTo(outImg_);
 
-		auto dotPoint = coordToPoint(currLocation_);
+		if (sources_.empty())
+		{
+			return;
+		}
+
+		// TODO loop over all source and draw a dot for each
+		auto telemSrc = sources_.front();
+
+		const auto &currSample = telemSrc->at(telemSrc->seekedIdx()).gpSamp;
+		auto dotPoint = coordToPoint(currSample.gps.coord);
 		cv::circle(outImg_,dotPoint,dotRadius_px_,RGBA_COLOR(255,0,0,255),cv::FILLED);
 
 		// render result into final image
-		RenderedObject::render(intoImg,originX,originY,renderSize);
+		TelemetryObject::render(intoImg,originX,originY,renderSize);
 	}
 
 	cv::Point

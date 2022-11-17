@@ -151,8 +151,9 @@ int main(int argc, char *argv[])
 	cv::Mat rFrame;// rendered frame
 	cv::Mat pFrame;// preview frame
 	gpo::TrackMapObject trackMap;
+	trackMap.addSource(data.telemSrc);
+	trackMap.initMap();
 	cv::Size tmRenderSize = trackMap.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
-	trackMap.initMap(telemData);
 	gpo::FrictionCircleObject frictionCircle;
 	cv::Size fcRenderSize = frictionCircle.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
 	frictionCircle.setTailLength(fcTailLength);
@@ -251,7 +252,6 @@ int main(int argc, char *argv[])
 				rFrame.rows - fcRenderSize.height,
 				fcRenderSize);
 
-			trackMap.setLocation(telemSamp.gps.coord);
 			trackMap.render(rFrame,0,0,tmRenderSize);
 
 			lapTimer.render(rFrame,rFrame.cols/2,0,ltRenderSize);

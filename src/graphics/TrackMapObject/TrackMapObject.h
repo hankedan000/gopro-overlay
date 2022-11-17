@@ -3,30 +3,19 @@
 #include <GoProTelem/SampleTypes.h>
 #include <opencv2/opencv.hpp>
 
-#include "RenderedObject.h"
+#include "TelemetryObject.h"
 
 namespace gpo
 {
-	class TrackMapObject : public RenderedObject
+	class TrackMapObject : public TelemetryObject
 	{
 	public:
 		TrackMapObject();
 
 		bool
 		initMap(
-			const std::vector<gpt::CombinedSample> &samples,
 			int trackStartIdx = 0,
 			int trackEndIdx = -1);
-
-		void
-		setLocation(
-			const gpt::CoordLL &loc);
-
-		virtual
-		void
-		render(
-			cv::Mat &intoImg,
-			int originX, int originY);
 
 		virtual
 		void
@@ -49,8 +38,6 @@ namespace gpo
 		// coordinates of upper-left and lower-right corners
 		gpt::CoordLL ulCoord_;
 		gpt::CoordLL lrCoord_;
-
-		gpt::CoordLL currLocation_;
 
 		double pxPerDeg_;
 
