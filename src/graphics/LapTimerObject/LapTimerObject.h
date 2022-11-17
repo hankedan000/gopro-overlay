@@ -3,11 +3,11 @@
 #include <GoProTelem/SampleTypes.h>
 #include <opencv2/opencv.hpp>
 
-#include "RenderedObject.h"
+#include "TelemetryObject.h"
 
 namespace gpo
 {
-	class LapTimerObject : public RenderedObject
+	class LapTimerObject : public TelemetryObject
 	{
 	public:
 		LapTimerObject();
@@ -17,10 +17,12 @@ namespace gpo
 			int lapStartIdx,
 			int lapFinishIdx = -1);
 
+		virtual
 		void
-		updateTimer(
-			const std::vector<gpt::CombinedSample> &samples,
-			size_t currentIndex);
+		render(
+			cv::Mat &intoImg,
+			int originX, int originY,
+			cv::Size renderSize);
 
 	private:
 		// background image

@@ -13,7 +13,7 @@ namespace gpo
 	}
 
 	const TelemetrySample &
-	TelemetrySource::getSample(
+	TelemetrySource::at(
 		size_t idx) const
 	{
 		return samples_->at(idx);

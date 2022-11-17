@@ -15,7 +15,7 @@ namespace gpo
 			TelemetrySeekerPtr seeker);
 
 		const TelemetrySample &
-		getSample(
+		at(
 			size_t idx) const;
 
 		size_t

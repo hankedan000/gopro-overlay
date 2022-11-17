@@ -159,6 +159,7 @@ int main(int argc, char *argv[])
 	gpo::LapTimerObject lapTimer;
 	cv::Size ltRenderSize = lapTimer.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 10.0);
 	lapTimer.init(0,telemData.size()-1);
+	lapTimer.addSource(data.telemSrc);
 	cv::VideoWriter vWriter(
 		opts.outputFile,
 		cv::VideoWriter::fourcc('M','P','4','V'),
@@ -174,6 +175,7 @@ int main(int argc, char *argv[])
 	vCap.set(cv::CAP_PROP_POS_FRAMES, initFrameIdx);
 	for (size_t frameIdx=initFrameIdx; ! stop_app && frameIdx<frameCount; frameIdx++)
 	{
+		data.seeker->seekToIdx(frameIdx);
 		uint64_t frameStart_usec = getTicks_usec();
 		if (prevFrameStart_usec != 0)
 		{
@@ -252,7 +254,6 @@ int main(int argc, char *argv[])
 			trackMap.setLocation(telemSamp.gps.coord);
 			trackMap.render(rFrame,0,0,tmRenderSize);
 
-			lapTimer.updateTimer(telemData,frameIdx);
 			lapTimer.render(rFrame,rFrame.cols/2,0,ltRenderSize);
 
 			// write frame to video file

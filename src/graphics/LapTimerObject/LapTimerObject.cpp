@@ -7,7 +7,7 @@ namespace gpo
 	const int LAPTIMER_RENDERED_HEIGHT = 200;
 
 	LapTimerObject::LapTimerObject()
-	 : RenderedObject(LAPTIMER_RENDERED_WIDTH,LAPTIMER_RENDERED_HEIGHT)
+	 : TelemetryObject(LAPTIMER_RENDERED_WIDTH,LAPTIMER_RENDERED_HEIGHT)
 	 , bgImg_(LAPTIMER_RENDERED_HEIGHT,LAPTIMER_RENDERED_WIDTH,CV_8UC4,RGBA_COLOR(0,0,0,0))
 	 , textColor_(RGBA_COLOR(255,255,255,255))
 	 , startIdx_(-1)
@@ -27,11 +27,19 @@ namespace gpo
 	}
 
 	void
-	LapTimerObject::updateTimer(
-		const std::vector<gpt::CombinedSample> &samples,
-		size_t currentIndex)
+	LapTimerObject::render(
+		cv::Mat &intoImg,
+		int originX, int originY,
+		cv::Size renderSize)
 	{
 		bgImg_.copyTo(outImg_);
+
+		if (sources_.empty())
+		{
+			return;
+		}
+
+		auto telemSrc = sources_.front();
 
 		// constrain the start/finish indices to within the samples vector
 		size_t startIdx = startIdx_;
@@ -40,24 +48,26 @@ namespace gpo
 			startIdx = 0;
 		}
 		size_t finishIdx = finishIdx_;
-		if (finishIdx < 0 || finishIdx >= samples.size())
+		if (finishIdx < 0 || finishIdx >= telemSrc->size())
 		{
-			finishIdx = samples.size() - 1;
+			finishIdx = telemSrc->size() - 1;
 		}
 
 		double lapTime = 0.0;
+		const auto &startSamp = telemSrc->at(startIdx);
+		const auto &finishSamp = telemSrc->at(finishIdx);
 		if (isLapFinished_)
 		{
-			lapTime = samples.at(finishIdx).t_offset - samples.at(startIdx).t_offset;
+			lapTime = finishSamp.gpSamp.t_offset - startSamp.gpSamp.t_offset;
 		}
-		else if ( ! isLapFinished_ && currentIndex >= finishIdx)
+		else if ( ! isLapFinished_ && telemSrc->seekedIdx() >= finishIdx)
 		{
 			isLapFinished_ = true;
-			lapTime = samples.at(finishIdx).t_offset - samples.at(startIdx).t_offset;
+			lapTime = finishSamp.gpSamp.t_offset - startSamp.gpSamp.t_offset;
 		}
-		else if (currentIndex > startIdx_)
+		else if (telemSrc->seekedIdx() > startIdx_)
 		{
-			lapTime = samples.at(currentIndex).t_offset - samples.at(startIdx_).t_offset;
+			lapTime = telemSrc->at(telemSrc->seekedIdx()).gpSamp.t_offset - startSamp.gpSamp.t_offset;
 		}
 
 		char lapTimeStr[1024];
@@ -70,6 +80,9 @@ namespace gpo
 			2.0,// font scale
 			textColor_, //font color
 			2);// thickness
+
+		// let base class perfom its own rendering too
+		TelemetryObject::render(intoImg,originX,originY,renderSize);
 	}
 
 }
