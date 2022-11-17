@@ -155,7 +155,8 @@ int main(int argc, char *argv[])
 	trackMap.initMap(telemData);
 	gpo::FrictionCircleObject frictionCircle;
 	cv::Size fcRenderSize = frictionCircle.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
-	frictionCircle.init();
+	frictionCircle.setTailLength(fcTailLength);
+	frictionCircle.addSource(data.telemSrc);
 	gpo::LapTimerObject lapTimer;
 	cv::Size ltRenderSize = lapTimer.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 10.0);
 	lapTimer.init(0,telemData.size()-1);
@@ -244,7 +245,6 @@ int main(int argc, char *argv[])
 				CV_RGB(2,155,250), // font color
 				2 * 2);// thickness
 
-			frictionCircle.updateTail(telemData,frameIdx,fcTailLength);
 			frictionCircle.render(
 				rFrame,
 				rFrame.cols - fcRenderSize.width,

@@ -81,7 +81,7 @@ namespace gpo
 			textColor_, //font color
 			2);// thickness
 
-		// let base class perfom its own rendering too
+		// let base class perform its own rendering too
 		TelemetryObject::render(intoImg,originX,originY,renderSize);
 	}
 

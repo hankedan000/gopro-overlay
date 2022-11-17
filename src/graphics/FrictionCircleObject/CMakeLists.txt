@@ -6,6 +6,4 @@ target_include_directories(FrictionCircleObject
 		"${CMAKE_CURRENT_SOURCE_DIR}")
 
 target_link_libraries(FrictionCircleObject
-	${OpenCV_LIBS}
-	GoProTelem::GoProTelem
-	RenderedObject)
+	TelemetryObject)

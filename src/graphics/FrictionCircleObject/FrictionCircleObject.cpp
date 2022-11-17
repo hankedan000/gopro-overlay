@@ -7,18 +7,14 @@ namespace gpo
 	const int F_CIRCLE_RENDER_HEIGHT = 480;
 
 	FrictionCircleObject::FrictionCircleObject()
-	 : RenderedObject(F_CIRCLE_RENDER_WIDTH,F_CIRCLE_RENDER_HEIGHT)
+	 : TelemetryObject(F_CIRCLE_RENDER_WIDTH,F_CIRCLE_RENDER_HEIGHT)
 	 , outlineImg_(F_CIRCLE_RENDER_HEIGHT,F_CIRCLE_RENDER_WIDTH,CV_8UC4,RGBA_COLOR(0,0,0,0))
+	 , tailLength_(0)
 	 , radius_px_(200)
 	 , margin_px_(40)
 	 , center_(radius_px_+margin_px_,radius_px_+margin_px_)
 	 , borderColor_(RGBA_COLOR(2,155,250,255))
 	 , currentDotColor_(RGBA_COLOR(255,255,255,255))
-	{
-	}
-
-	bool
-	FrictionCircleObject::init()
 	{
 		// draw outer circle
 		cv::circle(outlineImg_,center_,radius_px_,borderColor_,8);
@@ -31,30 +27,42 @@ namespace gpo
 			1.0,// font scale
 			borderColor_, // font color
 			2);// thickness
-
-		return true;
 	}
 
 	void
-	FrictionCircleObject::updateTail(
-		const std::vector<gpt::CombinedSample> &samples,
-		size_t currentIndex,
+	FrictionCircleObject::setTailLength(
 		size_t tailLength)
+	{
+		tailLength_ = tailLength;
+	}
+
+	void
+	FrictionCircleObject::render(
+		cv::Mat &intoImg,
+		int originX, int originY,
+		cv::Size renderSize)
 	{
 		outlineImg_.copyTo(outImg_);
 
+		if (sources_.empty())
+		{
+			return;
+		}
+
+		auto telemSrc = sources_.front();
+
 		// draw trail
-		int startIdx = currentIndex - tailLength;
+		int startIdx = telemSrc->seekedIdx() - tailLength_;
 		if (startIdx < 0)
 		{
 			startIdx = 0;
 		}
-		for (size_t i=startIdx; i<=currentIndex && i<samples.size(); i++)
+		for (size_t i=startIdx; i<=telemSrc->seekedIdx() && i<telemSrc->size(); i++)
 		{
-			bool isLast = i == currentIndex;
+			bool isLast = i == telemSrc->seekedIdx();
 			auto color = (isLast ? currentDotColor_ : RGBA_COLOR(247,162,2,255));
 			int dotRadius = (isLast ? 20 : 6);
-			const auto &accl = samples.at(i).accl;
+			const auto &accl = telemSrc->at(i).gpSamp.accl;
 
 			auto drawPoint = cv::Point(
 				(accl.x / -9.8) * radius_px_ + center_.x,
@@ -76,6 +84,9 @@ namespace gpo
 					2);// thickness
 			}
 		}
+
+		// let base class perform its own rendering too
+		TelemetryObject::render(intoImg,originX,originY,renderSize);
 	}
 
 }

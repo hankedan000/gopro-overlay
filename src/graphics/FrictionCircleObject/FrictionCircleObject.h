@@ -3,27 +3,31 @@
 #include <GoProTelem/SampleTypes.h>
 #include <opencv2/opencv.hpp>
 
-#include "RenderedObject.h"
+#include "TelemetryObject.h"
 
 namespace gpo
 {
-	class FrictionCircleObject : public RenderedObject
+	class FrictionCircleObject : public TelemetryObject
 	{
 	public:
 		FrictionCircleObject();
 
-		bool
-		init();
-
 		void
-		updateTail(
-			const std::vector<gpt::CombinedSample> &samples,
-			size_t currentIndex,
+		setTailLength(
 			size_t tailLength);
+
+		virtual
+		void
+		render(
+			cv::Mat &intoImg,
+			int originX, int originY,
+			cv::Size renderSize);
 
 	private:
 		// map outline
 		cv::Mat outlineImg_;
+
+		size_t tailLength_;
 
 		int radius_px_;
 		int margin_px_;
