@@ -12,12 +12,12 @@ namespace gpo
 
 	void
 	TelemetryObject::addSource(
-		const TelemetrySource &tSrc)
+		const TelemetrySourcePtr &tSrc)
 	{
 		sources_.push_back(tSrc);
 	}
 
-	TelemetrySource
+	TelemetrySourcePtr
 	TelemetryObject::getSource(
 		size_t idx) const
 	{

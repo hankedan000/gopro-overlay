@@ -7,6 +7,7 @@
 
 #include <GoProTelem/GoProTelem.h>
 
+#include "DataFactory.h"
 #include "FrictionCircleObject.h"
 #include "LapTimerObject.h"
 #include "TrackMapObject.h"
@@ -117,10 +118,16 @@ int main(int argc, char *argv[])
 	}
 
 	printf("opening %s\n", opts.inputFile.c_str());
+	gpo::Data data;
+	if ( ! gpo::DataFactory::loadData(opts.inputFile,data))
+	{
+		printf("No video data\n");
+		return -1;
+	}
 	cv::VideoCapture vCap(opts.inputFile);
 	if ( ! vCap.isOpened())
 	{
-		printf("No image data\n");
+		printf("No video data\n");
 		return -1;
 	}
 

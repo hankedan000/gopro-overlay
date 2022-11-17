@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "TelemetrySample.h"
 #include "TelemetrySeeker.h"
 
@@ -27,4 +29,6 @@ namespace gpo
 		TelemetrySeekerPtr seeker_;
 
 	};
+
+	using TelemetrySourcePtr = std::shared_ptr<TelemetrySource>;
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <opencv2/opencv.hpp>
 
 #include "TelemetrySample.h"
@@ -30,4 +31,6 @@ namespace gpo
 		TelemetrySeekerPtr seeker_;
 
 	};
+
+	using VideoSourcePtr = std::shared_ptr<VideoSource>;
 }

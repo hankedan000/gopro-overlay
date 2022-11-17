@@ -16,9 +16,9 @@ namespace gpo
 
 		void
 		addSource(
-			const TelemetrySource &tSrc);
+			const TelemetrySourcePtr &tSrc);
 
-		TelemetrySource
+		TelemetrySourcePtr
 		getSource(
 			size_t idx) const;
 
@@ -26,7 +26,7 @@ namespace gpo
 		sourceCount() const;
 
 	protected:
-		std::vector<TelemetrySource> sources_;
+		std::vector<TelemetrySourcePtr> sources_;
 
 	};
 }
