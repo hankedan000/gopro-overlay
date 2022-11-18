@@ -15,3 +15,18 @@ target_link_libraries(gopro_overlay
 	TrackMapObject
 	tqdm
 	VideoObject)
+
+add_executable(topbottom_overlay
+	topbottom_overlay.cpp)
+
+target_link_libraries(topbottom_overlay
+	${OpenCV_LIBS} 
+	DataFactory
+	FrictionCircleObject
+	GoProTelem::GoProTelem
+	LapTimerObject
+	SpeedometerObject
+	TelemetryPrintoutObject
+	TrackMapObject
+	tqdm
+	VideoObject)

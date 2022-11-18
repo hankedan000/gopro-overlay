@@ -12,6 +12,16 @@ namespace gpo
 	}
 
 	void
+	TelemetrySeeker::next()
+	{
+		auto nextIdx = seekedIdx_ + 1;
+		if (nextIdx < size())
+		{
+			seekedIdx_ = nextIdx;
+		}
+	}
+
+	void
 	TelemetrySeeker::seekToIdx(
 		size_t idx)
 	{

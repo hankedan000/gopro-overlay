@@ -13,6 +13,9 @@ namespace gpo
 			TelemetrySamplesPtr samples);
 
 		void
+		next();
+
+		void
 		seekToIdx(
 			size_t idx);
 	

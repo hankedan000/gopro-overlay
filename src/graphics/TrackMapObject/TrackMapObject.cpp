@@ -113,12 +113,21 @@ namespace gpo
 			return;
 		}
 
-		// TODO loop over all source and draw a dot for each
-		auto telemSrc = sources_.front();
+		const size_t NUM_DOT_COLORS = 3;
+		const cv::Scalar DOT_COLORS[] = {
+			RGBA_COLOR(255,0,0,255),
+			RGBA_COLOR(0,255,0,255),
+			RGBA_COLOR(0,0,255,255)
+		};
+		for (unsigned int ss=0; ss<sources_.size(); ss++)
+		{
+			auto telemSrc = sources_.at(ss);
 
-		const auto &currSample = telemSrc->at(telemSrc->seekedIdx()).gpSamp;
-		auto dotPoint = coordToPoint(currSample.gps.coord);
-		cv::circle(outImg_,dotPoint,dotRadius_px_,RGBA_COLOR(255,0,0,255),cv::FILLED);
+			const auto &currSample = telemSrc->at(telemSrc->seekedIdx()).gpSamp;
+			auto dotPoint = coordToPoint(currSample.gps.coord);
+			auto dotColor = DOT_COLORS[ss%NUM_DOT_COLORS];
+			cv::circle(outImg_,dotPoint,dotRadius_px_,dotColor,cv::FILLED);
+		}
 
 		// render result into final image
 		TelemetryObject::render(intoImg,originX,originY,renderSize);
