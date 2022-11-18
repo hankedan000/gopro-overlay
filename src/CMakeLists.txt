@@ -10,6 +10,7 @@ target_link_libraries(gopro_overlay
 	FrictionCircleObject
 	GoProTelem::GoProTelem
 	LapTimerObject
+	SpeedometerObject
 	TelemetryPrintoutObject
 	TrackMapObject
 	tqdm

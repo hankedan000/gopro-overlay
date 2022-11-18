@@ -4,11 +4,10 @@
 #include <unistd.h>// sleep
 #include <time.h>
 
-#include <GoProTelem/GoProTelem.h>
-
 #include "DataFactory.h"
 #include "FrictionCircleObject.h"
 #include "LapTimerObject.h"
+#include "SpeedometerObject.h"
 #include "TelemetryPrintoutObject.h"
 #include "TrackMapObject.h"
 #include "tqdm.h"
@@ -126,14 +125,8 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	gpt::MP4_Source mp4;
-	mp4.open(opts.inputFile);
-	auto telemData = gpt::getCombinedSamples(mp4);
-
 	const auto RENDERED_VIDEO_SIZE = data.videoSrc->frameSize();
 	const auto PREVIEW_VIDEO_SIZE = cv::Size(1280,720);
-	const auto TEXT_FONT = cv::FONT_HERSHEY_DUPLEX;
-	const auto TEXT_COLOR = CV_RGB(0, 255, 0);
 	const double F_CIRCLE_HISTORY_SEC = 1.0;
 	double frameCount = data.videoSrc->frameCount();
 	double fps = data.videoSrc->fps();
@@ -155,11 +148,14 @@ int main(int argc, char *argv[])
 	frictionCircle.addSource(data.telemSrc);
 	gpo::LapTimerObject lapTimer;
 	cv::Size ltRenderSize = lapTimer.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 10.0);
-	lapTimer.init(0,telemData.size()-1);
+	lapTimer.init(0,data.telemSrc->size()-1);
 	lapTimer.addSource(data.telemSrc);
 	gpo::TelemetryPrintoutObject printoutObject;
 	printoutObject.addSource(data.telemSrc);
 	printoutObject.setVisible(opts.renderDebugInfo);
+	gpo::SpeedometerObject speedoObject;
+	speedoObject.addSource(data.telemSrc);
+	cv::Size speedoRenderSize = speedoObject.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 6.0);
 	cv::VideoWriter vWriter(
 		opts.outputFile,
 		cv::VideoWriter::fourcc('M','P','4','V'),
@@ -191,9 +187,6 @@ int main(int argc, char *argv[])
 			bar.progress(curr,total);
 		}
 
-		auto &telemSamp = telemData.at(frameIdx);
-		// printf("%s\n",telemSamp.toString().c_str());
-
 		try
 		{
 			videoObject.render(rFrame,0,0,RENDERED_VIDEO_SIZE);
@@ -204,16 +197,11 @@ int main(int argc, char *argv[])
 			continue;
 		}
 
-		int speedMPH = round(telemSamp.gps.speed2D * 2.23694);// m/s to mph
-		sprintf(tmpStr,"%2dmph",speedMPH);
-		cv::putText(
-			rFrame, // target image
-			tmpStr, // text
-			cv::Point(10, rFrame.rows - 30), // bottom-left position
-			TEXT_FONT,// font face
-			2.0 * 2,// font scale
-			CV_RGB(2,155,250), // font color
-			2 * 2);// thickness
+		speedoObject.render(
+			rFrame,
+			0,
+			rFrame.rows - speedoRenderSize.height,
+			speedoRenderSize);
 
 		frictionCircle.render(
 			rFrame,

@@ -39,18 +39,18 @@ namespace gpo
 		}
 
 		// draw final output to user image
-		cv::Rect rect(cv::Point(originX,originY), imgToRender->size());
-		cv::Mat3b roi = intoImg(rect);
+		cv::Rect roi(cv::Point(originX,originY), imgToRender->size());
+		cv::Mat3b destROI = intoImg(roi);
 		double alpha = 1.0; // alpha in [0,1]
-		for (int r = 0; r < roi.rows; ++r)
+		for (int r = 0; r < destROI.rows; ++r)
 		{
-			for (int c = 0; c < roi.cols; ++c)
+			for (int c = 0; c < destROI.cols; ++c)
 			{
 				auto vf = imgToRender->at<cv::Vec4b>(r,c);
 				// Blending
 				if (vf[3] > 0)
 				{
-					cv::Vec3b &vb = roi(r,c);
+					cv::Vec3b &vb = destROI(r,c);
 					vb[0] = alpha * vf[0] + (1 - alpha) * vb[0];
 					vb[1] = alpha * vf[1] + (1 - alpha) * vb[1];
 					vb[2] = alpha * vf[2] + (1 - alpha) * vb[2];
@@ -60,7 +60,7 @@ namespace gpo
 
 		if (boundingBoxVisible_)
 		{
-			cv::rectangle(intoImg,rect,CV_RGB(255,255,255));
+			cv::rectangle(intoImg,roi,CV_RGB(255,255,255));
 		}
 	}
 
