@@ -27,5 +27,4 @@ if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
 endif()
 
 add_subdirectory(extern)
-add_subdirectory(libraries)
 add_subdirectory(src)
