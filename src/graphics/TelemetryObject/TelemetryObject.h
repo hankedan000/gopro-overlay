@@ -14,6 +14,7 @@ namespace gpo
 			int width,
 			int height);
 
+		virtual
 		void
 		addSource(
 			const TelemetrySourcePtr &tSrc);

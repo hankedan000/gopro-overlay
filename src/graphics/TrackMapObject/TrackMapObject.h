@@ -11,10 +11,20 @@ namespace gpo
 	public:
 		TrackMapObject();
 
+		virtual
+		void
+		addSource(
+			const TelemetrySourcePtr &tSrc);
+
 		bool
 		initMap(
 			int trackStartIdx = 0,
 			int trackEndIdx = -1);
+
+		void
+		setDotColor(
+			size_t sourceIdx,
+			cv::Scalar color);
 
 		virtual
 		void
@@ -45,6 +55,8 @@ namespace gpo
 
 		const double DEFAULT_DOT_RADIUS_RATIO = 5.0 / 300.0;// 'dot radius' over 'rendered trackmap width'
 		int dotRadius_px_;
+
+		std::vector<cv::Scalar> dotColors_;
 
 	};
 }

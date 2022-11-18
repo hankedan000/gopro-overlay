@@ -143,6 +143,8 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	const cv::Scalar TOP_COLOR = RGBA_COLOR(255,0,0,255);
+	const cv::Scalar BOT_COLOR = RGBA_COLOR(0,255,255,255);
 	const auto RENDERED_VIDEO_SIZE = topData.videoSrc->frameSize();
 	const auto PREVIEW_VIDEO_SIZE = cv::Size(1280,720);
 	const double F_CIRCLE_HISTORY_SEC = 1.0;
@@ -165,6 +167,8 @@ int main(int argc, char *argv[])
 	cv::Size tmRenderSize = trackMap.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
 	trackMap.addSource(topData.telemSrc);
 	trackMap.addSource(botData.telemSrc);
+	trackMap.setDotColor(0,TOP_COLOR);
+	trackMap.setDotColor(1,BOT_COLOR);
 	trackMap.initMap();
 
 	gpo::FrictionCircleObject topFC;
@@ -184,9 +188,11 @@ int main(int argc, char *argv[])
 	gpo::TelemetryPrintoutObject topPrintoutObject;
 	topPrintoutObject.addSource(topData.telemSrc);
 	topPrintoutObject.setVisible(opts.renderDebugInfo);
+	topPrintoutObject.setFontColor(TOP_COLOR);
 	gpo::TelemetryPrintoutObject botPrintoutObject;
 	botPrintoutObject.addSource(botData.telemSrc);
 	botPrintoutObject.setVisible(opts.renderDebugInfo);
+	botPrintoutObject.setFontColor(BOT_COLOR);
 
 	gpo::SpeedometerObject topSpeedoObject;
 	cv::Size topSpeedoRenderSize = topSpeedoObject.getScaledSizeFromTargetHeight(topVideoSize.height / 4.0);

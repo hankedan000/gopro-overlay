@@ -5,6 +5,13 @@ namespace gpo
 	const int TRACK_MAP_RENDER_WIDTH = 600;
 	const int TRACK_MAP_RENDER_HEIGHT = 600;
 
+	const size_t NUM_DEFAULT_DOT_COLORS = 3;
+	const cv::Scalar DEFAULT_DOT_COLORS[] = {
+		RGBA_COLOR(255,0,0,255),
+		RGBA_COLOR(0,255,0,255),
+		RGBA_COLOR(0,0,255,255)
+	};
+
 	TrackMapObject::TrackMapObject()
 	 : TelemetryObject(TRACK_MAP_RENDER_WIDTH,TRACK_MAP_RENDER_HEIGHT)
 	 , outlineImg_(TRACK_MAP_RENDER_HEIGHT,TRACK_MAP_RENDER_WIDTH,CV_8UC4,RGBA_COLOR(0,0,0,0))
@@ -14,6 +21,15 @@ namespace gpo
 	 , trackThickness_px_(DEFAULT_TRACK_THICKNESS_RATIO * TRACK_MAP_RENDER_WIDTH)
 	 , dotRadius_px_(DEFAULT_DOT_RADIUS_RATIO * TRACK_MAP_RENDER_WIDTH)
 	{
+	}
+
+	void
+	TrackMapObject::addSource(
+		const TelemetrySourcePtr &tSrc)
+	{
+		TelemetryObject::addSource(tSrc);
+
+		dotColors_.push_back(DEFAULT_DOT_COLORS[(sources_.size()-1)%NUM_DEFAULT_DOT_COLORS]);
 	}
 
 	bool
@@ -101,6 +117,14 @@ namespace gpo
 	}
 
 	void
+	TrackMapObject::setDotColor(
+		size_t sourceIdx,
+		cv::Scalar color)
+	{
+		dotColors_.at(sourceIdx) = color;
+	}
+
+	void
 	TrackMapObject::render(
 		cv::Mat &intoImg,
 		int originX, int originY,
@@ -113,20 +137,13 @@ namespace gpo
 			return;
 		}
 
-		const size_t NUM_DOT_COLORS = 3;
-		const cv::Scalar DOT_COLORS[] = {
-			RGBA_COLOR(255,0,0,255),
-			RGBA_COLOR(0,255,0,255),
-			RGBA_COLOR(0,0,255,255)
-		};
 		for (unsigned int ss=0; ss<sources_.size(); ss++)
 		{
 			auto telemSrc = sources_.at(ss);
 
 			const auto &currSample = telemSrc->at(telemSrc->seekedIdx()).gpSamp;
 			auto dotPoint = coordToPoint(currSample.gps.coord);
-			auto dotColor = DOT_COLORS[ss%NUM_DOT_COLORS];
-			cv::circle(outImg_,dotPoint,dotRadius_px_,dotColor,cv::FILLED);
+			cv::circle(outImg_,dotPoint,dotRadius_px_,dotColors_.at(ss),cv::FILLED);
 		}
 
 		// render result into final image
