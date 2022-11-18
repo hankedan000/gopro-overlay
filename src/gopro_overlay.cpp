@@ -9,6 +9,7 @@
 #include "DataFactory.h"
 #include "FrictionCircleObject.h"
 #include "LapTimerObject.h"
+#include "TelemetryPrintoutObject.h"
 #include "TrackMapObject.h"
 #include "tqdm.h"
 #include "VideoObject.h"
@@ -156,6 +157,9 @@ int main(int argc, char *argv[])
 	cv::Size ltRenderSize = lapTimer.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 10.0);
 	lapTimer.init(0,telemData.size()-1);
 	lapTimer.addSource(data.telemSrc);
+	gpo::TelemetryPrintoutObject printoutObject;
+	printoutObject.addSource(data.telemSrc);
+	printoutObject.setVisible(opts.renderDebugInfo);
 	cv::VideoWriter vWriter(
 		opts.outputFile,
 		cv::VideoWriter::fourcc('M','P','4','V'),
@@ -200,39 +204,6 @@ int main(int argc, char *argv[])
 			continue;
 		}
 
-		if (opts.renderDebugInfo)
-		{
-			sprintf(tmpStr,"frameIdx: %ld",frameIdx);
-			cv::putText(
-				rFrame, //target image
-				tmpStr, //text
-				cv::Point(10, 30), //top-left position
-				TEXT_FONT,// font face
-				1.0,// font scale
-				TEXT_COLOR, //font color
-				1);// thickness
-
-			sprintf(tmpStr,"time_offset: %0.3fs",timeOffset_sec);
-			cv::putText(
-				rFrame, //target image
-				tmpStr, //text
-				cv::Point(10, 30 * 2), //top-left position
-				TEXT_FONT,// font face
-				1.0,// font scale
-				TEXT_COLOR, //font color
-				1);// thickness
-
-			sprintf(tmpStr,"accl: %s",telemSamp.accl.toString().c_str());
-			cv::putText(
-				rFrame, //target image
-				tmpStr, //text
-				cv::Point(10, 30 * 3), //top-left position
-				TEXT_FONT,// font face
-				1.0,// font scale
-				TEXT_COLOR, //font color
-				1);// thickness
-		}
-
 		int speedMPH = round(telemSamp.gps.speed2D * 2.23694);// m/s to mph
 		sprintf(tmpStr,"%2dmph",speedMPH);
 		cv::putText(
@@ -253,6 +224,11 @@ int main(int argc, char *argv[])
 		trackMap.render(rFrame,0,0,tmRenderSize);
 
 		lapTimer.render(rFrame,rFrame.cols/2,0,ltRenderSize);
+
+		if (printoutObject.isVisible())
+		{
+			printoutObject.render(rFrame,0,rFrame.rows/2);
+		}
 
 		// write frame to video file
 		vWriter.write(rFrame);
