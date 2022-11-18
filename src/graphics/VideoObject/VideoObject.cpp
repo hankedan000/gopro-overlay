@@ -17,7 +17,10 @@ namespace gpo
 		cv::Size renderSize)
 	{
 		auto frameIdx = source_->seekedIdx();
-		source_->getFrame(outImg_,frameIdx);
+		if ( ! source_->getFrame(outImg_,frameIdx))
+		{
+			throw std::runtime_error("getFrame() failed on frameIdx " + std::to_string(frameIdx));
+		}
 
 		cv::Mat *imgToRender = &outImg_;
 		if (renderSize.width != getNativeWidth() || renderSize.height != getNativeHeight())

@@ -1,7 +1,6 @@
 #include <csignal>
 #include <getopt.h>
 #include <iostream>
-#include <opencv2/opencv.hpp>
 #include <unistd.h>// sleep
 #include <time.h>
 
@@ -12,6 +11,7 @@
 #include "LapTimerObject.h"
 #include "TrackMapObject.h"
 #include "tqdm.h"
+#include "VideoObject.h"
 
 const char *PROG_NAME = "gopro_overlay";
 bool stop_app = false;
@@ -124,32 +124,26 @@ int main(int argc, char *argv[])
 		printf("No video data\n");
 		return -1;
 	}
-	cv::VideoCapture vCap(opts.inputFile);
-	if ( ! vCap.isOpened())
-	{
-		printf("No video data\n");
-		return -1;
-	}
 
 	gpt::MP4_Source mp4;
 	mp4.open(opts.inputFile);
 	auto telemData = gpt::getCombinedSamples(mp4);
 
-	const auto RENDERED_VIDEO_SIZE = cv::Size(2704,1520);
+	const auto RENDERED_VIDEO_SIZE = data.videoSrc->frameSize();
 	const auto PREVIEW_VIDEO_SIZE = cv::Size(1280,720);
 	const auto TEXT_FONT = cv::FONT_HERSHEY_DUPLEX;
 	const auto TEXT_COLOR = CV_RGB(0, 255, 0);
 	const double F_CIRCLE_HISTORY_SEC = 1.0;
-	double frameCount = vCap.get(cv::CAP_PROP_FRAME_COUNT);
-	double fps = vCap.get(cv::CAP_PROP_FPS);
+	double frameCount = data.videoSrc->frameCount();
+	double fps = data.videoSrc->fps();
 	double frameTime_sec = 1.0 / fps;
 	double frameTime_usec = 1.0e6 / fps;
 	int fcTailLength = F_CIRCLE_HISTORY_SEC * fps;
 	int frameTime_ms = std::round(1.0e3 / fps);
 
-	cv::Mat frame;
-	cv::Mat rFrame;// rendered frame
+	cv::Mat rFrame(RENDERED_VIDEO_SIZE,CV_8UC3);// rendered frame
 	cv::Mat pFrame;// preview frame
+	gpo::VideoObject videoObject(data.videoSrc);
 	gpo::TrackMapObject trackMap;
 	trackMap.addSource(data.telemSrc);
 	trackMap.initMap();
@@ -174,7 +168,6 @@ int main(int argc, char *argv[])
 	uint64_t prevFrameStart_usec = 0;
 	int64_t frameTimeErr_usec = 0;// (+) means measured frame time was longer than targeted FPS
 	size_t initFrameIdx = 0;
-	vCap.set(cv::CAP_PROP_POS_FRAMES, initFrameIdx);
 	for (size_t frameIdx=initFrameIdx; ! stop_app && frameIdx<frameCount; frameIdx++)
 	{
 		data.seeker->seekToIdx(frameIdx);
@@ -197,102 +190,100 @@ int main(int argc, char *argv[])
 		auto &telemSamp = telemData.at(frameIdx);
 		// printf("%s\n",telemSamp.toString().c_str());
 
-		// Capture frame-by-frame
-		if (vCap.read(frame))
+		try
 		{
-			cv::resize(frame,rFrame,RENDERED_VIDEO_SIZE);
+			videoObject.render(rFrame,0,0,RENDERED_VIDEO_SIZE);
+		}
+		catch (const std::runtime_error &re)
+		{
+			printf("caught std::runtime_error on videoObject.render().\n what(): %s\n",re.what());
+			continue;
+		}
 
-			if (opts.renderDebugInfo)
-			{
-				sprintf(tmpStr,"frameIdx: %ld",frameIdx);
-				cv::putText(
-					rFrame, //target image
-					tmpStr, //text
-					cv::Point(10, 30), //top-left position
-					TEXT_FONT,// font face
-					1.0,// font scale
-					TEXT_COLOR, //font color
-					1);// thickness
-
-				sprintf(tmpStr,"time_offset: %0.3fs",timeOffset_sec);
-				cv::putText(
-					rFrame, //target image
-					tmpStr, //text
-					cv::Point(10, 30 * 2), //top-left position
-					TEXT_FONT,// font face
-					1.0,// font scale
-					TEXT_COLOR, //font color
-					1);// thickness
-
-				sprintf(tmpStr,"accl: %s",telemSamp.accl.toString().c_str());
-				cv::putText(
-					rFrame, //target image
-					tmpStr, //text
-					cv::Point(10, 30 * 3), //top-left position
-					TEXT_FONT,// font face
-					1.0,// font scale
-					TEXT_COLOR, //font color
-					1);// thickness
-			}
-
-			int speedMPH = round(telemSamp.gps.speed2D * 2.23694);// m/s to mph
-			sprintf(tmpStr,"%2dmph",speedMPH);
+		if (opts.renderDebugInfo)
+		{
+			sprintf(tmpStr,"frameIdx: %ld",frameIdx);
 			cv::putText(
-				rFrame, // target image
-				tmpStr, // text
-				cv::Point(10, rFrame.rows - 30), // bottom-left position
+				rFrame, //target image
+				tmpStr, //text
+				cv::Point(10, 30), //top-left position
 				TEXT_FONT,// font face
-				2.0 * 2,// font scale
-				CV_RGB(2,155,250), // font color
-				2 * 2);// thickness
+				1.0,// font scale
+				TEXT_COLOR, //font color
+				1);// thickness
 
-			frictionCircle.render(
-				rFrame,
-				rFrame.cols - fcRenderSize.width,
-				rFrame.rows - fcRenderSize.height,
-				fcRenderSize);
+			sprintf(tmpStr,"time_offset: %0.3fs",timeOffset_sec);
+			cv::putText(
+				rFrame, //target image
+				tmpStr, //text
+				cv::Point(10, 30 * 2), //top-left position
+				TEXT_FONT,// font face
+				1.0,// font scale
+				TEXT_COLOR, //font color
+				1);// thickness
 
-			trackMap.render(rFrame,0,0,tmRenderSize);
+			sprintf(tmpStr,"accl: %s",telemSamp.accl.toString().c_str());
+			cv::putText(
+				rFrame, //target image
+				tmpStr, //text
+				cv::Point(10, 30 * 3), //top-left position
+				TEXT_FONT,// font face
+				1.0,// font scale
+				TEXT_COLOR, //font color
+				1);// thickness
+		}
 
-			lapTimer.render(rFrame,rFrame.cols/2,0,ltRenderSize);
+		int speedMPH = round(telemSamp.gps.speed2D * 2.23694);// m/s to mph
+		sprintf(tmpStr,"%2dmph",speedMPH);
+		cv::putText(
+			rFrame, // target image
+			tmpStr, // text
+			cv::Point(10, rFrame.rows - 30), // bottom-left position
+			TEXT_FONT,// font face
+			2.0 * 2,// font scale
+			CV_RGB(2,155,250), // font color
+			2 * 2);// thickness
 
-			// write frame to video file
-			vWriter.write(rFrame);
+		frictionCircle.render(
+			rFrame,
+			rFrame.cols - fcRenderSize.width,
+			rFrame.rows - fcRenderSize.height,
+			fcRenderSize);
 
-			// Display the frame live
-			if (opts.showPreview)
+		trackMap.render(rFrame,0,0,tmRenderSize);
+
+		lapTimer.render(rFrame,rFrame.cols/2,0,ltRenderSize);
+
+		// write frame to video file
+		vWriter.write(rFrame);
+
+		// Display the frame live
+		if (opts.showPreview)
+		{
+			cv::resize(rFrame,pFrame,PREVIEW_VIDEO_SIZE);
+			cv::imshow("Preview", pFrame);
+			double processingTime_usec = getTicks_usec() - frameStart_usec;
+			int waitTime_ms = std::round((frameTime_usec - processingTime_usec) / 1000.0);
+			if (waitTime_ms <= 0)
 			{
-				cv::resize(rFrame,pFrame,PREVIEW_VIDEO_SIZE);
-				cv::imshow("Preview", pFrame);
-				double processingTime_usec = getTicks_usec() - frameStart_usec;
-				int waitTime_ms = std::round((frameTime_usec - processingTime_usec) / 1000.0);
-				if (waitTime_ms <= 0)
+				// processing is so slow that it ate up all out frame time
+				// need to wait at least a little for the OpenCV to do it's drawing
+				waitTime_ms = 1;
+			}
+			if (waitTime_ms > 0)
+			{
+				// Press Q on keyboard to exit
+				auto keycode = cv::waitKey(waitTime_ms);
+				if (keycode & 0xFF == 'q')
 				{
-					// processing is so slow that it ate up all out frame time
-					// need to wait at least a little for the OpenCV to do it's drawing
-					waitTime_ms = 1;
-				}
-				if (waitTime_ms > 0)
-				{
-					// Press Q on keyboard to exit
-					auto keycode = cv::waitKey(waitTime_ms);
-					if (keycode & 0xFF == 'q')
-					{
-						printf("Quit video playback!\n");
-						break;
-					}
+					printf("Quit video playback!\n");
+					break;
 				}
 			}
+		}
 
-			timeOffset_sec += frameTime_sec;
-			prevFrameStart_usec = frameStart_usec;
-		}
-		else
-		{
-			// i'm seeing GoPro videos do this about 1s into the clip.
-			// i wonder if they're encoding some metadata or something.
-			printf("frame %ld is bad?\n", frameIdx);
-		}
+		timeOffset_sec += frameTime_sec;
+		prevFrameStart_usec = frameStart_usec;
 	}
 
 	if ( ! opts.showPreview)

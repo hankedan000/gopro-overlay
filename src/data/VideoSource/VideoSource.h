@@ -24,6 +24,9 @@ namespace gpo
 		cv::Size
 		frameSize() const;
 
+		double
+		fps();
+
 		bool
 		getFrame(
 			cv::Mat &outImg,
@@ -39,6 +42,7 @@ namespace gpo
 		cv::VideoCapture vCapture_;
 		TelemetrySeekerPtr seeker_;
 		cv::Size frameSize_;
+		size_t prevFrameIdxRead_;
 
 	};
 

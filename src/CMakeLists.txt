@@ -11,4 +11,5 @@ target_link_libraries(gopro_overlay
 	GoProTelem::GoProTelem
 	LapTimerObject
 	TrackMapObject
-	tqdm)
+	tqdm
+	VideoObject)

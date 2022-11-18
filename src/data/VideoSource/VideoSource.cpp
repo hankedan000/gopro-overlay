@@ -8,6 +8,7 @@ namespace gpo
 	 : vCapture_(capture)
 	 , seeker_(seeker)
 	 , frameSize_()
+	 , prevFrameIdxRead_(-1)
 	{
 		frameSize_.width = vCapture_.get(cv::CAP_PROP_FRAME_WIDTH);
 		frameSize_.height = vCapture_.get(cv::CAP_PROP_FRAME_HEIGHT);
@@ -31,12 +32,23 @@ namespace gpo
 		return frameSize_;
 	}
 
+	double
+	VideoSource::fps()
+	{
+		return vCapture_.get(cv::CAP_PROP_FPS);
+	}
+
 	bool
 	VideoSource::getFrame(
 		cv::Mat &outImg,
 		size_t idx)
 	{
-		vCapture_.set(cv::CAP_PROP_POS_FRAMES, idx);
+		// seeking can be constly, so avoid it if reading consecutive frames
+		if (idx != (prevFrameIdxRead_ + 1))
+		{
+			vCapture_.set(cv::CAP_PROP_POS_FRAMES, idx);
+		}
+		prevFrameIdxRead_ = idx;
 		return vCapture_.read(outImg);
 	}
 
