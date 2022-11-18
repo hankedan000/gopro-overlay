@@ -26,5 +26,13 @@ if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
 	endif()
 endif()
 
+# use cppunit for testing
+find_package(cppunit)
+# enable testing if root project is us
+if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND CPPUNIT_FOUND)
+	include(CTest)
+	set(BUILD_TESTING "ON")
+endif()
+
 add_subdirectory(extern)
 add_subdirectory(src)
