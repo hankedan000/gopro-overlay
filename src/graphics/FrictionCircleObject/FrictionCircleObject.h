@@ -1,8 +1,5 @@
 #pragma once
 
-#include <GoProTelem/SampleTypes.h>
-#include <opencv2/opencv.hpp>
-
 #include "TelemetryObject.h"
 
 namespace gpo

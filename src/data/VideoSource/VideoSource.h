@@ -15,6 +15,15 @@ namespace gpo
 			const cv::VideoCapture &capture,
 			TelemetrySeekerPtr seeker);
 
+		int
+		frameWidth() const;
+
+		int
+		frameHeight() const;
+
+		cv::Size
+		frameSize() const;
+
 		bool
 		getFrame(
 			cv::Mat &outImg,
@@ -29,6 +38,7 @@ namespace gpo
 	private:
 		cv::VideoCapture vCapture_;
 		TelemetrySeekerPtr seeker_;
+		cv::Size frameSize_;
 
 	};
 
