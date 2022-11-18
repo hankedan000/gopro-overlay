@@ -6,6 +6,7 @@ namespace gpo
 		const VideoSourcePtr &vSrc)
 	 : RenderedObject(0,0)
 	 , source_(vSrc)
+	 , prevRenderedFrameIdx_(-1)
 	{
 		outImg_.create(source_->frameSize(),CV_8UC3);
 	}
@@ -17,7 +18,8 @@ namespace gpo
 		cv::Size renderSize)
 	{
 		auto frameIdx = source_->seekedIdx();
-		if ( ! source_->getFrame(outImg_,frameIdx))
+		bool needNewFrame = frameIdx != prevRenderedFrameIdx_;
+		if (needNewFrame && ! source_->getFrame(outImg_,frameIdx))
 		{
 			throw std::runtime_error("getFrame() failed on frameIdx " + std::to_string(frameIdx));
 		}
@@ -38,5 +40,6 @@ namespace gpo
 		{
 			cv::rectangle(intoImg,roi,CV_RGB(255,255,255));
 		}
+		prevRenderedFrameIdx_ = frameIdx;
 	}
 }

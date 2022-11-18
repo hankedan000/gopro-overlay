@@ -22,6 +22,7 @@ namespace gpo
 		VideoSourcePtr source_;
 
 		cv::Mat resizedFrame_;
+		size_t prevRenderedFrameIdx_;
 
 	};
 }
