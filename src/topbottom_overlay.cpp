@@ -9,6 +9,7 @@
 #include "LapTimerObject.h"
 #include "SpeedometerObject.h"
 #include "TelemetryPrintoutObject.h"
+#include "TextObject.h"
 #include "TrackMapObject.h"
 #include "tqdm.h"
 #include "VideoObject.h"
@@ -180,10 +181,11 @@ int main(int argc, char *argv[])
 	botFC.setTailLength(fcTailLength);
 	botFC.addSource(botData.telemSrc);
 
-	gpo::LapTimerObject lapTimer;
-	cv::Size ltRenderSize = lapTimer.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 10.0);
-	lapTimer.init(0,topData.telemSrc->size()-1);
-	lapTimer.addSource(topData.telemSrc);
+	gpo::LapTimerObject topLapTimer;
+	cv::Size ltRenderSize = topLapTimer.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 10.0);
+	topLapTimer.addSource(topData.telemSrc);
+	gpo::LapTimerObject botLapTimer;
+	botLapTimer.addSource(botData.telemSrc);
 
 	gpo::TelemetryPrintoutObject topPrintoutObject;
 	topPrintoutObject.addSource(topData.telemSrc);
@@ -201,6 +203,17 @@ int main(int argc, char *argv[])
 	cv::Size botSpeedoRenderSize = botSpeedoObject.getScaledSizeFromTargetHeight(botVideoSize.height / 4.0);
 	botSpeedoObject.addSource(botData.telemSrc);
 
+	gpo::TextObject topTextObject;
+	topTextObject.setText("Run A");
+	topTextObject.setColor(TOP_COLOR);
+	topTextObject.setScale(2);
+	topTextObject.setThickness(2);
+	gpo::TextObject botTextObject;
+	botTextObject.setText("Run B");
+	botTextObject.setColor(BOT_COLOR);
+	botTextObject.setScale(2);
+	botTextObject.setThickness(2);
+
 	cv::VideoWriter vWriter(
 		opts.outputFile,
 		cv::VideoWriter::fourcc('M','P','4','V'),
@@ -212,15 +225,18 @@ int main(int argc, char *argv[])
 	tqdm bar;// for render progress
 	uint64_t prevFrameStart_usec = 0;
 	int64_t frameTimeErr_usec = 0;// (+) means measured frame time was longer than targeted FPS
-	size_t topStartIdx = 0;// 194; // GH10160
-	size_t botStartIdx = 0;// 1004;// GH10163
+	const size_t startDelay = 60;
+	size_t topStartIdx = 0;// 1736;// 20220918_GCAC/GH010137.MP4
+	size_t botStartIdx = 0;// 1481;// 20220918_GCAC/GH010143.MP4
 	size_t topFinishIdx = topData.videoSrc->frameCount();
 	size_t botFinishIdx = botData.videoSrc->frameCount();
 	size_t topFramesToRender = topFinishIdx - topStartIdx;
 	size_t botFramesToRender = botFinishIdx - botStartIdx;
 	size_t netFramesToRender = std::max(topFramesToRender,botFramesToRender);
-	topData.seeker->seekToIdx(topStartIdx);
-	botData.seeker->seekToIdx(botStartIdx);
+	topData.seeker->seekToIdx(topStartIdx - startDelay);
+	botData.seeker->seekToIdx(botStartIdx - startDelay);
+	topLapTimer.init(topStartIdx,topData.telemSrc->size()-1);
+	botLapTimer.init(botStartIdx,botData.telemSrc->size()-1);
 	for (size_t ff=0; ! stop_app && ff<netFramesToRender; ff++)
 	{
 		rFrame.setTo(cv::Scalar(0,0,0));// clear frame
@@ -289,9 +305,25 @@ int main(int argc, char *argv[])
 			RENDERED_VIDEO_SIZE.height-botVideoSize.height,
 			botFC_RenderSize);
 
+		topTextObject.render(
+			rFrame,
+			rFrame.cols - topVideoSize.width,
+			50);
+		botTextObject.render(
+			rFrame,
+			rFrame.cols - botVideoSize.width,
+			topVideoSize.height + 50);
+
 		trackMap.render(rFrame,0,0,tmRenderSize);
 
-		lapTimer.render(rFrame,rFrame.cols/2,0,ltRenderSize);
+		topLapTimer.render(
+			rFrame,
+			0,rFrame.rows / 2 - ltRenderSize.height,
+			ltRenderSize);
+		botLapTimer.render(
+			rFrame,
+			0,rFrame.rows / 2,
+			ltRenderSize);
 
 		if (topPrintoutObject.isVisible())
 		{

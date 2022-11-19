@@ -28,6 +28,7 @@ target_link_libraries(topbottom_overlay
 	LapTimerObject
 	SpeedometerObject
 	TelemetryPrintoutObject
+	TextObject
 	TrackMapObject
 	tqdm
 	VideoObject)
