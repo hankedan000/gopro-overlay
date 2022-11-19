@@ -220,8 +220,6 @@ int main(int argc, char *argv[])
 		fps,
 		RENDERED_VIDEO_SIZE,
 		true);
-	char tmpStr[1024];
-	double timeOffset_sec = 0.0;
 	tqdm bar;// for render progress
 	uint64_t prevFrameStart_usec = 0;
 	int64_t frameTimeErr_usec = 0;// (+) means measured frame time was longer than targeted FPS
@@ -371,7 +369,6 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		timeOffset_sec += frameTime_sec;
 		prevFrameStart_usec = frameStart_usec;
 	}
 
