@@ -1,6 +1,8 @@
 # Class Diagrams
 ## data Classes
-```plantuml
+<!--
+@startuml plantuml_imgs/dataClasses
+
 class TelemetrySample {
 	+gpt::CombinedSample gpSamp
 	+size_t lap
@@ -41,10 +43,14 @@ TelemetrySample -- TelemetrySeeker
 TelemetrySeeker -- TelemetrySource
 TelemetrySeeker -- VideoSource
 
-```
+@enduml
+-->
+![](plantuml_imgs/dataClasses.png)
 
 ## graphics Classes
-```plantuml
+<!--
+@startuml plantuml_imgs/graphicsClasses
+
 class RenderedObject {
 	+cv::Mat getImage()
 	+void render(cv::Mat img, int x, int y, sc::Size size)
@@ -124,10 +130,14 @@ TelemetryObject <|-- TelemetryPrintoutObject
 
 TelemetrySource -- TelemetryObject
 VideoSource -- VideoObject
-```
+
+@enduml
+-->
+![](plantuml_imgs/graphicsClasses.png)
 
 ## TBD Classes
-```plantuml
+<!--
+@startuml plantuml_imgs/tbdClasses
 
 class Track {
 	+string name
@@ -144,4 +154,6 @@ class Session {
 	+loadVideo()
 }
 
-```
+@enduml
+-->
+![](plantuml_imgs/tbdClasses.png)
