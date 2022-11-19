@@ -225,13 +225,16 @@ int main(int argc, char *argv[])
 	tqdm bar;// for render progress
 	uint64_t prevFrameStart_usec = 0;
 	int64_t frameTimeErr_usec = 0;// (+) means measured frame time was longer than targeted FPS
-	const size_t startDelay = 60;
+	size_t startDelay = 60;// # of frames to begin render before the start line
 	size_t topStartIdx = 0;// 1736;// 20220918_GCAC/GH010137.MP4
 	size_t botStartIdx = 0;// 1481;// 20220918_GCAC/GH010143.MP4
+	// make sure startDelay doesn't cause negative start
+	startDelay = std::min(startDelay,topStartIdx);
+	startDelay = std::min(startDelay,botStartIdx);
 	size_t topFinishIdx = topData.videoSrc->frameCount();
 	size_t botFinishIdx = botData.videoSrc->frameCount();
-	size_t topFramesToRender = topFinishIdx - topStartIdx;
-	size_t botFramesToRender = botFinishIdx - botStartIdx;
+	size_t topFramesToRender = topFinishIdx - topStartIdx + startDelay;
+	size_t botFramesToRender = botFinishIdx - botStartIdx + startDelay;
 	size_t netFramesToRender = std::max(topFramesToRender,botFramesToRender);
 	topData.seeker->seekToIdx(topStartIdx - startDelay);
 	botData.seeker->seekToIdx(botStartIdx - startDelay);
