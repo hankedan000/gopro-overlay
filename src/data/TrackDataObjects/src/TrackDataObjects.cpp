@@ -195,4 +195,18 @@ namespace gpo
 		return std::tuple(closestDist!=-1,closestPoint,closestIdx);
 	}
 
+	Track
+	makeTrackFromTelemetry(
+		TelemetrySourcePtr tSrc)
+	{
+		std::vector<cv::Vec2d> path;
+		path.resize(tSrc->size());
+		for (size_t i=0; i<path.size(); i++)
+		{
+			path[i][0] = tSrc->at(i).gpSamp.gps.coord.lat;
+			path[i][1] = tSrc->at(i).gpSamp.gps.coord.lon;
+		}
+		return Track(path);
+	}
+
 }

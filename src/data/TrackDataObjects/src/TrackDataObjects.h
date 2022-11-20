@@ -4,6 +4,8 @@
 #include <tuple>
 #include <vector>
 
+#include "TelemetrySource.h"
+
 namespace gpo
 {
 
@@ -113,8 +115,13 @@ namespace gpo
 		DetectionGate start_;
 		DetectionGate finish_;
 		std::vector<Sector> sectors_;
+		// list of lat/lon points making up the track's path
 		std::vector<cv::Vec2d> path_;
 
 	};
+
+	Track
+	makeTrackFromTelemetry(
+		TelemetrySourcePtr tSrc);
 
 }
