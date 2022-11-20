@@ -31,7 +31,6 @@ find_package(cppunit)
 # enable testing if root project is us
 if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND CPPUNIT_FOUND)
 	include(CTest)
-	set(BUILD_TESTING "ON")
 endif()
 
 add_subdirectory(extern)
