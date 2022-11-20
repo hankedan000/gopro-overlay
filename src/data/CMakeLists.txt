@@ -1,6 +1,0 @@
-add_subdirectory(TelemetrySample)
-add_subdirectory(TelemetrySeeker)
-add_subdirectory(TelemetrySource)
-add_subdirectory(VideoSource)
-add_subdirectory(TrackDataObjects)
-add_subdirectory(DataFactory)

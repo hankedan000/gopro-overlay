@@ -35,3 +35,7 @@ endif()
 
 add_subdirectory(extern)
 add_subdirectory(src)
+add_subdirectory(apps)
+if (BUILD_TESTING)
+	add_subdirectory(test)
+endif ()
