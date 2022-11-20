@@ -4,8 +4,6 @@
 
 namespace utils
 {
-	
-
 	// Given three colinear points p, q, r, the function checks if 
 	// point q lies on line segment 'pr' 
 	bool

@@ -47,6 +47,59 @@ TelemetrySeeker -- VideoSource
 -->
 ![](plantuml_imgs/dataClasses.png)
 
+<!--
+@startuml plantuml_imgs/dataClasses2
+
+class DetectionGate {
+	+DetectionGate(cv::Vec2d a, cv::Vec2d b)
+	+bool detect(cv::Vec2d c1, cv::Vec2d c2)
+
+	-cv::Vec2d a;
+	-cv::Vec2d b;
+}
+
+class Sector {
+	+std::string name()
+	+DetectionGate entry()
+	+DetectionGate exit()
+
+	-std::string name_
+	-DetectionGate entry_
+	-DetectionGate exit_
+}
+
+class Track {
+	+void setStart(DetectionGate start)
+	+DetectionGate getStart()
+	+void setFinish(DetectionGate finish)
+	+DetectionGate getFinish()
+
+	+void addSector(Sector s)
+	+void removeSector(Sector *s)
+	+void removeSector(size_t idx)
+	+Sector *getSector(size_t idx)
+	+size_t sectorCount()
+
+	+size_t pathCount()
+	+cv::Vec2d getPathPoint(size_t idx)
+	+DetectionGate getNearestDetectionGate(cv::Vec2d p, double width_meters)
+	+cv::Vec2d findClosestPoint(cv::Vec2d p)
+	+std::pair<cv::Vec2d, size_t> findClosestPointWithIdx(cv::Vec2d p)
+
+	-DetectionGate start_
+	-DetectionGate finish_
+	-std::vector<Sector> sectors_
+	-std::vector<cv::Vec2d> path_
+}
+
+DetectionGate -- Sector
+DetectionGate -- Track
+Sector -- Track
+
+@enduml
+-->
+![](plantuml_imgs/dataClasses2.png)
+
 ## graphics Classes
 <!--
 @startuml plantuml_imgs/graphicsClasses

@@ -1,3 +1,4 @@
+add_subdirectory(TrackDataObjects)
 add_subdirectory(TelemetrySample)
 add_subdirectory(TelemetrySeeker)
 add_subdirectory(TelemetrySource)
