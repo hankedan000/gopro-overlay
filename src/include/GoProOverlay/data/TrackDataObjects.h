@@ -55,6 +55,8 @@ namespace gpo
 	class Track
 	{
 	public:
+		Track();
+
 		Track(
 			const std::vector<cv::Vec2d> &path);
 

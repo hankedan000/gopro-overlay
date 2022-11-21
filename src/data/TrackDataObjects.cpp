@@ -57,6 +57,11 @@ namespace gpo
 		return exit_;
 	}
 
+	Track::Track()
+	 : Track(std::vector<cv::Vec2d>())
+	{
+	}
+
 	Track::Track(
 		const std::vector<cv::Vec2d> &path)
 	 : start_()
