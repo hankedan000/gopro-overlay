@@ -84,6 +84,124 @@ TrackDataObjectsTest::closestPoint()
 	CPPUNIT_ASSERT_EQUAL(5UL, std::get<2>(findWithIdxRes));
 }
 
+void
+TrackDataObjectsTest::detectionGate()
+{
+	// horizontal path
+	{
+		/**
+		 *   *(0,0)  *(2,0)  *(4,0)
+		 */
+		std::vector<cv::Vec2d> path;
+		path.resize(3);
+		path[0] = {0,0};
+		path[1] = {2,0};
+		path[2] = {4,0};
+
+		gpo::Track track(path);
+		CPPUNIT_ASSERT_EQUAL(3UL, track.pathCount());
+
+		// -----------------------
+		// test Track::getDetectionGate()
+
+		const double WIDTH_METERS = 1.0;
+		const double HALF_WIDTH_DECDEG = gpo::m2dd(WIDTH_METERS/2.0);
+		auto gate = track.getDetectionGate(1,WIDTH_METERS);// around point (2,0)
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(2.0, gate.a()[0], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(2.0, gate.b()[0], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(+HALF_WIDTH_DECDEG, gate.a()[1], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(-HALF_WIDTH_DECDEG, gate.b()[1], 0.000001);
+
+		// test case at beginning of path
+		gate = track.getDetectionGate(0,WIDTH_METERS);// around point (0,0)
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gate.a()[0], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gate.b()[0], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(+HALF_WIDTH_DECDEG, gate.a()[1], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(-HALF_WIDTH_DECDEG, gate.b()[1], 0.000001);
+
+		// test case at end of path
+		gate = track.getDetectionGate(2,WIDTH_METERS);// around point (4,0)
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(4.0, gate.a()[0], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(4.0, gate.b()[0], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(+HALF_WIDTH_DECDEG, gate.a()[1], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(-HALF_WIDTH_DECDEG, gate.b()[1], 0.000001);
+	}
+
+	// vertical path
+	{
+		/**
+		 *   *(0,4)
+		 * 
+		 *   *(0,2)
+		 * 
+		 *   *(0,0)
+		 */
+		std::vector<cv::Vec2d> path;
+		path.resize(3);
+		path[0] = {0,0};
+		path[1] = {0,2};
+		path[2] = {0,4};
+
+		gpo::Track track(path);
+		CPPUNIT_ASSERT_EQUAL(3UL, track.pathCount());
+
+		// -----------------------
+		// test Track::getDetectionGate()
+
+		const double WIDTH_METERS = 1.0;
+		const double HALF_WIDTH_DECDEG = gpo::m2dd(WIDTH_METERS/2.0);
+		auto gate = track.getDetectionGate(1,WIDTH_METERS);// around point (0,2)
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(2.0, gate.a()[1], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(2.0, gate.b()[1], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(-HALF_WIDTH_DECDEG, gate.a()[0], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(+HALF_WIDTH_DECDEG, gate.b()[0], 0.000001);
+
+		// test case at beginning of path
+		gate = track.getDetectionGate(0,WIDTH_METERS);// around point (0,0)
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gate.a()[1], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gate.b()[1], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(-HALF_WIDTH_DECDEG, gate.a()[0], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(+HALF_WIDTH_DECDEG, gate.b()[0], 0.000001);
+
+		// test case at end of path
+		gate = track.getDetectionGate(2,WIDTH_METERS);// around point (0,4)
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(4.0, gate.a()[1], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(4.0, gate.b()[1], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(-HALF_WIDTH_DECDEG, gate.a()[0], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(+HALF_WIDTH_DECDEG, gate.b()[0], 0.000001);
+	}
+
+	// diagonal path
+	{
+		/**
+		 *               *(5,4)
+		 * 
+		 *         *(3,2)
+		 * 
+		 *   *(0,0)
+		 */
+		std::vector<cv::Vec2d> path;
+		path.resize(3);
+		path[0] = {0,0};
+		path[1] = {3,2};
+		path[2] = {5,4};
+
+		gpo::Track track(path);
+		CPPUNIT_ASSERT_EQUAL(3UL, track.pathCount());
+
+		// -----------------------
+		// test Track::getDetectionGate()
+
+		const double WIDTH_METERS = 1.0;
+		const double HALF_WIDTH_DECDEG = gpo::m2dd(WIDTH_METERS/2.0);
+		auto gate = track.getDetectionGate(1,WIDTH_METERS);// around point (0,2)
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(2.000003, gate.a()[1], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(1.999997, gate.b()[1], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(3.000002, gate.a()[0], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(2.999997, gate.b()[0], 0.000001);
+	}
+}
+
 int main()
 {
 	CppUnit::TextUi::TestRunner runner;

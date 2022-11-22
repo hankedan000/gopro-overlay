@@ -29,6 +29,18 @@ namespace gpo
 		return utils::doIntersect(a_,b_,c1,c2);
 	}
 
+	const cv::Vec2d &
+	DetectionGate::a() const
+	{
+		return a_;
+	}
+
+	const cv::Vec2d &
+	DetectionGate::b() const
+	{
+		return b_;
+	}
+
 	Sector::Sector(
 		const std::string &name,
 		const DetectionGate &entry,
@@ -164,11 +176,69 @@ namespace gpo
 	}
 
 	DetectionGate
+	Track::getDetectionGate(
+		size_t pathIdx,
+		double width_meters)
+	{
+		// find two points before and after the pathIdx point.
+		// we'll use the points to form a line and then find its normal.
+		// the normal will be used to base the DetectionGate from.
+		cv::Vec2d pA,pB;
+		pA = pB = path_.at(pathIdx);
+		if (pathIdx != 0)
+		{
+			pA = path_.at(pathIdx-1);
+		}
+		if ((pathIdx+1) < path_.size())
+		{
+			pB = path_.at(pathIdx+1);
+		}
+
+		double halfGateWidth_dd = m2dd(width_meters) / 2.0;
+		double a,b;
+		if (pA[0] == pB[0])
+		{
+			// latitudes equal; path is a horizontal line at pathIdx
+			a = halfGateWidth_dd;
+			b = 0.0;
+		}
+		else if (pA[1] == pB[1])
+		{
+			// longitudes equal; path is a vertical line at pathIdx
+			a = 0.0;halfGateWidth_dd;
+			b = halfGateWidth_dd;
+		}
+		else
+		{
+			double pathSlope = (pB[0]-pA[0])/(pB[1]-pA[1]);// slope in lat/lon
+			double normSlope = -1.0 / pathSlope;// if slope of line = m; its normal's slope = -1 / m
+
+			// a^2 + b^2 = c^2
+			// normSlope = a / b
+			b = sqrt(
+				(halfGateWidth_dd * halfGateWidth_dd) /
+				(normSlope * normSlope + 1));
+			a = normSlope * b;
+		}
+
+		auto gateCenter = path_.at(pathIdx);
+		auto gateHalf = cv::Vec2d(-a,b);
+		return DetectionGate(
+			gateCenter+gateHalf,
+			gateCenter-gateHalf);
+	}
+
+	DetectionGate
 	Track::getNearestDetectionGate(
 		cv::Vec2d p,
 		double width_meters)
 	{
-		throw std::runtime_error(std::string(__func__) + " is unimplemented");
+		auto findRes = findClosestPointWithIdx(p);
+		if (std::get<0>(findRes))
+		{
+			return getDetectionGate(std::get<2>(findRes),width_meters);
+		}
+		throw std::runtime_error("nearest detection gate not found!");
 	}
 
 	std::pair<bool,cv::Vec2d>

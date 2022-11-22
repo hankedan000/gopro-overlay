@@ -23,6 +23,12 @@ namespace gpo
 			cv::Vec2d c1,
 			cv::Vec2d c2);
 
+		const cv::Vec2d &
+		a() const;
+
+		const cv::Vec2d &
+		b() const;
+
 	private:
 		cv::Vec2d a_;
 		cv::Vec2d b_;
@@ -51,6 +57,25 @@ namespace gpo
 		DetectionGate exit_;
 
 	};
+
+	// conversion factor from decimal degrees to meter (on earth)
+	const double DECDEG_PER_METER = 1.0 / 111000.0;
+
+	inline
+	double
+	dd2m(
+		double dd)
+	{
+		return dd / DECDEG_PER_METER;
+	}
+
+	inline
+	double
+	m2dd(
+		double m)
+	{
+		return m * DECDEG_PER_METER;
+	}
 
 	class Track
 	{
@@ -99,6 +124,11 @@ namespace gpo
 		cv::Vec2d
 		getPathPoint(
 			size_t idx);
+
+		DetectionGate
+		getDetectionGate(
+			size_t pathIdx,
+			double width_meters);
 
 		DetectionGate
 		getNearestDetectionGate(
