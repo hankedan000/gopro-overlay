@@ -170,7 +170,7 @@ namespace gpo
 
 	cv::Vec2d
 	Track::getPathPoint(
-		size_t idx)
+		size_t idx) const
 	{
 		return path_.at(idx);
 	}
@@ -178,7 +178,7 @@ namespace gpo
 	DetectionGate
 	Track::getDetectionGate(
 		size_t pathIdx,
-		double width_meters)
+		double width_meters) const
 	{
 		// find two points before and after the pathIdx point.
 		// we'll use the points to form a line and then find its normal.
@@ -231,7 +231,7 @@ namespace gpo
 	DetectionGate
 	Track::getNearestDetectionGate(
 		cv::Vec2d p,
-		double width_meters)
+		double width_meters) const
 	{
 		auto findRes = findClosestPointWithIdx(p);
 		if (std::get<0>(findRes))
@@ -243,7 +243,7 @@ namespace gpo
 
 	std::pair<bool,cv::Vec2d>
 	Track::findClosestPoint(
-		cv::Vec2d p)
+		cv::Vec2d p) const
 	{
 		auto res = findClosestPointWithIdx(p);
 		return std::pair(std::get<0>(res),std::get<1>(res));
@@ -251,7 +251,7 @@ namespace gpo
 
 	std::tuple<bool,cv::Vec2d, size_t>
 	Track::findClosestPointWithIdx(
-		cv::Vec2d p)
+		cv::Vec2d p) const
 	{
 		double closestDist = -1;
 		cv::Vec2d closestPoint;

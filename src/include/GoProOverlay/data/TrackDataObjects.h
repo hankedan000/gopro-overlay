@@ -123,25 +123,25 @@ namespace gpo
 
 		cv::Vec2d
 		getPathPoint(
-			size_t idx);
+			size_t idx) const;
 
 		DetectionGate
 		getDetectionGate(
 			size_t pathIdx,
-			double width_meters);
+			double width_meters) const;
 
 		DetectionGate
 		getNearestDetectionGate(
 			cv::Vec2d p,
-			double width_meters);
+			double width_meters) const;
 
 		std::pair<bool,cv::Vec2d>
 		findClosestPoint(
-			cv::Vec2d p);
+			cv::Vec2d p) const;
 
 		std::tuple<bool,cv::Vec2d, size_t>
 		findClosestPointWithIdx(
-			cv::Vec2d p);
+			cv::Vec2d p) const;
 
 	private:
 		DetectionGate start_;
