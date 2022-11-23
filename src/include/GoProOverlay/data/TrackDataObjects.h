@@ -178,8 +178,8 @@ struct convert<cv::Vec2d>
 		const cv::Vec2d& rhs)
 	{
 		Node node;
-		node["_0"] = rhs[0];
-		node["_1"] = rhs[1];
+		node.push_back(rhs[0]);
+		node.push_back(rhs[1]);
 
 		return node;
 	}
@@ -189,8 +189,12 @@ struct convert<cv::Vec2d>
 		const Node& node,
 		cv::Vec2d& rhs)
 	{
-		node["_0"].as<double>(rhs[0]);
-		node["_1"].as<double>(rhs[1]);
+		if( ! node.IsSequence() || node.size() != 2) {
+			return false;
+		}
+
+		node[0].as<double>(rhs[0]);
+		node[1].as<double>(rhs[1]);
 
 		return true;
 	}
@@ -269,11 +273,8 @@ struct convert<gpo::Track>
 		const Node& node,
 		gpo::Track& rhs)
 	{
-		gpo::DetectionGate gate;
-		YAML_TO_FIELD(node,"start",gate);
-		rhs.setStart(gate);
-		YAML_TO_FIELD(node,"finish",gate);
-		rhs.setFinish(gate);
+		rhs.setStart(node["start"].as<gpo::DetectionGate>());
+		rhs.setFinish(node["finish"].as<gpo::DetectionGate>());
 
 		return true;
 	}
