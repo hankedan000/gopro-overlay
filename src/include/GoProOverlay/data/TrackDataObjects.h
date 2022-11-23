@@ -3,7 +3,9 @@
 #include <opencv2/opencv.hpp>
 #include <tuple>
 #include <vector>
+#include <yaml-cpp/yaml.h>
 
+#include "GoProOverlay/utils/YAML_Utils.h"
 #include "TelemetrySource.h"
 
 namespace gpo
@@ -28,6 +30,12 @@ namespace gpo
 
 		const cv::Vec2d &
 		b() const;
+
+		cv::Vec2d &
+		a();
+
+		cv::Vec2d &
+		b();
 
 	private:
 		cv::Vec2d a_;
@@ -157,3 +165,118 @@ namespace gpo
 		TelemetrySourcePtr tSrc);
 
 }
+
+// overrides for yaml config encode/decode
+namespace YAML
+{
+
+template<>
+struct convert<cv::Vec2d>
+{
+	static Node
+	encode(
+		const cv::Vec2d& rhs)
+	{
+		Node node;
+		node["_0"] = rhs[0];
+		node["_1"] = rhs[1];
+
+		return node;
+	}
+
+	static bool
+	decode(
+		const Node& node,
+		cv::Vec2d& rhs)
+	{
+		node["_0"].as<double>(rhs[0]);
+		node["_1"].as<double>(rhs[1]);
+
+		return true;
+	}
+};
+
+template<>
+struct convert<gpo::DetectionGate>
+{
+	static Node
+	encode(
+		const gpo::DetectionGate& rhs)
+	{
+		Node node;
+		node["a"] = rhs.a();
+		node["b"] = rhs.b();
+
+		return node;
+	}
+
+	static bool
+	decode(
+		const Node& node,
+		gpo::DetectionGate& rhs)
+	{
+		node["a"].as<cv::Vec2d>(rhs.a());
+		node["b"].as<cv::Vec2d>(rhs.b());
+
+		return true;
+	}
+};
+
+template<>
+struct convert<gpo::Sector>
+{
+	static Node
+	encode(
+		const gpo::Sector& rhs)
+	{
+		Node node;
+		node["name"] = rhs.name();
+		node["entry"] = rhs.entry();
+		node["exit"] = rhs.exit();
+
+		return node;
+	}
+
+	static bool
+	decode(
+		const Node& node,
+		gpo::Sector& rhs)
+	{
+		node["name"].as<std::string>(rhs.name());
+		node["entry"].as<gpo::DetectionGate>(rhs.entry());
+		node["exit"].as<gpo::DetectionGate>(rhs.exit());
+
+		return true;
+	}
+};
+
+template<>
+struct convert<gpo::Track>
+{
+	static Node
+	encode(
+		const gpo::Track& rhs)
+	{
+		Node node;
+		node["start"] = rhs.getStart();
+		node["finish"] = rhs.getFinish();
+
+		return node;
+	}
+
+	static bool
+	decode(
+		const Node& node,
+		gpo::Track& rhs)
+	{
+		gpo::DetectionGate gate;
+		YAML_TO_FIELD(node,"start",gate);
+		rhs.setStart(gate);
+		YAML_TO_FIELD(node,"finish",gate);
+		rhs.setFinish(gate);
+
+		return true;
+	}
+};
+
+}// namespace YAML

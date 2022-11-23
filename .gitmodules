@@ -4,3 +4,6 @@
 [submodule "extern/cpptqdm"]
 	path = extern/cpptqdm
 	url = https://github.com/aminnj/cpptqdm.git
+[submodule "extern/yaml-cpp"]
+	path = extern/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp.git

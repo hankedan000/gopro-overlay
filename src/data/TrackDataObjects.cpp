@@ -41,6 +41,18 @@ namespace gpo
 		return b_;
 	}
 
+	cv::Vec2d &
+	DetectionGate::a()
+	{
+		return a_;
+	}
+
+	cv::Vec2d &
+	DetectionGate::b()
+	{
+		return b_;
+	}
+
 	Sector::Sector(
 		const std::string &name,
 		const DetectionGate &entry,

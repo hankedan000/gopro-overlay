@@ -1,1 +1,0 @@
-recommend putting submodule dependencies within this directory

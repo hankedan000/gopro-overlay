@@ -30,7 +30,8 @@ target_include_directories("${LIBNAME}"
 target_link_libraries("${LIBNAME}"
 	PUBLIC
 		GoProTelem::GoProTelem
-		${OpenCV_LIBS})
+		${OpenCV_LIBS}
+		yaml-cpp)
 
 # build a list of public header files to install
 list(APPEND ${LIBNAME_ALL_UPPER}_PUBLIC_HEADERS
