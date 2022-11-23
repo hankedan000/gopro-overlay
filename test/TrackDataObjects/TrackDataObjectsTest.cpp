@@ -153,22 +153,22 @@ TrackDataObjectsTest::detectionGate()
 		auto gate = track.getDetectionGate(1,WIDTH_METERS);// around point (0,2)
 		CPPUNIT_ASSERT_DOUBLES_EQUAL(2.0, gate.a()[1], 0.000001);
 		CPPUNIT_ASSERT_DOUBLES_EQUAL(2.0, gate.b()[1], 0.000001);
-		CPPUNIT_ASSERT_DOUBLES_EQUAL(-HALF_WIDTH_DECDEG, gate.a()[0], 0.000001);
-		CPPUNIT_ASSERT_DOUBLES_EQUAL(+HALF_WIDTH_DECDEG, gate.b()[0], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(+HALF_WIDTH_DECDEG, gate.a()[0], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(-HALF_WIDTH_DECDEG, gate.b()[0], 0.000001);
 
 		// test case at beginning of path
 		gate = track.getDetectionGate(0,WIDTH_METERS);// around point (0,0)
 		CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gate.a()[1], 0.000001);
 		CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, gate.b()[1], 0.000001);
-		CPPUNIT_ASSERT_DOUBLES_EQUAL(-HALF_WIDTH_DECDEG, gate.a()[0], 0.000001);
-		CPPUNIT_ASSERT_DOUBLES_EQUAL(+HALF_WIDTH_DECDEG, gate.b()[0], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(+HALF_WIDTH_DECDEG, gate.a()[0], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(-HALF_WIDTH_DECDEG, gate.b()[0], 0.000001);
 
 		// test case at end of path
 		gate = track.getDetectionGate(2,WIDTH_METERS);// around point (0,4)
 		CPPUNIT_ASSERT_DOUBLES_EQUAL(4.0, gate.a()[1], 0.000001);
 		CPPUNIT_ASSERT_DOUBLES_EQUAL(4.0, gate.b()[1], 0.000001);
-		CPPUNIT_ASSERT_DOUBLES_EQUAL(-HALF_WIDTH_DECDEG, gate.a()[0], 0.000001);
-		CPPUNIT_ASSERT_DOUBLES_EQUAL(+HALF_WIDTH_DECDEG, gate.b()[0], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(+HALF_WIDTH_DECDEG, gate.a()[0], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(-HALF_WIDTH_DECDEG, gate.b()[0], 0.000001);
 	}
 
 	// diagonal path
@@ -197,8 +197,13 @@ TrackDataObjectsTest::detectionGate()
 		auto gate = track.getDetectionGate(1,WIDTH_METERS);// around point (0,2)
 		CPPUNIT_ASSERT_DOUBLES_EQUAL(2.000003, gate.a()[1], 0.000001);
 		CPPUNIT_ASSERT_DOUBLES_EQUAL(1.999997, gate.b()[1], 0.000001);
-		CPPUNIT_ASSERT_DOUBLES_EQUAL(3.000002, gate.a()[0], 0.000001);
-		CPPUNIT_ASSERT_DOUBLES_EQUAL(2.999997, gate.b()[0], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(2.999997, gate.a()[0], 0.000001);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(3.000002, gate.b()[0], 0.000001);
+
+		double pathSlope = (path[2][1]-path[0][1])/(path[2][0]-path[0][0]);
+		double expectGateSlope = -1.0/pathSlope;
+		double actualGateSlope = (gate.a()[1]-gate.b()[1])/(gate.a()[0]-gate.b()[0]);
+		CPPUNIT_ASSERT_DOUBLES_EQUAL(expectGateSlope,actualGateSlope,0.000001);
 	}
 }
 

@@ -222,7 +222,7 @@ namespace gpo
 		}
 
 		auto gateCenter = path_.at(pathIdx);
-		auto gateHalf = cv::Vec2d(-a,b);
+		auto gateHalf = cv::Vec2d(a,b);
 		return DetectionGate(
 			gateCenter+gateHalf,
 			gateCenter-gateHalf);
