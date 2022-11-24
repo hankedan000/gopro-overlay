@@ -11,3 +11,25 @@ add_executable(topbottom_overlay
 target_link_libraries(topbottom_overlay
 	GoProOverlay
 	tqdm)
+
+
+
+
+
+set(CMAKE_AUTOUIC ON)# Qt UI compiler (for *.ui files)
+set(CMAKE_AUTOMOC ON)# Qt Meta Object compiler
+set(CMAKE_AUTORCC ON)
+
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+
+add_subdirectory(ui)
+
+add_executable(TrackEditor
+	TrackEditor.cpp
+)
+
+target_link_libraries(TrackEditor PUBLIC
+	GoProOverlay
+	MyWidgets
+)
