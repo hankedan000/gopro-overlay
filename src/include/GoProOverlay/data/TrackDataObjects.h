@@ -42,28 +42,11 @@ namespace gpo
 		cv::Vec2d b_;
 	};
 
-	class Sector
+	struct Sector
 	{
-	public:
-		Sector(
-			const std::string &name,
-			const DetectionGate &entry,
-			const DetectionGate &exit);
-
-		const std::string &
-		name() const;
-
-		const DetectionGate &
-		entry() const;
-		
-		const DetectionGate &
-		exit() const;
-
-	private:
-		std::string name_;
-		DetectionGate entry_;
-		DetectionGate exit_;
-
+		std::string name;
+		DetectionGate entry;
+		DetectionGate exit;
 	};
 
 	// conversion factor from decimal degrees to meter (on earth)
@@ -113,15 +96,15 @@ namespace gpo
 
 		bool
 		removeSector(
-			Sector *s);
-
-		bool
-		removeSector(
 			size_t idx);
 
-		Sector *
+		Sector &
 		getSector(
 			size_t idx);
+
+		const Sector &
+		getSector(
+			size_t idx) const;
 
 		size_t
 		sectorCount() const;
@@ -234,9 +217,9 @@ struct convert<gpo::Sector>
 		const gpo::Sector& rhs)
 	{
 		Node node;
-		node["name"] = rhs.name();
-		node["entry"] = rhs.entry();
-		node["exit"] = rhs.exit();
+		node["name"] = rhs.name;
+		node["entry"] = rhs.entry;
+		node["exit"] = rhs.exit;
 
 		return node;
 	}
@@ -246,9 +229,9 @@ struct convert<gpo::Sector>
 		const Node& node,
 		gpo::Sector& rhs)
 	{
-		node["name"].as<std::string>(rhs.name());
-		node["entry"].as<gpo::DetectionGate>(rhs.entry());
-		node["exit"].as<gpo::DetectionGate>(rhs.exit());
+		node["name"].as<std::string>(rhs.name);
+		node["entry"].as<gpo::DetectionGate>(rhs.entry);
+		node["exit"].as<gpo::DetectionGate>(rhs.exit);
 
 		return true;
 	}
@@ -264,6 +247,10 @@ struct convert<gpo::Track>
 		Node node;
 		node["start"] = rhs.getStart();
 		node["finish"] = rhs.getFinish();
+		for (size_t ss=0; ss<rhs.sectorCount(); ss++)
+		{
+			node["sectors"].push_back(rhs.getSector(ss));
+		}
 
 		return node;
 	}
@@ -275,6 +262,16 @@ struct convert<gpo::Track>
 	{
 		rhs.setStart(node["start"].as<gpo::DetectionGate>());
 		rhs.setFinish(node["finish"].as<gpo::DetectionGate>());
+		YAML::Node sectors = node["sectors"];
+		if(sectors && sectors.IsSequence())
+		{
+			for (size_t ss=0; ss<sectors.size(); ss++)
+			{
+				gpo::Sector sector = sectors[ss].as<gpo::Sector>();
+				rhs.addSector(sector);
+			}
+			return false;
+		}
 
 		return true;
 	}

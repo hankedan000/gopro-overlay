@@ -53,34 +53,6 @@ namespace gpo
 		return b_;
 	}
 
-	Sector::Sector(
-		const std::string &name,
-		const DetectionGate &entry,
-		const DetectionGate &exit)
-	 : name_(name)
-	 , entry_(entry)
-	 , exit_(exit)
-	{
-	}
-
-	const std::string &
-	Sector::name() const
-	{
-		return name_;
-	}
-
-	const DetectionGate &
-	Sector::entry() const
-	{
-		return entry_;
-	}
-	
-	const DetectionGate &
-	Sector::exit() const
-	{
-		return exit_;
-	}
-
 	Track::Track()
 	 : Track(std::vector<cv::Vec2d>())
 	{
@@ -130,22 +102,6 @@ namespace gpo
 
 	bool
 	Track::removeSector(
-		Sector *s)
-	{
-		bool removed = false;
-		for (auto itr=sectors_.begin(); itr!=sectors_.end(); itr++)
-		{
-			if (s == &(*itr))
-			{
-				sectors_.erase(itr);
-				removed = true;
-			}
-		}
-		return removed;
-	}
-
-	bool
-	Track::removeSector(
 		size_t idx)
 	{
 		bool removed = false;
@@ -157,15 +113,18 @@ namespace gpo
 		return removed;
 	}
 
-	Sector *
+	Sector &
 	Track::getSector(
 		size_t idx)
 	{
-		if (idx < sectors_.size())
-		{
-			return &sectors_[idx];
-		}
-		return nullptr;
+		return sectors_.at(idx);
+	}
+
+	const Sector &
+	Track::getSector(
+		size_t idx) const
+	{
+		return sectors_.at(idx);
 	}
 
 	size_t
