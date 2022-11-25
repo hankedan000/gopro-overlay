@@ -53,6 +53,242 @@ namespace gpo
 		return b_;
 	}
 
+	TrackPathObject::TrackPathObject(
+		Track *track,
+		std::string name)
+	 : track_(track)
+	 , name_(name)
+	{
+	}
+
+	Track*
+	TrackPathObject::getTrack()
+	{
+		return track_;
+	}
+
+	bool
+	TrackPathObject::isGate() const
+	{
+		return false;
+	}
+
+	bool
+	TrackPathObject::isSector() const
+	{
+		return false;
+	}
+
+	const std::string &
+	TrackPathObject::getName() const
+	{
+		return name_;
+	}
+
+	void
+	TrackPathObject::setName(
+		std::string name)
+	{
+		name_ = name;
+	}
+
+
+	TrackSector::TrackSector(
+		Track *track,
+		std::string name,
+		size_t entryIdx,
+		size_t exitIdx)
+	 : TrackSector(track,name,entryIdx,exitIdx,DEFAULT_GATE_WIDTH)
+	{
+	}
+
+	TrackSector::TrackSector(
+		Track *track,
+		std::string name,
+		size_t entryIdx,
+		size_t exitIdx,
+		double gateWidth_meters)
+	 : TrackPathObject(track,name)
+	 , entryIdx_(entryIdx)
+	 , exitIdx_(exitIdx)
+	 , gateWidth_meters_(gateWidth_meters)
+	{
+	}
+
+	void
+	TrackSector::setWidth(
+		double width_meters)
+	{
+		gateWidth_meters_ = width_meters;
+	}
+
+	double
+	TrackSector::getWidth() const
+	{
+		return gateWidth_meters_;
+	}
+
+	bool
+	TrackSector::isSector() const
+	{
+		return true;
+	}
+
+	void
+	TrackSector::setEntryIdx(
+		size_t pathIdx)
+	{
+		entryIdx_ = pathIdx;
+	}
+
+	size_t
+	TrackSector::getEntryIdx() const
+	{
+		return entryIdx_;
+	}
+
+	void
+	TrackSector::setExitIdx(
+		size_t pathIdx)
+	{
+		exitIdx_ = pathIdx;
+	}
+
+	size_t
+	TrackSector::getExitIdx() const
+	{
+		return exitIdx_;
+	}
+
+	DetectionGate
+	TrackSector::getEntryGate() const
+	{
+		return track_->getDetectionGate(entryIdx_,gateWidth_meters_);
+	}
+
+	DetectionGate
+	TrackSector::getExitGate() const
+	{
+		return track_->getDetectionGate(exitIdx_,gateWidth_meters_);
+	}
+
+	// YAML encode/decode
+	YAML::Node
+	TrackSector::encode() const
+	{
+		YAML::Node node;
+		node["name"] = name_;
+		node["entryPathIdx"] = entryIdx_;
+		node["exitPathIdx"] = exitIdx_;
+		node["gateWidth_meters"] = gateWidth_meters_;
+
+		return node;
+	}
+
+	bool
+	TrackSector::decode(
+		const YAML::Node& node)
+	{
+		node["name"].as<std::string>(name_);
+		node["entryPathIdx"].as<size_t>(entryIdx_);
+		node["exitPathIdx"].as<size_t>(exitIdx_);
+		node["gateWidth_meters"].as<double>(gateWidth_meters_);
+
+		return true;
+	}
+
+	TrackGate::TrackGate(
+		Track *track,
+		std::string name,
+		size_t pathIdx)
+	 : TrackGate::TrackGate(track,name,pathIdx,DEFAULT_GATE_WIDTH)
+	{
+	}
+
+	TrackGate::TrackGate(
+		Track *track,
+		std::string name,
+		size_t pathIdx,
+		double gateWidth_meters)
+	 : TrackPathObject(track,name)
+	 , pathIdx_(pathIdx)
+	 , gateWidth_meters_(gateWidth_meters)
+	{
+	}
+
+	void
+	TrackGate::setWidth(
+		double width_meters)
+	{
+		gateWidth_meters_ = width_meters;
+	}
+
+	double
+	TrackGate::getWidth() const
+	{
+		return gateWidth_meters_;
+	}
+
+	bool
+	TrackGate::isGate() const
+	{
+		return true;
+	}
+
+	void
+	TrackGate::setPathIdx(
+		size_t pathIdx)
+	{
+		pathIdx_ = pathIdx;
+	}
+
+	size_t
+	TrackGate::getEntryIdx() const
+	{
+		return pathIdx_;
+	}
+
+	size_t
+	TrackGate::getExitIdx() const
+	{
+		return pathIdx_;
+	}
+
+	DetectionGate
+	TrackGate::getEntryGate() const
+	{
+		return track_->getDetectionGate(pathIdx_,gateWidth_meters_);
+	}
+
+	DetectionGate
+	TrackGate::getExitGate() const
+	{
+		return track_->getDetectionGate(pathIdx_,gateWidth_meters_);
+	}
+
+	// YAML encode/decode
+	YAML::Node
+	TrackGate::encode() const
+	{
+		YAML::Node node;
+		node["name"] = name_;
+		node["pathIdx"] = pathIdx_;
+		node["gateWidth_meters"] = gateWidth_meters_;
+
+		return node;
+	}
+
+	bool
+	TrackGate::decode(
+		const YAML::Node& node)
+	{
+		node["name"].as<std::string>(name_);
+		node["pathIdx"].as<size_t>(pathIdx_);
+		node["gateWidth_meters"].as<double>(gateWidth_meters_);
+
+		return true;
+	}
+
 	Track::Track()
 	 : Track(std::vector<cv::Vec2d>())
 	{
@@ -60,69 +296,95 @@ namespace gpo
 
 	Track::Track(
 		const std::vector<cv::Vec2d> &path)
-	 : start_()
-	 , finish_()
+	 : start_(new TrackGate(this, "startGate", 0))
+	 , finish_(new TrackGate(this, "finishGate", path.size() - 1))
 	 , sectors_()
 	 , path_(path)
 	{
 	}
 
-	void
-	Track::setStart(
-		const DetectionGate &start)
+	Track::~Track()
 	{
-		start_ = start;
+		delete start_;
+		delete finish_;
+		for (auto sector : sectors_)
+		{
+			delete sector;
+		}
 	}
 
-	const DetectionGate &
-	Track::getStart() const
+	// start/finish related methods
+	void
+	Track::setStart(
+		size_t pathIdx)
+	{
+		start_->setPathIdx(pathIdx);
+	}
+
+	const TrackGate *
+	Track::getStart()
 	{
 		return start_;
 	}
 
 	void
 	Track::setFinish(
-		const DetectionGate &finish)
+		size_t pathIdx)
 	{
-		finish_ = finish;
+		finish_->setPathIdx(pathIdx);
 	}
 
-	const DetectionGate &
-	Track::getFinish() const
+	const TrackGate *
+	Track::getFinish()
 	{
 		return finish_;
 	}
 
+	// sector related methods
 	void
 	Track::addSector(
-		const Sector &s)
+		std::string name,
+		size_t entryIdx,
+		size_t exitIdx)
 	{
-		sectors_.push_back(s);
+		sectors_.push_back(new TrackSector(this,name,entryIdx,exitIdx));
 	}
 
-	bool
+	void
 	Track::removeSector(
 		size_t idx)
 	{
-		bool removed = false;
-		if (idx < sectors_.size())
-		{
-			sectors_.erase(sectors_.begin()+(idx-1));
-			removed = true;
-		}
-		return removed;
+		sectors_.erase(std::next(sectors_.begin(), idx));
 	}
 
-	Sector &
+	void
+	Track::setSectorName(
+		size_t idx,
+		std::string name)
+	{
+		sectors_.at(idx)->setName(name);
+	}
+
+	void
+	Track::setSectorEntry(
+		size_t idx,
+		size_t entryIdx)
+	{
+		sectors_.at(idx)->setEntryIdx(entryIdx);
+	}
+
+	void
+	Track::setSectorExit(
+		size_t idx,
+		size_t exitIdx)
+	{
+		sectors_.at(idx)->setExitIdx(exitIdx);
+	}
+
+	const
+	TrackSector *
 	Track::getSector(
 		size_t idx)
-	{
-		return sectors_.at(idx);
-	}
-
-	const Sector &
-	Track::getSector(
-		size_t idx) const
 	{
 		return sectors_.at(idx);
 	}
@@ -241,7 +503,67 @@ namespace gpo
 		return std::tuple(closestDist!=-1,closestPoint,closestIdx);
 	}
 
-	Track
+	// YAML encode/decode
+	YAML::Node
+	Track::encode() const
+	{
+		YAML::Node node;
+		node["start"] = start_->encode();
+		node["finish"] = finish_->encode();
+
+		YAML::Node ySectors = node["sectors"];
+		for (const auto &sector : sectors_)
+		{
+			ySectors.push_back(sector->encode());
+		}
+
+		YAML::Node yPath = node["path"];
+		for (const auto &pathVec : path_)
+		{
+			yPath.push_back(pathVec);
+		}
+
+		return node;
+	}
+
+	bool
+	Track::decode(
+		const YAML::Node& node)
+	{
+		bool okay = true;
+		okay = okay && start_->decode(node["start"]);
+		okay = okay && finish_->decode(node["finish"]);
+
+		const YAML::Node &ySectors = node["sectors"];
+		sectors_.resize(ySectors.size());
+		for (size_t ss=0; okay && ss<sectors_.size(); ss++)
+		{
+			const YAML::Node &ySector = ySectors[ss];
+			auto newSector = new TrackSector(this,"",0,0);
+			if (newSector->decode(ySector))
+			{
+				sectors_.at(ss) = newSector;
+			}
+			else
+			{
+				delete newSector;
+				sectors_.clear();
+				okay = false;
+			}
+		}
+
+		const YAML::Node &yPath = node["path"];
+		path_.resize(yPath.size());
+		for (size_t pp=0; okay && pp<path_.size(); pp++)
+		{
+			const YAML::Node &yVec = yPath[pp];
+			yVec.as<cv::Vec2d>(path_.at(pp));
+		}
+
+		return okay;
+	}
+
+	Track *
 	makeTrackFromTelemetry(
 		TelemetrySourcePtr tSrc)
 	{
@@ -252,7 +574,7 @@ namespace gpo
 			path[i][0] = tSrc->at(i).gpSamp.gps.coord.lat;
 			path[i][1] = tSrc->at(i).gpSamp.gps.coord.lon;
 		}
-		return Track(path);
+		return new Track(path);
 	}
 
 }

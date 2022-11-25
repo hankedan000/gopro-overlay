@@ -50,6 +50,11 @@ TelemetrySeeker -- VideoSource
 <!--
 @startuml plantuml_imgs/dataClasses2
 
+enum TrackObjectType {
+	eTOT_Gate,
+	eTOT_Sector
+}
+
 class DetectionGate {
 	+DetectionGate(cv::Vec2d a, cv::Vec2d b)
 	+bool detect(cv::Vec2d c1, cv::Vec2d c2)
@@ -58,26 +63,60 @@ class DetectionGate {
 	-cv::Vec2d b;
 }
 
-class Sector {
-	+std::string name()
-	+DetectionGate entry()
-	+DetectionGate exit()
+class TrackPathObject {
+	+TrackPathObject(Track *track, std::string name)
+	+Track* getTrack()
+	+bool isGate()
+	+bool isSector()
+	+size_t getEntryIdx()
+	+size_t getExitIdx()
+	+DetectionGate getEntryGate()
+	+DetectionGate getExitGate()
+	+std::string getName()
+	+void setName(std::string name)
+	#Track* track_
+}
 
-	-std::string name_
-	-DetectionGate entry_
-	-DetectionGate exit_
+class TrackSector {
+	+TrackSector(Track *track, std::string name, size_t entryIdx, size_t exitIdx)
+	+TrackSector(Track *track, std::string name, size_t entryIdx, size_t exitIdx, double gateWidth_meters)
+	+void setWidth(double width_meters)
+	+double getWidth()
+	+bool isSector()
+	+void setEntryIdx(size_t pathIdx)
+	+void setExitIdx(size_t pathIdx)
+	+void setWidth(double width_meters)
+
+	-size_t entryIdx_
+	-size_t exitIdx_
+	-double gateWidth_meters_
+}
+
+class TrackGate {
+	+TrackGate(Track *track, std::string name, size_t pathIdx)
+	+TrackGate(Track *track, std::string name, size_t pathIdx, double gateWidth_meters)
+	+void setWidth(double width_meters)
+	+double getWidth()
+	+bool isGate()
+	+void setPathIdx(size_t pathIdx)
+	+void setWidth(double width_meters)
+
+	-size_t pathIdx_
+	-double gateWidth_meters_
 }
 
 class Track {
-	+void setStart(DetectionGate start)
-	+DetectionGate getStart()
-	+void setFinish(DetectionGate finish)
-	+DetectionGate getFinish()
+	+void setStart(size_t pathIdx)
+	+const TrackGate *getStart()
+	+void setFinish(size_t pathIdx)
+	+const TrackGate *getFinish()
 
-	+void addSector(Sector s)
-	+void removeSector(Sector *s)
+	+void addSector(std::string name, size_t entryIdx, size_t exitIdx)
 	+void removeSector(size_t idx)
-	+Sector *getSector(size_t idx)
+	+void setSectorName(size_t idx, std::string name)
+	+void setSectorEntry(size_t idx, size_t entryIdx)
+	+void setSectorExit(size_t idx, size_t exitIdx)
+	+const TrackSector *getSector(size_t idx)
 	+size_t sectorCount()
 
 	+size_t pathCount()
@@ -86,15 +125,18 @@ class Track {
 	+cv::Vec2d findClosestPoint(cv::Vec2d p)
 	+std::pair<cv::Vec2d, size_t> findClosestPointWithIdx(cv::Vec2d p)
 
-	-DetectionGate start_
-	-DetectionGate finish_
-	-std::vector<Sector> sectors_
+	-TrackGate *start_
+	-TrackGate *finish_
+	-std::vector<TrackSector *> sectors_
 	-std::vector<cv::Vec2d> path_
 }
 
-DetectionGate -- Sector
+DetectionGate -- TrackPathObject
 DetectionGate -- Track
-Sector -- Track
+TrackPathObject <|-- TrackSector
+TrackPathObject <|-- TrackGate
+TrackSector -- Track
+TrackGate -- Track
 
 @enduml
 -->

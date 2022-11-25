@@ -8,7 +8,7 @@ TrackView::TrackView(QWidget *parent) :
     QFrame(parent),
     ui(new Ui::TrackView),
     track_(nullptr),
-    mouseLocationValid_(false),
+    mliValid_(false),
     pMode_(PlacementMode::ePM_None),
     startGateColor_(Qt::green),
     finishGateColor_(Qt::red)
@@ -38,14 +38,14 @@ TrackView::paintEvent(
 
     if (pMode_ != PlacementMode::ePM_StartGate)
     {
-        drawDetectionGate(painter,track_->getStart(),startGateColor_);
+        drawDetectionGate(painter,track_->getStart()->getEntryGate(),startGateColor_);
     }
     if (pMode_ != PlacementMode::ePM_FinishGate)
     {
-        drawDetectionGate(painter,track_->getFinish(),finishGateColor_);
+        drawDetectionGate(painter,track_->getFinish()->getEntryGate(),finishGateColor_);
     }
 
-    if (mouseLocationValid_ && pMode_ != PlacementMode::ePM_None)
+    if (mliValid_ && pMode_ != PlacementMode::ePM_None)
     {
         QColor c = Qt::white;
         switch (pMode_)
@@ -61,7 +61,7 @@ TrackView::paintEvent(
                 break;
         }
 
-        drawDetectionGate(painter,mouseGate_,c);
+        drawDetectionGate(painter,mli_.gate,c);
     }
 }
 
@@ -73,20 +73,21 @@ TrackView::eventFilter(
     if (event->type() == QEvent::MouseMove)
     {
         QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
-        mouseLocation_ = mouseEvent->pos();
-        mouseCoord_ = pointToCoord(mouseLocation_);
-        auto findRes = track_->findClosestPointWithIdx(mouseCoord_);
+        mli_.loc_px = mouseEvent->pos();
+        mli_.loc_coord = pointToCoord(mli_.loc_px);
+        auto findRes = track_->findClosestPointWithIdx(mli_.loc_coord);
         if (std::get<0>(findRes))
         {
-            mouseNearestPathPoint_ = coordToPoint(std::get<1>(findRes));
-            mouseGate_ = track_->getDetectionGate(std::get<2>(findRes),10.0);// 10m gate width
-            mouseLocationValid_ = true;
+            mli_.path_loc_px = coordToPoint(std::get<1>(findRes));
+            mli_.path_idx = std::get<2>(findRes);
+            mli_.gate = track_->getDetectionGate(mli_.path_idx,10.0);// 10m gate width
+            mliValid_ = true;
         }
         update();// request repaint
     }
     else if (event->type() == QEvent::MouseButtonPress)
     {
-        emit gatePlaced(pMode_,mouseGate_);
+        emit gatePlaced(pMode_,mli_.path_idx);
     }
     return false;
 }

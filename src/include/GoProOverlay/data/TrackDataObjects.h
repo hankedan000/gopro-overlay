@@ -11,6 +11,11 @@
 namespace gpo
 {
 
+	const double DEFAULT_GATE_WIDTH = 10.0;// 10m
+
+	// forward declarations
+	class Track;
+
 	class DetectionGate
 	{
 	public:
@@ -42,13 +47,6 @@ namespace gpo
 		cv::Vec2d b_;
 	};
 
-	struct Sector
-	{
-		std::string name;
-		DetectionGate entry;
-		DetectionGate exit;
-	};
-
 	// conversion factor from decimal degrees to meter (on earth)
 	const double DECDEG_PER_METER = 1.0 / 111000.0;
 
@@ -68,6 +66,193 @@ namespace gpo
 		return m * DECDEG_PER_METER;
 	}
 
+	class TrackPathObject
+	{
+	public:
+		TrackPathObject(
+			Track *track,
+			std::string name);
+
+		Track*
+		getTrack();
+
+		virtual
+		bool
+		isGate() const;
+
+		virtual
+		bool
+		isSector() const;
+
+		virtual
+		size_t
+		getEntryIdx() const = 0;
+
+		virtual
+		size_t
+		getExitIdx() const = 0;
+
+		virtual
+		DetectionGate
+		getEntryGate() const = 0;
+
+		virtual
+		DetectionGate
+		getExitGate() const = 0;
+
+		const std::string &
+		getName() const;
+
+		void
+		setName(
+			std::string name);
+
+		// YAML encode/decode
+		virtual
+		YAML::Node
+		encode() const = 0;
+
+		virtual
+		bool
+		decode(
+			const YAML::Node& node) = 0;
+
+	protected:
+		Track* track_;
+		std::string name_;
+
+	};
+
+
+	class TrackSector : public TrackPathObject
+	{
+	public:
+		TrackSector(
+			Track *track,
+			std::string name,
+			size_t entryIdx,
+			size_t exitIdx);
+
+		TrackSector(
+			Track *track,
+			std::string name,
+			size_t entryIdx,
+			size_t exitIdx,
+			double gateWidth_meters);
+
+		void
+		setWidth(
+			double width_meters);
+
+		double
+		getWidth() const;
+
+		virtual
+		bool
+		isSector() const override;
+
+		void
+		setEntryIdx(
+			size_t pathIdx);
+
+		virtual
+		size_t
+		getEntryIdx() const override;
+
+		void
+		setExitIdx(
+			size_t pathIdx);
+
+		virtual
+		size_t
+		getExitIdx() const override;
+
+		virtual
+		DetectionGate
+		getEntryGate() const override;
+
+		virtual
+		DetectionGate
+		getExitGate() const override;
+
+		// YAML encode/decode
+		virtual
+		YAML::Node
+		encode() const override;
+
+		virtual
+		bool
+		decode(
+			const YAML::Node& node) override;
+
+	private:
+		size_t entryIdx_;
+		size_t exitIdx_;
+		double gateWidth_meters_;
+
+	};
+
+	class TrackGate : public TrackPathObject
+	{
+	public:
+		TrackGate(
+			Track *track,
+			std::string name,
+			size_t pathIdx);
+
+		TrackGate(
+			Track *track,
+			std::string name,
+			size_t pathIdx,
+			double gateWidth_meters);
+
+		void
+		setWidth(
+			double width_meters);
+
+		double
+		getWidth() const;
+
+		virtual
+		bool
+		isGate() const override;
+
+		void
+		setPathIdx(
+			size_t pathIdx);
+
+		virtual
+		size_t
+		getEntryIdx() const override;
+
+		virtual
+		size_t
+		getExitIdx() const override;
+
+		virtual
+		DetectionGate
+		getEntryGate() const override;
+
+		virtual
+		DetectionGate
+		getExitGate() const override;
+
+		// YAML encode/decode
+		virtual
+		YAML::Node
+		encode() const override;
+
+		virtual
+		bool
+		decode(
+			const YAML::Node& node) override;
+
+	private:
+		size_t pathIdx_;
+		double gateWidth_meters_;
+
+	};
+
 	class Track
 	{
 	public:
@@ -76,39 +261,58 @@ namespace gpo
 		Track(
 			const std::vector<cv::Vec2d> &path);
 
+		~Track();
+
+		// start/finish related methods
 		void
 		setStart(
-			const DetectionGate &start);
+			size_t pathIdx);
 
-		const DetectionGate &
-		getStart() const;
+		const TrackGate *
+		getStart();
 
 		void
 		setFinish(
-			const DetectionGate &finish);
+			size_t pathIdx);
 
-		const DetectionGate &
-		getFinish() const;
+		const TrackGate *
+		getFinish();
 
+		// sector related methods
 		void
 		addSector(
-			const Sector &s);
+			std::string name,
+			size_t entryIdx,
+			size_t exitIdx);
 
-		bool
+		void
 		removeSector(
 			size_t idx);
 
-		Sector &
+		void
+		setSectorName(
+			size_t idx,
+			std::string name);
+
+		void
+		setSectorEntry(
+			size_t idx,
+			size_t entryIdx);
+
+		void
+		setSectorExit(
+			size_t idx,
+			size_t exitIdx);
+
+		const
+		TrackSector *
 		getSector(
 			size_t idx);
-
-		const Sector &
-		getSector(
-			size_t idx) const;
 
 		size_t
 		sectorCount() const;
 
+		// path related methods
 		size_t
 		pathCount() const;
 
@@ -134,16 +338,24 @@ namespace gpo
 		findClosestPointWithIdx(
 			cv::Vec2d p) const;
 
+		// YAML encode/decode
+		YAML::Node
+		encode() const;
+
+		bool
+		decode(
+			const YAML::Node& node);
+
 	private:
-		DetectionGate start_;
-		DetectionGate finish_;
-		std::vector<Sector> sectors_;
+		TrackGate *start_;
+		TrackGate *finish_;
+		std::vector<TrackSector *> sectors_;
 		// list of lat/lon points making up the track's path
 		std::vector<cv::Vec2d> path_;
 
 	};
 
-	Track
+	Track *
 	makeTrackFromTelemetry(
 		TelemetrySourcePtr tSrc);
 
@@ -204,74 +416,6 @@ struct convert<gpo::DetectionGate>
 	{
 		node["a"].as<cv::Vec2d>(rhs.a());
 		node["b"].as<cv::Vec2d>(rhs.b());
-
-		return true;
-	}
-};
-
-template<>
-struct convert<gpo::Sector>
-{
-	static Node
-	encode(
-		const gpo::Sector& rhs)
-	{
-		Node node;
-		node["name"] = rhs.name;
-		node["entry"] = rhs.entry;
-		node["exit"] = rhs.exit;
-
-		return node;
-	}
-
-	static bool
-	decode(
-		const Node& node,
-		gpo::Sector& rhs)
-	{
-		node["name"].as<std::string>(rhs.name);
-		node["entry"].as<gpo::DetectionGate>(rhs.entry);
-		node["exit"].as<gpo::DetectionGate>(rhs.exit);
-
-		return true;
-	}
-};
-
-template<>
-struct convert<gpo::Track>
-{
-	static Node
-	encode(
-		const gpo::Track& rhs)
-	{
-		Node node;
-		node["start"] = rhs.getStart();
-		node["finish"] = rhs.getFinish();
-		for (size_t ss=0; ss<rhs.sectorCount(); ss++)
-		{
-			node["sectors"].push_back(rhs.getSector(ss));
-		}
-
-		return node;
-	}
-
-	static bool
-	decode(
-		const Node& node,
-		gpo::Track& rhs)
-	{
-		rhs.setStart(node["start"].as<gpo::DetectionGate>());
-		rhs.setFinish(node["finish"].as<gpo::DetectionGate>());
-		YAML::Node sectors = node["sectors"];
-		if(sectors && sectors.IsSequence())
-		{
-			for (size_t ss=0; ss<sectors.size(); ss++)
-			{
-				gpo::Sector sector = sectors[ss].as<gpo::Sector>();
-				rhs.addSector(sector);
-			}
-			return false;
-		}
 
 		return true;
 	}

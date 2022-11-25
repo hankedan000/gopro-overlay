@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QStandardItemModel>
 
 #include "trackview.h"
 
@@ -11,30 +12,35 @@ QT_END_NAMESPACE
 
 class MainWindow : public QMainWindow
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	MainWindow(QWidget *parent = nullptr);
-	~MainWindow();
+    MainWindow(QWidget *parent = nullptr);
+    ~MainWindow();
 
 private slots:
-	void
-	setStartToggled(
-		bool checked);
+    void
+    setStartToggled(
+        bool checked);
 
-	void
-	setFinishToggled(
-		bool checked);
+    void
+    setFinishToggled(
+        bool checked);
 
-	void
-	trackViewGatePlaced(
-		TrackView::PlacementMode pMode,
-		gpo::DetectionGate gate);
+    void
+    trackViewGatePlaced(
+        TrackView::PlacementMode pMode,
+            size_t pathIdx);
+
+    void
+    addSectorPressed();
 
 private:
-	Ui::MainWindow *ui;
-	TrackView *trackView_;
-	gpo::Track track_;
+    Ui::MainWindow *ui;
+    TrackView *trackView_;
+    gpo::Track *track_;
+
+    QStandardItemModel *sectorTableModel_;
 
 };
 #endif // MAINWINDOW_H

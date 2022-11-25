@@ -31,7 +31,7 @@ signals:
     void
     gatePlaced(
             PlacementMode pMode,
-            gpo::DetectionGate gate);
+            size_t pathIdx);
 
 public:
     void
@@ -86,11 +86,22 @@ private:
     cv::Vec2d lrCoord_;
     double pxPerDeg_;
     gpo::Track *track_;
-    bool mouseLocationValid_;
-    QPoint mouseLocation_;
-    cv::Vec2d mouseCoord_;
-    QPoint mouseNearestPathPoint_;
-    gpo::DetectionGate mouseGate_;
+
+    struct MouseLocationInfo
+    {
+        // (x,y) location of mouse on widget
+        QPoint loc_px;
+        // (lat,lon) location on map
+        cv::Vec2d loc_coord;
+        // (x,y) location to nearest track path location
+        QPoint path_loc_px;
+        // nearest track path index
+        size_t path_idx;
+        // a detection gate based from 'path_idx'
+        gpo::DetectionGate gate;
+    };
+    MouseLocationInfo mli_;
+    bool mliValid_;// true if 'mli_' fields are valid
 
     PlacementMode pMode_;
 
