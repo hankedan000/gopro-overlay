@@ -66,6 +66,14 @@ namespace gpo
 		return m * DECDEG_PER_METER;
 	}
 
+	enum GateType_E
+	{
+		eGT_Start,
+		eGT_Finish,
+		eGT_Other,
+		eGT_NOT_A_GATE
+	};
+
 	class TrackPathObject
 	{
 	public:
@@ -83,6 +91,10 @@ namespace gpo
 		virtual
 		bool
 		isSector() const;
+
+		virtual
+		GateType_E
+		getGateType() const;
 
 		virtual
 		size_t
@@ -198,12 +210,14 @@ namespace gpo
 		TrackGate(
 			Track *track,
 			std::string name,
-			size_t pathIdx);
+			size_t pathIdx,
+			GateType_E type);
 
 		TrackGate(
 			Track *track,
 			std::string name,
 			size_t pathIdx,
+			GateType_E type,
 			double gateWidth_meters);
 
 		void
@@ -216,6 +230,10 @@ namespace gpo
 		virtual
 		bool
 		isGate() const override;
+
+		virtual
+		GateType_E
+		getGateType() const override;
 
 		void
 		setPathIdx(
@@ -249,6 +267,7 @@ namespace gpo
 
 	private:
 		size_t pathIdx_;
+		GateType_E type_;
 		double gateWidth_meters_;
 
 	};
@@ -337,6 +356,10 @@ namespace gpo
 		std::tuple<bool,cv::Vec2d, size_t>
 		findClosestPointWithIdx(
 			cv::Vec2d p) const;
+
+		bool
+		getSortedPathObjects(
+			std::vector<const TrackPathObject *> &objs) const;
 
 		// YAML encode/decode
 		YAML::Node

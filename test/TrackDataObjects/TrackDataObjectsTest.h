@@ -9,6 +9,7 @@ class TrackDataObjectsTest : public CppUnit::TestFixture
 	CPPUNIT_TEST_SUITE(TrackDataObjectsTest);
 	CPPUNIT_TEST(closestPoint);
 	CPPUNIT_TEST(detectionGate);
+	CPPUNIT_TEST(sortedPathObjects);
 	CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -19,6 +20,7 @@ public:
 protected:
 	void closestPoint();
 	void detectionGate();
+	void sortedPathObjects();
 
 private:
 

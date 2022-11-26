@@ -79,6 +79,12 @@ namespace gpo
 		return false;
 	}
 
+	GateType_E
+	TrackPathObject::getGateType() const
+	{
+		return GateType_E::eGT_NOT_A_GATE;
+	}
+
 	const std::string &
 	TrackPathObject::getName() const
 	{
@@ -200,8 +206,9 @@ namespace gpo
 	TrackGate::TrackGate(
 		Track *track,
 		std::string name,
-		size_t pathIdx)
-	 : TrackGate::TrackGate(track,name,pathIdx,DEFAULT_GATE_WIDTH)
+		size_t pathIdx,
+		GateType_E type)
+	 : TrackGate::TrackGate(track,name,pathIdx,type,DEFAULT_GATE_WIDTH)
 	{
 	}
 
@@ -209,9 +216,11 @@ namespace gpo
 		Track *track,
 		std::string name,
 		size_t pathIdx,
+		GateType_E type,
 		double gateWidth_meters)
 	 : TrackPathObject(track,name)
 	 , pathIdx_(pathIdx)
+	 , type_(type)
 	 , gateWidth_meters_(gateWidth_meters)
 	{
 	}
@@ -233,6 +242,12 @@ namespace gpo
 	TrackGate::isGate() const
 	{
 		return true;
+	}
+
+	GateType_E
+	TrackGate::getGateType() const
+	{
+		return type_;
 	}
 
 	void
@@ -296,8 +311,8 @@ namespace gpo
 
 	Track::Track(
 		const std::vector<cv::Vec2d> &path)
-	 : start_(new TrackGate(this, "startGate", 0))
-	 , finish_(new TrackGate(this, "finishGate", path.size() - 1))
+	 : start_(new TrackGate(this, "startGate", 0, GateType_E::eGT_Start))
+	 , finish_(new TrackGate(this, "finishGate", path.size() - 1, GateType_E::eGT_Finish))
 	 , sectors_()
 	 , path_(path)
 	{
@@ -501,6 +516,29 @@ namespace gpo
 			}
 		}
 		return std::tuple(closestDist!=-1,closestPoint,closestIdx);
+	}
+
+	bool
+	Track::getSortedPathObjects(
+		std::vector<const TrackPathObject *> &objs) const
+	{
+		objs.clear();
+
+		// sort objects by entry path index
+		std::map<size_t,const TrackPathObject *> objsByEntryIdx;
+		objsByEntryIdx.insert({start_->getEntryIdx(),start_});
+		objsByEntryIdx.insert({finish_->getEntryIdx(),finish_});
+		for (const auto &sector : sectors_)
+		{
+			objsByEntryIdx.insert({sector->getEntryIdx(),sector});
+		}
+
+		for (auto entry : objsByEntryIdx)
+		{
+			objs.push_back(entry.second);
+		}
+
+		return true;
 	}
 
 	// YAML encode/decode

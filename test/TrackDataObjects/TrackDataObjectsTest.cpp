@@ -207,6 +207,54 @@ TrackDataObjectsTest::detectionGate()
 	}
 }
 
+void
+TrackDataObjectsTest::sortedPathObjects()
+{
+	const size_t PATH_LENGTH = 100;
+	std::vector<cv::Vec2d> path;
+	for (unsigned int i=0; i<PATH_LENGTH; i++)
+	{
+		path.push_back(cv::Vec2d(i, i*2));
+	}
+
+	gpo::Track track(path);
+	track.setStart(5);
+	track.setFinish(95);
+	track.addSector("Sector1",10,20);
+	track.addSector("Sector3",60,70);
+	track.addSector("Sector2",30,50);
+
+	// make sure objects are sorted based on entry path index
+	std::vector<const gpo::TrackPathObject *> pathObjs;
+	CPPUNIT_ASSERT_EQUAL(true, track.getSortedPathObjects(pathObjs));
+	CPPUNIT_ASSERT_EQUAL(5UL, pathObjs.size());
+
+	CPPUNIT_ASSERT_EQUAL(std::string("startGate"), pathObjs.at(0)->getName());
+	CPPUNIT_ASSERT_EQUAL(true, pathObjs.at(0)->isGate());
+	CPPUNIT_ASSERT_EQUAL(false, pathObjs.at(0)->isSector());
+	CPPUNIT_ASSERT_EQUAL(gpo::GateType_E::eGT_Start, pathObjs.at(0)->getGateType());
+
+	CPPUNIT_ASSERT_EQUAL(std::string("Sector1"), pathObjs.at(1)->getName());
+	CPPUNIT_ASSERT_EQUAL(false, pathObjs.at(1)->isGate());
+	CPPUNIT_ASSERT_EQUAL(true, pathObjs.at(1)->isSector());
+	CPPUNIT_ASSERT_EQUAL(gpo::GateType_E::eGT_NOT_A_GATE, pathObjs.at(1)->getGateType());
+
+	CPPUNIT_ASSERT_EQUAL(std::string("Sector2"), pathObjs.at(2)->getName());
+	CPPUNIT_ASSERT_EQUAL(false, pathObjs.at(2)->isGate());
+	CPPUNIT_ASSERT_EQUAL(true, pathObjs.at(2)->isSector());
+	CPPUNIT_ASSERT_EQUAL(gpo::GateType_E::eGT_NOT_A_GATE, pathObjs.at(2)->getGateType());
+
+	CPPUNIT_ASSERT_EQUAL(std::string("Sector3"), pathObjs.at(3)->getName());
+	CPPUNIT_ASSERT_EQUAL(false, pathObjs.at(3)->isGate());
+	CPPUNIT_ASSERT_EQUAL(true, pathObjs.at(3)->isSector());
+	CPPUNIT_ASSERT_EQUAL(gpo::GateType_E::eGT_NOT_A_GATE, pathObjs.at(3)->getGateType());
+
+	CPPUNIT_ASSERT_EQUAL(std::string("finishGate"), pathObjs.at(4)->getName());
+	CPPUNIT_ASSERT_EQUAL(true, pathObjs.at(4)->isGate());
+	CPPUNIT_ASSERT_EQUAL(false, pathObjs.at(4)->isSector());
+	CPPUNIT_ASSERT_EQUAL(gpo::GateType_E::eGT_Finish, pathObjs.at(4)->getGateType());
+}
+
 int main()
 {
 	CppUnit::TextUi::TestRunner runner;
