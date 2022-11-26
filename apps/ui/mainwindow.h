@@ -63,6 +63,23 @@ private:
     void
     configureFileMenuButtons();
 
+    void
+    addNewSector(
+            size_t entryIdx,
+            size_t exitIdx);
+
+    void
+    loadSectorsToTable();
+
+    void
+    addSectorToTable(
+            const std::string &name,
+            size_t entryIdx,
+            size_t exitIdx);
+
+    void
+    clearSectorTable();
+
 private:
     Ui::MainWindow *ui;
     TrackView *trackView_;
@@ -71,6 +88,11 @@ private:
     QStandardItemModel *sectorTableModel_;
 
     std::string filepathToSaveTo_;
+
+    // when building a new sector this variable stores the entry
+    // gate's index. we won't add the sector until the user places
+    // the exit gate.
+    size_t sectorEntryIdx_;
 
 };
 #endif // MAINWINDOW_H

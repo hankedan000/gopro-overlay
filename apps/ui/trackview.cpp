@@ -36,6 +36,7 @@ TrackView::paintEvent(
 
     drawTrackPath(painter,track_);
 
+    // draw start/finish gates
     if (pMode_ != PlacementMode::ePM_StartGate)
     {
         drawDetectionGate(painter,track_->getStart()->getEntryGate(),startGateColor_);
@@ -43,6 +44,13 @@ TrackView::paintEvent(
     if (pMode_ != PlacementMode::ePM_FinishGate)
     {
         drawDetectionGate(painter,track_->getFinish()->getEntryGate(),finishGateColor_);
+    }
+
+    // draw all track sectors
+    for (size_t ss=0; ss<track_->sectorCount(); ss++)
+    {
+        auto sector = track_->getSector(ss);
+        drawSector(painter,sector,Qt::cyan);
     }
 
     if (mliValid_ && pMode_ != PlacementMode::ePM_None)
@@ -165,6 +173,12 @@ TrackView::setPlacementMode(
     pMode_ = mode;
 }
 
+TrackView::PlacementMode
+TrackView::getPlacementMode() const
+{
+    return pMode_;
+}
+
 void
 TrackView::drawTrackPath(
         QPainter &painter,
@@ -197,6 +211,42 @@ TrackView::drawDetectionGate(
     auto pB = coordToPoint(gate.b());
     painter.setPen(color);
     painter.drawLine(pA,pB);
+}
+
+void
+TrackView::drawSector(
+        QPainter &painter,
+        const gpo::TrackSector *sector,
+        QColor color)
+{
+    // draw entry/exit gates
+    drawDetectionGate(painter,sector->getEntryGate(),color);
+    drawDetectionGate(painter,sector->getExitGate(),color);
+
+    // highlight path between gates
+    QPen pen;
+    pen.setWidth(4);
+    pen.setColor(color);
+    pen.setCapStyle(Qt::PenCapStyle::FlatCap);
+    painter.setPen(pen);
+
+    size_t entryIdx = sector->getEntryIdx();
+    size_t exitIdx = sector->getExitIdx();
+    size_t startIdx = std::min(entryIdx,exitIdx);
+    size_t endIdx = std::max(entryIdx,exitIdx);
+    QPoint prevPoint;
+    for (size_t i=startIdx; i<=endIdx; i++)
+    {
+        auto pathPoint = track_->getPathPoint(i);
+        auto currPoint = coordToPoint(pathPoint);
+
+        if (i != startIdx)
+        {
+            painter.drawLine(prevPoint,currPoint);
+        }
+
+        prevPoint = currPoint;
+    }
 }
 
 QPoint

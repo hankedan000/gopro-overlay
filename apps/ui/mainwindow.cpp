@@ -16,6 +16,9 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
     ui->trackViewLayout->addWidget(trackView_);
+    setWindowTitle("Track Editor");
+
+    // button actions
     connect(ui->setStartButton, &QPushButton::toggled, this, &MainWindow::setStartToggled);
     connect(ui->setFinishButton, &QPushButton::toggled, this, &MainWindow::setFinishToggled);
     connect(ui->addSectorButton, &QPushButton::pressed, this, &MainWindow::addSectorPressed);
@@ -29,7 +32,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Create a new model
     // QStandardItemModel(int rows, int columns, QObject * parent = 0)
     sectorTableModel_ = new QStandardItemModel(0,2,this);
-    sectorTableModel_->setHorizontalHeaderLabels({"Sector Name",""});
+    clearSectorTable();// calling this to set table headers
 
     // Attach the model to the view
     ui->sectorTable->setModel(sectorTableModel_);
@@ -54,6 +57,10 @@ MainWindow::loadTrackFromVideo(
     bool loadOkay = gpo::DataFactory::loadData(filepath,data);
     if (loadOkay)
     {
+        setWindowTitle(QStringLiteral("Track Editor - %1").arg(filepath.c_str()));
+        ui->statusbar->showMessage(
+                    QStringLiteral("Loaded track data from '%1'").arg(filepath.c_str()),
+                    3000);// 3s
         releaseTrack();
         track_ = gpo::makeTrackFromTelemetry(data.telemSrc);
         trackView_->setTrack(track_);
@@ -75,9 +82,14 @@ MainWindow::loadTrackFromYAML(
         gpo::Track *newTrack = new gpo::Track();
         if (newTrack->decode(trackNode))
         {
+            setWindowTitle(QStringLiteral("Track Editor - %1").arg(filepath.c_str()));
+            ui->statusbar->showMessage(
+                        QStringLiteral("Loaded track data from '%1'").arg(filepath.c_str()),
+                        3000);// 3s
             releaseTrack();
             track_ = newTrack;
             trackView_->setTrack(newTrack);
+            loadSectorsToTable();
 
             filepathToSaveTo_ = filepath;
             configureFileMenuButtons();
@@ -112,11 +124,13 @@ MainWindow::setStartToggled(
     if (checked)
     {
         ui->setFinishButton->setChecked(false);
+        ui->statusbar->showMessage("Click to set starting gate.");
         trackView_->setPlacementMode(TrackView::PlacementMode::ePM_StartGate);
     }
     else
     {
         trackView_->setPlacementMode(TrackView::PlacementMode::ePM_None);
+        ui->statusbar->clearMessage();
     }
 }
 
@@ -127,11 +141,13 @@ MainWindow::setFinishToggled(
     if (checked)
     {
         ui->setStartButton->setChecked(false);
+        ui->statusbar->showMessage("Click to set finishing gate.");
         trackView_->setPlacementMode(TrackView::PlacementMode::ePM_FinishGate);
     }
     else
     {
         trackView_->setPlacementMode(TrackView::PlacementMode::ePM_None);
+        ui->statusbar->clearMessage();
     }
 }
 
@@ -146,11 +162,23 @@ MainWindow::trackViewGatePlaced(
             track_->setStart(pathIdx);
             trackView_->setPlacementMode(TrackView::PlacementMode::ePM_None);
             ui->setStartButton->setChecked(false);
+            ui->statusbar->clearMessage();
             break;
         case TrackView::PlacementMode::ePM_FinishGate:
             track_->setFinish(pathIdx);
             trackView_->setPlacementMode(TrackView::PlacementMode::ePM_None);
             ui->setFinishButton->setChecked(false);
+            ui->statusbar->clearMessage();
+            break;
+        case TrackView::PlacementMode::ePM_SectorEntry:
+            sectorEntryIdx_ = pathIdx;
+            trackView_->setPlacementMode(TrackView::PlacementMode::ePM_SectorExit);
+            ui->statusbar->showMessage("Click to set sector's exit gate.");
+            break;
+        case TrackView::PlacementMode::ePM_SectorExit:
+            addNewSector(sectorEntryIdx_,pathIdx);
+            trackView_->setPlacementMode(TrackView::PlacementMode::ePM_None);
+            ui->statusbar->clearMessage();
             break;
         default:
             break;
@@ -160,14 +188,8 @@ MainWindow::trackViewGatePlaced(
 void
 MainWindow::addSectorPressed()
 {
-    unsigned int nSectors = sectorTableModel_->rowCount();
-    QList<QStandardItem *> row;
-    QStandardItem *item1 = new QStandardItem;
-    QString name = "Sector";
-    name.append(std::to_string(nSectors).c_str());
-    item1->setText(name);
-    row.append(item1);
-    sectorTableModel_->appendRow(row);
+    trackView_->setPlacementMode(TrackView::PlacementMode::ePM_SectorEntry);
+    ui->statusbar->showMessage("Click to set sector's entry gate.");
 }
 
 void
@@ -216,6 +238,7 @@ MainWindow::releaseTrack()
         track_ = nullptr;
     }
     trackView_->setTrack(track_);
+    clearSectorTable();
 }
 
 void
@@ -224,5 +247,59 @@ MainWindow::configureFileMenuButtons()
     ui->actionSave_Track->setEnabled(track_ != nullptr && ! filepathToSaveTo_.empty());
     ui->actionSave_Track_as->setEnabled(track_ != nullptr);
     ui->actionLoad_Track->setEnabled(true);
+}
+
+void
+MainWindow::addNewSector(
+        size_t entryIdx,
+        size_t exitIdx)
+{
+    std::string name = "Sector" + std::to_string(track_->sectorCount());
+    addSectorToTable(name,entryIdx,exitIdx);
+    track_->addSector(name,entryIdx,exitIdx);
+}
+
+void
+MainWindow::loadSectorsToTable()
+{
+    clearSectorTable();
+    for (size_t ss=0; ss<track_->sectorCount(); ss++)
+    {
+        auto tSector = track_->getSector(ss);
+        addSectorToTable(
+                    tSector->getName(),
+                    tSector->getEntryIdx(),
+                    tSector->getExitIdx());
+    }
+}
+
+void
+MainWindow::addSectorToTable(
+        const std::string &name,
+        size_t entryIdx,
+        size_t exitIdx)
+{
+    QList<QStandardItem *> row;
+
+    QStandardItem *nameItem = new QStandardItem;
+    nameItem->setText(name.c_str());
+    row.append(nameItem);
+
+    QStandardItem *entryItem = new QStandardItem;
+    entryItem->setText(QStringLiteral("%1").arg(entryIdx));
+    row.append(entryItem);
+
+    QStandardItem *exitItem = new QStandardItem;
+    exitItem->setText(QStringLiteral("%1").arg(exitIdx));
+    row.append(exitItem);
+
+    sectorTableModel_->appendRow(row);
+}
+
+void
+MainWindow::clearSectorTable()
+{
+    sectorTableModel_->clear();
+    sectorTableModel_->setHorizontalHeaderLabels({"Sector Name","Entry Index","Exit Index"});
 }
 

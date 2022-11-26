@@ -59,6 +59,9 @@ public:
     setPlacementMode(
             PlacementMode mode);
 
+    PlacementMode
+    getPlacementMode() const;
+
 private:
     void
     drawTrackPath(
@@ -69,6 +72,12 @@ private:
     drawDetectionGate(
             QPainter &painter,
             const gpo::DetectionGate &gate,
+            QColor color);
+
+    void
+    drawSector(
+            QPainter &painter,
+            const gpo::TrackSector *sector,
             QColor color);
 
     QPoint

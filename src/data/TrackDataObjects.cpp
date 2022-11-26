@@ -535,7 +535,7 @@ namespace gpo
 		okay = okay && finish_->decode(node["finish"]);
 
 		sectors_.clear();
-		try
+		if (node["sectors"])// not all files will have sectors
 		{
 			const YAML::Node &ySectors = node["sectors"];
 			sectors_.resize(ySectors.size());
@@ -554,10 +554,6 @@ namespace gpo
 					okay = false;
 				}
 			}
-		}
-		catch (const YAML::InvalidNode &e)
-		{
-			// not all files will have sectors
 		}
 
 		const YAML::Node &yPath = node["path"];
