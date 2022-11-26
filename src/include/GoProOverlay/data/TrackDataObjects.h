@@ -388,8 +388,8 @@ struct convert<cv::Vec2d>
 			return false;
 		}
 
-		node[0].as<double>(rhs[0]);
-		node[1].as<double>(rhs[1]);
+		rhs[0] = node[0].as<double>();
+		rhs[1] = node[1].as<double>();
 
 		return true;
 	}
@@ -414,8 +414,8 @@ struct convert<gpo::DetectionGate>
 		const Node& node,
 		gpo::DetectionGate& rhs)
 	{
-		node["a"].as<cv::Vec2d>(rhs.a());
-		node["b"].as<cv::Vec2d>(rhs.b());
+		rhs.a() = node["a"].as<cv::Vec2d>();
+		rhs.b() = node["b"].as<cv::Vec2d>();
 
 		return true;
 	}

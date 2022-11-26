@@ -11,6 +11,7 @@ MainWindow::MainWindow(QWidget *parent)
  , ui(new Ui::MainWindow)
  , trackView_(new TrackView)
  , track_(nullptr)
+ , filepathToSaveTo_()
 {
     ui->setupUi(this);
     ui->trackViewLayout->addWidget(trackView_);
@@ -19,6 +20,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->addSectorButton, &QPushButton::pressed, this, &MainWindow::addSectorPressed);
     connect(trackView_, &TrackView::gatePlaced, this, &MainWindow::trackViewGatePlaced);
 
+    // menu actions
+    connect(ui->actionSave_Track, &QAction::triggered, this, &MainWindow::onActionSaveTrack);
+    connect(ui->actionSave_Track_as, &QAction::triggered, this, &MainWindow::onActionSaveTrackAs);
+    connect(ui->actionLoad_Track, &QAction::triggered, this, &MainWindow::onActionLoadTrack);
+
     // Create a new model
     // QStandardItemModel(int rows, int columns, QObject * parent = 0)
     sectorTableModel_ = new QStandardItemModel(0,2,this);
@@ -26,18 +32,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Attach the model to the view
     ui->sectorTable->setModel(sectorTableModel_);
-
-    std::string videoFile = "/home/daniel/Downloads/Autocross/20220918_GCAC/GH010143.MP4";
-    gpo::Data data;
-    gpo::DataFactory::loadData(videoFile,data);
-
-    track_ = gpo::makeTrackFromTelemetry(data.telemSrc);
-    trackView_->setTrack(track_);
-
-    YAML::Node trackNode = track_->encode();
-    std::ofstream ofs("track.yaml");
-    ofs << trackNode;
-    ofs.close();
 }
 
 MainWindow::~MainWindow()
@@ -49,6 +43,65 @@ MainWindow::~MainWindow()
         delete track_;
         track_ = nullptr;
     }
+}
+
+bool
+MainWindow::loadTrackFromVideo(
+    const std::string &filepath)
+{
+    gpo::Data data;
+    bool loadOkay = gpo::DataFactory::loadData(filepath,data);
+    if (loadOkay)
+    {
+        releaseTrack();
+        track_ = gpo::makeTrackFromTelemetry(data.telemSrc);
+        trackView_->setTrack(track_);
+
+        filepathToSaveTo_ = "";
+        configureFileMenuButtons();
+    }
+
+    return loadOkay;
+}
+
+bool
+MainWindow::loadTrackFromYAML(
+    const std::string &filepath)
+{
+    YAML::Node trackNode = YAML::LoadFile(filepath);
+    if ( ! trackNode.IsNull())
+    {
+        gpo::Track *newTrack = new gpo::Track();
+        if (newTrack->decode(trackNode))
+        {
+            releaseTrack();
+            track_ = newTrack;
+            trackView_->setTrack(newTrack);
+
+            filepathToSaveTo_ = filepath;
+            configureFileMenuButtons();
+        }
+        else
+        {
+            delete newTrack;
+        }
+    }
+    return false;
+}
+
+bool
+MainWindow::saveTrackToYAML(
+    const std::string &filepath)
+{
+    if (track_)
+    {
+        YAML::Node trackNode = track_->encode();
+        std::ofstream ofs(filepath);
+        ofs << trackNode;
+        ofs.close();
+        return true;
+    }
+    return false;
 }
 
 void
@@ -114,5 +167,55 @@ MainWindow::addSectorPressed()
     item1->setText(name);
     row.append(item1);
     sectorTableModel_->appendRow(row);
+}
+
+void
+MainWindow::onActionSaveTrack()
+{
+    if ( ! filepathToSaveTo_.empty())
+    {
+        saveTrackToYAML(filepathToSaveTo_);
+    }
+}
+
+void
+MainWindow::onActionSaveTrackAs()
+{
+    // TODO use dialog
+    std::string filepath = "track_as.yaml";
+
+    if (saveTrackToYAML(filepath))
+    {
+        filepathToSaveTo_ = filepath;
+        configureFileMenuButtons();
+    }
+}
+
+void
+MainWindow::onActionLoadTrack()
+{
+    // TODO use dialog
+    std::string filepath = "track.yaml";
+
+    loadTrackFromYAML(filepath);// method handles update to 'filepathToSaveTo_'
+}
+
+void
+MainWindow::releaseTrack()
+{
+    if (track_)
+    {
+        delete track_;
+        track_ = nullptr;
+    }
+    trackView_->setTrack(track_);
+}
+
+void
+MainWindow::configureFileMenuButtons()
+{
+    ui->actionSave_Track->setEnabled(track_ != nullptr && ! filepathToSaveTo_.empty());
+    ui->actionSave_Track_as->setEnabled(track_ != nullptr);
+    ui->actionLoad_Track->setEnabled(true);
 }
 

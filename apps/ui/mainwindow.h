@@ -18,6 +18,18 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+    bool
+    loadTrackFromVideo(
+        const std::string &filepath);
+
+    bool
+    loadTrackFromYAML(
+        const std::string &filepath);
+
+    bool
+    saveTrackToYAML(
+        const std::string &filepath);
+
 private slots:
     void
     setStartToggled(
@@ -35,12 +47,30 @@ private slots:
     void
     addSectorPressed();
 
+    void
+    onActionSaveTrack();
+
+    void
+    onActionSaveTrackAs();
+
+    void
+    onActionLoadTrack();
+
+private:
+    void
+    releaseTrack();
+
+    void
+    configureFileMenuButtons();
+
 private:
     Ui::MainWindow *ui;
     TrackView *trackView_;
     gpo::Track *track_;
 
     QStandardItemModel *sectorTableModel_;
+
+    std::string filepathToSaveTo_;
 
 };
 #endif // MAINWINDOW_H

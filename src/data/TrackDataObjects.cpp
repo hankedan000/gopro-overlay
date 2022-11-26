@@ -189,10 +189,10 @@ namespace gpo
 	TrackSector::decode(
 		const YAML::Node& node)
 	{
-		node["name"].as<std::string>(name_);
-		node["entryPathIdx"].as<size_t>(entryIdx_);
-		node["exitPathIdx"].as<size_t>(exitIdx_);
-		node["gateWidth_meters"].as<double>(gateWidth_meters_);
+		name_ = node["name"].as<std::string>();
+		entryIdx_ = node["entryPathIdx"].as<size_t>();
+		exitIdx_ = node["exitPathIdx"].as<size_t>();
+		gateWidth_meters_ = node["gateWidth_meters"].as<double>();
 
 		return true;
 	}
@@ -282,9 +282,9 @@ namespace gpo
 	TrackGate::decode(
 		const YAML::Node& node)
 	{
-		node["name"].as<std::string>(name_);
-		node["pathIdx"].as<size_t>(pathIdx_);
-		node["gateWidth_meters"].as<double>(gateWidth_meters_);
+		name_ = node["name"].as<std::string>();
+		pathIdx_ = node["pathIdx"].as<size_t>();
+		gateWidth_meters_ = node["gateWidth_meters"].as<double>();
 
 		return true;
 	}
@@ -534,22 +534,30 @@ namespace gpo
 		okay = okay && start_->decode(node["start"]);
 		okay = okay && finish_->decode(node["finish"]);
 
-		const YAML::Node &ySectors = node["sectors"];
-		sectors_.resize(ySectors.size());
-		for (size_t ss=0; okay && ss<sectors_.size(); ss++)
+		sectors_.clear();
+		try
 		{
-			const YAML::Node &ySector = ySectors[ss];
-			auto newSector = new TrackSector(this,"",0,0);
-			if (newSector->decode(ySector))
+			const YAML::Node &ySectors = node["sectors"];
+			sectors_.resize(ySectors.size());
+			for (size_t ss=0; okay && ss<sectors_.size(); ss++)
 			{
-				sectors_.at(ss) = newSector;
+				const YAML::Node &ySector = ySectors[ss];
+				auto newSector = new TrackSector(this,"",0,0);
+				if (newSector->decode(ySector))
+				{
+					sectors_.at(ss) = newSector;
+				}
+				else
+				{
+					delete newSector;
+					sectors_.clear();
+					okay = false;
+				}
 			}
-			else
-			{
-				delete newSector;
-				sectors_.clear();
-				okay = false;
-			}
+		}
+		catch (const YAML::InvalidNode &e)
+		{
+			// not all files will have sectors
 		}
 
 		const YAML::Node &yPath = node["path"];
@@ -557,7 +565,7 @@ namespace gpo
 		for (size_t pp=0; okay && pp<path_.size(); pp++)
 		{
 			const YAML::Node &yVec = yPath[pp];
-			yVec.as<cv::Vec2d>(path_.at(pp));
+			path_.at(pp) = yVec.as<cv::Vec2d>();
 		}
 
 		return okay;

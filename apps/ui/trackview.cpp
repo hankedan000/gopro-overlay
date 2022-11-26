@@ -96,46 +96,52 @@ void
 TrackView::setTrack(
         gpo::Track *track)
 {
-    ulCoord_[0] = -10000;
-    lrCoord_[0] = +10000;
-    ulCoord_[1] = +10000;
-    lrCoord_[1] = -10000;
-    for (size_t i=0; i<track->pathCount(); i++)
-    {
-        auto point = track->getPathPoint(i);
-        if (point[0] > ulCoord_[0])
-        {
-            ulCoord_[0] = point[0];
-        }
-        if (point[1] < ulCoord_[1])
-        {
-            ulCoord_[1] = point[1];
-        }
-        if (point[0] < lrCoord_[0])
-        {
-            lrCoord_[0] = point[0];
-        }
-        if (point[1] > lrCoord_[1])
-        {
-            lrCoord_[1] = point[1];
-        }
-    }
-
-    double deltaLat = ulCoord_[0] - lrCoord_[0];
-    double deltaLon = lrCoord_[1] - ulCoord_[1];
-    pxPerDeg_ = 1.0;
-    if (deltaLat > deltaLon)
-    {
-        // track is taller than it is wide
-        pxPerDeg_ = (height() - PX_MARGIN * 2) / deltaLat;
-    }
-    else
-    {
-        // track is wider than it is tall
-        pxPerDeg_ = (width() - PX_MARGIN * 2) / deltaLon;
-    }
-
     track_ = track;
+    mliValid_ = false;
+
+    if (track_)
+    {
+        ulCoord_[0] = -10000;
+        lrCoord_[0] = +10000;
+        ulCoord_[1] = +10000;
+        lrCoord_[1] = -10000;
+        for (size_t i=0; i<track->pathCount(); i++)
+        {
+            auto point = track->getPathPoint(i);
+            if (point[0] > ulCoord_[0])
+            {
+                ulCoord_[0] = point[0];
+            }
+            if (point[1] < ulCoord_[1])
+            {
+                ulCoord_[1] = point[1];
+            }
+            if (point[0] < lrCoord_[0])
+            {
+                lrCoord_[0] = point[0];
+            }
+            if (point[1] > lrCoord_[1])
+            {
+                lrCoord_[1] = point[1];
+            }
+        }
+
+        double deltaLat = ulCoord_[0] - lrCoord_[0];
+        double deltaLon = lrCoord_[1] - ulCoord_[1];
+        pxPerDeg_ = 1.0;
+        if (deltaLat > deltaLon)
+        {
+            // track is taller than it is wide
+            pxPerDeg_ = (height() - PX_MARGIN * 2) / deltaLat;
+        }
+        else
+        {
+            // track is wider than it is tall
+            pxPerDeg_ = (width() - PX_MARGIN * 2) / deltaLon;
+        }
+    }
+
+    update();// request redraw
 }
 
 void

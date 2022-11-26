@@ -94,8 +94,33 @@
      <height>30</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionSave_Track"/>
+    <addaction name="actionSave_Track_as"/>
+    <addaction name="separator"/>
+    <addaction name="actionLoad_Track"/>
+   </widget>
+   <addaction name="menuFile"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionSave_Track">
+   <property name="text">
+    <string>Save Track</string>
+   </property>
+  </action>
+  <action name="actionSave_Track_as">
+   <property name="text">
+    <string>Save Track as...</string>
+   </property>
+  </action>
+  <action name="actionLoad_Track">
+   <property name="text">
+    <string>Open Track</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>
