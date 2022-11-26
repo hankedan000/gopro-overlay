@@ -4,6 +4,7 @@
 #include <GoProOverlay/data/DataFactory.h>
 #include <GoProOverlay/data/TrackDataObjects.h>
 #include <fstream>
+#include <QFileDialog>
 #include <yaml-cpp/yaml.h>
 
 MainWindow::MainWindow(QWidget *parent)
@@ -181,8 +182,11 @@ MainWindow::onActionSaveTrack()
 void
 MainWindow::onActionSaveTrackAs()
 {
-    // TODO use dialog
-    std::string filepath = "track_as.yaml";
+    std::string filepath = QFileDialog::getSaveFileName(
+                this,
+                "Save Track",
+                QDir::currentPath(),
+                "Track files (*.yaml) ;; All files (*.*)").toStdString();
 
     if (saveTrackToYAML(filepath))
     {
@@ -194,8 +198,11 @@ MainWindow::onActionSaveTrackAs()
 void
 MainWindow::onActionLoadTrack()
 {
-    // TODO use dialog
-    std::string filepath = "track.yaml";
+    std::string filepath = QFileDialog::getOpenFileName(
+                this,
+                "Open Track",
+                QDir::currentPath(),
+                "Track files (*.yaml) ;; All files (*.*)").toStdString();
 
     loadTrackFromYAML(filepath);// method handles update to 'filepathToSaveTo_'
 }
