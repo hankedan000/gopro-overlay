@@ -1,2 +1,3 @@
 add_subdirectory(LineSegmentUtils)
 add_subdirectory(TrackDataObjects)
+add_subdirectory(DataProcessingUtilsTest)

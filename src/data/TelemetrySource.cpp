@@ -19,6 +19,13 @@ namespace gpo
 		return samples_->at(idx);
 	}
 
+	TelemetrySample &
+	TelemetrySource::at(
+		size_t idx)
+	{
+		return samples_->at(idx);
+	}
+
 	size_t
 	TelemetrySource::seekedIdx() const
 	{

@@ -10,9 +10,10 @@ namespace gpo
 	{
 	public:
 		gpt::CombinedSample gpSamp;
-		size_t lap;
+		int lap;
 		double lapTimeOffset;
-		size_t sector;
+		int sector;
+		double sectorTimeOffset;
 
 	};
 

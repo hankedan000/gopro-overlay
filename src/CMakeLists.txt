@@ -16,6 +16,7 @@ add_library("${LIBNAME}" STATIC
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/TextObject.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/TrackMapObject.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/VideoObject.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/utils/DataProcessingUtils.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/utils/LineSegmentUtils.cpp")
 
 # add namespaced alias so that library target is referencable similar

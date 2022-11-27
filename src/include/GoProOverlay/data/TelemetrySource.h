@@ -18,6 +18,10 @@ namespace gpo
 		at(
 			size_t idx) const;
 
+		TelemetrySample &
+		at(
+			size_t idx);
+
 		size_t
 		seekedIdx() const;
 
