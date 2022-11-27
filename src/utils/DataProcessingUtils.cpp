@@ -37,87 +37,98 @@ namespace utils
 			auto &samp = telemSrc->at(ii);
 			cv::Vec2d currCoord(samp.gpSamp.gps.coord.lat,samp.gpSamp.gps.coord.lon);
 
-			bool crossed = ii != 0 && gate.detect(prevCoord,currCoord);
-			if (crossed && gateType == gpo::GateType_E::eGT_Start)
+			bool movedToNextObject = false;
+			do
 			{
-				lapStartTimeOffset = samp.gpSamp.t_offset;
-				if (currLap == -1)
+				movedToNextObject = false;
+				bool crossed = ii != 0 && gate.detect(prevCoord,currCoord);
+				if (crossed && gateType == gpo::GateType_E::eGT_Start)
 				{
-					currLap = 1;
+					lapStartTimeOffset = samp.gpSamp.t_offset;
+					if (currLap == -1)
+					{
+						currLap = 1;
+					}
+					else
+					{
+						currLap++;
+					}
 				}
-				else
+				else if (crossed && gateType == gpo::GateType_E::eGT_Finish)
 				{
-					currLap++;
+					finished = true;
+					currLap = -1;
 				}
-			}
-			else if (crossed && gateType == gpo::GateType_E::eGT_Finish)
-			{
-				finished = true;
-				currLap = -1;
-			}
-			else if (crossed && gateType == gpo::GateType_E::eGT_NOT_A_GATE)
-			{
-				if (isEntry)
+				else if (crossed && gateType == gpo::GateType_E::eGT_NOT_A_GATE)
 				{
-					currSector = sectorSeq;
-					sectorStartTimeOffset = samp.gpSamp.t_offset;
+					if (isEntry)
+					{
+						currSector = sectorSeq;
+						sectorStartTimeOffset = samp.gpSamp.t_offset;
+					}
+					else
+					{
+						currSector = -1;
+						sectorSeq++;
+					}
 				}
-				else
-				{
-					currSector = -1;
-					sectorSeq++;
-				}
-			}
 
-			// determine next gate to monitor for cross detection
-			if (crossed && ! isSector)
-			{
-				if (++tpoItr != trackObjs.end())
+				// determine next gate to monitor for cross detection
+				if (crossed && ! isSector)
 				{
-					// crossed regular gate, so look for next track object now
-					gateType = (*tpoItr)->getGateType();
-					gate = (*tpoItr)->getEntryGate();
-					isSector = (*tpoItr)->isSector();
-					isEntry = true;
+					if (++tpoItr != trackObjs.end())
+					{
+						// crossed regular gate, so look for next track object now
+						gateType = (*tpoItr)->getGateType();
+						gate = (*tpoItr)->getEntryGate();
+						isSector = (*tpoItr)->isSector();
+						isEntry = true;
+						movedToNextObject = true;
+					}
+					else
+					{
+						// crossed last track object, so loop back to first
+						sectorSeq = 0;
+						tpoItr = trackObjs.begin();
+						gateType = (*tpoItr)->getGateType();
+						gate = (*tpoItr)->getEntryGate();
+						isSector = (*tpoItr)->isSector();
+						isEntry = true;
+						movedToNextObject = true;
+					}
 				}
-				else
+				else if (crossed && isSector)
 				{
-					// crossed last track object, so loop back to first
-					sectorSeq = 0;
-					tpoItr = trackObjs.begin();
-					gateType = (*tpoItr)->getGateType();
-					gate = (*tpoItr)->getEntryGate();
-					isSector = (*tpoItr)->isSector();
-					isEntry = true;
+					if (isEntry)
+					{
+						// crossed sector entry, so look for exit now
+						gate = (*tpoItr)->getExitGate();
+						isEntry = false;
+						movedToNextObject = true;
+					}
+					else if (++tpoItr != trackObjs.end())
+					{
+						// crossed sector exit, so look for next track object now
+						gateType = (*tpoItr)->getGateType();
+						gate = (*tpoItr)->getEntryGate();
+						isSector = (*tpoItr)->isSector();
+						isEntry = true;
+						movedToNextObject = true;
+					}
+					else
+					{
+						// crossed last track object, so loop back to first
+						sectorSeq = 0;
+						tpoItr = trackObjs.begin();
+						gateType = (*tpoItr)->getGateType();
+						gate = (*tpoItr)->getEntryGate();
+						isSector = (*tpoItr)->isSector();
+						isEntry = true;
+						movedToNextObject = true;
+					}
 				}
 			}
-			else if (crossed && isSector)
-			{
-				if (isEntry)
-				{
-					// crossed sector entry, so look for exit now
-					gate = (*tpoItr)->getExitGate();
-					isEntry = false;
-				}
-				else if (++tpoItr != trackObjs.end())
-				{
-					// crossed sector exit, so look for next track object now
-					gateType = (*tpoItr)->getGateType();
-					gate = (*tpoItr)->getEntryGate();
-					isSector = (*tpoItr)->isSector();
-					isEntry = true;
-				}
-				else
-				{
-					// crossed last track object, so loop back to first
-					sectorSeq = 0;
-					tpoItr = trackObjs.begin();
-					gateType = (*tpoItr)->getGateType();
-					gate = (*tpoItr)->getEntryGate();
-					isSector = (*tpoItr)->isSector();
-					isEntry = true;
-				}
-			}
+			while (movedToNextObject);
 
 			// update telemetry sample
 			samp.lap = currLap;

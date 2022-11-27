@@ -39,9 +39,9 @@ DataProcessingUtilsTest::trackTimes()
 	gpo::Track track(path);
 	track.setStart(5);
 	track.setFinish(95);
-	track.addSector("Sector1",10,20);
-	track.addSector("Sector3",60,70);
+	track.addSector("Sector1",10,30);
 	track.addSector("Sector2",30,50);
+	track.addSector("Sector3",60,70);
 
 	auto seeker = gpo::TelemetrySeekerPtr(new gpo::TelemetrySeeker(tSamps));
 	auto tSource = gpo::TelemetrySourcePtr(new gpo::TelemetrySource(tSamps,seeker));
@@ -70,15 +70,10 @@ DataProcessingUtilsTest::trackTimes()
 			CPPUNIT_ASSERT_EQUAL(1, samp.lap);
 			CPPUNIT_ASSERT_EQUAL(-1, samp.sector);
 		}
-		else if (i < 20)// exited sector1
+		else if (i < 30)// exited sector1 AND entered sector2
 		{
 			CPPUNIT_ASSERT_EQUAL(1, samp.lap);
 			CPPUNIT_ASSERT_EQUAL(0, samp.sector);
-		}
-		else if (i < 30)// entered sector2
-		{
-			CPPUNIT_ASSERT_EQUAL(1, samp.lap);
-			CPPUNIT_ASSERT_EQUAL(-1, samp.sector);
 		}
 		else if (i < 50)// exited sector2
 		{
