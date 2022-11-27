@@ -4,7 +4,7 @@
 #include <unistd.h>// sleep
 #include <time.h>
 
-#include "GoProOverlay/data/DataFactory.h"
+#include "GoProOverlay/data/DataSource.h"
 #include "GoProOverlay/graphics/FrictionCircleObject.h"
 #include "GoProOverlay/graphics/LapTimerObject.h"
 #include "GoProOverlay/graphics/SpeedometerObject.h"
@@ -118,18 +118,18 @@ int main(int argc, char *argv[])
 	}
 
 	printf("opening %s\n", opts.inputFile.c_str());
-	gpo::Data data;
-	if ( ! gpo::DataFactory::loadData(opts.inputFile,data))
+	gpo::DataSourcePtr data;
+	if ( ! gpo::loadDataFromVideo(opts.inputFile,data))
 	{
 		printf("No video data\n");
 		return -1;
 	}
 
-	const auto RENDERED_VIDEO_SIZE = data.videoSrc->frameSize();
+	const auto RENDERED_VIDEO_SIZE = data->videoSrc->frameSize();
 	const auto PREVIEW_VIDEO_SIZE = cv::Size(1280,720);
 	const double F_CIRCLE_HISTORY_SEC = 1.0;
-	double frameCount = data.videoSrc->frameCount();
-	double fps = data.videoSrc->fps();
+	double frameCount = data->videoSrc->frameCount();
+	double fps = data->videoSrc->fps();
 	double frameTime_sec = 1.0 / fps;
 	double frameTime_usec = 1.0e6 / fps;
 	int fcTailLength = F_CIRCLE_HISTORY_SEC * fps;
@@ -137,24 +137,24 @@ int main(int argc, char *argv[])
 
 	cv::Mat rFrame(RENDERED_VIDEO_SIZE,CV_8UC3);// rendered frame
 	cv::Mat pFrame;// preview frame
-	gpo::VideoObject videoObject(data.videoSrc);
+	gpo::VideoObject videoObject(data->videoSrc);
 	gpo::TrackMapObject trackMap;
-	trackMap.addSource(data.telemSrc);
+	trackMap.addSource(data->telemSrc);
 	trackMap.initMap();
 	cv::Size tmRenderSize = trackMap.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
 	gpo::FrictionCircleObject frictionCircle;
 	cv::Size fcRenderSize = frictionCircle.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
 	frictionCircle.setTailLength(fcTailLength);
-	frictionCircle.addSource(data.telemSrc);
+	frictionCircle.addSource(data->telemSrc);
 	gpo::LapTimerObject lapTimer;
 	cv::Size ltRenderSize = lapTimer.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 10.0);
-	lapTimer.init(0,data.telemSrc->size()-1);
-	lapTimer.addSource(data.telemSrc);
+	lapTimer.init(0,data->telemSrc->size()-1);
+	lapTimer.addSource(data->telemSrc);
 	gpo::TelemetryPrintoutObject printoutObject;
-	printoutObject.addSource(data.telemSrc);
+	printoutObject.addSource(data->telemSrc);
 	printoutObject.setVisible(opts.renderDebugInfo);
 	gpo::SpeedometerObject speedoObject;
-	speedoObject.addSource(data.telemSrc);
+	speedoObject.addSource(data->telemSrc);
 	cv::Size speedoRenderSize = speedoObject.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 6.0);
 	cv::VideoWriter vWriter(
 		opts.outputFile,
@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
 	size_t initFrameIdx = 0;
 	for (size_t frameIdx=initFrameIdx; ! stop_app && frameIdx<frameCount; frameIdx++)
 	{
-		data.seeker->seekToIdx(frameIdx);
+		data->seeker->seekToIdx(frameIdx);
 		uint64_t frameStart_usec = getTicks_usec();
 		if (prevFrameStart_usec != 0)
 		{

@@ -4,7 +4,7 @@
 #include <unistd.h>// sleep
 #include <time.h>
 
-#include "GoProOverlay/data/DataFactory.h"
+#include "GoProOverlay/data/DataSource.h"
 #include "GoProOverlay/graphics/FrictionCircleObject.h"
 #include "GoProOverlay/graphics/LapTimerObject.h"
 #include "GoProOverlay/graphics/SpeedometerObject.h"
@@ -130,15 +130,15 @@ int main(int argc, char *argv[])
 	}
 
 	printf("opening %s\n", opts.topFile.c_str());
-	gpo::Data topData;
-	if ( ! gpo::DataFactory::loadData(opts.topFile,topData))
+	gpo::DataSourcePtr topData;
+	if ( ! gpo::loadDataFromVideo(opts.topFile,topData))
 	{
 		printf("No top video data\n");
 		return -1;
 	}
 	printf("opening %s\n", opts.bottomFile.c_str());
-	gpo::Data botData;
-	if ( ! gpo::DataFactory::loadData(opts.bottomFile,botData))
+	gpo::DataSourcePtr botData;
+	if ( ! gpo::loadDataFromVideo(opts.bottomFile,botData))
 	{
 		printf("No bottom video data\n");
 		return -1;
@@ -146,11 +146,11 @@ int main(int argc, char *argv[])
 
 	const cv::Scalar TOP_COLOR = RGBA_COLOR(255,0,0,255);
 	const cv::Scalar BOT_COLOR = RGBA_COLOR(0,255,255,255);
-	const auto RENDERED_VIDEO_SIZE = topData.videoSrc->frameSize();
+	const auto RENDERED_VIDEO_SIZE = topData->videoSrc->frameSize();
 	const auto PREVIEW_VIDEO_SIZE = cv::Size(1280,720);
 	const double F_CIRCLE_HISTORY_SEC = 1.0;
-	double frameCount = topData.videoSrc->frameCount();
-	double fps = topData.videoSrc->fps();
+	double frameCount = topData->videoSrc->frameCount();
+	double fps = topData->videoSrc->fps();
 	double frameTime_sec = 1.0 / fps;
 	double frameTime_usec = 1.0e6 / fps;
 	int fcTailLength = F_CIRCLE_HISTORY_SEC * fps;
@@ -159,15 +159,15 @@ int main(int argc, char *argv[])
 	cv::Mat rFrame(RENDERED_VIDEO_SIZE,CV_8UC3);// rendered frame
 	cv::Mat pFrame;// preview frame
 
-	gpo::VideoObject topVideoObject(topData.videoSrc);
+	gpo::VideoObject topVideoObject(topData->videoSrc);
 	cv::Size topVideoSize = topVideoObject.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 2.0);
-	gpo::VideoObject botVideoObject(botData.videoSrc);
+	gpo::VideoObject botVideoObject(botData->videoSrc);
 	cv::Size botVideoSize = botVideoObject.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 2.0);
 
 	gpo::TrackMapObject trackMap;
 	cv::Size tmRenderSize = trackMap.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
-	trackMap.addSource(topData.telemSrc);
-	trackMap.addSource(botData.telemSrc);
+	trackMap.addSource(topData->telemSrc);
+	trackMap.addSource(botData->telemSrc);
 	trackMap.setDotColor(0,TOP_COLOR);
 	trackMap.setDotColor(1,BOT_COLOR);
 	trackMap.initMap();
@@ -175,33 +175,33 @@ int main(int argc, char *argv[])
 	gpo::FrictionCircleObject topFC;
 	cv::Size topFC_RenderSize = topFC.getScaledSizeFromTargetHeight(topVideoSize.height / 2.0);
 	topFC.setTailLength(fcTailLength);
-	topFC.addSource(topData.telemSrc);
+	topFC.addSource(topData->telemSrc);
 	gpo::FrictionCircleObject botFC;
 	cv::Size botFC_RenderSize = botFC.getScaledSizeFromTargetHeight(botVideoSize.height / 2.0);
 	botFC.setTailLength(fcTailLength);
-	botFC.addSource(botData.telemSrc);
+	botFC.addSource(botData->telemSrc);
 
 	gpo::LapTimerObject topLapTimer;
 	cv::Size ltRenderSize = topLapTimer.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 10.0);
-	topLapTimer.addSource(topData.telemSrc);
+	topLapTimer.addSource(topData->telemSrc);
 	gpo::LapTimerObject botLapTimer;
-	botLapTimer.addSource(botData.telemSrc);
+	botLapTimer.addSource(botData->telemSrc);
 
 	gpo::TelemetryPrintoutObject topPrintoutObject;
-	topPrintoutObject.addSource(topData.telemSrc);
+	topPrintoutObject.addSource(topData->telemSrc);
 	topPrintoutObject.setVisible(opts.renderDebugInfo);
 	topPrintoutObject.setFontColor(TOP_COLOR);
 	gpo::TelemetryPrintoutObject botPrintoutObject;
-	botPrintoutObject.addSource(botData.telemSrc);
+	botPrintoutObject.addSource(botData->telemSrc);
 	botPrintoutObject.setVisible(opts.renderDebugInfo);
 	botPrintoutObject.setFontColor(BOT_COLOR);
 
 	gpo::SpeedometerObject topSpeedoObject;
 	cv::Size topSpeedoRenderSize = topSpeedoObject.getScaledSizeFromTargetHeight(topVideoSize.height / 4.0);
-	topSpeedoObject.addSource(topData.telemSrc);
+	topSpeedoObject.addSource(topData->telemSrc);
 	gpo::SpeedometerObject botSpeedoObject;
 	cv::Size botSpeedoRenderSize = botSpeedoObject.getScaledSizeFromTargetHeight(botVideoSize.height / 4.0);
-	botSpeedoObject.addSource(botData.telemSrc);
+	botSpeedoObject.addSource(botData->telemSrc);
 
 	gpo::TextObject topTextObject;
 	topTextObject.setText("Run A");
@@ -229,20 +229,20 @@ int main(int argc, char *argv[])
 	// make sure startDelay doesn't cause negative start
 	startDelay = std::min(startDelay,topStartIdx);
 	startDelay = std::min(startDelay,botStartIdx);
-	size_t topFinishIdx = topData.videoSrc->frameCount();
-	size_t botFinishIdx = botData.videoSrc->frameCount();
+	size_t topFinishIdx = topData->videoSrc->frameCount();
+	size_t botFinishIdx = botData->videoSrc->frameCount();
 	size_t topFramesToRender = topFinishIdx - topStartIdx + startDelay;
 	size_t botFramesToRender = botFinishIdx - botStartIdx + startDelay;
 	size_t netFramesToRender = std::max(topFramesToRender,botFramesToRender);
-	topData.seeker->seekToIdx(topStartIdx - startDelay);
-	botData.seeker->seekToIdx(botStartIdx - startDelay);
-	topLapTimer.init(topStartIdx,topData.telemSrc->size()-1);
-	botLapTimer.init(botStartIdx,botData.telemSrc->size()-1);
+	topData->seeker->seekToIdx(topStartIdx - startDelay);
+	botData->seeker->seekToIdx(botStartIdx - startDelay);
+	topLapTimer.init(topStartIdx,topData->telemSrc->size()-1);
+	botLapTimer.init(botStartIdx,botData->telemSrc->size()-1);
 	for (size_t ff=0; ! stop_app && ff<netFramesToRender; ff++)
 	{
 		rFrame.setTo(cv::Scalar(0,0,0));// clear frame
-		topData.seeker->next();
-		botData.seeker->next();
+		topData->seeker->next();
+		botData->seeker->next();
 		uint64_t frameStart_usec = getTicks_usec();
 		if (prevFrameStart_usec != 0)
 		{

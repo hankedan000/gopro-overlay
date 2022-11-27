@@ -2,7 +2,7 @@ set(LIBNAME "GoProOverlay")
 set(LIBNAME_ALL_UPPER "GOPRO_OVERLAY")
 
 add_library("${LIBNAME}" STATIC
-	"${CMAKE_CURRENT_SOURCE_DIR}/data/DataFactory.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/data/DataSource.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/data/TelemetrySeeker.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/data/TelemetrySource.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/data/TrackDataObjects.cpp"

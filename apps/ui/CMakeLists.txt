@@ -1,4 +1,10 @@
 set(QT_WIDGETS_SOURCES
+        cvimageview.h
+        cvimageview.cpp
+        cvimageview.ui
+        scrubbablevideo.h
+        scrubbablevideo.cpp
+        scrubbablevideo.ui
 	trackeditor.h
 	trackeditor.cpp
 	trackeditor.ui

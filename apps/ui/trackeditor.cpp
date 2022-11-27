@@ -1,7 +1,7 @@
 #include "trackeditor.h"
 #include "ui_trackeditor.h"
 
-#include <GoProOverlay/data/DataFactory.h>
+#include <GoProOverlay/data/DataSource.h>
 #include <GoProOverlay/data/TrackDataObjects.h>
 #include <fstream>
 #include <QFileDialog>
@@ -53,8 +53,8 @@ bool
 TrackEditor::loadTrackFromVideo(
     const std::string &filepath)
 {
-    gpo::Data data;
-    bool loadOkay = gpo::DataFactory::loadData(filepath,data);
+    gpo::DataSourcePtr data;
+    bool loadOkay = gpo::loadDataFromVideo(filepath,data);
     if (loadOkay)
     {
         setWindowTitle(QStringLiteral("Track Editor - %1").arg(filepath.c_str()));
@@ -62,7 +62,7 @@ TrackEditor::loadTrackFromVideo(
                     QStringLiteral("Loaded track data from '%1'").arg(filepath.c_str()),
                     3000);// 3s
         releaseTrack();
-        track_ = gpo::makeTrackFromTelemetry(data.telemSrc);
+        track_ = gpo::makeTrackFromTelemetry(data->telemSrc);
         trackView_->setTrack(track_);
 
         filepathToSaveTo_ = "";
