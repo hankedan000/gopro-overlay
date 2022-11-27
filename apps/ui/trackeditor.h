@@ -1,5 +1,4 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
 #include <QMainWindow>
 #include <QStandardItemModel>
@@ -7,16 +6,16 @@
 #include "trackview.h"
 
 QT_BEGIN_NAMESPACE
-namespace Ui { class MainWindow; }
+namespace Ui { class TrackEditor; }
 QT_END_NAMESPACE
 
-class MainWindow : public QMainWindow
+class TrackEditor : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    TrackEditor(QWidget *parent = nullptr);
+    ~TrackEditor();
 
     bool
     loadTrackFromVideo(
@@ -81,7 +80,7 @@ private:
     clearSectorTable();
 
 private:
-    Ui::MainWindow *ui;
+    Ui::TrackEditor *ui;
     TrackView *trackView_;
     gpo::Track *track_;
 
@@ -95,4 +94,3 @@ private:
     size_t sectorEntryIdx_;
 
 };
-#endif // MAINWINDOW_H

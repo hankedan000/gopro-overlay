@@ -1,7 +1,7 @@
 set(QT_WIDGETS_SOURCES
-	mainwindow.h
-	mainwindow.cpp
-	mainwindow.ui
+	trackeditor.h
+	trackeditor.cpp
+	trackeditor.ui
 	trackview.h
 	trackview.cpp
 	trackview.ui

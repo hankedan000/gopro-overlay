@@ -1,5 +1,5 @@
-#include "mainwindow.h"
-#include "ui_mainwindow.h"
+#include "trackeditor.h"
+#include "ui_trackeditor.h"
 
 #include <GoProOverlay/data/DataFactory.h>
 #include <GoProOverlay/data/TrackDataObjects.h>
@@ -7,9 +7,9 @@
 #include <QFileDialog>
 #include <yaml-cpp/yaml.h>
 
-MainWindow::MainWindow(QWidget *parent)
+TrackEditor::TrackEditor(QWidget *parent)
  : QMainWindow(parent)
- , ui(new Ui::MainWindow)
+ , ui(new Ui::TrackEditor)
  , trackView_(new TrackView)
  , track_(nullptr)
  , filepathToSaveTo_()
@@ -19,15 +19,15 @@ MainWindow::MainWindow(QWidget *parent)
     setWindowTitle("Track Editor");
 
     // button actions
-    connect(ui->setStartButton, &QPushButton::toggled, this, &MainWindow::setStartToggled);
-    connect(ui->setFinishButton, &QPushButton::toggled, this, &MainWindow::setFinishToggled);
-    connect(ui->addSectorButton, &QPushButton::pressed, this, &MainWindow::addSectorPressed);
-    connect(trackView_, &TrackView::gatePlaced, this, &MainWindow::trackViewGatePlaced);
+    connect(ui->setStartButton, &QPushButton::toggled, this, &TrackEditor::setStartToggled);
+    connect(ui->setFinishButton, &QPushButton::toggled, this, &TrackEditor::setFinishToggled);
+    connect(ui->addSectorButton, &QPushButton::pressed, this, &TrackEditor::addSectorPressed);
+    connect(trackView_, &TrackView::gatePlaced, this, &TrackEditor::trackViewGatePlaced);
 
     // menu actions
-    connect(ui->actionSave_Track, &QAction::triggered, this, &MainWindow::onActionSaveTrack);
-    connect(ui->actionSave_Track_as, &QAction::triggered, this, &MainWindow::onActionSaveTrackAs);
-    connect(ui->actionLoad_Track, &QAction::triggered, this, &MainWindow::onActionLoadTrack);
+    connect(ui->actionSave_Track, &QAction::triggered, this, &TrackEditor::onActionSaveTrack);
+    connect(ui->actionSave_Track_as, &QAction::triggered, this, &TrackEditor::onActionSaveTrackAs);
+    connect(ui->actionLoad_Track, &QAction::triggered, this, &TrackEditor::onActionLoadTrack);
 
     // Create a new model
     // QStandardItemModel(int rows, int columns, QObject * parent = 0)
@@ -38,7 +38,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->sectorTable->setModel(sectorTableModel_);
 }
 
-MainWindow::~MainWindow()
+TrackEditor::~TrackEditor()
 {
     delete ui;
     delete sectorTableModel_;
@@ -50,7 +50,7 @@ MainWindow::~MainWindow()
 }
 
 bool
-MainWindow::loadTrackFromVideo(
+TrackEditor::loadTrackFromVideo(
     const std::string &filepath)
 {
     gpo::Data data;
@@ -73,7 +73,7 @@ MainWindow::loadTrackFromVideo(
 }
 
 bool
-MainWindow::loadTrackFromYAML(
+TrackEditor::loadTrackFromYAML(
     const std::string &filepath)
 {
     YAML::Node trackNode = YAML::LoadFile(filepath);
@@ -103,7 +103,7 @@ MainWindow::loadTrackFromYAML(
 }
 
 bool
-MainWindow::saveTrackToYAML(
+TrackEditor::saveTrackToYAML(
     const std::string &filepath)
 {
     if (track_)
@@ -118,7 +118,7 @@ MainWindow::saveTrackToYAML(
 }
 
 void
-MainWindow::setStartToggled(
+TrackEditor::setStartToggled(
         bool checked)
 {
     if (checked)
@@ -135,7 +135,7 @@ MainWindow::setStartToggled(
 }
 
 void
-MainWindow::setFinishToggled(
+TrackEditor::setFinishToggled(
         bool checked)
 {
     if (checked)
@@ -152,7 +152,7 @@ MainWindow::setFinishToggled(
 }
 
 void
-MainWindow::trackViewGatePlaced(
+TrackEditor::trackViewGatePlaced(
         TrackView::PlacementMode pMode,
         size_t pathIdx)
 {
@@ -186,14 +186,14 @@ MainWindow::trackViewGatePlaced(
 }
 
 void
-MainWindow::addSectorPressed()
+TrackEditor::addSectorPressed()
 {
     trackView_->setPlacementMode(TrackView::PlacementMode::ePM_SectorEntry);
     ui->statusbar->showMessage("Click to set sector's entry gate.");
 }
 
 void
-MainWindow::onActionSaveTrack()
+TrackEditor::onActionSaveTrack()
 {
     if ( ! filepathToSaveTo_.empty())
     {
@@ -202,7 +202,7 @@ MainWindow::onActionSaveTrack()
 }
 
 void
-MainWindow::onActionSaveTrackAs()
+TrackEditor::onActionSaveTrackAs()
 {
     std::string filepath = QFileDialog::getSaveFileName(
                 this,
@@ -218,7 +218,7 @@ MainWindow::onActionSaveTrackAs()
 }
 
 void
-MainWindow::onActionLoadTrack()
+TrackEditor::onActionLoadTrack()
 {
     std::string filepath = QFileDialog::getOpenFileName(
                 this,
@@ -230,7 +230,7 @@ MainWindow::onActionLoadTrack()
 }
 
 void
-MainWindow::releaseTrack()
+TrackEditor::releaseTrack()
 {
     if (track_)
     {
@@ -242,7 +242,7 @@ MainWindow::releaseTrack()
 }
 
 void
-MainWindow::configureFileMenuButtons()
+TrackEditor::configureFileMenuButtons()
 {
     ui->actionSave_Track->setEnabled(track_ != nullptr && ! filepathToSaveTo_.empty());
     ui->actionSave_Track_as->setEnabled(track_ != nullptr);
@@ -250,7 +250,7 @@ MainWindow::configureFileMenuButtons()
 }
 
 void
-MainWindow::addNewSector(
+TrackEditor::addNewSector(
         size_t entryIdx,
         size_t exitIdx)
 {
@@ -260,7 +260,7 @@ MainWindow::addNewSector(
 }
 
 void
-MainWindow::loadSectorsToTable()
+TrackEditor::loadSectorsToTable()
 {
     clearSectorTable();
     for (size_t ss=0; ss<track_->sectorCount(); ss++)
@@ -274,7 +274,7 @@ MainWindow::loadSectorsToTable()
 }
 
 void
-MainWindow::addSectorToTable(
+TrackEditor::addSectorToTable(
         const std::string &name,
         size_t entryIdx,
         size_t exitIdx)
@@ -297,7 +297,7 @@ MainWindow::addSectorToTable(
 }
 
 void
-MainWindow::clearSectorTable()
+TrackEditor::clearSectorTable()
 {
     sectorTableModel_->clear();
     sectorTableModel_->setHorizontalHeaderLabels({"Sector Name","Entry Index","Exit Index"});

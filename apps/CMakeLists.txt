@@ -25,11 +25,11 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 add_subdirectory(ui)
 
-add_executable(TrackEditor
-	TrackEditor.cpp
+add_executable(TrackEditorApp
+	TrackEditorApp.cpp
 )
 
-target_link_libraries(TrackEditor PUBLIC
+target_link_libraries(TrackEditorApp PUBLIC
 	GoProOverlay
 	MyWidgets
 )
