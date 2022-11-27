@@ -1,5 +1,7 @@
 #include "GoProOverlay/data/DataSource.h"
 
+#include <filesystem>
+
 #include <GoProTelem/GoProTelem.h>
 #include <GoProOverlay/utils/DataProcessingUtils.h>
 
@@ -146,8 +148,8 @@ namespace gpo
 			}
 		}
 
-		std::string name = "VideoSource" + std::to_string(sources_.size());
-		return addVideoSourceWithName(filepath,name);
+		std::filesystem::path p(filepath);
+		return addVideoSourceWithName(p,p.filename());
 	}
 
 	void
@@ -163,6 +165,20 @@ namespace gpo
 		const std::string &name)
 	{
 		sources_.at(idx).name = name;
+	}
+
+	std::string
+	DataSourceManager::getSourceName(
+		size_t idx) const
+	{
+		return sources_.at(idx).name;
+	}
+
+	std::string
+	DataSourceManager::getSourceOrigin(
+		size_t idx) const
+	{
+		return sources_.at(idx).originFile;
 	}
 
 	size_t
@@ -208,7 +224,6 @@ namespace gpo
 	DataSourceManager::decode(
 		const YAML::Node& node)
 	{
-
 		bool okay = true;
 
 		sources_.clear();
@@ -216,7 +231,7 @@ namespace gpo
 		{
 			const YAML::Node &ySources = node["sources"];
 			sources_.reserve(ySources.size());
-			for (size_t ss=0; okay && ss<sources_.size(); ss++)
+			for (size_t ss=0; okay && ss<ySources.size(); ss++)
 			{
 				const YAML::Node &ySource = ySources[ss];
 				okay = addVideoSourceWithName(
@@ -239,7 +254,7 @@ namespace gpo
 		{
 			InternalSourceEntry newEntry;
 			newEntry.originFile = filepath;
-			newEntry.name = "";// TODO set from filename
+			newEntry.name = name;
 			newEntry.data = data;
 			sources_.push_back(newEntry);
 		}

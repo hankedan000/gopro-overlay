@@ -3,6 +3,7 @@ set(LIBNAME_ALL_UPPER "GOPRO_OVERLAY")
 
 add_library("${LIBNAME}" STATIC
 	"${CMAKE_CURRENT_SOURCE_DIR}/data/DataSource.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/data/RenderProject.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/data/TelemetrySeeker.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/data/TelemetrySource.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/data/TrackDataObjects.cpp"
@@ -18,6 +19,8 @@ add_library("${LIBNAME}" STATIC
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/VideoObject.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/utils/DataProcessingUtils.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/utils/LineSegmentUtils.cpp")
+
+target_compile_features(${LIBNAME} PRIVATE cxx_std_17)
 
 # add namespaced alias so that library target is referencable similar
 # to how it would when included from exports. this enabled project

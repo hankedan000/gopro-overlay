@@ -33,3 +33,12 @@ target_link_libraries(TrackEditorApp PUBLIC
 	GoProOverlay
 	MyWidgets
 )
+
+add_executable(ProjectApp
+	ProjectApp.cpp
+)
+
+target_link_libraries(ProjectApp PUBLIC
+	GoProOverlay
+	MyWidgets
+)

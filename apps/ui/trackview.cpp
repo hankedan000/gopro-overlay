@@ -78,6 +78,11 @@ TrackView::eventFilter(
         QObject *obj,
         QEvent *event)
 {
+    if (track_ == nullptr)
+    {
+        return false;
+    }
+
     if (event->type() == QEvent::MouseMove)
     {
         QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);

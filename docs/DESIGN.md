@@ -1,7 +1,7 @@
 # Class Diagrams
 ## data Classes
 <!--
-@startuml plantuml_imgs/dataClasses
+@startuml plantuml_imgs/dataSourceClasses
 
 class TelemetrySample {
 	+gpt::CombinedSample gpSamp
@@ -68,6 +68,8 @@ class DataSourceManager {
 	+bool addVideo(const std::string &filepath)
 	+void removeSource(size_t idx)
 	+void setSourceName(size_t idx, const std::string &name)
+	+std::string getSourceName(size_t idx) const
+	+std::string getSourceOrigin(size_t idx) const
 	+size_t sourceCount() const
 	+DataSourcePtr getSource(size_t idx)
 
@@ -89,10 +91,10 @@ DataSource *-- DataSourceManager
 
 @enduml
 -->
-![](plantuml_imgs/dataClasses.png)
+![](plantuml_imgs/dataSourceClasses.png)
 
 <!--
-@startuml plantuml_imgs/dataClasses2
+@startuml plantuml_imgs/trackDataClasses
 
 enum GateType_E
 {
@@ -206,7 +208,37 @@ TrackGate *-- Track
 
 @enduml
 -->
-![](plantuml_imgs/dataClasses2.png)
+![](plantuml_imgs/trackDataClasses.png)
+
+
+## project Classes
+<!--
+@startuml plantuml_imgs/projectClasses
+
+class RenderProject {
+	+RenderProject()
+
+	+DataSourceManager &dataSourceManager()
+	+void setTrack(Track *track)
+	+Track *getTrack()
+	+bool hasTrack() const
+
+	+bool save(const std::string &filepath)
+	+bool load(const std::string &filepath)
+
+	+YAML::Node encode() const
+	+bool decode(const YAML::Node& node)
+
+	-DataSourceManager dsm_
+	-Track *track_
+}
+
+DataSourceManager *-- RenderProject
+Track *-- RenderProject
+
+@enduml
+-->
+![](plantuml_imgs/projectClasses.png)
 
 ## graphics Classes
 <!--
@@ -295,26 +327,3 @@ VideoSource -- VideoObject
 @enduml
 -->
 ![](plantuml_imgs/graphicsClasses.png)
-
-## TBD Classes
-<!--
-@startuml plantuml_imgs/tbdClasses
-
-class Track {
-	+string name
-	+gpt::CoordLL start
-	+gpt::CoordLL finish
-}
-
-class Session {
-	-Track track
-	-string[] videoFilepaths
-
-	+addVideo(string filepath)
-	+size_t videoCount()
-	+loadVideo()
-}
-
-@enduml
--->
-![](plantuml_imgs/tbdClasses.png)

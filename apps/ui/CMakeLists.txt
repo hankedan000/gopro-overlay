@@ -2,6 +2,9 @@ set(QT_WIDGETS_SOURCES
         cvimageview.h
         cvimageview.cpp
         cvimageview.ui
+        projectwindow.h
+        projectwindow.cpp
+        projectwindow.ui
         scrubbablevideo.h
         scrubbablevideo.cpp
         scrubbablevideo.ui

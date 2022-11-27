@@ -82,6 +82,14 @@ namespace gpo
 			size_t idx,
 			const std::string &name);
 
+		std::string
+		getSourceName(
+			size_t idx) const;
+
+		std::string
+		getSourceOrigin(
+			size_t idx) const;
+
 		size_t
 		sourceCount() const;
 

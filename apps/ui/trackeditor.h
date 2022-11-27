@@ -29,6 +29,10 @@ public:
     saveTrackToYAML(
         const std::string &filepath);
 
+    void
+    setTrack(
+            gpo::Track *track);
+
 private slots:
     void
     setStartToggled(
@@ -82,6 +86,8 @@ private:
 private:
     Ui::TrackEditor *ui;
     TrackView *trackView_;
+
+    bool iOwnTrack_;
     gpo::Track *track_;
 
     QStandardItemModel *sectorTableModel_;

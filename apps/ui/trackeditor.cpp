@@ -11,11 +11,13 @@ TrackEditor::TrackEditor(QWidget *parent)
  : QMainWindow(parent)
  , ui(new Ui::TrackEditor)
  , trackView_(new TrackView)
+ , iOwnTrack_(parent == nullptr)
  , track_(nullptr)
  , filepathToSaveTo_()
 {
     ui->setupUi(this);
     ui->trackViewLayout->addWidget(trackView_);
+    ui->menubar->setVisible(iOwnTrack_);// only show menubar if running in standalone
     setWindowTitle("Track Editor");
 
     // button actions
@@ -42,7 +44,7 @@ TrackEditor::~TrackEditor()
 {
     delete ui;
     delete sectorTableModel_;
-    if (track_)
+    if (iOwnTrack_ && track_)
     {
         delete track_;
         track_ = nullptr;
@@ -62,8 +64,7 @@ TrackEditor::loadTrackFromVideo(
                     QStringLiteral("Loaded track data from '%1'").arg(filepath.c_str()),
                     3000);// 3s
         releaseTrack();
-        track_ = gpo::makeTrackFromTelemetry(data->telemSrc);
-        trackView_->setTrack(track_);
+        setTrack(gpo::makeTrackFromTelemetry(data->telemSrc));
 
         filepathToSaveTo_ = "";
         configureFileMenuButtons();
@@ -87,9 +88,7 @@ TrackEditor::loadTrackFromYAML(
                         QStringLiteral("Loaded track data from '%1'").arg(filepath.c_str()),
                         3000);// 3s
             releaseTrack();
-            track_ = newTrack;
-            trackView_->setTrack(newTrack);
-            loadSectorsToTable();
+            setTrack(newTrack);
 
             filepathToSaveTo_ = filepath;
             configureFileMenuButtons();
@@ -115,6 +114,15 @@ TrackEditor::saveTrackToYAML(
         return true;
     }
     return false;
+}
+
+void
+TrackEditor::setTrack(
+        gpo::Track *track)
+{
+    track_ = track;
+    trackView_->setTrack(track_);
+    loadSectorsToTable();
 }
 
 void
@@ -263,7 +271,7 @@ void
 TrackEditor::loadSectorsToTable()
 {
     clearSectorTable();
-    for (size_t ss=0; ss<track_->sectorCount(); ss++)
+    for (size_t ss=0; track_ && ss<track_->sectorCount(); ss++)
     {
         auto tSector = track_->getSector(ss);
         addSectorToTable(
