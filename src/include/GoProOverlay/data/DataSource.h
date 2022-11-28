@@ -115,6 +115,10 @@ namespace gpo
 		getSource(
 			size_t idx) const;
 
+		DataSourcePtr
+		getSourceByName(
+			const std::string &sourceName);
+
 		// YAML encode/decode
 		YAML::Node
 		encode() const;

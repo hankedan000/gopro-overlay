@@ -80,6 +80,7 @@ class DataSourceManager {
 	+std::string getSourceOrigin(size_t idx) const
 	+size_t sourceCount() const
 	+DataSourcePtr getSource(size_t idx)
+	+DataSourcePtr getSourceByName(const std::string &sourceName)
 
 	+YAML::Node encode() const
 	+bool decode(const YAML::Node& node)
@@ -432,12 +433,15 @@ class RenderEngine {
 	+void setRenderSize(cv::Size size)
 
 	+void addEntity(RenderedEntity re)
-	+RenderedEntity *getEntity(size_t idx)
-	+const RenderedEntity *getEntity(size_t idx) const
+	+RenderedEntity &getEntity(size_t idx)
+	+const RenderedEntity &getEntity(size_t idx) const
 	+void removeEntity(size_t idx)
 
 	+void render()
 	+const cv::Mat &getFrame() const
+
+	+YAML::Node encode() const
+	+bool decode(const YAML::Node& node)
 
 	-cv::Mat rFrame_
 	-std::vector<RenderedEntity> entities_
