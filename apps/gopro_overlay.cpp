@@ -140,7 +140,8 @@ int main(int argc, char *argv[])
 
 	cv::Mat rFrame(RENDERED_VIDEO_SIZE,CV_8UC3);// rendered frame
 	cv::Mat pFrame;// preview frame
-	gpo::VideoObject videoObject(data->videoSrc);
+	gpo::VideoObject videoObject;
+	videoObject.addVideoSource(data->videoSrc);
 	gpo::TrackMapObject trackMap;
 	trackMap.addTelemetrySource(data->telemSrc);
 	trackMap.setTrack(track);

@@ -389,36 +389,6 @@ namespace YAML
 {
 
 template<>
-struct convert<cv::Vec2d>
-{
-	static Node
-	encode(
-		const cv::Vec2d& rhs)
-	{
-		Node node;
-		node.push_back(rhs[0]);
-		node.push_back(rhs[1]);
-
-		return node;
-	}
-
-	static bool
-	decode(
-		const Node& node,
-		cv::Vec2d& rhs)
-	{
-		if( ! node.IsSequence() || node.size() != 2) {
-			return false;
-		}
-
-		rhs[0] = node[0].as<double>();
-		rhs[1] = node[1].as<double>();
-
-		return true;
-	}
-};
-
-template<>
 struct convert<gpo::DetectionGate>
 {
 	static Node

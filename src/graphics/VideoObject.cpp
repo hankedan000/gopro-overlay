@@ -2,13 +2,10 @@
 
 namespace gpo
 {
-	VideoObject::VideoObject(
-		const VideoSourcePtr &vSrc)
+	VideoObject::VideoObject()
 	 : RenderedObject(0,0)
-	 , source_(vSrc)
 	 , prevRenderedFrameIdx_(-1)
 	{
-		outImg_.create(source_->frameSize(),CV_8UC3);
 	}
 
 	std::string
@@ -29,9 +26,15 @@ namespace gpo
 		int originX, int originY,
 		cv::Size renderSize)
 	{
-		auto frameIdx = source_->seekedIdx();
+		if ( ! requirementsMet())
+		{
+			return;
+		}
+		auto vSource = vSources_.front();
+
+		auto frameIdx = vSource->seekedIdx();
 		bool needNewFrame = frameIdx != prevRenderedFrameIdx_;
-		if (needNewFrame && ! source_->getFrame(outImg_,frameIdx))
+		if (needNewFrame && ! vSource->getFrame(outImg_,frameIdx))
 		{
 			throw std::runtime_error("getFrame() failed on frameIdx " + std::to_string(frameIdx));
 		}
@@ -53,6 +56,12 @@ namespace gpo
 			cv::rectangle(intoImg,roi,CV_RGB(255,255,255));
 		}
 		prevRenderedFrameIdx_ = frameIdx;
+	}
+
+	void
+	VideoObject::sourcesValid()
+	{
+		outImg_.create(vSources_.front()->frameSize(),CV_8UC3);
 	}
 
 	YAML::Node

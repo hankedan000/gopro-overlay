@@ -296,7 +296,7 @@ class RenderedObject {
 	+const Track *getTrack() const
 
 	+YAML::Node encode() const
-	+bool decode(const YAML::Node& node)
+	+bool decode(const YAML::Node& node, const DataSourceManager &dsm)
 
 	#void sourcesValid()
 	#bool videoReqsMet() const
@@ -441,7 +441,7 @@ class RenderEngine {
 	+const cv::Mat &getFrame() const
 
 	+YAML::Node encode() const
-	+bool decode(const YAML::Node& node)
+	+bool decode(const YAML::Node& node, const DataSourceManager &dsm)
 
 	-cv::Mat rFrame_
 	-std::vector<RenderedEntity> entities_

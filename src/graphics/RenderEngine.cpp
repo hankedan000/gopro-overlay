@@ -7,6 +7,7 @@
 #include "GoProOverlay/graphics/TextObject.h"
 #include "GoProOverlay/graphics/TrackMapObject.h"
 #include "GoProOverlay/graphics/VideoObject.h"
+#include "GoProOverlay/utils/YAML_Utils.h"
 
 namespace gpo
 {
@@ -92,15 +93,66 @@ namespace gpo
 	RenderEngine::encode() const
 	{
 		YAML::Node node;
-		throw std::runtime_error("RenderEngine::encode not implemented");
+
+		node["renderSize"] = rFrame_.size();
+
+		YAML::Node yEntities = node["entities"];
+		for (const auto &ent : entities_)
+		{
+			YAML::Node yEntity;
+			yEntity["rObj"] = ent.rObj->encode();
+			yEntity["rSize"] = ent.rSize;
+			yEntity["rPos"] = ent.rPos;
+			yEntities.push_back(yEntity);
+		}
+
 		return node;
 	}
 
 	bool
 	RenderEngine::decode(
-		const YAML::Node& node)
+		const YAML::Node& node,
+		const DataSourceManager &dsm)
 	{
-		throw std::runtime_error("RenderEngine::decode not implemented");
+		setRenderSize(node["renderSize"].as<cv::Size>());
+
+		if (node["entities"])
+		{
+			const YAML::Node &yEntities = node["entities"];
+			for (size_t i=0; i<yEntities.size(); i++)
+			{
+				RenderedEntity re;
+
+				const YAML::Node yEntity = yEntities[i];
+				YAML_TO_FIELD(yEntity,"rSize",re.rSize);
+				YAML_TO_FIELD(yEntity,"rPos",re.rPos);
+
+				const YAML::Node yR_Obj = yEntity["rObj"];
+				const std::string typeName = yR_Obj["typeName"].as<std::string>();
+				re.rObj = nullptr;
+				if (typeName == "FrictionCircleObject")
+					re.rObj = new FrictionCircleObject();
+				else if (typeName == "LapTimerObject")
+					re.rObj = new LapTimerObject();
+				else if (typeName == "SpeedometerObject")
+					re.rObj = new SpeedometerObject();
+				else if (typeName == "TelemetryPrintoutObject")
+					re.rObj = new TelemetryPrintoutObject();
+				else if (typeName == "TextObject")
+					re.rObj = new TextObject();
+				else if (typeName == "TrackMapObject")
+					re.rObj = new TrackMapObject();
+				else if (typeName == "VideoObject")
+					re.rObj = new VideoObject();
+				else
+					throw std::runtime_error("unsupported decode for RenderedObject type " + typeName);
+
+				re.rObj->decode(yEntity,dsm);
+
+				addEntity(re);
+			}
+		}
+
 		return true;
 	}
 
@@ -122,15 +174,19 @@ namespace gpo
 
 		engine.setRenderSize(RENDERED_VIDEO_SIZE);
 
+		auto topVideo = new VideoObject();
 		RenderEngine::RenderedEntity topVideoRE;
-		topVideoRE.rObj = new VideoObject(topData->videoSrc);
+		topVideoRE.rObj = topVideo;
 		topVideoRE.rSize = topVideoRE.rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 2.0);
 		topVideoRE.rPos = cv::Point(RENDERED_VIDEO_SIZE.width-topVideoRE.rSize.width, 0);
+		topVideo->addVideoSource(topData->videoSrc);
 		engine.addEntity(topVideoRE);
+		auto botVideo = new VideoObject();
 		RenderEngine::RenderedEntity botVideoRE;
-		botVideoRE.rObj = new VideoObject(botData->videoSrc);
+		botVideoRE.rObj = botVideo;
 		botVideoRE.rSize = botVideoRE.rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 2.0);
 		botVideoRE.rPos = cv::Point(RENDERED_VIDEO_SIZE.width-botVideoRE.rSize.width, RENDERED_VIDEO_SIZE.height-botVideoRE.rSize.height);
+		botVideo->addVideoSource(botData->videoSrc);
 		engine.addEntity(botVideoRE);
 
 		auto trackMap = new gpo::TrackMapObject();

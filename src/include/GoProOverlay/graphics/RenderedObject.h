@@ -3,6 +3,7 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
 
+#include "GoProOverlay/data/DataSource.h"
 #include "GoProOverlay/data/VideoSource.h"
 #include "GoProOverlay/data/TelemetrySource.h"
 #include "GoProOverlay/data/TrackDataObjects.h"
@@ -150,7 +151,8 @@ namespace gpo
 
 		bool
 		decode(
-			const YAML::Node& node);
+			const YAML::Node& node,
+			const DataSourceManager &dsm);
 
 	protected:
 		// callback to notify subclass that all source are valid and set

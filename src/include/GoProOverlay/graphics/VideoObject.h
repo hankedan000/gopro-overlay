@@ -8,8 +8,7 @@ namespace gpo
 	class VideoObject : public RenderedObject
 	{
 	public:
-		VideoObject(
-			const VideoSourcePtr &vSrc);
+		VideoObject();
 
 		virtual
 		std::string
@@ -27,6 +26,11 @@ namespace gpo
 			cv::Size renderSize);
 
 	protected:
+		// callback from RenderedObject class when all source requirements are met
+		virtual
+		void
+		sourcesValid() override;
+
 		virtual
 		YAML::Node
 		subEncode() const override;
@@ -37,8 +41,6 @@ namespace gpo
 			const YAML::Node& node) override;
 
 	private:
-		VideoSourcePtr source_;
-
 		cv::Mat resizedFrame_;
 		size_t prevRenderedFrameIdx_;
 

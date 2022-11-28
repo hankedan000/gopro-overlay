@@ -270,7 +270,8 @@ namespace gpo
 
 	bool
 	RenderedObject::decode(
-		const YAML::Node& node)
+		const YAML::Node& node,
+		const DataSourceManager &dsm)
 	{
 		throw std::runtime_error("RenderedObject::decode is not implemented");
 		return true;

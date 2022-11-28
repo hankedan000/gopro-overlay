@@ -53,7 +53,8 @@ namespace gpo
 
 		bool
 		decode(
-			const YAML::Node& node);
+			const YAML::Node& node,
+			const DataSourceManager &dsm);
 
 	private:
 		cv::Mat rFrame_;
