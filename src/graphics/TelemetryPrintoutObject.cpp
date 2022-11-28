@@ -13,6 +13,12 @@ namespace gpo
 	{
 	}
 
+	std::string
+	TelemetryPrintoutObject::typeName() const
+	{
+		return "TelemetryPrintoutObject";
+	}
+
 	DataSourceRequirements
 	TelemetryPrintoutObject::dataSourceRequirements() const
 	{
@@ -89,6 +95,22 @@ namespace gpo
 			1);// thickness
 
 		RenderedObject::render(intoImg,originX,originY,renderSize);
+	}
+
+	YAML::Node
+	TelemetryPrintoutObject::subEncode() const
+	{
+		YAML::Node node;
+		node["fontFace"] = fontFace_;
+		return node;
+	}
+
+	bool
+	TelemetryPrintoutObject::subDecode(
+		const YAML::Node& node)
+	{
+		fontFace_ = node["fontFace"].as<int>();
+		return true;
 	}
 
 }

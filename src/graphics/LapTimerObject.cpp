@@ -16,6 +16,12 @@ namespace gpo
 	{
 	}
 
+	std::string
+	LapTimerObject::typeName() const
+	{
+		return "LapTimerObject";
+	}
+
 	DataSourceRequirements
 	LapTimerObject::dataSourceRequirements() const
 	{
@@ -88,6 +94,20 @@ namespace gpo
 
 		// let base class perform its own rendering too
 		RenderedObject::render(intoImg,originX,originY,renderSize);
+	}
+
+	YAML::Node
+	LapTimerObject::subEncode() const
+	{
+		YAML::Node node;
+		return node;
+	}
+
+	bool
+	LapTimerObject::subDecode(
+		const YAML::Node& node)
+	{
+		return true;
 	}
 
 }

@@ -12,6 +12,10 @@ namespace gpo
 		TrackMapObject();
 
 		virtual
+		std::string
+		typeName() const override;
+
+		virtual
 		DataSourceRequirements
 		dataSourceRequirements() const override;
 
@@ -32,6 +36,15 @@ namespace gpo
 		virtual
 		void
 		sourcesValid() override;
+
+		virtual
+		YAML::Node
+		subEncode() const override;
+
+		virtual
+		bool
+		subDecode(
+			const YAML::Node& node) override;
 
 	private:
 		cv::Point

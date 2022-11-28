@@ -10,6 +10,10 @@ namespace gpo
 		FrictionCircleObject();
 
 		virtual
+		std::string
+		typeName() const override;
+
+		virtual
 		DataSourceRequirements
 		dataSourceRequirements() const override;
 
@@ -23,6 +27,16 @@ namespace gpo
 			cv::Mat &intoImg,
 			int originX, int originY,
 			cv::Size renderSize) override;
+
+	protected:
+		virtual
+		YAML::Node
+		subEncode() const override;
+
+		virtual
+		bool
+		subDecode(
+			const YAML::Node& node) override;
 
 	private:
 		// map outline

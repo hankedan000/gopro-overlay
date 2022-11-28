@@ -245,6 +245,37 @@ namespace gpo
 		return track_;
 	}
 
+	YAML::Node
+	RenderedObject::encode() const
+	{
+		YAML::Node node;
+		node["typeName"] = typeName();
+
+		YAML::Node yVidSources = node["vSources"];
+		for (const auto &vSource : vSources_)
+		{
+			yVidSources.push_back(vSource->getDataSourceName());
+		}
+
+		YAML::Node yTelemSources = node["tSources"];
+		for (const auto &tSource : tSources_)
+		{
+			yTelemSources.push_back(tSource->getDataSourceName());
+		}
+
+		node["subclass"] = subEncode();
+
+		return node;
+	}
+
+	bool
+	RenderedObject::decode(
+		const YAML::Node& node)
+	{
+		throw std::runtime_error("RenderedObject::decode is not implemented");
+		return true;
+	}
+
 	void
 	RenderedObject::sourcesValid()
 	{

@@ -29,6 +29,12 @@ namespace gpo
 			2);// thickness
 	}
 
+	std::string
+	FrictionCircleObject::typeName() const
+	{
+		return "FrictionCircleObject";
+	}
+
 	DataSourceRequirements
 	FrictionCircleObject::dataSourceRequirements() const
 	{
@@ -92,6 +98,25 @@ namespace gpo
 
 		// let base class perform its own rendering too
 		RenderedObject::render(intoImg,originX,originY,renderSize);
+	}
+
+	YAML::Node
+	FrictionCircleObject::subEncode() const
+	{
+		YAML::Node node;
+
+		node["tailLength"] = tailLength_;
+
+		return node;
+	}
+
+	bool
+	FrictionCircleObject::subDecode(
+		const YAML::Node& node)
+	{
+		tailLength_ = node["tailLength"].as<size_t>();
+
+		return true;
 	}
 
 }

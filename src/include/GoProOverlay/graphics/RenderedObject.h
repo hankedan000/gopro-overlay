@@ -44,6 +44,10 @@ namespace gpo
 			int width,
 			int height);
 
+		virtual
+		std::string
+		typeName() const = 0;
+
 		const cv::Mat &
 		getImage() const;
 
@@ -141,6 +145,13 @@ namespace gpo
 		const Track *
 		getTrack() const;
 
+		YAML::Node
+		encode() const;
+
+		bool
+		decode(
+			const YAML::Node& node);
+
 	protected:
 		// callback to notify subclass that all source are valid and set
 		virtual
@@ -155,6 +166,15 @@ namespace gpo
 
 		bool
 		trackReqsMet() const;
+
+		virtual
+		YAML::Node
+		subEncode() const = 0;
+
+		virtual
+		bool
+		subDecode(
+			const YAML::Node& node) = 0;
 
 	private:
 

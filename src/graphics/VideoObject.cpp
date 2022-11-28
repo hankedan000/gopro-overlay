@@ -11,6 +11,18 @@ namespace gpo
 		outImg_.create(source_->frameSize(),CV_8UC3);
 	}
 
+	std::string
+	VideoObject::typeName() const
+	{
+		return "VideoObject";
+	}
+
+	DataSourceRequirements
+	VideoObject::dataSourceRequirements() const
+	{
+		return DataSourceRequirements(1,0,0);
+	}
+
 	void
 	VideoObject::render(
 		cv::Mat &intoImg,
@@ -42,4 +54,19 @@ namespace gpo
 		}
 		prevRenderedFrameIdx_ = frameIdx;
 	}
+
+	YAML::Node
+	VideoObject::subEncode() const
+	{
+		YAML::Node node;
+		return node;
+	}
+
+	bool
+	VideoObject::subDecode(
+		const YAML::Node& node)
+	{
+		return true;
+	}
+
 }

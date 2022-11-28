@@ -11,6 +11,12 @@ namespace gpo
 	{
 	}
 
+	std::string
+	SpeedometerObject::typeName() const
+	{
+		return "SpeedometerObject";
+	}
+
 	DataSourceRequirements
 	SpeedometerObject::dataSourceRequirements() const
 	{
@@ -48,4 +54,19 @@ namespace gpo
 		// let base class perform its own rendering too
 		RenderedObject::render(intoImg,originX,originY,renderSize);
 	}
+
+	YAML::Node
+	SpeedometerObject::subEncode() const
+	{
+		YAML::Node node;
+		return node;
+	}
+
+	bool
+	SpeedometerObject::subDecode(
+		const YAML::Node& node)
+	{
+		return true;
+	}
+
 }

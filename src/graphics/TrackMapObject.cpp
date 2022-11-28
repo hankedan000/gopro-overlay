@@ -23,6 +23,12 @@ namespace gpo
 	{
 	}
 
+	std::string
+	TrackMapObject::typeName() const
+	{
+		return "TrackMapObject";
+	}
+
 	DataSourceRequirements
 	TrackMapObject::dataSourceRequirements() const
 	{
@@ -144,6 +150,20 @@ namespace gpo
 		return cv::Point(
 			PX_MARGIN + (coord.lon - ulCoord_.lon) * pxPerDeg_,
 			PX_MARGIN + (coord.lat - ulCoord_.lat) * -pxPerDeg_);
+	}
+
+	YAML::Node
+	TrackMapObject::subEncode() const
+	{
+		YAML::Node node;
+		return node;
+	}
+
+	bool
+	TrackMapObject::subDecode(
+		const YAML::Node& node)
+	{
+		return true;
 	}
 
 }

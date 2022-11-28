@@ -263,6 +263,8 @@ class DataSourceRequirements {
 class RenderedObject {
 	+RenderedObject(int width, int height)
 
+	+std::string typeName()
+
 	+cv::Mat getImage()
 	+void render(cv::Mat img, int x, int y, sc::Size size)
 	+int getNativeWidth()
@@ -292,10 +294,15 @@ class RenderedObject {
 	+bool setTrack(const Track *track)
 	+const Track *getTrack() const
 
+	+YAML::Node encode() const
+	+bool decode(const YAML::Node& node)
+
 	#void sourcesValid()
 	#bool videoReqsMet() const
 	#bool telemetryReqsMet() const
 	#bool trackReqsMet() const
+	#YAML::Node subEncode() const
+	#bool subDecode(const YAML::Node& node)
 
 	-void checkAndNotifyRequirementsMet();
 
