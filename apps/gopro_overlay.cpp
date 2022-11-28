@@ -139,22 +139,22 @@ int main(int argc, char *argv[])
 	cv::Mat pFrame;// preview frame
 	gpo::VideoObject videoObject(data->videoSrc);
 	gpo::TrackMapObject trackMap;
-	trackMap.addSource(data->telemSrc);
-	trackMap.initMap();
+	trackMap.addTelemetrySource(data->telemSrc);
+	trackMap.setTrack(data->makeTrack());
 	cv::Size tmRenderSize = trackMap.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
 	gpo::FrictionCircleObject frictionCircle;
 	cv::Size fcRenderSize = frictionCircle.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
 	frictionCircle.setTailLength(fcTailLength);
-	frictionCircle.addSource(data->telemSrc);
+	frictionCircle.addTelemetrySource(data->telemSrc);
 	gpo::LapTimerObject lapTimer;
 	cv::Size ltRenderSize = lapTimer.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 10.0);
 	lapTimer.init(0,data->telemSrc->size()-1);
-	lapTimer.addSource(data->telemSrc);
+	lapTimer.addTelemetrySource(data->telemSrc);
 	gpo::TelemetryPrintoutObject printoutObject;
-	printoutObject.addSource(data->telemSrc);
+	printoutObject.addTelemetrySource(data->telemSrc);
 	printoutObject.setVisible(opts.renderDebugInfo);
 	gpo::SpeedometerObject speedoObject;
-	speedoObject.addSource(data->telemSrc);
+	speedoObject.addTelemetrySource(data->telemSrc);
 	cv::Size speedoRenderSize = speedoObject.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 6.0);
 	cv::VideoWriter vWriter(
 		opts.outputFile,

@@ -8,6 +8,9 @@ namespace gpo
 	 : outImg_(height,width,CV_8UC4,cv::Scalar(0,0,0,0))
 	 , visible_(true)
 	 , boundingBoxVisible_(false)
+	 , vSources_()
+	 , tSources_()
+	 , track_(nullptr)
 	{
 	}
 
@@ -114,6 +117,207 @@ namespace gpo
 	RenderedObject::isBoundingBoxVisible() const
 	{
 		return boundingBoxVisible_;
+	}
+
+	DataSourceRequirements
+	RenderedObject::dataSourceRequirements() const
+	{
+		return DataSourceRequirements(0,0,0);
+	}
+
+	bool
+	RenderedObject::requirementsMet() const
+	{
+		bool met = true;
+		met = met && videoReqsMet();
+		met = met && telemetryReqsMet();
+		met = met && trackReqsMet();
+		return met;
+	}
+
+	bool
+	RenderedObject::addVideoSource(
+		VideoSourcePtr vSrc)
+	{
+		if (videoReqsMet())
+		{
+			return false;
+		}
+
+		vSources_.push_back(vSrc);
+		checkAndNotifyRequirementsMet();
+		return true;
+	}
+
+	size_t
+	RenderedObject::numVideoSources() const
+	{
+		return vSources_.size();
+	}
+
+	void
+	RenderedObject::setVideoSource(
+		size_t idx,
+		VideoSourcePtr vSrc)
+	{
+		vSources_.at(idx) = vSrc;
+	}
+
+	VideoSourcePtr
+	RenderedObject::getVideoSource(
+		size_t idx)
+	{
+		return vSources_.at(idx);
+	}
+
+	void
+	RenderedObject::removeVideoSource(
+		size_t idx)
+	{
+		vSources_.erase(std::next(vSources_.begin(), idx));
+	}
+
+	bool
+	RenderedObject::addTelemetrySource(
+		TelemetrySourcePtr tSrc)
+	{
+		if (telemetryReqsMet())
+		{
+			return false;
+		}
+
+		tSources_.push_back(tSrc);
+		checkAndNotifyRequirementsMet();
+		return true;
+	}
+
+	size_t
+	RenderedObject::numTelemetrySources() const
+	{
+		return tSources_.size();
+	}
+
+	void
+	RenderedObject::setTelemetrySource(
+		size_t idx,
+		TelemetrySourcePtr tSrc)
+	{
+		tSources_.at(idx) = tSrc;
+	}
+
+	TelemetrySourcePtr
+	RenderedObject::getTelemetrySource(
+		size_t idx)
+	{
+		return tSources_.at(idx);
+	}
+
+	void
+	RenderedObject::removeTelemetrySource(
+		size_t idx)
+	{
+		tSources_.erase(std::next(tSources_.begin(), idx));
+	}
+
+	bool
+	RenderedObject::setTrack(
+		const Track *track)
+	{
+		if (trackReqsMet())
+		{
+			return false;
+		}
+
+		track_ = track;
+		checkAndNotifyRequirementsMet();
+		return true;
+	}
+
+	const Track *
+	RenderedObject::getTrack() const
+	{
+		return track_;
+	}
+
+	void
+	RenderedObject::sourcesValid()
+	{
+		// do nothing impl - let subclass override if needed
+	}
+
+	bool
+	RenderedObject::videoReqsMet() const
+	{
+		const auto reqs = dataSourceRequirements();
+		bool met = true;
+
+		if (reqs.numVideoSources == DSR_ZERO_OR_MORE)
+		{
+			// anything counts
+		}
+		else if (reqs.numVideoSources == DSR_ONE_OR_MORE)
+		{
+			met = met && vSources_.size() >= 1;
+		}
+		else
+		{
+			met = met && vSources_.size() == reqs.numVideoSources;
+		}
+
+		return met;
+	}
+
+	bool
+	RenderedObject::telemetryReqsMet() const
+	{
+		const auto reqs = dataSourceRequirements();
+		bool met = true;
+
+		if (reqs.numTelemetrySources == DSR_ZERO_OR_MORE)
+		{
+			// anything counts
+		}
+		else if (reqs.numTelemetrySources == DSR_ONE_OR_MORE)
+		{
+			met = met && tSources_.size() >= 1;
+		}
+		else
+		{
+			met = met && tSources_.size() == reqs.numTelemetrySources;
+		}
+
+		return met;
+	}
+
+	bool
+	RenderedObject::trackReqsMet() const
+	{
+		const auto reqs = dataSourceRequirements();
+		bool met = true;
+
+		if (reqs.numTracks == DSR_ZERO_OR_MORE)
+		{
+			// anything counts
+		}
+		else if (reqs.numTracks == DSR_ONE_OR_MORE)
+		{
+			met = met && track_ != nullptr;
+		}
+		else
+		{
+			met = met && track_ != nullptr;
+		}
+
+		return met;
+	}
+
+	void
+	RenderedObject::checkAndNotifyRequirementsMet()
+	{
+		if (requirementsMet())
+		{
+			sourcesValid();
+		}
 	}
 
 }

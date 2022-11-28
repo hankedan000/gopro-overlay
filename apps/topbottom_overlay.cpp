@@ -166,42 +166,42 @@ int main(int argc, char *argv[])
 
 	gpo::TrackMapObject trackMap;
 	cv::Size tmRenderSize = trackMap.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
-	trackMap.addSource(topData->telemSrc);
-	trackMap.addSource(botData->telemSrc);
+	trackMap.addTelemetrySource(topData->telemSrc);
+	trackMap.addTelemetrySource(botData->telemSrc);
+	trackMap.setTrack(topData->makeTrack());
 	trackMap.setDotColor(0,TOP_COLOR);
 	trackMap.setDotColor(1,BOT_COLOR);
-	trackMap.initMap();
 
 	gpo::FrictionCircleObject topFC;
 	cv::Size topFC_RenderSize = topFC.getScaledSizeFromTargetHeight(topVideoSize.height / 2.0);
 	topFC.setTailLength(fcTailLength);
-	topFC.addSource(topData->telemSrc);
+	topFC.addTelemetrySource(topData->telemSrc);
 	gpo::FrictionCircleObject botFC;
 	cv::Size botFC_RenderSize = botFC.getScaledSizeFromTargetHeight(botVideoSize.height / 2.0);
 	botFC.setTailLength(fcTailLength);
-	botFC.addSource(botData->telemSrc);
+	botFC.addTelemetrySource(botData->telemSrc);
 
 	gpo::LapTimerObject topLapTimer;
 	cv::Size ltRenderSize = topLapTimer.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 10.0);
-	topLapTimer.addSource(topData->telemSrc);
+	topLapTimer.addTelemetrySource(topData->telemSrc);
 	gpo::LapTimerObject botLapTimer;
-	botLapTimer.addSource(botData->telemSrc);
+	botLapTimer.addTelemetrySource(botData->telemSrc);
 
 	gpo::TelemetryPrintoutObject topPrintoutObject;
-	topPrintoutObject.addSource(topData->telemSrc);
+	topPrintoutObject.addTelemetrySource(topData->telemSrc);
 	topPrintoutObject.setVisible(opts.renderDebugInfo);
 	topPrintoutObject.setFontColor(TOP_COLOR);
 	gpo::TelemetryPrintoutObject botPrintoutObject;
-	botPrintoutObject.addSource(botData->telemSrc);
+	botPrintoutObject.addTelemetrySource(botData->telemSrc);
 	botPrintoutObject.setVisible(opts.renderDebugInfo);
 	botPrintoutObject.setFontColor(BOT_COLOR);
 
 	gpo::SpeedometerObject topSpeedoObject;
 	cv::Size topSpeedoRenderSize = topSpeedoObject.getScaledSizeFromTargetHeight(topVideoSize.height / 4.0);
-	topSpeedoObject.addSource(topData->telemSrc);
+	topSpeedoObject.addTelemetrySource(topData->telemSrc);
 	gpo::SpeedometerObject botSpeedoObject;
 	cv::Size botSpeedoRenderSize = botSpeedoObject.getScaledSizeFromTargetHeight(botVideoSize.height / 4.0);
-	botSpeedoObject.addSource(botData->telemSrc);
+	botSpeedoObject.addTelemetrySource(botData->telemSrc);
 
 	gpo::TextObject topTextObject;
 	topTextObject.setText("Run A");

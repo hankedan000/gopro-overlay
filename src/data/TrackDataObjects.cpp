@@ -337,7 +337,7 @@ namespace gpo
 	}
 
 	const TrackGate *
-	Track::getStart()
+	Track::getStart() const
 	{
 		return start_;
 	}
@@ -350,7 +350,7 @@ namespace gpo
 	}
 
 	const TrackGate *
-	Track::getFinish()
+	Track::getFinish() const
 	{
 		return finish_;
 	}

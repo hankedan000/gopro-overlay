@@ -1,13 +1,17 @@
 #pragma once
 
-#include "GoProOverlay/graphics/TelemetryObject.h"
+#include "GoProOverlay/graphics/RenderedObject.h"
 
 namespace gpo
 {
-	class LapTimerObject : public TelemetryObject
+	class LapTimerObject : public RenderedObject
 	{
 	public:
 		LapTimerObject();
+
+		virtual
+		DataSourceRequirements
+		dataSourceRequirements() const override;
 
 		bool
 		init(
@@ -19,7 +23,7 @@ namespace gpo
 		render(
 			cv::Mat &intoImg,
 			int originX, int originY,
-			cv::Size renderSize);
+			cv::Size renderSize) override;
 
 	private:
 		// background image

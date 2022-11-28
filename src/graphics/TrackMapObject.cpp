@@ -13,7 +13,7 @@ namespace gpo
 	};
 
 	TrackMapObject::TrackMapObject()
-	 : TelemetryObject(TRACK_MAP_RENDER_WIDTH,TRACK_MAP_RENDER_HEIGHT)
+	 : RenderedObject(TRACK_MAP_RENDER_WIDTH,TRACK_MAP_RENDER_HEIGHT)
 	 , outlineImg_(TRACK_MAP_RENDER_HEIGHT,TRACK_MAP_RENDER_WIDTH,CV_8UC4,RGBA_COLOR(0,0,0,0))
 	 , ulCoord_()
 	 , lrCoord_()
@@ -23,36 +23,59 @@ namespace gpo
 	{
 	}
 
-	void
-	TrackMapObject::addSource(
-		const TelemetrySourcePtr &tSrc)
+	DataSourceRequirements
+	TrackMapObject::dataSourceRequirements() const
 	{
-		TelemetryObject::addSource(tSrc);
-
-		dotColors_.push_back(DEFAULT_DOT_COLORS[(sources_.size()-1)%NUM_DEFAULT_DOT_COLORS]);
+		return DataSourceRequirements(0,DSR_ONE_OR_MORE,1);
 	}
 
-	bool
-	TrackMapObject::initMap(
-		int trackStartIdx,
-		int trackEndIdx)
+	void
+	TrackMapObject::setDotColor(
+		size_t sourceIdx,
+		cv::Scalar color)
 	{
-		if (sources_.empty())
+		dotColors_.at(sourceIdx) = color;
+	}
+
+	void
+	TrackMapObject::render(
+		cv::Mat &intoImg,
+		int originX, int originY,
+		cv::Size renderSize)
+	{
+		outlineImg_.copyTo(outImg_);
+		if ( ! requirementsMet())
 		{
-			return true;
+			return;
+		}
+
+		for (unsigned int ss=0; ss<tSources_.size(); ss++)
+		{
+			auto telemSrc = tSources_.at(ss);
+
+			const auto &currSample = telemSrc->at(telemSrc->seekedIdx()).gpSamp;
+			auto dotPoint = coordToPoint(currSample.gps.coord);
+			cv::circle(outImg_,dotPoint,dotRadius_px_,dotColors_.at(ss),cv::FILLED);
+		}
+
+		// render result into final image
+		RenderedObject::render(intoImg,originX,originY,renderSize);
+	}
+
+	void
+	TrackMapObject::sourcesValid()
+	{
+		// init dot colors based on number of sources
+		for (size_t i=0; i<tSources_.size(); i++)
+		{
+			dotColors_.push_back(DEFAULT_DOT_COLORS[i%NUM_DEFAULT_DOT_COLORS]);
 		}
 
 		// use first source as the basis for the track map outline
-		auto telemSrc = sources_.front();
+		auto telemSrc = tSources_.front();
 
-		if (trackStartIdx < 0)
-		{
-			trackStartIdx = 0;
-		}
-		if (trackEndIdx < 0)
-		{
-			trackEndIdx = telemSrc->size();
-		}
+		size_t trackStartIdx = track_->getStart()->getEntryIdx();
+		size_t trackEndIdx = track_->getFinish()->getEntryIdx();
 
 		ulCoord_.lat = -10000;
 		lrCoord_.lat = +10000;
@@ -112,42 +135,6 @@ namespace gpo
 
 			prevPoint = currPoint;
 		}
-
-		return true;
-	}
-
-	void
-	TrackMapObject::setDotColor(
-		size_t sourceIdx,
-		cv::Scalar color)
-	{
-		dotColors_.at(sourceIdx) = color;
-	}
-
-	void
-	TrackMapObject::render(
-		cv::Mat &intoImg,
-		int originX, int originY,
-		cv::Size renderSize)
-	{
-		outlineImg_.copyTo(outImg_);
-
-		if (sources_.empty())
-		{
-			return;
-		}
-
-		for (unsigned int ss=0; ss<sources_.size(); ss++)
-		{
-			auto telemSrc = sources_.at(ss);
-
-			const auto &currSample = telemSrc->at(telemSrc->seekedIdx()).gpSamp;
-			auto dotPoint = coordToPoint(currSample.gps.coord);
-			cv::circle(outImg_,dotPoint,dotRadius_px_,dotColors_.at(ss),cv::FILLED);
-		}
-
-		// render result into final image
-		TelemetryObject::render(intoImg,originX,originY,renderSize);
 	}
 
 	cv::Point

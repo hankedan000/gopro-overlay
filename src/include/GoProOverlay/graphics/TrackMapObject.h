@@ -2,24 +2,18 @@
 
 #include <GoProTelem/SampleTypes.h>
 
-#include "GoProOverlay/graphics/TelemetryObject.h"
+#include "GoProOverlay/graphics/RenderedObject.h"
 
 namespace gpo
 {
-	class TrackMapObject : public TelemetryObject
+	class TrackMapObject : public RenderedObject
 	{
 	public:
 		TrackMapObject();
 
 		virtual
-		void
-		addSource(
-			const TelemetrySourcePtr &tSrc);
-
-		bool
-		initMap(
-			int trackStartIdx = 0,
-			int trackEndIdx = -1);
+		DataSourceRequirements
+		dataSourceRequirements() const override;
 
 		void
 		setDotColor(
@@ -31,7 +25,13 @@ namespace gpo
 		render(
 			cv::Mat &intoImg,
 			int originX, int originY,
-			cv::Size renderSize);
+			cv::Size renderSize) override;
+
+	protected:
+		// callback from RenderedObject class when all source requirements are met
+		virtual
+		void
+		sourcesValid() override;
 
 	private:
 		cv::Point

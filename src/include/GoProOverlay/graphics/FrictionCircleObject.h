@@ -1,13 +1,17 @@
 #pragma once
 
-#include "GoProOverlay/graphics/TelemetryObject.h"
+#include "GoProOverlay/graphics/RenderedObject.h"
 
 namespace gpo
 {
-	class FrictionCircleObject : public TelemetryObject
+	class FrictionCircleObject : public RenderedObject
 	{
 	public:
 		FrictionCircleObject();
+
+		virtual
+		DataSourceRequirements
+		dataSourceRequirements() const override;
 
 		void
 		setTailLength(
@@ -18,7 +22,7 @@ namespace gpo
 		render(
 			cv::Mat &intoImg,
 			int originX, int originY,
-			cv::Size renderSize);
+			cv::Size renderSize) override;
 
 	private:
 		// map outline

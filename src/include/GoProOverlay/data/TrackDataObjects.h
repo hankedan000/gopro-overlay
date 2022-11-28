@@ -288,14 +288,14 @@ namespace gpo
 			size_t pathIdx);
 
 		const TrackGate *
-		getStart();
+		getStart() const;
 
 		void
 		setFinish(
 			size_t pathIdx);
 
 		const TrackGate *
-		getFinish();
+		getFinish() const;
 
 		// sector related methods
 		void

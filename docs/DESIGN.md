@@ -244,7 +244,15 @@ Track *-- RenderProject
 <!--
 @startuml plantuml_imgs/graphicsClasses
 
+class DataSourceRequirements {
+	int numVideoSources
+	int numTelemetrySources
+	int numTracks
+}
+
 class RenderedObject {
+	+RenderedObject(int width, int height)
+
 	+cv::Mat getImage()
 	+void render(cv::Mat img, int x, int y, sc::Size size)
 	+int getNativeWidth()
@@ -255,24 +263,51 @@ class RenderedObject {
 	+bool isVisible()
 	+void setBoundingBoxVisible(bool visible)
 	+bool isBoundingBoxVisible()
+
+	+DataSourceRequirements dataSourceRequirements() const
+	+bool requirementsMet() const
+
+	+bool addVideoSource(VideoSourcePtr vSrc)
+	+size_t numVideoSources() const
+	+void setVideoSource(size_t idx, VideoSourcePtr vSrc)
+	+VideoSourcePtr getVideoSource(size_t idx)
+	+void removeVideoSource(size_t idx)
+
+	+bool addTelemetrySource(TelemetrySourcePtr tSrc)
+	+size_t numTelemetrySources() const
+	+void setTelemetrySource(size_t idx, TelemetrySourcePtr tSrc)
+	+TelemetrySourcePtr getTelemetrySource(size_t idx)
+	+void removeTelemetrySource(size_t idx)
+
+	+bool setTrack(const Track *track)
+	+const Track *getTrack() const
+
+	#void sourcesValid()
+	#bool videoReqsMet() const
+	#bool telemetryReqsMet() const
+	#bool trackReqsMet() const
+
+	-void checkAndNotifyRequirementsMet();
+
 	#cv::Mat outImg_
 	#bool visible_
 	#bool boundingBoxVisible_
-}
-
-class TelemetryObject {
-	+void addSource(TelemetrySource tSrc)
-	+TelemetrySource getSource(size_t idx)
-	+size_t sourceCount()
-	#std::vector<TelemetrySrouce> sources_;
+	#std::vector<VideoSourcePtr> vSources_
+	#std::vector<TelemetrySourcePtr> tSources_
+	#const Track *track_
 }
 
 class TextObject {
+	+TextObject()
+
+	+void render(cv::Mat img, int x, int y, sc::Size size)
+
 	+void setText(string text)
 	+void setFontFace(int fontFace)
 	+void setScale(double scale)
 	+void setColor(cv::Scalar color)
 	+void setThickness(int thickness)
+
 	-string text_
 	-int fontFace_
 	-double fontScale_
@@ -281,48 +316,84 @@ class TextObject {
 }
 
 class VideoObject {
-	+void setSource(VideoSource vSrc)
-	+VideoSource getSource()
-	#VideoSource source_;
+	+VideoObject()
+
+	+DataSourceRequirements dataSourceRequirements() const
+	+void render(cv::Mat img, int x, int y, sc::Size size)
+	#sourcesValid()
 }
 
 class TrackMapObject {
-	+void init(size_t trackStartIdx, size_t trackFinishIdx)
-	+void setDotColor(size_t sourceIdx, cv::Scalar color)
+	+TrackMapObject()
+
+	+DataSourceRequirements dataSourceRequirements() const
+	+void render(cv::Mat img, int x, int y, sc::Size size)
+	#sourcesValid()
+
 	-cv::Mat trackOutlineImg_
 }
 
 class FrictionCircleObject {
+	+FrictionCircleObject()
+
+	+DataSourceRequirements dataSourceRequirements() const
+	+void render(cv::Mat img, int x, int y, sc::Size size)
+
 	+void setTailLength(size_t length)
+
 	-cv::Mat circleOutlineImg_
 	-size_t taileLength_
 }
 
 class LapTimerObject {
+	+LapTimerObject()
+
+	+DataSourceRequirements dataSourceRequirements() const
+	+void render(cv::Mat img, int x, int y, sc::Size size)
+
 	+void init(size_t lapStartIdx, size_t lapEndIdx)
 }
 
 class SpeedometerObject {
+	+SpeedometerObject()
+
+	+DataSourceRequirements dataSourceRequirements() const
+	+void render(cv::Mat img, int x, int y, sc::Size size)
 }
 
 class TelemetryPrintoutObject {
+	+SpeedometerObject()
+
+	+DataSourceRequirements dataSourceRequirements() const
+	+void render(cv::Mat img, int x, int y, sc::Size size)
+
 	+void setFontFace(int fontFace)
 	+void setFontColor(cv::Scalar color)
 	-int fontFace_
 	-cv::Scalara fontColor_
 }
 
-RenderedObject <|-- TelemetryObject
+DataSourceRequirements .. RenderedObject
+
 RenderedObject <|-- VideoObject
 RenderedObject <|-- TextObject
-TelemetryObject <|-- TrackMapObject
-TelemetryObject <|-- FrictionCircleObject
-TelemetryObject <|-- LapTimerObject
-TelemetryObject <|-- SpeedometerObject
-TelemetryObject <|-- TelemetryPrintoutObject
+RenderedObject <|-- TrackMapObject
+RenderedObject <|-- FrictionCircleObject
+RenderedObject <|-- LapTimerObject
+RenderedObject <|-- SpeedometerObject
+RenderedObject <|-- TelemetryPrintoutObject
 
-TelemetrySource -- TelemetryObject
-VideoSource -- VideoObject
+VideoSource o-- RenderedObject
+TelemetrySource o-- RenderedObject
+Track o-- RenderedObject
+
+VideoSource o.. VideoObject
+Track o.. TrackMapObject
+TelemetrySource o.. TrackMapObject
+TelemetrySource o.. FrictionCircleObject
+TelemetrySource o.. LapTimerObject
+TelemetrySource o.. SpeedometerObject
+TelemetrySource o.. TelemetryPrintoutObject
 
 @enduml
 -->

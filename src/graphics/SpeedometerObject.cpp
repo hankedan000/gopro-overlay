@@ -7,8 +7,14 @@ namespace gpo
 	const int SPEEDOMETER_RENDERED_HEIGHT = 200;
 
 	SpeedometerObject::SpeedometerObject()
-	 : TelemetryObject(SPEEDOMETER_RENDERED_WIDTH,SPEEDOMETER_RENDERED_HEIGHT)
+	 : RenderedObject(SPEEDOMETER_RENDERED_WIDTH,SPEEDOMETER_RENDERED_HEIGHT)
 	{
+	}
+
+	DataSourceRequirements
+	SpeedometerObject::dataSourceRequirements() const
+	{
+		return DataSourceRequirements(0,1,0);
 	}
 
 	void
@@ -17,11 +23,11 @@ namespace gpo
 		int originX, int originY,
 		cv::Size renderSize)
 	{
-		if (sources_.empty())
+		if ( ! requirementsMet())
 		{
 			return;
 		}
-		auto telemSrc = sources_.front();
+		auto telemSrc = tSources_.front();
 		auto frameIdx = telemSrc->seekedIdx();
 		auto telemSamp = telemSrc->at(frameIdx);
 
@@ -40,6 +46,6 @@ namespace gpo
 			2 * 2);// thickness
 
 		// let base class perform its own rendering too
-		TelemetryObject::render(intoImg,originX,originY,renderSize);
+		RenderedObject::render(intoImg,originX,originY,renderSize);
 	}
 }

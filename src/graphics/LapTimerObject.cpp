@@ -7,13 +7,19 @@ namespace gpo
 	const int LAPTIMER_RENDERED_HEIGHT = 200;
 
 	LapTimerObject::LapTimerObject()
-	 : TelemetryObject(LAPTIMER_RENDERED_WIDTH,LAPTIMER_RENDERED_HEIGHT)
+	 : RenderedObject(LAPTIMER_RENDERED_WIDTH,LAPTIMER_RENDERED_HEIGHT)
 	 , bgImg_(LAPTIMER_RENDERED_HEIGHT,LAPTIMER_RENDERED_WIDTH,CV_8UC4,RGBA_COLOR(0,0,0,0))
 	 , textColor_(RGBA_COLOR(255,255,255,255))
 	 , startIdx_(-1)
 	 , finishIdx_(-1)
 	 , isLapFinished_(false)
 	{
+	}
+
+	DataSourceRequirements
+	LapTimerObject::dataSourceRequirements() const
+	{
+		return DataSourceRequirements(0,1,0);
 	}
 
 	bool
@@ -33,13 +39,12 @@ namespace gpo
 		cv::Size renderSize)
 	{
 		bgImg_.copyTo(outImg_);
-
-		if (sources_.empty())
+		if ( ! requirementsMet())
 		{
 			return;
 		}
 
-		auto telemSrc = sources_.front();
+		auto telemSrc = tSources_.front();
 
 		// constrain the start/finish indices to within the samples vector
 		size_t startIdx = startIdx_;
@@ -82,7 +87,7 @@ namespace gpo
 			2);// thickness
 
 		// let base class perform its own rendering too
-		TelemetryObject::render(intoImg,originX,originY,renderSize);
+		RenderedObject::render(intoImg,originX,originY,renderSize);
 	}
 
 }

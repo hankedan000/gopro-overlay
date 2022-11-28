@@ -7,7 +7,7 @@ namespace gpo
 	const int F_CIRCLE_RENDER_HEIGHT = 480;
 
 	FrictionCircleObject::FrictionCircleObject()
-	 : TelemetryObject(F_CIRCLE_RENDER_WIDTH,F_CIRCLE_RENDER_HEIGHT)
+	 : RenderedObject(F_CIRCLE_RENDER_WIDTH,F_CIRCLE_RENDER_HEIGHT)
 	 , outlineImg_(F_CIRCLE_RENDER_HEIGHT,F_CIRCLE_RENDER_WIDTH,CV_8UC4,RGBA_COLOR(0,0,0,0))
 	 , tailLength_(0)
 	 , radius_px_(200)
@@ -29,6 +29,12 @@ namespace gpo
 			2);// thickness
 	}
 
+	DataSourceRequirements
+	FrictionCircleObject::dataSourceRequirements() const
+	{
+		return DataSourceRequirements(0,1,0);
+	}
+
 	void
 	FrictionCircleObject::setTailLength(
 		size_t tailLength)
@@ -43,13 +49,12 @@ namespace gpo
 		cv::Size renderSize)
 	{
 		outlineImg_.copyTo(outImg_);
-
-		if (sources_.empty())
+		if ( ! requirementsMet())
 		{
 			return;
 		}
 
-		auto telemSrc = sources_.front();
+		auto telemSrc = tSources_.front();
 
 		// draw trail
 		int startIdx = telemSrc->seekedIdx() - tailLength_;
@@ -86,7 +91,7 @@ namespace gpo
 		}
 
 		// let base class perform its own rendering too
-		TelemetryObject::render(intoImg,originX,originY,renderSize);
+		RenderedObject::render(intoImg,originX,originY,renderSize);
 	}
 
 }

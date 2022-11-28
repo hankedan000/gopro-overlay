@@ -12,7 +12,6 @@ add_library("${LIBNAME}" STATIC
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/LapTimerObject.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/RenderedObject.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/SpeedometerObject.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/TelemetryObject.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/TelemetryPrintoutObject.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/TextObject.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/TrackMapObject.cpp"

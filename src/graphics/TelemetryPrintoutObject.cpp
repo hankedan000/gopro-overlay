@@ -7,10 +7,16 @@ namespace gpo
 	const int PRINTOUT_RENDERED_HEIGHT = 200;
 
 	TelemetryPrintoutObject::TelemetryPrintoutObject()
-	 : TelemetryObject(PRINTOUT_RENDERED_WIDTH,PRINTOUT_RENDERED_HEIGHT)
+	 : RenderedObject(PRINTOUT_RENDERED_WIDTH,PRINTOUT_RENDERED_HEIGHT)
 	 , fontFace_(cv::FONT_HERSHEY_DUPLEX)
 	 , fontColor_(RGBA_COLOR(0,255,0,255))
 	{
+	}
+
+	DataSourceRequirements
+	TelemetryPrintoutObject::dataSourceRequirements() const
+	{
+		return DataSourceRequirements(0,1,0);
 	}
 
 	void
@@ -41,11 +47,11 @@ namespace gpo
 		int originX, int originY,
 		cv::Size renderSize)
 	{
-		if (sources_.empty())
+		if ( ! requirementsMet())
 		{
 			return;
 		}
-		auto telemSrc = sources_.front();
+		auto telemSrc = tSources_.front();
 		auto frameIdx = telemSrc->seekedIdx();
 		auto telemSamp = telemSrc->at(frameIdx);
 
@@ -82,7 +88,7 @@ namespace gpo
 			fontColor_, //font color
 			1);// thickness
 
-		TelemetryObject::render(intoImg,originX,originY,renderSize);
+		RenderedObject::render(intoImg,originX,originY,renderSize);
 	}
 
 }
