@@ -139,7 +139,10 @@ namespace gpo
 	RenderedObject::addVideoSource(
 		VideoSourcePtr vSrc)
 	{
-		if (videoReqsMet())
+		const auto reqs = dataSourceRequirements();
+		if (reqs.numVideoSources != DSR_ZERO_OR_MORE &&
+			reqs.numVideoSources != DSR_ONE_OR_MORE &&
+			vSources_.size() == reqs.numVideoSources)
 		{
 			return false;
 		}
@@ -181,7 +184,10 @@ namespace gpo
 	RenderedObject::addTelemetrySource(
 		TelemetrySourcePtr tSrc)
 	{
-		if (telemetryReqsMet())
+		const auto reqs = dataSourceRequirements();
+		if (reqs.numTelemetrySources != DSR_ZERO_OR_MORE &&
+			reqs.numTelemetrySources != DSR_ONE_OR_MORE &&
+			tSources_.size() == reqs.numTelemetrySources)
 		{
 			return false;
 		}
@@ -303,7 +309,7 @@ namespace gpo
 		{
 			met = met && track_ != nullptr;
 		}
-		else
+		else if (reqs.numTracks > 0)
 		{
 			met = met && track_ != nullptr;
 		}
