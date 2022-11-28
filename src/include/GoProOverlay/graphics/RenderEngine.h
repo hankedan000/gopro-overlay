@@ -3,6 +3,7 @@
 #include <vector>
 #include <yaml-cpp/yaml.h>
 
+#include "GoProOverlay/data/DataSource.h"
 #include "GoProOverlay/graphics/RenderedObject.h"
 
 namespace gpo
@@ -59,4 +60,15 @@ namespace gpo
 		std::vector<RenderedEntity> entities_;
 
 	};
+
+	class RenderEngineFactory
+	{
+	public:
+		static
+		RenderEngine
+		topBottomAB_Compare(
+			gpo::DataSourcePtr topData,
+			gpo::DataSourcePtr botData);
+	};
+
 }

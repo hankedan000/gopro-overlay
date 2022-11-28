@@ -125,6 +125,9 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	auto track = data->makeTrack();
+	data->setDatumTrack(track);
+
 	const auto RENDERED_VIDEO_SIZE = data->videoSrc->frameSize();
 	const auto PREVIEW_VIDEO_SIZE = cv::Size(1280,720);
 	const double F_CIRCLE_HISTORY_SEC = 1.0;
@@ -140,7 +143,7 @@ int main(int argc, char *argv[])
 	gpo::VideoObject videoObject(data->videoSrc);
 	gpo::TrackMapObject trackMap;
 	trackMap.addTelemetrySource(data->telemSrc);
-	trackMap.setTrack(data->makeTrack());
+	trackMap.setTrack(track);
 	cv::Size tmRenderSize = trackMap.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
 	gpo::FrictionCircleObject frictionCircle;
 	cv::Size fcRenderSize = frictionCircle.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
@@ -148,7 +151,6 @@ int main(int argc, char *argv[])
 	frictionCircle.addTelemetrySource(data->telemSrc);
 	gpo::LapTimerObject lapTimer;
 	cv::Size ltRenderSize = lapTimer.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 10.0);
-	lapTimer.init(0,data->telemSrc->size()-1);
 	lapTimer.addTelemetrySource(data->telemSrc);
 	gpo::TelemetryPrintoutObject printoutObject;
 	printoutObject.addTelemetrySource(data->telemSrc);

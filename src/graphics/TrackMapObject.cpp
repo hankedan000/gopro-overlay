@@ -89,22 +89,22 @@ namespace gpo
 		lrCoord_.lon = -10000;
 		for (size_t i=trackStartIdx; i<trackEndIdx; i++)
 		{
-			auto &samp = telemSrc->at(i).gpSamp;
-			if (samp.gps.coord.lat > ulCoord_.lat)
+			const auto &coord = track_->getPathPoint(i);
+			if (coord[0] > ulCoord_.lat)
 			{
-				ulCoord_.lat = samp.gps.coord.lat;
+				ulCoord_.lat = coord[0];
 			}
-			if (samp.gps.coord.lon < ulCoord_.lon)
+			if (coord[1] < ulCoord_.lon)
 			{
-				ulCoord_.lon = samp.gps.coord.lon;
+				ulCoord_.lon = coord[1];
 			}
-			if (samp.gps.coord.lat < lrCoord_.lat)
+			if (coord[0] < lrCoord_.lat)
 			{
-				lrCoord_.lat = samp.gps.coord.lat;
+				lrCoord_.lat = coord[0];
 			}
-			if (samp.gps.coord.lon > lrCoord_.lon)
+			if (coord[1] > lrCoord_.lon)
 			{
-				lrCoord_.lon = samp.gps.coord.lon;
+				lrCoord_.lon = coord[1];
 			}
 		}
 
@@ -125,8 +125,8 @@ namespace gpo
 		cv::Point prevPoint;
 		for (size_t i=trackStartIdx; i<trackEndIdx; i++)
 		{
-			auto &samp = telemSrc->at(i).gpSamp;
-			auto currPoint = coordToPoint(samp.gps.coord);
+			const auto &coord = track_->getPathPoint(i);
+			auto currPoint = coordToPoint({coord[0],coord[1]});
 
 			if (i != trackStartIdx)
 			{

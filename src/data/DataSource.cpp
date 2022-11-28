@@ -63,7 +63,7 @@ namespace gpo
 		if (okay)
 		{
 			// determine lap count by starting at end of data and finding first valid lap
-			for (size_t i=(telemSrc->size()-1); i>=0; i++)
+			for (size_t i=(telemSrc->size()-1); i>=0; i--)
 			{
 				const auto &samp = telemSrc->at(i);
 				if (samp.lap != -1)

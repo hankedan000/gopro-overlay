@@ -17,11 +17,6 @@ namespace gpo
 		DataSourceRequirements
 		dataSourceRequirements() const override;
 
-		bool
-		init(
-			int lapStartIdx,
-			int lapFinishIdx = -1);
-
 		virtual
 		void
 		render(
@@ -45,10 +40,7 @@ namespace gpo
 
 		cv::Scalar textColor_;
 
-		int startIdx_;
-		int finishIdx_;
-
-		bool isLapFinished_;
+		double lapTime_;
 
 	};
 }

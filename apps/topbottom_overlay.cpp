@@ -7,6 +7,7 @@
 #include "GoProOverlay/data/DataSource.h"
 #include "GoProOverlay/graphics/FrictionCircleObject.h"
 #include "GoProOverlay/graphics/LapTimerObject.h"
+#include "GoProOverlay/graphics/RenderEngine.h"
 #include "GoProOverlay/graphics/SpeedometerObject.h"
 #include "GoProOverlay/graphics/TelemetryPrintoutObject.h"
 #include "GoProOverlay/graphics/TextObject.h"
@@ -144,75 +145,21 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	const cv::Scalar TOP_COLOR = RGBA_COLOR(255,0,0,255);
-	const cv::Scalar BOT_COLOR = RGBA_COLOR(0,255,255,255);
+	auto track = botData->makeTrack();
+	topData->setDatumTrack(track);
+	botData->setDatumTrack(track);
+
+	auto engine = gpo::RenderEngineFactory::topBottomAB_Compare(topData,botData);
+
 	const auto RENDERED_VIDEO_SIZE = topData->videoSrc->frameSize();
 	const auto PREVIEW_VIDEO_SIZE = cv::Size(1280,720);
-	const double F_CIRCLE_HISTORY_SEC = 1.0;
 	double frameCount = topData->videoSrc->frameCount();
 	double fps = topData->videoSrc->fps();
 	double frameTime_sec = 1.0 / fps;
 	double frameTime_usec = 1.0e6 / fps;
-	int fcTailLength = F_CIRCLE_HISTORY_SEC * fps;
 	int frameTime_ms = std::round(1.0e3 / fps);
 
-	cv::Mat rFrame(RENDERED_VIDEO_SIZE,CV_8UC3);// rendered frame
 	cv::Mat pFrame;// preview frame
-
-	gpo::VideoObject topVideoObject(topData->videoSrc);
-	cv::Size topVideoSize = topVideoObject.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 2.0);
-	gpo::VideoObject botVideoObject(botData->videoSrc);
-	cv::Size botVideoSize = botVideoObject.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 2.0);
-
-	gpo::TrackMapObject trackMap;
-	cv::Size tmRenderSize = trackMap.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
-	trackMap.addTelemetrySource(topData->telemSrc);
-	trackMap.addTelemetrySource(botData->telemSrc);
-	trackMap.setTrack(topData->makeTrack());
-	trackMap.setDotColor(0,TOP_COLOR);
-	trackMap.setDotColor(1,BOT_COLOR);
-
-	gpo::FrictionCircleObject topFC;
-	cv::Size topFC_RenderSize = topFC.getScaledSizeFromTargetHeight(topVideoSize.height / 2.0);
-	topFC.setTailLength(fcTailLength);
-	topFC.addTelemetrySource(topData->telemSrc);
-	gpo::FrictionCircleObject botFC;
-	cv::Size botFC_RenderSize = botFC.getScaledSizeFromTargetHeight(botVideoSize.height / 2.0);
-	botFC.setTailLength(fcTailLength);
-	botFC.addTelemetrySource(botData->telemSrc);
-
-	gpo::LapTimerObject topLapTimer;
-	cv::Size ltRenderSize = topLapTimer.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 10.0);
-	topLapTimer.addTelemetrySource(topData->telemSrc);
-	gpo::LapTimerObject botLapTimer;
-	botLapTimer.addTelemetrySource(botData->telemSrc);
-
-	gpo::TelemetryPrintoutObject topPrintoutObject;
-	topPrintoutObject.addTelemetrySource(topData->telemSrc);
-	topPrintoutObject.setVisible(opts.renderDebugInfo);
-	topPrintoutObject.setFontColor(TOP_COLOR);
-	gpo::TelemetryPrintoutObject botPrintoutObject;
-	botPrintoutObject.addTelemetrySource(botData->telemSrc);
-	botPrintoutObject.setVisible(opts.renderDebugInfo);
-	botPrintoutObject.setFontColor(BOT_COLOR);
-
-	gpo::SpeedometerObject topSpeedoObject;
-	cv::Size topSpeedoRenderSize = topSpeedoObject.getScaledSizeFromTargetHeight(topVideoSize.height / 4.0);
-	topSpeedoObject.addTelemetrySource(topData->telemSrc);
-	gpo::SpeedometerObject botSpeedoObject;
-	cv::Size botSpeedoRenderSize = botSpeedoObject.getScaledSizeFromTargetHeight(botVideoSize.height / 4.0);
-	botSpeedoObject.addTelemetrySource(botData->telemSrc);
-
-	gpo::TextObject topTextObject;
-	topTextObject.setText("Run A");
-	topTextObject.setColor(TOP_COLOR);
-	topTextObject.setScale(2);
-	topTextObject.setThickness(2);
-	gpo::TextObject botTextObject;
-	botTextObject.setText("Run B");
-	botTextObject.setColor(BOT_COLOR);
-	botTextObject.setScale(2);
-	botTextObject.setThickness(2);
 
 	cv::VideoWriter vWriter(
 		opts.outputFile,
@@ -236,11 +183,8 @@ int main(int argc, char *argv[])
 	size_t netFramesToRender = std::max(topFramesToRender,botFramesToRender);
 	topData->seeker->seekToIdx(topStartIdx - startDelay);
 	botData->seeker->seekToIdx(botStartIdx - startDelay);
-	topLapTimer.init(topStartIdx,topData->telemSrc->size()-1);
-	botLapTimer.init(botStartIdx,botData->telemSrc->size()-1);
 	for (size_t ff=0; ! stop_app && ff<netFramesToRender; ff++)
 	{
-		rFrame.setTo(cv::Scalar(0,0,0));// clear frame
 		topData->seeker->next();
 		botData->seeker->next();
 		uint64_t frameStart_usec = getTicks_usec();
@@ -257,97 +201,15 @@ int main(int argc, char *argv[])
 			bar.progress(ff,netFramesToRender);
 		}
 
-		try
-		{
-			topVideoObject.render(
-				rFrame,
-				RENDERED_VIDEO_SIZE.width-topVideoSize.width,
-				0,
-				topVideoSize);
-		}
-		catch (const std::runtime_error &re)
-		{
-			printf("caught std::runtime_error on topVideoObject.render().\n what(): %s\n",re.what());
-			continue;
-		}
-		try
-		{
-			botVideoObject.render(
-				rFrame,
-				RENDERED_VIDEO_SIZE.width-botVideoSize.width,
-				RENDERED_VIDEO_SIZE.height-botVideoSize.height,
-				botVideoSize);
-		}
-		catch (const std::runtime_error &re)
-		{
-			printf("caught std::runtime_error on botVideoObject.render().\n what(): %s\n",re.what());
-			continue;
-		}
-
-		topSpeedoObject.render(
-			rFrame,
-			rFrame.cols - topVideoSize.width - topSpeedoRenderSize.width,
-			topVideoSize.height - topSpeedoRenderSize.height,
-			topSpeedoRenderSize);
-		botSpeedoObject.render(
-			rFrame,
-			rFrame.cols - botVideoSize.width - botSpeedoRenderSize.width,
-			RENDERED_VIDEO_SIZE.height - botSpeedoRenderSize.height,
-			botSpeedoRenderSize);
-
-		topFC.render(
-			rFrame,
-			rFrame.cols - topVideoSize.width - topFC_RenderSize.width,
-			0,
-			topFC_RenderSize);
-		botFC.render(
-			rFrame,
-			rFrame.cols - botVideoSize.width - botFC_RenderSize.width,
-			RENDERED_VIDEO_SIZE.height-botVideoSize.height,
-			botFC_RenderSize);
-
-		topTextObject.render(
-			rFrame,
-			rFrame.cols - topVideoSize.width,
-			50);
-		botTextObject.render(
-			rFrame,
-			rFrame.cols - botVideoSize.width,
-			topVideoSize.height + 50);
-
-		trackMap.render(rFrame,0,0,tmRenderSize);
-
-		topLapTimer.render(
-			rFrame,
-			0,rFrame.rows / 2 - ltRenderSize.height,
-			ltRenderSize);
-		botLapTimer.render(
-			rFrame,
-			0,rFrame.rows / 2,
-			ltRenderSize);
-
-		if (topPrintoutObject.isVisible())
-		{
-			topPrintoutObject.render(
-				rFrame,
-				RENDERED_VIDEO_SIZE.width-topVideoSize.width,
-				0);
-		}
-		if (botPrintoutObject.isVisible())
-		{
-			botPrintoutObject.render(
-				rFrame,
-				RENDERED_VIDEO_SIZE.width-botVideoSize.width,
-				RENDERED_VIDEO_SIZE.height-botVideoSize.height);
-		}
+		engine.render();
 
 		// write frame to video file
-		vWriter.write(rFrame);
+		vWriter.write(engine.getFrame());
 
 		// Display the frame live
 		if (opts.showPreview)
 		{
-			cv::resize(rFrame,pFrame,PREVIEW_VIDEO_SIZE);
+			cv::resize(engine.getFrame(),pFrame,PREVIEW_VIDEO_SIZE);
 			cv::imshow("Preview", pFrame);
 			double processingTime_usec = getTicks_usec() - frameStart_usec;
 			int waitTime_ms = std::round((frameTime_usec - processingTime_usec) / 1000.0);
