@@ -7,12 +7,20 @@
 
 namespace gpo
 {
+	// forward declaration
+	class DataSource;
+	using DataSourcePtr = std::shared_ptr<DataSource>;
+
 	class TelemetrySource
 	{
 	public:
 		TelemetrySource(
 			TelemetrySamplesPtr samples,
-			TelemetrySeekerPtr seeker);
+			TelemetrySeekerPtr seeker,
+			DataSourcePtr dSrc = nullptr);
+
+		std::string
+		getDataSourceName() const;
 
 		const TelemetrySample &
 		at(
@@ -31,6 +39,7 @@ namespace gpo
 	private:
 		TelemetrySamplesPtr samples_;
 		TelemetrySeekerPtr seeker_;
+		DataSourcePtr dataSrc_;
 
 	};
 

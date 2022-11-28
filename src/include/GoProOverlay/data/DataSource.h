@@ -11,10 +11,19 @@
 
 namespace gpo
 {
+	// forward declarations
+	// class DataSourceManager;
+
 	class DataSource
 	{
 	public:
 		DataSource();
+
+		std::string
+		getSourceName() const;
+
+		std::string
+		getOrigin() const;
 
 		bool
 		setDatumTrack(
@@ -52,6 +61,11 @@ namespace gpo
 		VideoSourcePtr videoSrc;
 
 	private:
+		// allow DataSourceManager to modify sourceName_ and originFile_
+		friend class DataSourceManager;
+
+		std::string sourceName_;
+		std::string originFile_;
 		const Track *datumTrack_;
 		int lapCount_;
 
@@ -116,17 +130,7 @@ namespace gpo
 			const std::string &name);
 
 	private:
-		struct InternalSourceEntry
-		{
-			// the path to file where data originated from
-			std::string originFile;
-
-			std::string name;
-
-			DataSourcePtr data;
-		};
-
-		std::vector<InternalSourceEntry> sources_;
+		std::vector<DataSourcePtr> sources_;
 
 	};
 }

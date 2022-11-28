@@ -11,9 +11,23 @@ namespace gpo
 	 : seeker(nullptr)
 	 , telemSrc(nullptr)
 	 , videoSrc(nullptr)
+	 , sourceName_("")
+	 , originFile_("")
 	 , datumTrack_(nullptr)
 	 , lapCount_(0)
 	{
+	}
+
+	std::string
+	DataSource::getSourceName() const
+	{
+		return sourceName_;
+	}
+
+	std::string
+	DataSource::getOrigin() const
+	{
+		return originFile_;
 	}
 
 	bool
@@ -139,9 +153,9 @@ namespace gpo
 	DataSourceManager::addVideo(
 		const std::string &filepath)
 	{
-		for (const auto &entry : sources_)
+		for (const auto &source : sources_)
 		{
-			if (entry.originFile == filepath)
+			if (source->originFile_ == filepath)
 			{
 				// already imported
 				return false;
@@ -164,21 +178,21 @@ namespace gpo
 		size_t idx,
 		const std::string &name)
 	{
-		sources_.at(idx).name = name;
+		sources_.at(idx)->sourceName_ = name;
 	}
 
 	std::string
 	DataSourceManager::getSourceName(
 		size_t idx) const
 	{
-		return sources_.at(idx).name;
+		return sources_.at(idx)->sourceName_;
 	}
 
 	std::string
 	DataSourceManager::getSourceOrigin(
 		size_t idx) const
 	{
-		return sources_.at(idx).originFile;
+		return sources_.at(idx)->originFile_;
 	}
 
 	size_t
@@ -191,14 +205,14 @@ namespace gpo
 	DataSourceManager::getSource(
 		size_t idx)
 	{
-		return sources_.at(idx).data;
+		return sources_.at(idx);
 	}
 
 	const DataSourcePtr
 	DataSourceManager::getSource(
 		size_t idx) const
 	{
-		return sources_.at(idx).data;
+		return sources_.at(idx);
 	}
 
 	// YAML encode/decode
@@ -211,8 +225,8 @@ namespace gpo
 		for (const auto &source : sources_)
 		{
 			YAML::Node ySource;
-			ySource["originFile"] = source.originFile;
-			ySource["name"] = source.name;
+			ySource["originFile"] = source->originFile_;
+			ySource["name"] = source->sourceName_;
 
 			ySources.push_back(ySource);
 		}
@@ -252,11 +266,9 @@ namespace gpo
 		bool loadOkay = loadDataFromVideo(filepath,data);
 		if (loadOkay)
 		{
-			InternalSourceEntry newEntry;
-			newEntry.originFile = filepath;
-			newEntry.name = name;
-			newEntry.data = data;
-			sources_.push_back(newEntry);
+			data->sourceName_ = name;
+			data->originFile_ = filepath;
+			sources_.push_back(data);
 		}
 		return loadOkay;
 	}

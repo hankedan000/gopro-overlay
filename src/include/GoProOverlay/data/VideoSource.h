@@ -8,12 +8,20 @@
 
 namespace gpo
 {
+	// forward declaration
+	class DataSource;
+	using DataSourcePtr = std::shared_ptr<DataSource>;
+
 	class VideoSource
 	{
 	public:
 		VideoSource(
 			const cv::VideoCapture &capture,
-			TelemetrySeekerPtr seeker);
+			TelemetrySeekerPtr seeker,
+			DataSourcePtr dSrc = nullptr);
+
+		std::string
+		getDataSourceName() const;
 
 		int
 		frameWidth() const;
@@ -41,6 +49,7 @@ namespace gpo
 	private:
 		cv::VideoCapture vCapture_;
 		TelemetrySeekerPtr seeker_;
+		DataSourcePtr dataSrc_;
 		cv::Size frameSize_;
 		size_t prevFrameIdxRead_;
 

@@ -1,4 +1,5 @@
 #include "GoProOverlay/data/TelemetrySource.h"
+#include "GoProOverlay/data/DataSource.h"
 
 #include <stdexcept>
 
@@ -6,10 +7,22 @@ namespace gpo
 {
 	TelemetrySource::TelemetrySource(
 		TelemetrySamplesPtr samples,
-		TelemetrySeekerPtr seeker)
+		TelemetrySeekerPtr seeker,
+		DataSourcePtr dSrc)
 	 : samples_(samples)
 	 , seeker_(seeker)
+	 , dataSrc_(dSrc)
 	{
+	}
+
+	std::string
+	TelemetrySource::getDataSourceName() const
+	{
+		if (dataSrc_)
+		{
+			return dataSrc_->getSourceName();
+		}
+		return "SOURCE_UNKNOWN";
 	}
 
 	const TelemetrySample &

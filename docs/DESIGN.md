@@ -22,23 +22,27 @@ class TelemetrySeeker {
 }
 
 class TelemetrySource {
-	+TelemetrySource(std::shared_ptr<std::vector<CombinedSample>> samples,std::shared_ptr<TelemetrySeeker> seeker)
+	+TelemetrySource(std::shared_ptr<std::vector<CombinedSample>> samples,std::shared_ptr<TelemetrySeeker> seeker, DataSourcePtr dSrc = nullptr)
 
+	+std::string getDataSourceName() const
 	+TelemetrySample at(size_t idx)
 	+size_t seekedIdx()
 	+size_t size()
 
+	-DataSourcePtr dataSrc
 	-std::shared_ptr<std::vector<CombinedSample>> samples_
 	-std::shared_ptr<TelemetrySeeker> seeker_
 }
 
 class VideoSource {
-	+VideoSource(cv::VideoCapture vc,std::shared_ptr<TelemetrySeeker> seeker)
+	+VideoSource(cv::VideoCapture vc,std::shared_ptr<TelemetrySeeker> seeker, DataSourcePtr dSrc = nullptr)
 
+	+std::string getDataSourceName() const
 	+cv::Mat getFrame(size_t idx)
 	+size_t seekedIdx()
 	+size_t frameCount()
 
+	-DataSourcePtr dataSrc
 	-cv::VideoCapture videoCapture_
 	-std::shared_ptr<TelemetrySeeker> seeker_
 }
@@ -46,6 +50,8 @@ class VideoSource {
 class DataSource {
 	+DataSource()
 
+	+std::string getSourceName() const
+	+std::string getOrigin() const
 	+bool setDatumTrack(const Track *track, bool processNow)
 	+const Track *getDatumTrack() const
 	+bool reprocessDatumTrack()
@@ -58,6 +64,8 @@ class DataSource {
 	+TelemetrySource telemSrc
 	+VideoSource videoSrc
 
+	-std::string sourceName_
+	-std::string originFile_;
 	-const Track *datumTrack_
 	-int lapCount_
 }
@@ -78,16 +86,18 @@ class DataSourceManager {
 }
 
 TelemetrySample *-- TelemetrySource
-TelemetrySample o-- TelemetrySeeker
-TelemetrySeeker o-- TelemetrySource
-TelemetrySeeker o-- VideoSource
+TelemetrySample *-- TelemetrySeeker
+TelemetrySeeker *-- TelemetrySource
+TelemetrySeeker *-- VideoSource
+DataSource *-- TelemetrySource
+DataSource *-- VideoSource
 
-TelemetrySeeker *-- DataSource
-TelemetrySource *-- DataSource
-VideoSource *-- DataSource
+TelemetrySeeker o-- DataSource
+TelemetrySource o-- DataSource
+VideoSource o-- DataSource
 Track o-- DataSource
 
-DataSource *-- DataSourceManager
+DataSource o-- DataSourceManager
 
 @enduml
 -->
@@ -398,3 +408,37 @@ TelemetrySource o.. TelemetryPrintoutObject
 @enduml
 -->
 ![](plantuml_imgs/graphicsClasses.png)
+
+## Render Engine Classes
+<!--
+@startuml plantuml_imgs/renderEngineClasses
+
+class RenderedEntity {
+	+RenderedObject *rObj
+	+cv::Size rSize
+	+cv::Point rPos
+}
+
+class RenderEngine {
+	+RenderEngine()
+
+	+void setRenderSize(cv::Size size)
+
+	+void addEntity(RenderedEntity re)
+	+RenderedEntity *getEntity(size_t idx)
+	+const RenderedEntity *getEntity(size_t idx) const
+	+void removeEntity(size_t idx)
+
+	+void render()
+	+const cv::Mat &getFrame() const
+
+	-cv::Mat rFrame_
+	-std::vector<RenderedEntity> entities_
+}
+
+RenderedObject *-- RenderedEntity
+RenderedEntity o-- RenderEngine
+
+@enduml
+-->
+![](plantuml_imgs/renderEngineClasses.png)
