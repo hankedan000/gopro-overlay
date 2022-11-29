@@ -2,6 +2,7 @@
 #include "ui_projectwindow.h"
 
 #include <QFileDialog>
+#include <QMessageBox>
 
 const QString RECENT_PROJECT_KEY = "RECENT_PROJECTS";
 const int MAX_RECENT_PROJECTS = 10;
@@ -12,7 +13,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     settings(QSettings::Format::NativeFormat, QSettings::UserScope, "ProjectWindow", "GoProOverlay Render Project Application"),
     currProjectDir_(),
     proj_(),
-    sourcesTableModel_(new QStandardItemModel(0,2,this)),
+    sourcesTableModel_(new QStandardItemModel(0,3,this)),
     trackEditor_(new TrackEditor(this)),
     reWizTopBot_(new RenderEngineWizard_TopBottom(this,&proj_))
 {
@@ -27,6 +28,29 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
 
     // connect buttons
     connect(ui->topBottomWizard, &QPushButton::pressed, this, [this]{reWizTopBot_->show();});
+    connect(ui->newTrackButton, &QPushButton::pressed, this, [this]{
+        if (proj_.hasTrack())
+        {
+            auto msgBox = new QMessageBox(
+                        QMessageBox::Icon::Warning,
+                        "Track Exists",
+                        "Your project already has a Track defined.\nIf you continue, it will be overwritten.",
+                        QMessageBox::Ok | QMessageBox::Cancel);
+            msgBox->setModal(true);
+            int res = msgBox->exec();
+            if (res != QMessageBox::Ok)
+            {
+                return;
+            }
+        }
+
+        QString sourceName = ui->newTrackSourceCombo->currentText();
+        auto &dsm = proj_.dataSourceManager();
+        auto dScr = dsm.getSourceByName(sourceName.toStdString());
+        proj_.setTrack(dScr->makeTrack());
+
+        updateTrackPane();
+    });
 
     // attach table models
     ui->tableDataSources->setModel(sourcesTableModel_);
@@ -34,6 +58,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
 
     configureMenuActions();
     populateRecentProjects();
+    updateTrackPane();
 }
 
 ProjectWindow::~ProjectWindow()
@@ -87,6 +112,7 @@ ProjectWindow::loadProject(
         // update menus that change based on project
         reloadDataSourceTable();
         populateRecentProjects();
+        updateTrackPane();
 
         if (proj_.hasTrack())
         {
@@ -124,7 +150,7 @@ void
 ProjectWindow::clearDataSourcesTable()
 {
     sourcesTableModel_->clear();
-    sourcesTableModel_->setHorizontalHeaderLabels({"Source Name","Path"});
+    sourcesTableModel_->setHorizontalHeaderLabels({"Source Name","Path","Track View"});
 }
 
 void
@@ -157,7 +183,27 @@ ProjectWindow::addSourceToTable(
     originItem->setText(originPath.c_str());
     row.append(originItem);
 
+    QStandardItem *trackViewItem = new QStandardItem;
+    row.append(trackViewItem);
+
     sourcesTableModel_->appendRow(row);
+
+    // add a button the table to show source's track view
+    auto buttonIndex = sourcesTableModel_->index(sourcesTableModel_->rowCount()-1,2);
+    auto showTrackButton = new QPushButton(this);
+    showTrackButton->setText("Show Track");
+    showTrackButton->setEnabled(false);
+    if (dSrc->hasTelemetry())
+    {
+        showTrackButton->setEnabled(true);
+        connect(showTrackButton, &QPushButton::pressed, this, [this,dSrc]{
+            auto trackview = new TrackView();
+            trackview->setTrack(dSrc->makeTrack());
+            trackview->setWindowTitle(QStringLiteral("Track View - %1").arg(dSrc->getSourceName().c_str()));
+            trackview->show();
+        });
+    }
+    ui->tableDataSources->setIndexWidget(buttonIndex,showTrackButton);
 }
 
 void
@@ -176,6 +222,23 @@ ProjectWindow::populateRecentProjects()
         connect(action,&QAction::triggered,this,[this,projectPath]{ loadProject(projectPath.toStdString()); });
         ui->menuLoad_Recent_Project->addAction(action);
     }
+}
+
+void
+ProjectWindow::updateTrackPane()
+{
+    ui->newTrackSourceCombo->clear();
+    auto &dsm = proj_.dataSourceManager();
+    for (size_t ss=0; ss<dsm.sourceCount(); ss++)
+    {
+        auto src = dsm.getSource(ss);
+        if (src->hasTelemetry())
+        {
+            ui->newTrackSourceCombo->addItem(src->getSourceName().c_str());
+        }
+    }
+    ui->newTrackButton->setEnabled(ui->newTrackSourceCombo->count() > 0);
+    ui->editTrackButton->setEnabled(proj_.hasTrack());
 }
 
 void

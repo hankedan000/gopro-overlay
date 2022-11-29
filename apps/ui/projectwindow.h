@@ -59,6 +59,9 @@ private:
     void
     populateRecentProjects();
 
+    void
+    updateTrackPane();
+
 private slots:
     void
     onActionSaveProject();

@@ -19,11 +19,8 @@ RenderEngineWizard_TopBottom::RenderEngineWizard_TopBottom(
 
         if (topData && botData)
         {
-            printf("making engine...\n");
             auto newEngine = gpo::RenderEngineFactory::topBottomAB_Compare(topData,botData);
-            printf("emitting signal...\n");
             emit created(newEngine);
-            printf("done!\n");
         }
     });
 }
