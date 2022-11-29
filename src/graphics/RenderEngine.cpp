@@ -207,18 +207,18 @@ namespace gpo
 		engine->setRenderSize(RENDERED_VIDEO_SIZE);
 
 		auto topVideo = new VideoObject();
+		topVideo->addVideoSource(topData->videoSrc);
 		RenderEngine::RenderedEntity topVideoRE;
 		topVideoRE.rObj = topVideo;
 		topVideoRE.rSize = topVideoRE.rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 2.0);
 		topVideoRE.rPos = cv::Point(RENDERED_VIDEO_SIZE.width-topVideoRE.rSize.width, 0);
-		topVideo->addVideoSource(topData->videoSrc);
 		engine->addEntity(topVideoRE);
 		auto botVideo = new VideoObject();
+		botVideo->addVideoSource(botData->videoSrc);
 		RenderEngine::RenderedEntity botVideoRE;
 		botVideoRE.rObj = botVideo;
 		botVideoRE.rSize = botVideoRE.rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 2.0);
 		botVideoRE.rPos = cv::Point(RENDERED_VIDEO_SIZE.width-botVideoRE.rSize.width, RENDERED_VIDEO_SIZE.height-botVideoRE.rSize.height);
-		botVideo->addVideoSource(botData->videoSrc);
 		engine->addEntity(botVideoRE);
 
 		auto trackMap = new gpo::TrackMapObject();
