@@ -45,6 +45,13 @@ namespace gpo
 		return seeker_->seekedIdx();
 	}
 
+	TelemetrySeekerPtr
+	TelemetrySource::seeker()
+	{
+		return seeker_;
+	}
+
+
 	size_t
 	TelemetrySource::size() const
 	{

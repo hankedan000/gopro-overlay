@@ -71,6 +71,12 @@ namespace gpo
 		return seeker_->seekedIdx();
 	}
 
+	TelemetrySeekerPtr
+	VideoSource::seeker()
+	{
+		return seeker_;
+	}
+
 	size_t
 	VideoSource::frameCount()
 	{

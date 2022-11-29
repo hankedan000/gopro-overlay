@@ -4,6 +4,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include "GoProOverlay/data/DataSource.h"
+#include "GoProOverlay/data/GroupedSeeker.h"
 #include "GoProOverlay/graphics/RenderedObject.h"
 
 namespace gpo
@@ -48,6 +49,9 @@ namespace gpo
 		size_t
 		entityCount() const;
 
+		GroupedSeekerPtr
+		getSeeker();
+
 		void
 		render();
 
@@ -65,6 +69,7 @@ namespace gpo
 	private:
 		cv::Mat rFrame_;
 		std::vector<RenderedEntity> entities_;
+		GroupedSeekerPtr gSeeker_;
 
 	};
 

@@ -16,9 +16,24 @@ class TelemetrySeeker {
 	+void seekToTime(double timeOffset)
 	+void seekToLap(size_t lap)
 	+size_t seekedIdx()
+	+size_t size() const;
 
 	-size_t seekedIdx_
 	-std::shared_ptr<std::vector<TelemetrySample>> samples_
+}
+
+class GroupedSeeker {
+	+GroupedSeeker()
+
+	+void addSeeker(TelemetrySeekerPtr seeker)
+	+size_t seekerCount() const
+	+TelemetrySeekerPtr getSeeker(size_t idx)
+	+void removeSeeker(size_t idx)
+
+	+void next();
+	+void seekToIdx(size_t idx)
+
+	-std::vector<TelemetrySeekerPtr> seekers_
 }
 
 class TelemetrySource {
@@ -99,6 +114,8 @@ VideoSource o-- DataSource
 Track o-- DataSource
 
 DataSource o-- DataSourceManager
+
+TelemetrySeeker o-- GroupedSeeker
 
 @enduml
 -->
@@ -441,6 +458,9 @@ class RenderEngine {
 	+RenderedEntity &getEntity(size_t idx)
 	+const RenderedEntity &getEntity(size_t idx) const
 	+void removeEntity(size_t idx)
+	+size_t entityCount() const
+
+	+GroupedSeekerPtr getSeeker()
 
 	+void render()
 	+const cv::Mat &getFrame() const
@@ -450,6 +470,7 @@ class RenderEngine {
 
 	-cv::Mat rFrame_
 	-std::vector<RenderedEntity> entities_
+	-GroupedSeekerPtr gSeeker_
 }
 
 class RenderEngineFactory {
@@ -458,6 +479,7 @@ class RenderEngineFactory {
 
 RenderedObject *-- RenderedEntity
 RenderedEntity o-- RenderEngine
+GroupedSeeker *-- RenderEngine
 RenderEngine -- RenderEngineFactory
 
 @enduml

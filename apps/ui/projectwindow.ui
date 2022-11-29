@@ -125,7 +125,6 @@
     <property name="title">
      <string>View</string>
     </property>
-    <addaction name="actionShow_Track_Editor"/>
     <addaction name="actionShow_Render_Preview"/>
    </widget>
    <addaction name="menuFile"/>

@@ -33,6 +33,9 @@ namespace gpo
 		size_t
 		seekedIdx() const;
 
+		TelemetrySeekerPtr
+		seeker();
+
 		size_t
 		size() const;
 

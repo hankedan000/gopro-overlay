@@ -21,6 +21,7 @@ namespace gpo
 	RenderEngine::RenderEngine()
 	 : rFrame_()
 	 , entities_()
+	 , gSeeker_(new GroupedSeeker())
 	{
 	}
 
@@ -35,7 +36,25 @@ namespace gpo
 	RenderEngine::addEntity(
 		RenderedEntity re)
 	{
+		if ( ! re.rObj)
+		{
+			throw std::runtime_error("rObj is null. can't add entity to engine");
+		}
+
 		entities_.push_back(re);
+
+		for (size_t i=0; i<re.rObj->numVideoSources(); i++)
+		{
+			auto vSrc = re.rObj->getVideoSource(i);
+			auto vSeeker = vSrc->seeker();
+			gSeeker_->addSeekerUnique(vSeeker);
+		}
+		for (size_t i=0; i<re.rObj->numTelemetrySources(); i++)
+		{
+			auto tSrc = re.rObj->getTelemetrySource(i);
+			auto tSeeker = tSrc->seeker();
+			gSeeker_->addSeekerUnique(tSeeker);
+		}
 	}
 
 	RenderEngine::RenderedEntity &
@@ -63,6 +82,12 @@ namespace gpo
 	RenderEngine::entityCount() const
 	{
 		return entities_.size();
+	}
+
+	GroupedSeekerPtr
+	RenderEngine::getSeeker()
+	{
+		return gSeeker_;
 	}
 
 	void

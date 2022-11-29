@@ -8,6 +8,7 @@
 #include <GoProOverlay/data/RenderProject.h>
 
 #include "renderenginewizard_topbottom.h"
+#include "scrubbablevideo.h"
 #include "trackeditor.h"
 
 namespace Ui {
@@ -81,9 +82,6 @@ private slots:
     void
     onActionImportSources();
 
-    void
-    onActionShowTrackEditor();
-
     // connected to various RenderEnginer Wizards
     void
     onEngineCreated(
@@ -100,6 +98,7 @@ private:
     QStandardItemModel *entitiesTableModel_;
 
     TrackEditor *trackEditor_;
+    ScrubbableVideo *previewWindow_;
     RenderEngineWizard_TopBottom *reWizTopBot_;
 };
 

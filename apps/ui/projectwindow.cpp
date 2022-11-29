@@ -16,19 +16,22 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     sourcesTableModel_(new QStandardItemModel(0,3,this)),
     entitiesTableModel_(new QStandardItemModel(0,3,this)),
     trackEditor_(new TrackEditor(this)),
+    previewWindow_(new ScrubbableVideo()),
     reWizTopBot_(new RenderEngineWizard_TopBottom(this,&proj_))
 {
     ui->setupUi(this);
+    previewWindow_->setWindowTitle("Render Preview");
 
     // menu actions
     connect(ui->actionSave_Project, &QAction::triggered, this, &ProjectWindow::onActionSaveProject);
     connect(ui->actionSave_Project_as, &QAction::triggered, this, &ProjectWindow::onActionSaveProjectAs);
     connect(ui->actionLoad_Project, &QAction::triggered, this, &ProjectWindow::onActionLoadProject);
     connect(ui->actionImport_Sources, &QAction::triggered, this, &ProjectWindow::onActionImportSources);
-    connect(ui->actionShow_Track_Editor, &QAction::triggered, this, &ProjectWindow::onActionShowTrackEditor);
+    connect(ui->actionShow_Render_Preview, &QAction::triggered, this, [this]{previewWindow_->show();});
 
     // connect buttons
     connect(ui->topBottomWizard, &QPushButton::pressed, this, [this]{reWizTopBot_->show();});
+    connect(ui->editTrackButton, &QPushButton::pressed, this, [this]{trackEditor_->show();});
     connect(ui->newTrackButton, &QPushButton::pressed, this, [this]{
         if (proj_.hasTrack())
         {
@@ -124,6 +127,17 @@ ProjectWindow::loadProject(
         if (proj_.hasTrack())
         {
             trackEditor_->setTrack(proj_.getTrack());
+        }
+        auto engine = proj_.getEngine();
+        previewWindow_->setEngine(engine);
+        if (engine)
+        {
+            previewWindow_->show();
+            previewWindow_->showImage(engine->getFrame());
+        }
+        else
+        {
+            previewWindow_->hide();
         }
     }
 
@@ -245,6 +259,7 @@ ProjectWindow::updateTrackPane()
         }
     }
     ui->newTrackButton->setEnabled(ui->newTrackSourceCombo->count() > 0);
+    ui->newTrackSourceCombo->setEnabled(ui->newTrackSourceCombo->count() > 0);
     ui->editTrackButton->setEnabled(proj_.hasTrack());
 }
 
@@ -340,15 +355,22 @@ ProjectWindow::onActionImportSources()
 }
 
 void
-ProjectWindow::onActionShowTrackEditor()
-{
-    trackEditor_->show();
-}
-
-void
 ProjectWindow::onEngineCreated(
         gpo::RenderEnginePtr newEngine)
 {
     proj_.setEngine(newEngine);
     reloadRenderEntitiesTable();
+
+    // FIXME copied code. also in loadProject()
+    auto engine = proj_.getEngine();
+    previewWindow_->setEngine(engine);
+    if (engine)
+    {
+        previewWindow_->show();
+        previewWindow_->showImage(engine->getFrame());
+    }
+    else
+    {
+        previewWindow_->hide();
+    }
 }
