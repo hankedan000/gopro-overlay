@@ -65,10 +65,18 @@
     <property name="title">
      <string>File</string>
     </property>
+    <widget class="QMenu" name="menuLoad_Recent_Project">
+     <property name="title">
+      <string>Load Recent Project</string>
+     </property>
+     <addaction name="actionProject1"/>
+     <addaction name="actionProject2"/>
+    </widget>
     <addaction name="actionSave_Project"/>
     <addaction name="actionSave_Project_as"/>
     <addaction name="separator"/>
     <addaction name="actionLoad_Project"/>
+    <addaction name="menuLoad_Recent_Project"/>
     <addaction name="separator"/>
     <addaction name="actionImport_Sources"/>
    </widget>
@@ -111,6 +119,16 @@
   <action name="actionImport_Sources">
    <property name="text">
     <string>Import Sources ...</string>
+   </property>
+  </action>
+  <action name="actionProject1">
+   <property name="text">
+    <string>Project1</string>
+   </property>
+  </action>
+  <action name="actionProject2">
+   <property name="text">
+    <string>Project2</string>
    </property>
   </action>
  </widget>

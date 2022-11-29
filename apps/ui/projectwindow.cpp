@@ -3,9 +3,13 @@
 
 #include <QFileDialog>
 
+const QString RECENT_PROJECT_KEY = "RECENT_PROJECTS";
+const int MAX_RECENT_PROJECTS = 10;
+
 ProjectWindow::ProjectWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::ProjectWindow),
+    settings(QSettings::Format::NativeFormat, QSettings::UserScope, "ProjectWindow", "GoProOverlay Render Project Application"),
     currProjectDir_(),
     proj_(),
     sourcesTableModel_(new QStandardItemModel(0,2,this)),
@@ -25,6 +29,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     clearDataSourcesTable();// calling this to set table headers
 
     configureMenuActions();
+    populateRecentProjects();
 }
 
 ProjectWindow::~ProjectWindow()
@@ -64,7 +69,22 @@ ProjectWindow::loadProject(
     if (loadOkay)
     {
         currProjectDir_ = projectDir;
+
+        // add project to the recent projects history
+        QStringList recentProjects = settings.value(
+                    RECENT_PROJECT_KEY,
+                    QStringList()).toStringList();
+        recentProjects.removeAll(projectDir.c_str());
+        recentProjects.push_front(projectDir.c_str());
+        if (recentProjects.size() >= MAX_RECENT_PROJECTS)
+        {
+            recentProjects.pop_back();// remove oldests
+        }
+        settings.setValue(RECENT_PROJECT_KEY, recentProjects);
+
+        // update menus that change based on project
         reloadDataSourceTable();
+        populateRecentProjects();
 
         if (proj_.hasTrack())
         {
@@ -136,6 +156,24 @@ ProjectWindow::addSourceToTable(
     row.append(originItem);
 
     sourcesTableModel_->appendRow(row);
+}
+
+void
+ProjectWindow::populateRecentProjects()
+{
+    QStringList recentProjects = settings.value(
+                RECENT_PROJECT_KEY,
+                QStringList()).toStringList();
+    ui->menuLoad_Recent_Project->clear();
+    ui->menuLoad_Recent_Project->setEnabled(recentProjects.size() > 0);
+
+    for (auto projectPath : recentProjects)
+    {
+        auto action = new QAction(this);
+        action->setText(projectPath);
+        connect(action,&QAction::triggered,this,[this,projectPath]{ loadProject(projectPath.toStdString()); });
+        ui->menuLoad_Recent_Project->addAction(action);
+    }
 }
 
 void

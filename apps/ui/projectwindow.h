@@ -2,6 +2,7 @@
 #define PROJECTWINDOW_H
 
 #include <QMainWindow>
+#include <QSettings>
 #include <QStandardItemModel>
 
 #include <GoProOverlay/data/RenderProject.h>
@@ -54,6 +55,9 @@ private:
             const std::string &originPath,
             const gpo::DataSourcePtr dSrc);
 
+    void
+    populateRecentProjects();
+
 private slots:
     void
     onActionSaveProject();
@@ -72,6 +76,7 @@ private slots:
 
 private:
     Ui::ProjectWindow *ui;
+    QSettings settings;
 
     std::string currProjectDir_;
     gpo::RenderProject proj_;
