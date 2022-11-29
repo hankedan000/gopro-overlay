@@ -156,14 +156,46 @@ namespace gpo
 		return true;
 	}
 
-	RenderEngine
+	RenderEnginePtr
 	RenderEngineFactory::topBottomAB_Compare(
 		gpo::DataSourcePtr topData,
 		gpo::DataSourcePtr botData)
 	{
-		RenderEngine engine;
+		auto engine = RenderEnginePtr(new RenderEngine);
 
-		// TODO check input data sources for valid video/telemetry
+		// check for valid video/telemetry data sources
+		if ( ! topData->hasTelemetry())
+		{
+			throw std::runtime_error("topData doesn't provide telemetry data");
+		}
+		else if ( ! topData->hasVideo())
+		{
+			throw std::runtime_error("topData doesn't provide video data");
+		}
+		else if ( ! topData->hasTelemetry())
+		{
+			throw std::runtime_error("botData doesn't provide telemetry data");
+		}
+		else if ( ! botData->hasVideo())
+		{
+			throw std::runtime_error("botData doesn't provide video data");
+		}
+
+		// check for similar Track datums
+		const Track *topTrackDatum = topData->getDatumTrack();
+		const Track *botTrackDatum = botData->getDatumTrack();
+		if (topTrackDatum == nullptr)
+		{
+			throw std::runtime_error("topData has no Track datum set");
+		}
+		else if (botTrackDatum == nullptr)
+		{
+			throw std::runtime_error("botData has no Track datum set");
+		}
+		else if (topTrackDatum != botTrackDatum)
+		{
+			throw std::runtime_error("topData and botData have disimilar Track datums");
+		}
 
 		const cv::Scalar TOP_COLOR = RGBA_COLOR(255,0,0,255);
 		const cv::Scalar BOT_COLOR = RGBA_COLOR(0,255,255,255);
@@ -172,7 +204,7 @@ namespace gpo
 		double fps = topData->videoSrc->fps();
 		int fcTailLength = F_CIRCLE_HISTORY_SEC * fps;
 
-		engine.setRenderSize(RENDERED_VIDEO_SIZE);
+		engine->setRenderSize(RENDERED_VIDEO_SIZE);
 
 		auto topVideo = new VideoObject();
 		RenderEngine::RenderedEntity topVideoRE;
@@ -180,14 +212,14 @@ namespace gpo
 		topVideoRE.rSize = topVideoRE.rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 2.0);
 		topVideoRE.rPos = cv::Point(RENDERED_VIDEO_SIZE.width-topVideoRE.rSize.width, 0);
 		topVideo->addVideoSource(topData->videoSrc);
-		engine.addEntity(topVideoRE);
+		engine->addEntity(topVideoRE);
 		auto botVideo = new VideoObject();
 		RenderEngine::RenderedEntity botVideoRE;
 		botVideoRE.rObj = botVideo;
 		botVideoRE.rSize = botVideoRE.rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 2.0);
 		botVideoRE.rPos = cv::Point(RENDERED_VIDEO_SIZE.width-botVideoRE.rSize.width, RENDERED_VIDEO_SIZE.height-botVideoRE.rSize.height);
 		botVideo->addVideoSource(botData->videoSrc);
-		engine.addEntity(botVideoRE);
+		engine->addEntity(botVideoRE);
 
 		auto trackMap = new gpo::TrackMapObject();
 		RenderEngine::RenderedEntity trackMapRE;
@@ -199,7 +231,7 @@ namespace gpo
 		trackMap->setTrack(topData->getDatumTrack());
 		trackMap->setDotColor(0,TOP_COLOR);
 		trackMap->setDotColor(1,BOT_COLOR);
-		engine.addEntity(trackMapRE);
+		engine->addEntity(trackMapRE);
 
 		auto topFC = new gpo::FrictionCircleObject();
 		RenderEngine::RenderedEntity topFC_RE;
@@ -208,7 +240,7 @@ namespace gpo
 		topFC_RE.rPos = cv::Point(RENDERED_VIDEO_SIZE.width - topVideoRE.rSize.width - topFC_RE.rSize.width, 0);
 		topFC->setTailLength(fcTailLength);
 		topFC->addTelemetrySource(topData->telemSrc);
-		engine.addEntity(topFC_RE);
+		engine->addEntity(topFC_RE);
 		auto botFC = new gpo::FrictionCircleObject();
 		RenderEngine::RenderedEntity botFC_RE;
 		botFC_RE.rObj = botFC;
@@ -216,7 +248,7 @@ namespace gpo
 		botFC_RE.rPos = cv::Point(RENDERED_VIDEO_SIZE.width - botVideoRE.rSize.width - botFC_RE.rSize.width, RENDERED_VIDEO_SIZE.height - botVideoRE.rSize.height);
 		botFC->setTailLength(fcTailLength);
 		botFC->addTelemetrySource(botData->telemSrc);
-		engine.addEntity(botFC_RE);
+		engine->addEntity(botFC_RE);
 
 		auto topLapTimer = new gpo::LapTimerObject();
 		RenderEngine::RenderedEntity topLapTimerRE;
@@ -224,14 +256,14 @@ namespace gpo
 		topLapTimerRE.rSize = topLapTimer->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 10.0);
 		topLapTimerRE.rPos = cv::Point(0,RENDERED_VIDEO_SIZE.height / 2 - topLapTimerRE.rSize.height);
 		topLapTimer->addTelemetrySource(topData->telemSrc);
-		engine.addEntity(topLapTimerRE);
+		engine->addEntity(topLapTimerRE);
 		auto botLapTimer = new gpo::LapTimerObject();
 		RenderEngine::RenderedEntity botLapTimerRE;
 		botLapTimerRE.rObj = botLapTimer;
 		botLapTimerRE.rSize = topLapTimerRE.rSize;
 		botLapTimerRE.rPos = cv::Point(0,RENDERED_VIDEO_SIZE.height / 2);
 		botLapTimer->addTelemetrySource(botData->telemSrc);
-		engine.addEntity(botLapTimerRE);
+		engine->addEntity(botLapTimerRE);
 
 		const bool showDebug = false;
 		auto topPrintoutObject = new gpo::TelemetryPrintoutObject();
@@ -242,7 +274,7 @@ namespace gpo
 		topPrintoutObject->addTelemetrySource(topData->telemSrc);
 		topPrintoutObject->setVisible(showDebug);
 		topPrintoutObject->setFontColor(TOP_COLOR);
-		engine.addEntity(topPrintoutRE);
+		engine->addEntity(topPrintoutRE);
 		auto botPrintoutObject = new gpo::TelemetryPrintoutObject();
 		RenderEngine::RenderedEntity botPrintoutRE;
 		botPrintoutRE.rObj = botPrintoutObject;
@@ -251,7 +283,7 @@ namespace gpo
 		botPrintoutObject->addTelemetrySource(botData->telemSrc);
 		botPrintoutObject->setVisible(showDebug);
 		botPrintoutObject->setFontColor(BOT_COLOR);
-		engine.addEntity(botPrintoutRE);
+		engine->addEntity(botPrintoutRE);
 
 		auto topSpeedoObject = new gpo::SpeedometerObject();
 		RenderEngine::RenderedEntity topSpeedoRE;
@@ -259,14 +291,14 @@ namespace gpo
 		topSpeedoRE.rSize = topSpeedoObject->getScaledSizeFromTargetHeight(topVideoRE.rSize.height / 4.0);
 		topSpeedoRE.rPos = cv::Point(RENDERED_VIDEO_SIZE.width - topVideoRE.rSize.width - topSpeedoRE.rSize.width, topVideoRE.rSize.height - topSpeedoRE.rSize.height);
 		topSpeedoObject->addTelemetrySource(topData->telemSrc);
-		engine.addEntity(topSpeedoRE);
+		engine->addEntity(topSpeedoRE);
 		auto botSpeedoObject = new gpo::SpeedometerObject();
 		RenderEngine::RenderedEntity botSpeedoRE;
 		botSpeedoRE.rObj = botSpeedoObject;
 		botSpeedoRE.rSize = botSpeedoObject->getScaledSizeFromTargetHeight(botVideoRE.rSize.height / 4.0);
 		botSpeedoRE.rPos = cv::Point(RENDERED_VIDEO_SIZE.width - botVideoRE.rSize.width - botSpeedoRE.rSize.width, RENDERED_VIDEO_SIZE.height - botSpeedoRE.rSize.height);
 		botSpeedoObject->addTelemetrySource(botData->telemSrc);
-		engine.addEntity(botSpeedoRE);
+		engine->addEntity(botSpeedoRE);
 
 		auto topTextObject = new gpo::TextObject;
 		topTextObject->setText("Run A");
@@ -276,7 +308,7 @@ namespace gpo
 		RenderEngine::RenderedEntity topTextRE;
 		topTextRE.rObj = topTextObject;
 		topTextRE.rPos = cv::Point(RENDERED_VIDEO_SIZE.width - topVideoRE.rSize.width, 50);
-		engine.addEntity(topTextRE);
+		engine->addEntity(topTextRE);
 		auto botTextObject = new gpo::TextObject;
 		botTextObject->setText("Run B");
 		botTextObject->setColor(BOT_COLOR);
@@ -285,7 +317,7 @@ namespace gpo
 		RenderEngine::RenderedEntity botTextRE;
 		botTextRE.rObj = botTextObject;
 		botTextRE.rPos = cv::Point(RENDERED_VIDEO_SIZE.width - botVideoRE.rSize.width, topVideoRE.rSize.height + 50);
-		engine.addEntity(botTextRE);
+		engine->addEntity(botTextRE);
 
 		return engine;
 	}

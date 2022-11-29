@@ -233,6 +233,8 @@ class RenderProject {
 	+void setTrack(Track *track)
 	+Track *getTrack()
 	+bool hasTrack() const
+	+void setEngine(RenderEnginePtr engine)
+	+RenderEnginePtr getEngine()
 
 	+bool save(const std::string &filepath)
 	+bool load(const std::string &filepath)
@@ -241,11 +243,13 @@ class RenderProject {
 	+bool decode(const YAML::Node& node)
 
 	-DataSourceManager dsm_
+	-RenderEnginePtr engine_
 	-Track *track_
 }
 
 DataSourceManager *-- RenderProject
-Track *-- RenderProject
+Track o-- RenderProject
+RenderEngine *-- RenderProject
 
 @enduml
 -->
@@ -447,8 +451,13 @@ class RenderEngine {
 	-std::vector<RenderedEntity> entities_
 }
 
+class RenderEngineFactory {
+	{static} +RenderEnginePtr topBottomAB_Compare(DataSourcePtr topData, DataSourcePtr botData)
+}
+
 RenderedObject *-- RenderedEntity
 RenderedEntity o-- RenderEngine
+RenderEngine -- RenderEngineFactory
 
 @enduml
 -->

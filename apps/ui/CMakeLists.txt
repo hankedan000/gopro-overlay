@@ -5,6 +5,9 @@ set(QT_WIDGETS_SOURCES
         projectwindow.h
         projectwindow.cpp
         projectwindow.ui
+        renderenginewizard_topbottom.h
+        renderenginewizard_topbottom.cpp
+        renderenginewizard_topbottom.ui
         scrubbablevideo.h
         scrubbablevideo.cpp
         scrubbablevideo.ui

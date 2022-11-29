@@ -13,7 +13,8 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     currProjectDir_(),
     proj_(),
     sourcesTableModel_(new QStandardItemModel(0,2,this)),
-    trackEditor_(new TrackEditor(this))
+    trackEditor_(new TrackEditor(this)),
+    reWizTopBot_(new RenderEngineWizard_TopBottom(this,&proj_))
 {
     ui->setupUi(this);
 
@@ -23,6 +24,9 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     connect(ui->actionLoad_Project, &QAction::triggered, this, &ProjectWindow::onActionLoadProject);
     connect(ui->actionImport_Sources, &QAction::triggered, this, &ProjectWindow::onActionImportSources);
     connect(ui->actionShow_Track_Editor, &QAction::triggered, this, &ProjectWindow::onActionShowTrackEditor);
+
+    // connect buttons
+    connect(ui->topBottomWizard, &QPushButton::pressed, this, [this]{reWizTopBot_->show();});
 
     // attach table models
     ui->tableDataSources->setModel(sourcesTableModel_);
@@ -35,8 +39,6 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
 ProjectWindow::~ProjectWindow()
 {
     delete ui;
-    delete sourcesTableModel_;
-    delete trackEditor_;
 }
 
 bool

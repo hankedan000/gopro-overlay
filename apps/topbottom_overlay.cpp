@@ -201,15 +201,15 @@ int main(int argc, char *argv[])
 			bar.progress(ff,netFramesToRender);
 		}
 
-		engine.render();
+		engine->render();
 
 		// write frame to video file
-		vWriter.write(engine.getFrame());
+		vWriter.write(engine->getFrame());
 
 		// Display the frame live
 		if (opts.showPreview)
 		{
-			cv::resize(engine.getFrame(),pFrame,PREVIEW_VIDEO_SIZE);
+			cv::resize(engine->getFrame(),pFrame,PREVIEW_VIDEO_SIZE);
 			cv::imshow("Preview", pFrame);
 			double processingTime_usec = getTicks_usec() - frameStart_usec;
 			int waitTime_ms = std::round((frameTime_usec - processingTime_usec) / 1000.0);

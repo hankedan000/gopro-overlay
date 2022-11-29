@@ -1,5 +1,7 @@
 #include "GoProOverlay/data/RenderProject.h"
 
+#include "GoProOverlay/graphics/RenderEngine.h"
+
 #include <filesystem>
 #include <fstream>
 
@@ -10,6 +12,7 @@ namespace gpo
 {
 	RenderProject::RenderProject()
 	 : dsm_()
+	 , engine_(new RenderEngine())
 	 , track_(nullptr)
 	{
 	}
@@ -25,6 +28,12 @@ namespace gpo
 
 	DataSourceManager &
 	RenderProject::dataSourceManager()
+	{
+		return dsm_;
+	}
+
+	const DataSourceManager &
+	RenderProject::dataSourceManager() const
 	{
 		return dsm_;
 	}
@@ -55,6 +64,22 @@ namespace gpo
 	RenderProject::hasTrack() const
 	{
 		return track_ != nullptr;
+	}
+
+	void
+	RenderProject::setEngine(
+		RenderEnginePtr engine)
+	{
+		if (engine != nullptr)
+		{
+			engine_ = engine;
+		}
+	}
+
+	RenderEnginePtr
+	RenderProject::getEngine()
+	{
+		return engine_;
 	}
 
 	bool
@@ -161,6 +186,7 @@ namespace gpo
 		YAML::Node node;
 
 		node["dsm"] = dsm_.encode();
+		node["engine"] = engine_->encode();
 
 		return node;
 	}
@@ -172,6 +198,7 @@ namespace gpo
 		bool okay = true;
 
 		okay = okay && dsm_.decode(node["dsm"]);
+		okay = okay && engine_->decode(node["engine"],dsm_);
 
 		return okay;
 	}

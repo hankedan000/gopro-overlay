@@ -6,6 +6,10 @@
 namespace gpo
 {
 
+// forward declare
+class RenderEngine;
+using RenderEnginePtr = std::shared_ptr<RenderEngine>;
+
 class RenderProject
 {
 public:
@@ -16,6 +20,9 @@ public:
 	DataSourceManager &
 	dataSourceManager();
 
+	const DataSourceManager &
+	dataSourceManager() const;
+
 	void
 	setTrack(
 		Track *track);
@@ -25,6 +32,13 @@ public:
 
 	bool
 	hasTrack() const;
+
+	void
+	setEngine(
+		RenderEnginePtr engine);
+
+	RenderEnginePtr
+	getEngine();
 
 	static
 	bool
@@ -48,6 +62,7 @@ public:
 
 private:
 	DataSourceManager dsm_;
+	RenderEnginePtr engine_;
 	Track *track_;
 
 };

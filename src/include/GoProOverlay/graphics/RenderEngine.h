@@ -62,11 +62,13 @@ namespace gpo
 
 	};
 
+	using RenderEnginePtr = std::shared_ptr<RenderEngine>;
+
 	class RenderEngineFactory
 	{
 	public:
 		static
-		RenderEngine
+		RenderEnginePtr
 		topBottomAB_Compare(
 			gpo::DataSourcePtr topData,
 			gpo::DataSourcePtr botData);

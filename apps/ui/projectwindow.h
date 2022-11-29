@@ -7,6 +7,7 @@
 
 #include <GoProOverlay/data/RenderProject.h>
 
+#include "renderenginewizard_topbottom.h"
 #include "trackeditor.h"
 
 namespace Ui {
@@ -84,6 +85,7 @@ private:
     QStandardItemModel *sourcesTableModel_;
 
     TrackEditor *trackEditor_;
+    RenderEngineWizard_TopBottom *reWizTopBot_;
 };
 
 #endif // PROJECTWINDOW_H
