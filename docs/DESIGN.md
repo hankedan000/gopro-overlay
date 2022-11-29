@@ -429,6 +429,7 @@ class RenderedEntity {
 	+RenderedObject *rObj
 	+cv::Size rSize
 	+cv::Point rPos
+	+std::string name()
 }
 
 class RenderEngine {

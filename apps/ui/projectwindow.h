@@ -62,6 +62,12 @@ private:
     void
     updateTrackPane();
 
+    void
+    clearRenderEntitiesTable();
+
+    void
+    reloadRenderEntitiesTable();
+
 private slots:
     void
     onActionSaveProject();
@@ -78,6 +84,11 @@ private slots:
     void
     onActionShowTrackEditor();
 
+    // connected to various RenderEnginer Wizards
+    void
+    onEngineCreated(
+            gpo::RenderEnginePtr newEngine);
+
 private:
     Ui::ProjectWindow *ui;
     QSettings settings;
@@ -86,6 +97,7 @@ private:
     gpo::RenderProject proj_;
 
     QStandardItemModel *sourcesTableModel_;
+    QStandardItemModel *entitiesTableModel_;
 
     TrackEditor *trackEditor_;
     RenderEngineWizard_TopBottom *reWizTopBot_;

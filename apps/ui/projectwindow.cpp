@@ -14,6 +14,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     currProjectDir_(),
     proj_(),
     sourcesTableModel_(new QStandardItemModel(0,3,this)),
+    entitiesTableModel_(new QStandardItemModel(0,3,this)),
     trackEditor_(new TrackEditor(this)),
     reWizTopBot_(new RenderEngineWizard_TopBottom(this,&proj_))
 {
@@ -52,9 +53,14 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         updateTrackPane();
     });
 
+    // connect engines wizards.
+    connect(reWizTopBot_, &RenderEngineWizard_TopBottom::created, this, &ProjectWindow::onEngineCreated);
+
     // attach table models
     ui->tableDataSources->setModel(sourcesTableModel_);
     clearDataSourcesTable();// calling this to set table headers
+    ui->renderEntitiesTable->setModel(entitiesTableModel_);
+    clearRenderEntitiesTable();// calling this to set table headers
 
     configureMenuActions();
     populateRecentProjects();
@@ -111,13 +117,13 @@ ProjectWindow::loadProject(
 
         // update menus that change based on project
         reloadDataSourceTable();
+        reloadRenderEntitiesTable();
         populateRecentProjects();
         updateTrackPane();
 
         if (proj_.hasTrack())
         {
             trackEditor_->setTrack(proj_.getTrack());
-            trackEditor_->show();
         }
     }
 
@@ -181,6 +187,7 @@ ProjectWindow::addSourceToTable(
 
     QStandardItem *originItem = new QStandardItem;
     originItem->setText(originPath.c_str());
+    originItem->setEditable(false);
     row.append(originItem);
 
     QStandardItem *trackViewItem = new QStandardItem;
@@ -242,6 +249,46 @@ ProjectWindow::updateTrackPane()
 }
 
 void
+ProjectWindow::clearRenderEntitiesTable()
+{
+    entitiesTableModel_->clear();
+    entitiesTableModel_->setHorizontalHeaderLabels({"Name", "Type", "Visible"});
+}
+
+void
+ProjectWindow::reloadRenderEntitiesTable()
+{
+    clearRenderEntitiesTable();
+
+    auto engine = proj_.getEngine();
+    for (size_t ee=0; ee<engine->entityCount(); ee++)
+    {
+        auto &entity = engine->getEntity(ee);
+
+        QList<QStandardItem *> row;
+
+        QStandardItem *nameItem = new QStandardItem;
+        nameItem->setText(entity.name().c_str());
+        row.append(nameItem);
+
+        QStandardItem *typeItem = new QStandardItem;
+        typeItem->setText(entity.rObj->typeName().c_str());
+        typeItem->setEditable(false);
+        row.append(typeItem);
+
+        QStandardItem *visibleItem = new QStandardItem;
+        visibleItem->setCheckable(true);
+        visibleItem->setCheckState(
+                    entity.rObj->isVisible() ?
+                    Qt::CheckState::Checked :
+                    Qt::CheckState::Unchecked);
+        row.append(visibleItem);
+
+        entitiesTableModel_->appendRow(row);
+    }
+}
+
+void
 ProjectWindow::onActionSaveProject()
 {
     saveProject(currProjectDir_);
@@ -296,4 +343,12 @@ void
 ProjectWindow::onActionShowTrackEditor()
 {
     trackEditor_->show();
+}
+
+void
+ProjectWindow::onEngineCreated(
+        gpo::RenderEnginePtr newEngine)
+{
+    proj_.setEngine(newEngine);
+    reloadRenderEntitiesTable();
 }

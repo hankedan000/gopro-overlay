@@ -11,6 +11,13 @@
 
 namespace gpo
 {
+
+	std::string
+	RenderEngine::RenderedEntity::name() const
+	{
+		return rObj->typeName() + "<" + std::to_string((size_t)this) + ">";
+	}
+
 	RenderEngine::RenderEngine()
 	 : rFrame_()
 	 , entities_()
@@ -50,6 +57,12 @@ namespace gpo
 		size_t idx)
 	{
 		entities_.erase(std::next(entities_.begin(), idx));
+	}
+
+	size_t
+	RenderEngine::entityCount() const
+	{
+		return entities_.size();
 	}
 
 	void

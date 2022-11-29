@@ -17,6 +17,9 @@ namespace gpo
 			RenderedObject *rObj;
 			cv::Size rSize;
 			cv::Point rPos;
+
+			std::string
+			name() const;
 		};
 
 	public:
@@ -41,6 +44,9 @@ namespace gpo
 		void
 		removeEntity(
 			size_t idx);
+
+		size_t
+		entityCount() const;
 
 		void
 		render();

@@ -119,6 +119,10 @@ namespace gpo
 		getSourceByName(
 			const std::string &sourceName);
 
+		const DataSourcePtr
+		getSourceByName(
+			const std::string &sourceName) const;
+
 		// YAML encode/decode
 		YAML::Node
 		encode() const;

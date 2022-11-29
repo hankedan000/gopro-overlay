@@ -229,6 +229,20 @@ namespace gpo
 		return nullptr;
 	}
 
+	const DataSourcePtr
+	DataSourceManager::getSourceByName(
+		const std::string &sourceName) const
+	{
+		for (auto src : sources_)
+		{
+			if (src->sourceName_ == sourceName)
+			{
+				return src;
+			}
+		}
+		return nullptr;
+	}
+
 	// YAML encode/decode
 	YAML::Node
 	DataSourceManager::encode() const

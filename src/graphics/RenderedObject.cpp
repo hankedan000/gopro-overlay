@@ -273,8 +273,49 @@ namespace gpo
 		const YAML::Node& node,
 		const DataSourceManager &dsm)
 	{
-		throw std::runtime_error("RenderedObject::decode is not implemented");
-		return true;
+		bool okay = true;
+
+		// load in all the video sources
+		if (node["vSources"])
+		{
+			const YAML::Node yVidSources = node["vSources"];
+			for (size_t i=0; i<yVidSources.size(); i++)
+			{
+				const auto &sourceName = yVidSources[i].as<std::string>();
+				auto dSrc = dsm.getSourceByName(sourceName);
+				if (dSrc != nullptr)
+				{
+					addVideoSource(dSrc->videoSrc);
+				}
+				else
+				{
+					printf("failed to lookup video DataSource for sourceName '%s'\n", sourceName.c_str());
+					okay = false;
+				}
+			}
+		}
+
+		// load in all the telemetry sources
+		if (node["tSources"])
+		{
+			const YAML::Node yTelemSources = node["tSources"];
+			for (size_t i=0; i<yTelemSources.size(); i++)
+			{
+				const auto &sourceName = yTelemSources[i].as<std::string>();
+				auto dSrc = dsm.getSourceByName(sourceName);
+				if (dSrc != nullptr)
+				{
+					addTelemetrySource(dSrc->telemSrc);
+				}
+				else
+				{
+					printf("failed to lookup telemetry DataSource for sourceName '%s'\n", sourceName.c_str());
+					okay = false;
+				}
+			}
+		}
+		
+		return okay;
 	}
 
 	void
