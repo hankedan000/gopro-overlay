@@ -38,6 +38,10 @@ namespace gpo
 		seekToIdx(
 			size_t idx);
 
+		bool
+		seekToLap(
+			unsigned int lap);
+
 	private:
 		std::vector<TelemetrySeekerPtr> seekers_;
 

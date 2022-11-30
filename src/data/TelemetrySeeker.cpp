@@ -39,11 +39,20 @@ namespace gpo
 		throw std::runtime_error("seekToTime() is not implemented");
 	}
 	
-	void
+	std::pair<bool,size_t>
 	TelemetrySeeker::seekToLap(
-		size_t lap)
+		unsigned int lap)
 	{
-		throw std::runtime_error("seekToLap() is not implemented");
+		for (size_t i=0; i<size(); i++)
+		{
+			const auto &samp = samples_->at(i);
+			if (samp.lap == lap)
+			{
+				seekedIdx_ = i;
+				return {true,seekedIdx_};
+			}
+		}
+		return {false,seekedIdx_};
 	}
 	
 	size_t

@@ -73,4 +73,16 @@ namespace gpo
 			seeker->seekToIdx(idx);
 		}
 	}
+
+	bool
+	GroupedSeeker::seekToLap(
+		unsigned int lap)
+	{
+		bool okay = true;
+		for (auto & seeker : seekers_)
+		{
+			okay = seeker->seekToLap(lap).first && okay;
+		}
+		return okay;
+	}
 }

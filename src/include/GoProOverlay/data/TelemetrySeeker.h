@@ -23,9 +23,9 @@ namespace gpo
 		seekToTime(
 			double timeOffset);
 		
-		void
+		std::pair<bool,size_t>
 		seekToLap(
-			size_t lap);
+			unsigned int lap);
 		
 		size_t
 		seekedIdx();
