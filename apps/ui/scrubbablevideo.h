@@ -33,6 +33,7 @@ public:
 
 private:
     Ui::ScrubbableVideo *ui;
+    cv::Size frameSize_;
     cv::Mat frameBuffer_;
     CvImageView *imgView_;
     gpo::RenderEnginePtr engine_;

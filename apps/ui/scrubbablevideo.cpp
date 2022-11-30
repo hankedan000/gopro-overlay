@@ -34,6 +34,7 @@ void
 ScrubbableVideo::setSize(
         cv::Size size)
 {
+    frameSize_ = size;
     frameBuffer_.create(size.height,size.width,CV_8UC3);
 }
 
@@ -41,7 +42,25 @@ void
 ScrubbableVideo::showImage(
         const cv::Mat &img)
 {
-    cv::resize(img,frameBuffer_,frameBuffer_.size());
+    cv::Size imgSize = img.size();
+    // width over height (WOH) ratio:
+    //  * if WOH is <1.0 then image is taller than it is wide
+    //  * if WOH is >1.0 then image is wider than it is tall
+    double imgWOH = (double)(imgSize.width) / imgSize.height;
+    double frameWOH = (double)(frameSize_.width) / frameSize_.height;
+    cv::Size newSize;
+    if (imgWOH > frameWOH)
+    {
+        newSize.width = frameSize_.width;
+        newSize.height = frameSize_.width / imgWOH;
+    }
+    else
+    {
+        newSize.width = frameSize_.height * imgWOH;
+        newSize.height = frameSize_.height;
+    }
+
+    cv::resize(img,frameBuffer_,newSize);
     imgView_->setImage(frameBuffer_);
 }
 
