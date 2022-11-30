@@ -7,5 +7,5 @@ namespace utils
 	bool
 	computeTrackTimes(
 		const gpo::Track *track,
-		gpo::TelemetrySourcePtr telemSrc);
+		gpo::TelemetrySamplesPtr tSamps);
 }

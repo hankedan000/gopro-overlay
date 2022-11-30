@@ -11,6 +11,8 @@ class TelemetrySample {
 }
 
 class TelemetrySeeker {
+	+TelemetrySeeker(TelemetrySamplesPtr tSamps)
+
 	+void next();
 	+void seekToIdx(size_t idx)
 	+void seekToTime(double timeOffset)
@@ -19,7 +21,7 @@ class TelemetrySeeker {
 	+size_t size() const;
 
 	-size_t seekedIdx_
-	-std::shared_ptr<std::vector<TelemetrySample>> samples_
+	-TelemetrySamplesPtr samples_
 }
 
 class GroupedSeeker {
@@ -37,7 +39,7 @@ class GroupedSeeker {
 }
 
 class TelemetrySource {
-	+TelemetrySource(std::shared_ptr<std::vector<CombinedSample>> samples,std::shared_ptr<TelemetrySeeker> seeker, DataSourcePtr dSrc = nullptr)
+	+TelemetrySource(DataSourcePtr dSrc)
 
 	+std::string getDataSourceName() const
 	+TelemetrySample at(size_t idx)
@@ -45,12 +47,10 @@ class TelemetrySource {
 	+size_t size()
 
 	-DataSourcePtr dataSrc
-	-std::shared_ptr<std::vector<CombinedSample>> samples_
-	-std::shared_ptr<TelemetrySeeker> seeker_
 }
 
 class VideoSource {
-	+VideoSource(cv::VideoCapture vc,std::shared_ptr<TelemetrySeeker> seeker, DataSourcePtr dSrc = nullptr)
+	+VideoSource(DataSourcePtr dSrc)
 
 	+std::string getDataSourceName() const
 	+cv::Mat getFrame(size_t idx)
@@ -58,8 +58,6 @@ class VideoSource {
 	+size_t frameCount()
 
 	-DataSourcePtr dataSrc
-	-cv::VideoCapture videoCapture_
-	-std::shared_ptr<TelemetrySeeker> seeker_
 }
 
 class DataSource {
@@ -79,6 +77,8 @@ class DataSource {
 	+TelemetrySource telemSrc
 	+VideoSource videoSrc
 
+	-cv::VideoCapture videoCapture_
+	-TelemetrySamplesPtr samples_
 	-std::string sourceName_
 	-std::string originFile_;
 	-const Track *datumTrack_

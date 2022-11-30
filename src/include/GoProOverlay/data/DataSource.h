@@ -11,8 +11,10 @@
 
 namespace gpo
 {
-	// forward declarations
-	// class DataSourceManager;
+	// forward declaration
+	class DataSource;
+
+	using DataSourcePtr = std::shared_ptr<DataSource>;
 
 	class DataSource
 	{
@@ -55,6 +57,11 @@ namespace gpo
 		Track *
 		makeTrack() const;
 
+		static
+		DataSourcePtr
+		loadDataFromVideo(
+			const std::string &videoFile);
+
 	public:
 		TelemetrySeekerPtr seeker;
 		TelemetrySourcePtr telemSrc;
@@ -64,19 +71,18 @@ namespace gpo
 		// allow DataSourceManager to modify sourceName_ and originFile_
 		friend class DataSourceManager;
 
+		friend class TelemetrySource;
+		friend class VideoSource;
+
+		cv::VideoCapture vCapture_;
+		TelemetrySamplesPtr samples_;
+
 		std::string sourceName_;
 		std::string originFile_;
 		const Track *datumTrack_;
 		int lapCount_;
 
 	};
-
-	using DataSourcePtr = std::shared_ptr<DataSource>;
-
-	bool
-	loadDataFromVideo(
-		const std::string &videoFile,
-		DataSourcePtr &data);
 
 	class DataSourceManager
 	{

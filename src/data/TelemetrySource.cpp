@@ -6,12 +6,8 @@
 namespace gpo
 {
 	TelemetrySource::TelemetrySource(
-		TelemetrySamplesPtr samples,
-		TelemetrySeekerPtr seeker,
 		DataSourcePtr dSrc)
-	 : samples_(samples)
-	 , seeker_(seeker)
-	 , dataSrc_(dSrc)
+	 : dataSrc_(dSrc)
 	{
 	}
 
@@ -29,32 +25,32 @@ namespace gpo
 	TelemetrySource::at(
 		size_t idx) const
 	{
-		return samples_->at(idx);
+		return dataSrc_->samples_->at(idx);
 	}
 
 	TelemetrySample &
 	TelemetrySource::at(
 		size_t idx)
 	{
-		return samples_->at(idx);
+		return dataSrc_->samples_->at(idx);
 	}
 
 	size_t
 	TelemetrySource::seekedIdx() const
 	{
-		return seeker_->seekedIdx();
+		return dataSrc_->seeker->seekedIdx();
 	}
 
 	TelemetrySeekerPtr
 	TelemetrySource::seeker()
 	{
-		return seeker_;
+		return dataSrc_->seeker;
 	}
 
 
 	size_t
 	TelemetrySource::size() const
 	{
-		return samples_->size();
+		return dataSrc_->samples_->size();
 	}
 }

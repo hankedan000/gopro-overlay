@@ -16,9 +16,7 @@ namespace gpo
 	{
 	public:
 		VideoSource(
-			const cv::VideoCapture &capture,
-			TelemetrySeekerPtr seeker,
-			DataSourcePtr dSrc = nullptr);
+			DataSourcePtr dSrc);
 
 		std::string
 		getDataSourceName() const;
@@ -50,8 +48,6 @@ namespace gpo
 		frameCount();
 
 	private:
-		cv::VideoCapture vCapture_;
-		TelemetrySeekerPtr seeker_;
 		DataSourcePtr dataSrc_;
 		cv::Size frameSize_;
 		size_t prevFrameIdxRead_;

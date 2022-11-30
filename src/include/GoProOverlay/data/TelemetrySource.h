@@ -15,9 +15,7 @@ namespace gpo
 	{
 	public:
 		TelemetrySource(
-			TelemetrySamplesPtr samples,
-			TelemetrySeekerPtr seeker,
-			DataSourcePtr dSrc = nullptr);
+			DataSourcePtr dSrc);
 
 		std::string
 		getDataSourceName() const;
@@ -40,8 +38,6 @@ namespace gpo
 		size() const;
 
 	private:
-		TelemetrySamplesPtr samples_;
-		TelemetrySeekerPtr seeker_;
 		DataSourcePtr dataSrc_;
 
 	};

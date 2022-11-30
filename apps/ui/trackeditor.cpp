@@ -55,9 +55,8 @@ bool
 TrackEditor::loadTrackFromVideo(
     const std::string &filepath)
 {
-    gpo::DataSourcePtr data;
-    bool loadOkay = gpo::loadDataFromVideo(filepath,data);
-    if (loadOkay)
+    auto data = gpo::DataSource::loadDataFromVideo(filepath);
+    if (data)
     {
         setWindowTitle(QStringLiteral("Track Editor - %1").arg(filepath.c_str()));
         ui->statusbar->showMessage(
@@ -70,7 +69,7 @@ TrackEditor::loadTrackFromVideo(
         configureFileMenuButtons();
     }
 
-    return loadOkay;
+    return data != nullptr;
 }
 
 bool

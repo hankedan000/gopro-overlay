@@ -118,8 +118,8 @@ int main(int argc, char *argv[])
 	}
 
 	printf("opening %s\n", opts.inputFile.c_str());
-	gpo::DataSourcePtr data;
-	if ( ! gpo::loadDataFromVideo(opts.inputFile,data))
+	auto data = gpo::DataSource::loadDataFromVideo(opts.inputFile);
+	if ( ! data)
 	{
 		printf("No video data\n");
 		return -1;

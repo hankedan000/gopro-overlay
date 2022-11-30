@@ -4,17 +4,13 @@
 namespace gpo
 {
 	VideoSource::VideoSource(
-		const cv::VideoCapture &capture,
-		TelemetrySeekerPtr seeker,
 		DataSourcePtr dSrc)
-	 : vCapture_(capture)
-	 , seeker_(seeker)
-	 , dataSrc_(dSrc)
+	 : dataSrc_(dSrc)
 	 , frameSize_()
 	 , prevFrameIdxRead_(-1)
 	{
-		frameSize_.width = vCapture_.get(cv::CAP_PROP_FRAME_WIDTH);
-		frameSize_.height = vCapture_.get(cv::CAP_PROP_FRAME_HEIGHT);
+		frameSize_.width = dataSrc_->vCapture_.get(cv::CAP_PROP_FRAME_WIDTH);
+		frameSize_.height = dataSrc_->vCapture_.get(cv::CAP_PROP_FRAME_HEIGHT);
 	}
 
 	std::string
@@ -48,7 +44,7 @@ namespace gpo
 	double
 	VideoSource::fps()
 	{
-		return vCapture_.get(cv::CAP_PROP_FPS);
+		return dataSrc_->vCapture_.get(cv::CAP_PROP_FPS);
 	}
 
 	bool
@@ -59,27 +55,27 @@ namespace gpo
 		// seeking can be constly, so avoid it if reading consecutive frames
 		if (idx != (prevFrameIdxRead_ + 1))
 		{
-			vCapture_.set(cv::CAP_PROP_POS_FRAMES, idx);
+			dataSrc_->vCapture_.set(cv::CAP_PROP_POS_FRAMES, idx);
 		}
 		prevFrameIdxRead_ = idx;
-		return vCapture_.read(outImg);
+		return dataSrc_->vCapture_.read(outImg);
 	}
 
 	size_t
 	VideoSource::seekedIdx() const
 	{
-		return seeker_->seekedIdx();
+		return dataSrc_->seeker->seekedIdx();
 	}
 
 	TelemetrySeekerPtr
 	VideoSource::seeker()
 	{
-		return seeker_;
+		return dataSrc_->seeker;
 	}
 
 	size_t
 	VideoSource::frameCount()
 	{
-		return vCapture_.get(cv::CAP_PROP_FRAME_COUNT);
+		return dataSrc_->vCapture_.get(cv::CAP_PROP_FRAME_COUNT);
 	}
 }

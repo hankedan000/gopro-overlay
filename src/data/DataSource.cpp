@@ -11,6 +11,8 @@ namespace gpo
 	 : seeker(nullptr)
 	 , telemSrc(nullptr)
 	 , videoSrc(nullptr)
+	 , vCapture_()
+	 , samples_()
 	 , sourceName_("")
 	 , originFile_("")
 	 , datumTrack_(nullptr)
@@ -59,13 +61,13 @@ namespace gpo
 			return true;
 		}
 
-		bool okay = utils::computeTrackTimes(datumTrack_,telemSrc);
+		bool okay = utils::computeTrackTimes(datumTrack_,samples_);
 		if (okay)
 		{
 			// determine lap count by starting at end of data and finding first valid lap
-			for (size_t i=(telemSrc->size()-1); i>=0; i--)
+			for (size_t i=(samples_->size()-1); i>=0; i--)
 			{
-				const auto &samp = telemSrc->at(i);
+				const auto &samp = samples_->at(i);
 				if (samp.lap != -1)
 				{
 					lapCount_ = samp.lap;
@@ -106,42 +108,37 @@ namespace gpo
 		return makeTrackFromTelemetry(telemSrc);
 	}
 
-	bool
-	loadDataFromVideo(
-		const std::string &videoFile,
-		DataSourcePtr &data)
+	DataSourcePtr
+	DataSource::loadDataFromVideo(
+		const std::string &videoFile)
 	{
 		gpt::MP4_Source mp4;
 		mp4.open(videoFile);
 		auto videoTelem = gpt::getCombinedSamples(mp4);
 		if (videoTelem.empty())
 		{
-			return false;
+			return nullptr;
 		}
 		cv::VideoCapture vCap(videoFile);
 		if ( ! vCap.isOpened())
 		{
-			return false;
+			return nullptr;
 		}
 
-		auto telemSamps = TelemetrySamplesPtr(new TelemetrySamples());
-		telemSamps->resize(videoTelem.size());
+		auto newSrc = DataSourcePtr(new DataSource());
+		newSrc->vCapture_ = vCap;
+		newSrc->samples_ = TelemetrySamplesPtr(new TelemetrySamples());
+		newSrc->samples_->resize(videoTelem.size());
 		for (size_t i=0; i<videoTelem.size(); i++)
 		{
-			telemSamps->at(i).gpSamp = videoTelem.at(i);
+			newSrc->samples_->at(i).gpSamp = videoTelem.at(i);
 		}
 
-		data.reset(new DataSource());
-		data->seeker = TelemetrySeekerPtr(new TelemetrySeeker(
-			telemSamps));
-		data->telemSrc = TelemetrySourcePtr(new TelemetrySource(
-			telemSamps,
-			data->seeker));
-		data->videoSrc = VideoSourcePtr(new VideoSource(
-			vCap,
-			data->seeker));
+		newSrc->seeker = TelemetrySeekerPtr(new TelemetrySeeker(newSrc->samples_));
+		newSrc->telemSrc = TelemetrySourcePtr(new TelemetrySource(newSrc));
+		newSrc->videoSrc = VideoSourcePtr(new VideoSource(newSrc));
 
-		return true;
+		return newSrc;
 	}
 
 	DataSourceManager::DataSourceManager()
@@ -290,15 +287,14 @@ namespace gpo
 		const std::string &filepath,
 		const std::string &name)
 	{
-		DataSourcePtr data;
-		bool loadOkay = loadDataFromVideo(filepath,data);
-		if (loadOkay)
+		auto dataSrc = DataSource::loadDataFromVideo(filepath);
+		if (dataSrc)
 		{
-			data->sourceName_ = name;
-			data->originFile_ = filepath;
-			sources_.push_back(data);
+			dataSrc->sourceName_ = name;
+			dataSrc->originFile_ = filepath;
+			sources_.push_back(dataSrc);
 		}
-		return loadOkay;
+		return dataSrc != nullptr;
 	}
 
 }

@@ -43,15 +43,12 @@ DataProcessingUtilsTest::trackTimes()
 	track.addSector("Sector2",30,50);
 	track.addSector("Sector3",60,70);
 
-	auto seeker = gpo::TelemetrySeekerPtr(new gpo::TelemetrySeeker(tSamps));
-	auto tSource = gpo::TelemetrySourcePtr(new gpo::TelemetrySource(tSamps,seeker));
+	CPPUNIT_ASSERT_EQUAL(true, utils::computeTrackTimes(&track,tSamps));
 
-	CPPUNIT_ASSERT_EQUAL(true, utils::computeTrackTimes(&track,tSource));
-
-	CPPUNIT_ASSERT_EQUAL(PATH_LENGTH, tSource->size());
-	for (size_t i=0; i<tSource->size(); i++)
+	CPPUNIT_ASSERT_EQUAL(PATH_LENGTH, tSamps->size());
+	for (size_t i=0; i<tSamps->size(); i++)
 	{
-		const auto &samp = tSource->at(i);
+		const auto &samp = tSamps->at(i);
 
 		// printf("i: %3ld; lap: %+d (time: %3.3fs); sector: %+d (time: %3.3fs);\n",
 		// 	i,

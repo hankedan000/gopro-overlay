@@ -7,7 +7,7 @@ namespace utils
 	bool
 	computeTrackTimes(
 		const gpo::Track *track,
-		gpo::TelemetrySourcePtr telemSrc)
+		gpo::TelemetrySamplesPtr tSamps)
 	{
 		std::vector<const gpo::TrackPathObject *> trackObjs;
 		if ( ! track->getSortedPathObjects(trackObjs))
@@ -32,9 +32,9 @@ namespace utils
 		double sectorStartTimeOffset = 0;
 		gpo::GateType_E gateType = (*tpoItr)->getGateType();
 		gpo::DetectionGate gate = (*tpoItr)->getEntryGate();
-		for (size_t ii=0; ii<telemSrc->size(); ii++)
+		for (size_t ii=0; ii<tSamps->size(); ii++)
 		{
-			auto &samp = telemSrc->at(ii);
+			auto &samp = tSamps->at(ii);
 			cv::Vec2d currCoord(samp.gpSamp.gps.coord.lat,samp.gpSamp.gps.coord.lon);
 
 			bool movedToNextObject = false;

@@ -131,15 +131,15 @@ int main(int argc, char *argv[])
 	}
 
 	printf("opening %s\n", opts.topFile.c_str());
-	gpo::DataSourcePtr topData;
-	if ( ! gpo::loadDataFromVideo(opts.topFile,topData))
+	auto topData = gpo::DataSource::loadDataFromVideo(opts.topFile);
+	if ( ! topData)
 	{
 		printf("No top video data\n");
 		return -1;
 	}
 	printf("opening %s\n", opts.bottomFile.c_str());
-	gpo::DataSourcePtr botData;
-	if ( ! gpo::loadDataFromVideo(opts.bottomFile,botData))
+	auto botData = gpo::DataSource::loadDataFromVideo(opts.bottomFile);
+	if ( ! botData)
 	{
 		printf("No bottom video data\n");
 		return -1;

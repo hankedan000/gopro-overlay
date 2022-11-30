@@ -185,7 +185,7 @@ namespace gpo
 				else
 					throw std::runtime_error("unsupported decode for RenderedObject type " + typeName);
 
-				re.rObj->decode(yEntity,dsm);
+				re.rObj->decode(yR_Obj,dsm);
 
 				addEntity(re);
 			}

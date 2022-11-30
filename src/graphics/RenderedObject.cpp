@@ -250,6 +250,7 @@ namespace gpo
 	{
 		YAML::Node node;
 		node["typeName"] = typeName();
+		node["visible"] = visible_;
 
 		YAML::Node yVidSources = node["vSources"];
 		for (const auto &vSource : vSources_)
@@ -274,6 +275,8 @@ namespace gpo
 		const DataSourceManager &dsm)
 	{
 		bool okay = true;
+
+		YAML_TO_FIELD(node, "visible", visible_);
 
 		// load in all the video sources
 		if (node["vSources"])
