@@ -123,21 +123,11 @@ ProjectWindow::loadProject(
         reloadRenderEntitiesTable();
         populateRecentProjects();
         updateTrackPane();
+        updatePreviewWindowWithNewEngine(proj_.getEngine());
 
         if (proj_.hasTrack())
         {
             trackEditor_->setTrack(proj_.getTrack());
-        }
-        auto engine = proj_.getEngine();
-        previewWindow_->setEngine(engine);
-        if (engine)
-        {
-            previewWindow_->show();
-            previewWindow_->showImage(engine->getFrame());
-        }
-        else
-        {
-            previewWindow_->hide();
         }
     }
 
@@ -304,6 +294,23 @@ ProjectWindow::reloadRenderEntitiesTable()
 }
 
 void
+ProjectWindow::updatePreviewWindowWithNewEngine(
+        gpo::RenderEnginePtr newEngine)
+{
+    previewWindow_->setEngine(newEngine);
+    if (newEngine)
+    {
+        previewWindow_->show();
+        newEngine->render();// render initial frame
+        previewWindow_->showImage(newEngine->getFrame());
+    }
+    else
+    {
+        previewWindow_->hide();
+    }
+}
+
+void
 ProjectWindow::onActionSaveProject()
 {
     saveProject(currProjectDir_);
@@ -360,17 +367,5 @@ ProjectWindow::onEngineCreated(
 {
     proj_.setEngine(newEngine);
     reloadRenderEntitiesTable();
-
-    // FIXME copied code. also in loadProject()
-    auto engine = proj_.getEngine();
-    previewWindow_->setEngine(engine);
-    if (engine)
-    {
-        previewWindow_->show();
-        previewWindow_->showImage(engine->getFrame());
-    }
-    else
-    {
-        previewWindow_->hide();
-    }
+    updatePreviewWindowWithNewEngine(newEngine);
 }

@@ -69,6 +69,10 @@ private:
     void
     reloadRenderEntitiesTable();
 
+    void
+    updatePreviewWindowWithNewEngine(
+            gpo::RenderEnginePtr newEngine);
+
 private slots:
     void
     onActionSaveProject();
