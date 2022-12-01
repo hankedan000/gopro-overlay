@@ -8,6 +8,7 @@ namespace gpo
 		TelemetrySamplesPtr samples)
 	 : samples_(samples)
 	 , seekedIdx_(0)
+	 , lapIndicesMap_()
 	{
 	}
 
@@ -39,20 +40,18 @@ namespace gpo
 		throw std::runtime_error("seekToTime() is not implemented");
 	}
 	
-	std::pair<bool,size_t>
-	TelemetrySeeker::seekToLap(
+	void
+	TelemetrySeeker::seekToLapEntry(
 		unsigned int lap)
 	{
-		for (size_t i=0; i<size(); i++)
-		{
-			const auto &samp = samples_->at(i);
-			if (samp.lap == lap)
-			{
-				seekedIdx_ = i;
-				return {true,seekedIdx_};
-			}
-		}
-		return {false,seekedIdx_};
+		seekedIdx_ = lapIndicesMap_.at(lap).entryIdx;
+	}
+	
+	void
+	TelemetrySeeker::seekToLapExit(
+		unsigned int lap)
+	{
+		seekedIdx_ = lapIndicesMap_.at(lap).exitIdx;
 	}
 	
 	size_t
@@ -65,5 +64,61 @@ namespace gpo
 	TelemetrySeeker::size() const
 	{
 		return samples_->size();
+	}
+
+	unsigned int
+	TelemetrySeeker::lapCount() const
+	{
+		return lapIndicesMap_.size();
+	}
+
+	std::pair<size_t, size_t>
+	TelemetrySeeker::getLapEntryExit(
+		unsigned int lap) const
+	{
+		auto &li = lapIndicesMap_.at(lap);
+		return {li.entryIdx,li.exitIdx};
+	}
+
+	// forces seeker to analyze samples and find lap/sector seek points again
+	void
+	TelemetrySeeker::analyze()
+	{
+		lapIndicesMap_.clear();
+
+		LapIndices li;
+		int prevLap = -1;
+		int prevSampLap = -1;
+		int lapWereIn = -1;
+		bool inLap = false;
+		for (size_t i=0; i<size(); i++)
+		{
+			const auto &samp = samples_->at(i);
+			if (prevSampLap == -1 && samp.lap > 0)
+			{
+				// entered a lap
+				lapWereIn = samp.lap;
+				li.entryIdx = i;
+				li.exitIdx = -1;
+			}
+			else if (lapWereIn != -1 && prevSampLap != samp.lap)
+			{
+				// exited a lap
+				li.exitIdx = i - 1;
+				lapIndicesMap_.insert({lapWereIn,li});
+
+				prevLap = lapWereIn;
+				lapWereIn = samp.lap;
+				li.entryIdx = i;// circuit case where finishGate == startGate
+			}
+			prevSampLap = samp.lap;
+		}
+
+		// corner case where we never left a lap (could have pitted in early or something)
+		if (lapWereIn != -1)
+		{
+			li.exitIdx = size() - 1;
+			lapIndicesMap_.insert({lapWereIn,li});
+		}
 	}
 }

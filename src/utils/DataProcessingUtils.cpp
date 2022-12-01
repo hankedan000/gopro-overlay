@@ -21,7 +21,7 @@ namespace utils
 		}
 
 		int currLap = -1;
-		int sectorSeq = 0;// increments everytime we exit a sector
+		int sectorSeq = 1;// increments everytime we exit a sector
 		int currSector = -1;
 		cv::Vec2d prevCoord;
 		auto tpoItr = trackObjs.begin();
@@ -88,7 +88,7 @@ namespace utils
 					else
 					{
 						// crossed last track object, so loop back to first
-						sectorSeq = 0;
+						sectorSeq = 1;
 						tpoItr = trackObjs.begin();
 						gateType = (*tpoItr)->getGateType();
 						gate = (*tpoItr)->getEntryGate();
@@ -118,7 +118,7 @@ namespace utils
 					else
 					{
 						// crossed last track object, so loop back to first
-						sectorSeq = 0;
+						sectorSeq = 1;
 						tpoItr = trackObjs.begin();
 						gateType = (*tpoItr)->getGateType();
 						gate = (*tpoItr)->getEntryGate();

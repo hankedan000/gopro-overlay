@@ -1,5 +1,7 @@
 #include "GoProOverlay/data/GroupedSeeker.h"
 
+#include <limits>
+
 namespace gpo
 {
 	GroupedSeeker::GroupedSeeker()
@@ -56,7 +58,7 @@ namespace gpo
 	}
 
 	void
-	GroupedSeeker::next()
+	GroupedSeeker::nextAll()
 	{
 		for (auto &seeker : seekers_)
 		{
@@ -64,25 +66,79 @@ namespace gpo
 		}
 	}
 
-	void
-	GroupedSeeker::seekToIdx(
-		size_t idx)
+	unsigned int
+	GroupedSeeker::minLapCount() const
 	{
-		for (auto & seeker : seekers_)
+		if (seekers_.empty())
 		{
-			seeker->seekToIdx(idx);
+			return 0;
+		}
+
+		unsigned int min = std::numeric_limits<unsigned int>::max();
+		for (auto &seeker : seekers_)
+		{
+			min = std::min(min,seeker->lapCount());
+		}
+		return min;
+	}
+
+	unsigned int
+	GroupedSeeker::maxLapCount() const
+	{
+		if (seekers_.empty())
+		{
+			return 0;
+		}
+
+		unsigned int max = std::numeric_limits<unsigned int>::min();
+		for (auto &seeker : seekers_)
+		{
+			max = std::max(max,seeker->lapCount());
+		}
+		return max;
+	}
+
+	void
+	GroupedSeeker::seekAllToLapEntry(
+		unsigned int lap)
+	{
+		for (auto &seeker : seekers_)
+		{
+			seeker->seekToLapEntry(lap);
 		}
 	}
 
-	bool
-	GroupedSeeker::seekToLap(
+	void
+	GroupedSeeker::seekAllToLapExit(
 		unsigned int lap)
 	{
-		bool okay = true;
-		for (auto & seeker : seekers_)
+		for (auto &seeker : seekers_)
 		{
-			okay = seeker->seekToLap(lap).first && okay;
+			seeker->seekToLapExit(lap);
 		}
-		return okay;
+	}
+
+	std::pair<long, long>
+	GroupedSeeker::relativeSeekLimits() const
+	{
+		if (seekers_.empty())
+		{
+			return {0,0};
+		}
+
+		std::pair<long, long> limits;
+		limits.first = std::numeric_limits<decltype(limits.first)>::max();
+		limits.second = std::numeric_limits<decltype(limits.second)>::max();
+		for (auto &seeker : seekers_)
+		{
+			if (seeker->size() == 0)
+			{
+				return {0,0};// corner case where a seeker doesn't have any samples
+			}
+			limits.first = std::min(limits.first, (long)(seeker->seekedIdx()));
+			limits.second = std::min(limits.second, (long)(seeker->size() - seeker->seekedIdx() - 1));
+		}
+		limits.first *= -1;
+		return limits;
 	}
 }

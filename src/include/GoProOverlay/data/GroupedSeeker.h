@@ -32,15 +32,51 @@ namespace gpo
 			size_t idx);
 
 		void
-		next();
+		nextAll();
+
+		/**
+		 * @return
+		 * the lowest number of laps a seeker has in the group
+		 */
+		unsigned int
+		minLapCount() const;
+
+		/**
+		 * @return
+		 * the most number of laps a seeker has in the group
+		 */
+		unsigned int
+		maxLapCount() const;
 
 		void
-		seekToIdx(
-			size_t idx);
-
-		bool
-		seekToLap(
+		seekAllToLapEntry(
 			unsigned int lap);
+
+		void
+		seekAllToLapExit(
+			unsigned int lap);
+
+		/**
+		 * Imagine we have three TelemetrySeekers that are seeked to some random point in
+		 * their data set. If we aligned them all based on their current location, then
+		 * this function would return the relative distances you could seek to while still
+		 * remaining within all dataset ranges.
+		 * 
+		 *                :<- seeked point
+		 *                :
+		 *     ___________:___________________________
+		 *    |___________:___________________________|
+		 *   _____________:_____________________
+		 *  |_____________:_____________________|
+		 *       _________:________________________________
+		 *      |_________:________________________________|
+		 *                :
+		 *                :
+		 *      <----- relative seek limits ---->
+		 *     -10        0                    +22
+		 */
+		std::pair<long, long>
+		relativeSeekLimits() const;
 
 	private:
 		std::vector<TelemetrySeekerPtr> seekers_;

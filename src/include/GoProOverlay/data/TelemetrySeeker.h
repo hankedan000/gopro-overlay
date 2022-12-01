@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <unordered_map>
 
 #include "TelemetrySample.h"
 
@@ -23,8 +24,12 @@ namespace gpo
 		seekToTime(
 			double timeOffset);
 		
-		std::pair<bool,size_t>
-		seekToLap(
+		void
+		seekToLapEntry(
+			unsigned int lap);
+		
+		void
+		seekToLapExit(
 			unsigned int lap);
 		
 		size_t
@@ -33,9 +38,32 @@ namespace gpo
 		size_t
 		size() const;
 
+		unsigned int
+		lapCount() const;
+
+		std::pair<size_t, size_t>
+		getLapEntryExit(
+			unsigned int lap) const;
+
+		// forces seeker to analyze samples and find lap/sector seek points again
+		void
+		analyze();
+
 	private:
 		TelemetrySamplesPtr samples_;
 		size_t seekedIdx_;
+
+		struct LapIndices
+		{
+			LapIndices()
+			 : entryIdx(-1)
+			 , exitIdx(-1)
+			{}
+
+			size_t entryIdx;
+			size_t exitIdx;
+		};
+		std::unordered_map<unsigned int, LapIndices> lapIndicesMap_;
 
 	};
 

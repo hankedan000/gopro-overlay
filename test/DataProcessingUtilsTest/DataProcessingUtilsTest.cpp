@@ -70,12 +70,12 @@ DataProcessingUtilsTest::trackTimes()
 		else if (i < 30)// exited sector1 AND entered sector2
 		{
 			CPPUNIT_ASSERT_EQUAL(1, samp.lap);
-			CPPUNIT_ASSERT_EQUAL(0, samp.sector);
+			CPPUNIT_ASSERT_EQUAL(1, samp.sector);
 		}
 		else if (i < 50)// exited sector2
 		{
 			CPPUNIT_ASSERT_EQUAL(1, samp.lap);
-			CPPUNIT_ASSERT_EQUAL(1, samp.sector);
+			CPPUNIT_ASSERT_EQUAL(2, samp.sector);
 		}
 		else if (i < 60)// entered sector3
 		{
@@ -85,7 +85,7 @@ DataProcessingUtilsTest::trackTimes()
 		else if (i < 70)// exited sector3
 		{
 			CPPUNIT_ASSERT_EQUAL(1, samp.lap);
-			CPPUNIT_ASSERT_EQUAL(2, samp.sector);
+			CPPUNIT_ASSERT_EQUAL(3, samp.sector);
 		}
 		else if (i < 95)// cross finish
 		{

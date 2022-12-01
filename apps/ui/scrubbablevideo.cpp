@@ -17,7 +17,7 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
             return;
         }
 
-        engine_->getSeeker()->next();
+        engine_->getSeeker()->nextAll();
         engine_->render();
         showImage(engine_->getFrame());
     });
