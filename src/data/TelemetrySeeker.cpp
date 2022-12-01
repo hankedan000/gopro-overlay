@@ -13,13 +13,33 @@ namespace gpo
 	}
 
 	void
+	TelemetrySeeker::prev()
+	{
+		if (hasPrev())
+		{
+			seekedIdx_--;
+		}
+	}
+
+	void
 	TelemetrySeeker::next()
 	{
-		auto nextIdx = seekedIdx_ + 1;
-		if (nextIdx < size())
+		if (hasNext())
 		{
-			seekedIdx_ = nextIdx;
+			seekedIdx_++;
 		}
+	}
+
+	bool
+	TelemetrySeeker::hasPrev() const
+	{
+		return seekedIdx_ != 0;
+	}
+
+	bool
+	TelemetrySeeker::hasNext() const
+	{
+		return (seekedIdx_ + 1) < size();
 	}
 
 	void

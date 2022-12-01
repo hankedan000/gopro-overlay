@@ -125,6 +125,12 @@ ProjectWindow::loadProject(
         updateTrackPane();
         updatePreviewWindowWithNewEngine(proj_.getEngine());
 
+        auto gSeeker = proj_.getEngine()->getSeeker();
+        ui->lapSpinBox->setMinimum(gSeeker->minLapCount());
+        ui->lapSpinBox->setMaximum(gSeeker->maxLapCount());
+        ui->lapSpinBox->setValue(ui->lapSpinBox->minimum());
+        seekPreviewToAlignment();
+
         if (proj_.hasTrack())
         {
             trackEditor_->setTrack(proj_.getTrack());
@@ -308,6 +314,24 @@ ProjectWindow::updatePreviewWindowWithNewEngine(
     {
         previewWindow_->hide();
     }
+}
+
+void
+ProjectWindow::seekPreviewToAlignment()
+{
+    int lap = ui->lapSpinBox->value();
+    auto engine = proj_.getEngine();
+    auto gSeeker = engine->getSeeker();
+    if (lap > 0)
+    {
+        gSeeker->seekAllToLapEntry(lap);
+    }
+    else
+    {
+        gSeeker->seekAllToIdx(0);
+    }
+    engine->render();
+    previewWindow_->showImage(engine->getFrame());
 }
 
 void

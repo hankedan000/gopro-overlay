@@ -73,6 +73,9 @@ private:
     updatePreviewWindowWithNewEngine(
             gpo::RenderEnginePtr newEngine);
 
+    void
+    seekPreviewToAlignment();
+
 private slots:
     void
     onActionSaveProject();

@@ -16,7 +16,6 @@ namespace gpo
 	 , sourceName_("")
 	 , originFile_("")
 	 , datumTrack_(nullptr)
-	 , lapCount_(0)
 	{
 	}
 
@@ -54,7 +53,6 @@ namespace gpo
 	bool
 	DataSource::reprocessDatumTrack()
 	{
-		lapCount_ = 0;
 		if (datumTrack_ == nullptr)
 		{
 			// nothing to process
@@ -64,16 +62,7 @@ namespace gpo
 		bool okay = utils::computeTrackTimes(datumTrack_,samples_);
 		if (okay)
 		{
-			// determine lap count by starting at end of data and finding first valid lap
-			for (size_t i=(samples_->size()-1); i>=0; i--)
-			{
-				const auto &samp = samples_->at(i);
-				if (samp.lap != -1)
-				{
-					lapCount_ = samp.lap;
-					break;
-				}
-			}
+			seeker->analyze();
 		}
 
 		return okay;
@@ -82,7 +71,7 @@ namespace gpo
 	int
 	DataSource::lapCount() const
 	{
-		return lapCount_;
+		return seeker->lapCount();
 	}
 
 	bool

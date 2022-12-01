@@ -58,11 +58,54 @@ namespace gpo
 	}
 
 	void
-	GroupedSeeker::nextAll()
+	GroupedSeeker::prevAll(
+			bool onlyIfAllHavePrev)
 	{
+		if (onlyIfAllHavePrev)
+		{
+			for (auto &seeker : seekers_)
+			{
+				if ( ! seeker->hasPrev())
+				{
+					return;// don't move anybody if one can't be moved
+				}
+			}
+		}
+
+		for (auto &seeker : seekers_)
+		{
+			seeker->prev();
+		}
+	}
+
+	void
+	GroupedSeeker::nextAll(
+			bool onlyIfAllHaveNext)
+	{
+		if (onlyIfAllHaveNext)
+		{
+			for (auto &seeker : seekers_)
+			{
+				if ( ! seeker->hasNext())
+				{
+					return;// don't move anybody if one can't be moved
+				}
+			}
+		}
+
 		for (auto &seeker : seekers_)
 		{
 			seeker->next();
+		}
+	}
+
+	void
+	GroupedSeeker::seekAllToIdx(
+		size_t idx)
+	{
+		for (auto &seeker : seekers_)
+		{
+			seeker->seekToIdx(idx);
 		}
 	}
 

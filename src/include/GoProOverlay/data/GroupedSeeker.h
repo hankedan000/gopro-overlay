@@ -32,7 +32,16 @@ namespace gpo
 			size_t idx);
 
 		void
-		nextAll();
+		prevAll(
+			bool onlyIfAllHavePrev = true);
+
+		void
+		nextAll(
+			bool onlyIfAllHaveNext = true);
+
+		void
+		seekAllToIdx(
+			size_t idx);
 
 		/**
 		 * @return

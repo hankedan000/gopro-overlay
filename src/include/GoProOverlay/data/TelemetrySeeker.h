@@ -14,7 +14,16 @@ namespace gpo
 			TelemetrySamplesPtr samples);
 
 		void
+		prev();
+
+		void
 		next();
+
+		bool
+		hasPrev() const;
+
+		bool
+		hasNext() const;
 
 		void
 		seekToIdx(

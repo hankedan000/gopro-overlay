@@ -80,7 +80,6 @@ namespace gpo
 		std::string sourceName_;
 		std::string originFile_;
 		const Track *datumTrack_;
-		int lapCount_;
 
 	};
 

@@ -21,6 +21,16 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
         engine_->render();
         showImage(engine_->getFrame());
     });
+    connect(ui->prevFrameButton, &QToolButton::pressed, this, [this]{
+        if ( ! engine_)
+        {
+            return;
+        }
+
+        engine_->getSeeker()->prevAll();
+        engine_->render();
+        showImage(engine_->getFrame());
+    });
 
     setSize(cv::Size(640,480));// default size
 }
