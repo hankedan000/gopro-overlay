@@ -7,9 +7,15 @@
 const QString RECENT_PROJECT_KEY = "RECENT_PROJECTS";
 const int MAX_RECENT_PROJECTS = 10;
 
+// constants for the rendered entity tables
+const int ENTITY_NAME_COLUMN       = 0;
+const int ENTITY_TYPE_COLUMN       = 1;
+const int ENTITY_VISIBILITY_COLUMN = 2;
+
 ProjectWindow::ProjectWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::ProjectWindow),
+    previewResolutionActionGroup_(new QActionGroup(this)),
     settings(QSettings::Format::NativeFormat, QSettings::UserScope, "ProjectWindow", "GoProOverlay Render Project Application"),
     currProjectDir_(),
     proj_(),
@@ -21,6 +27,9 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     previewWindow_->setWindowTitle("Render Preview");
+    previewResolutionActionGroup_->addAction(ui->action960_x_540);
+    previewResolutionActionGroup_->addAction(ui->action1280_x_720);
+    previewResolutionActionGroup_->addAction(ui->action1920_x_1080);
 
     // menu actions
     connect(ui->actionSave_Project, &QAction::triggered, this, &ProjectWindow::onActionSaveProject);
@@ -28,6 +37,15 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     connect(ui->actionLoad_Project, &QAction::triggered, this, &ProjectWindow::onActionLoadProject);
     connect(ui->actionImport_Sources, &QAction::triggered, this, &ProjectWindow::onActionImportSources);
     connect(ui->actionShow_Render_Preview, &QAction::triggered, this, [this]{previewWindow_->show();});
+    connect(ui->action960_x_540, &QAction::triggered, this, [this]{
+        previewWindow_->setSize(cv::Size(960,540));
+    });
+    connect(ui->action1280_x_720, &QAction::triggered, this, [this]{
+        previewWindow_->setSize(cv::Size(1280,720));
+    });
+    connect(ui->action1920_x_1080, &QAction::triggered, this, [this]{
+        previewWindow_->setSize(cv::Size(1920,1080));
+    });
 
     // connect buttons
     connect(ui->topBottomWizard, &QPushButton::pressed, this, [this]{reWizTopBot_->show();});
@@ -55,6 +73,8 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
 
         updateTrackPane();
     });
+    connect(ui->entryRadio, &QRadioButton::toggled, this, [this]{seekEngineToAlignment();render();});
+    connect(ui->exitRadio, &QRadioButton::toggled, this, [this]{seekEngineToAlignment();render();});
 
     // connect engines wizards.
     connect(reWizTopBot_, &RenderEngineWizard_TopBottom::created, this, &ProjectWindow::onEngineCreated);
@@ -64,6 +84,24 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     clearDataSourcesTable();// calling this to set table headers
     ui->renderEntitiesTable->setModel(entitiesTableModel_);
     clearRenderEntitiesTable();// calling this to set table headers
+
+    connect(entitiesTableModel_, &QStandardItemModel::dataChanged, this, [this](
+            const QModelIndex &topLeft,
+            const QModelIndex &bottomRight,
+            const QVector<int> &roles){
+        int editWidth = bottomRight.column() - topLeft.column();
+        int editHeight = topLeft.row() - bottomRight.row();
+        if (editWidth != 0 || editHeight != 0)
+        {
+            printf("multi-cell edit in EntityTable is not supported\n");
+            return;
+        }
+
+        QStandardItem *entityNameItem = entitiesTableModel_->item(topLeft.row(),ENTITY_NAME_COLUMN);
+        // recover the encoded pointer to a RenderedEntity within the name's data()
+        QVariant v = entityNameItem->data();
+        auto re = reinterpret_cast<gpo::RenderEngine::RenderedEntity *>(v.toULongLong());
+    });
 
     configureMenuActions();
     populateRecentProjects();
@@ -123,13 +161,18 @@ ProjectWindow::loadProject(
         reloadRenderEntitiesTable();
         populateRecentProjects();
         updateTrackPane();
-        updatePreviewWindowWithNewEngine(proj_.getEngine());
+        updatePreviewWindowWithNewEngine(
+                    proj_.getEngine(),
+                    false,// don't show until we seek below
+                    false);// holdoff render untill we seek below
 
         auto gSeeker = proj_.getEngine()->getSeeker();
         ui->lapSpinBox->setMinimum(gSeeker->minLapCount());
         ui->lapSpinBox->setMaximum(gSeeker->maxLapCount());
         ui->lapSpinBox->setValue(ui->lapSpinBox->minimum());
-        seekPreviewToAlignment();
+        seekEngineToAlignment();
+        render();
+        previewWindow_->show();
 
         if (proj_.hasTrack())
         {
@@ -280,6 +323,7 @@ ProjectWindow::reloadRenderEntitiesTable()
 
         QStandardItem *nameItem = new QStandardItem;
         nameItem->setText(entity.name().c_str());
+        nameItem->setData(QVariant(reinterpret_cast<qulonglong>((void*)(&entity))));
         row.append(nameItem);
 
         QStandardItem *typeItem = new QStandardItem;
@@ -301,37 +345,59 @@ ProjectWindow::reloadRenderEntitiesTable()
 
 void
 ProjectWindow::updatePreviewWindowWithNewEngine(
-        gpo::RenderEnginePtr newEngine)
+        gpo::RenderEnginePtr newEngine,
+        bool updateVisibility,
+        bool updateRender)
 {
     previewWindow_->setEngine(newEngine);
-    if (newEngine)
+
+    if (updateVisibility)
     {
-        previewWindow_->show();
-        newEngine->render();// render initial frame
-        previewWindow_->showImage(newEngine->getFrame());
+        previewWindow_->setVisible(newEngine != nullptr);
     }
-    else
+
+    // render initial frame
+    if (newEngine && updateRender)
     {
-        previewWindow_->hide();
+        render();
     }
 }
 
 void
-ProjectWindow::seekPreviewToAlignment()
+ProjectWindow::seekEngineToAlignment()
 {
     int lap = ui->lapSpinBox->value();
     auto engine = proj_.getEngine();
     auto gSeeker = engine->getSeeker();
     if (lap > 0)
     {
-        gSeeker->seekAllToLapEntry(lap);
+        if (ui->entryRadio->isChecked())
+        {
+            gSeeker->seekAllToLapEntry(lap);
+        }
+        else
+        {
+            gSeeker->seekAllToLapExit(lap);
+        }
     }
     else
     {
         gSeeker->seekAllToIdx(0);
     }
-    engine->render();
-    previewWindow_->showImage(engine->getFrame());
+}
+
+void
+ProjectWindow::render()
+{
+    auto engine = proj_.getEngine();
+    if (engine)
+    {
+        engine->render();
+        if (previewWindow_->isVisible())
+        {
+            previewWindow_->showImage(engine->getFrame());
+        }
+    }
 }
 
 void
@@ -391,5 +457,8 @@ ProjectWindow::onEngineCreated(
 {
     proj_.setEngine(newEngine);
     reloadRenderEntitiesTable();
-    updatePreviewWindowWithNewEngine(newEngine);
+    updatePreviewWindowWithNewEngine(
+                newEngine,
+                true,// updateVisibilty
+                true);// updateRender
 }

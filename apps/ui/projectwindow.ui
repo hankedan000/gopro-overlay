@@ -95,29 +95,52 @@
          <widget class="QWidget" name="widget_2" native="true">
           <layout class="QVBoxLayout" name="verticalLayout_5">
            <item>
-            <widget class="QLabel" name="label_4">
-             <property name="text">
+            <widget class="QGroupBox" name="groupBox">
+             <property name="title">
               <string>4. Data Alignment</string>
              </property>
+             <layout class="QVBoxLayout" name="verticalLayout_7">
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,1">
+                <item>
+                 <widget class="QLabel" name="label_5">
+                  <property name="text">
+                   <string>Lap: </string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QSpinBox" name="lapSpinBox">
+                  <property name="minimum">
+                   <number>1</number>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_3">
+                <item>
+                 <widget class="QRadioButton" name="entryRadio">
+                  <property name="text">
+                   <string>Entry</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QRadioButton" name="exitRadio">
+                  <property name="text">
+                   <string>Exit</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
             </widget>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,1">
-             <item>
-              <widget class="QLabel" name="label_5">
-               <property name="text">
-                <string>Lap: </string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QSpinBox" name="lapSpinBox">
-               <property name="minimum">
-                <number>1</number>
-               </property>
-              </widget>
-             </item>
-            </layout>
            </item>
            <item>
             <spacer name="verticalSpacer">
@@ -173,7 +196,16 @@
     <property name="title">
      <string>View</string>
     </property>
+    <widget class="QMenu" name="menuPreview_Resolution">
+     <property name="title">
+      <string>Preview Resolution</string>
+     </property>
+     <addaction name="action960_x_540"/>
+     <addaction name="action1280_x_720"/>
+     <addaction name="action1920_x_1080"/>
+    </widget>
     <addaction name="actionShow_Render_Preview"/>
+    <addaction name="menuPreview_Resolution"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuView"/>
@@ -217,6 +249,36 @@
   <action name="actionProject2">
    <property name="text">
     <string>Project2</string>
+   </property>
+  </action>
+  <action name="action1280_x_720">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>1280 x 720</string>
+   </property>
+  </action>
+  <action name="action1920_x_1080">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>1920 x 1080</string>
+   </property>
+  </action>
+  <action name="action960_x_540">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>960 x 540</string>
    </property>
   </action>
  </widget>

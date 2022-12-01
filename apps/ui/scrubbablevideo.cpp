@@ -46,6 +46,11 @@ ScrubbableVideo::setSize(
 {
     frameSize_ = size;
     frameBuffer_.create(size.height,size.width,CV_8UC3);
+
+    if (isVisible() && engine_)
+    {
+        showImage(engine_->getFrame());
+    }
 }
 
 void

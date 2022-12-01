@@ -1,6 +1,7 @@
 #ifndef PROJECTWINDOW_H
 #define PROJECTWINDOW_H
 
+#include <QActionGroup>
 #include <QMainWindow>
 #include <QSettings>
 #include <QStandardItemModel>
@@ -69,12 +70,30 @@ private:
     void
     reloadRenderEntitiesTable();
 
+    /**
+     * @brief updatePreviewWindowWithNewEngine
+     * All logic to handle setting a new RenderEngine to the preview window.
+     * @param newEngine
+     * the new engine to set. can be nullptr.
+     *
+     * @param updateVisibility
+     * set to true and the preview pane will be shown or hidden based on if
+     * the engine is null or not.
+     *
+     * @param updateRender
+     * will trigger a render update after setting the engine.
+     */
     void
     updatePreviewWindowWithNewEngine(
-            gpo::RenderEnginePtr newEngine);
+            gpo::RenderEnginePtr newEngine,
+            bool updateVisibility,
+            bool updateRender);
 
     void
-    seekPreviewToAlignment();
+    seekEngineToAlignment();
+
+    void
+    render();
 
 private slots:
     void
@@ -96,6 +115,7 @@ private slots:
 
 private:
     Ui::ProjectWindow *ui;
+    QActionGroup *previewResolutionActionGroup_;
     QSettings settings;
 
     std::string currProjectDir_;
