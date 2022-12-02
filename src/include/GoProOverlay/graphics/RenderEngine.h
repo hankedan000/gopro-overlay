@@ -34,6 +34,9 @@ namespace gpo
 		getRenderSize() const;
 
 		void
+		clear();
+
+		void
 		addEntity(
 			RenderedEntity re);
 

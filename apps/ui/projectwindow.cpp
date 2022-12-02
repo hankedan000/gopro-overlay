@@ -37,6 +37,39 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     previewResolutionActionGroup_->addAction(ui->action1920_x_1080);
 
     // menu actions
+    connect(ui->actionNew_Project, &QAction::triggered, this, [this]{
+        if (maybeSave())
+        {
+            if (currProjectDir_.empty())
+            {
+                onActionSaveProjectAs();
+            }
+            else
+            {
+                onActionSaveProject();
+            }
+        }
+
+        // clear old project
+        proj_.clear();
+        currProjectDir_.clear();
+        projectDirty_ = false;
+
+        // reset UI elements related to project
+        reloadDataSourceTable();
+        reloadRenderEntitiesTable();
+        populateRecentProjects();
+        updateTrackPane();
+        updatePreviewWindowWithNewEngine(
+                    proj_.getEngine(),
+                    false,// we'll close it out selves below
+                    false);// hold off render until below
+        updateAlignmentPane();
+        previewWindow_->hide();
+        render();
+        trackEditor_->hide();
+        trackEditor_->setTrack(nullptr);
+    });
     connect(ui->actionSave_Project, &QAction::triggered, this, &ProjectWindow::onActionSaveProject);
     connect(ui->actionSave_Project_as, &QAction::triggered, this, &ProjectWindow::onActionSaveProjectAs);
     connect(ui->actionLoad_Project, &QAction::triggered, this, &ProjectWindow::onActionLoadProject);

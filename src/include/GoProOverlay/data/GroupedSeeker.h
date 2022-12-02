@@ -13,6 +13,9 @@ namespace gpo
 		GroupedSeeker();
 
 		void
+		clear();
+
+		void
 		addSeeker(
 			TelemetrySeekerPtr seeker);
 

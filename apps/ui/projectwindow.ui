@@ -23,14 +23,14 @@
       <widget class="QWidget" name="verticalLayoutWidget">
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
+         <widget class="QTableView" name="tableDataSources"/>
+        </item>
+        <item>
          <widget class="QLabel" name="label">
           <property name="text">
            <string>1. Data Sources</string>
           </property>
          </widget>
-        </item>
-        <item>
-         <widget class="QTableView" name="tableDataSources"/>
         </item>
         <item>
          <widget class="QLabel" name="label_3">
@@ -233,6 +233,7 @@
      <addaction name="actionProject1"/>
      <addaction name="actionProject2"/>
     </widget>
+    <addaction name="actionNew_Project"/>
     <addaction name="actionSave_Project"/>
     <addaction name="actionSave_Project_as"/>
     <addaction name="separator"/>
@@ -256,8 +257,15 @@
     <addaction name="actionShow_Render_Preview"/>
     <addaction name="menuPreview_Resolution"/>
    </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionAbout"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuView"/>
+   <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionSave_Project">
@@ -267,12 +275,12 @@
   </action>
   <action name="actionSave_Project_as">
    <property name="text">
-    <string>Save Project as ...</string>
+    <string>Save Project as...</string>
    </property>
   </action>
   <action name="actionLoad_Project">
    <property name="text">
-    <string>Load Project ...</string>
+    <string>Load Project...</string>
    </property>
   </action>
   <action name="actionShow_Track_Editor">
@@ -287,7 +295,7 @@
   </action>
   <action name="actionImport_Sources">
    <property name="text">
-    <string>Import Sources ...</string>
+    <string>Import Sources...</string>
    </property>
   </action>
   <action name="actionProject1">
@@ -328,6 +336,16 @@
    </property>
    <property name="text">
     <string>960 x 540</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About...</string>
+   </property>
+  </action>
+  <action name="actionNew_Project">
+   <property name="text">
+    <string>New Project</string>
    </property>
   </action>
  </widget>

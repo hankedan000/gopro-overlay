@@ -135,6 +135,12 @@ namespace gpo
 	{
 	}
 
+	void
+	DataSourceManager::clear()
+	{
+		sources_.clear();
+	}
+
 	bool
 	DataSourceManager::addVideo(
 		const std::string &filepath)

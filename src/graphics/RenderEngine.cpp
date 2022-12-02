@@ -39,6 +39,13 @@ namespace gpo
 	}
 
 	void
+	RenderEngine::clear()
+	{
+		entities_.clear();
+		gSeeker_->clear();
+	}
+
+	void
 	RenderEngine::addEntity(
 		RenderedEntity re)
 	{

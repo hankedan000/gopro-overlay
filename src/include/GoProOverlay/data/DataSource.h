@@ -88,6 +88,9 @@ namespace gpo
 	public:
 		DataSourceManager();
 
+		void
+		clear();
+
 		bool
 		addVideo(
 			const std::string &filepath);

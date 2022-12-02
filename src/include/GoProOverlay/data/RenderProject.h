@@ -24,6 +24,9 @@ public:
 	dataSourceManager() const;
 
 	void
+	clear();
+
+	void
 	setTrack(
 		Track *track);
 

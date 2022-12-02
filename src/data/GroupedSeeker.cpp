@@ -10,6 +10,12 @@ namespace gpo
 	}
 
 	void
+	GroupedSeeker::clear()
+	{
+		seekers_.clear();
+	}
+
+	void
 	GroupedSeeker::addSeeker(
 		TelemetrySeekerPtr seeker)
 	{

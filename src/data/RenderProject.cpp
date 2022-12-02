@@ -39,6 +39,14 @@ namespace gpo
 	}
 
 	void
+	RenderProject::clear()
+	{
+		dsm_.clear();
+		engine_->clear();
+		setTrack(nullptr);
+	}
+
+	void
 	RenderProject::setTrack(
 		Track *track)
 	{
