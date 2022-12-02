@@ -94,6 +94,26 @@ namespace gpo
 			fontColor_, //font color
 			1);// thickness
 
+		sprintf(tmpStr,"gps: %s",telemSamp.gpSamp.gps.coord.toString().c_str());
+		cv::putText(
+			outImg_, //target image
+			tmpStr, //text
+			cv::Point(10, 30 * 4), // position
+			fontFace_,// font face
+			1.0,// font scale
+			fontColor_, //font color
+			1);// thickness
+
+		sprintf(tmpStr,"altitude: %fm",telemSamp.gpSamp.gps.altitude);
+		cv::putText(
+			outImg_, //target image
+			tmpStr, //text
+			cv::Point(10, 30 * 5), // position
+			fontFace_,// font face
+			1.0,// font scale
+			fontColor_, //font color
+			1);// thickness
+
 		RenderedObject::render(intoImg,originX,originY,renderSize);
 	}
 
