@@ -177,7 +177,14 @@
               <item>
                <widget class="QPushButton" name="exportButton">
                 <property name="text">
-                 <string>Export!</string>
+                 <string>Export</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="stopButton">
+                <property name="text">
+                 <string>Stop</string>
                 </property>
                </widget>
               </item>

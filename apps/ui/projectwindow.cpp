@@ -30,6 +30,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     this->setWindowTitle(WINDOW_TITLE);
+    ui->stopButton->setVisible(false);
     previewWindow_->setWindowTitle("Render Preview");
     previewResolutionActionGroup_->addAction(ui->action960_x_540);
     previewResolutionActionGroup_->addAction(ui->action1280_x_720);
@@ -91,8 +92,15 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         });
         connect(rThread_, &RenderThread::finished, this, [this]{
             printf("render finished!\n");
+            ui->exportButton->setVisible(true);
+            ui->stopButton->setVisible(false);
         });
         rThread_->start();
+        ui->exportButton->setVisible(false);
+        ui->stopButton->setVisible(true);
+    });
+    connect(ui->stopButton, &QPushButton::clicked, this, [this]{
+        rThread_->stopRender();
     });
 
     // connect engines wizards.
