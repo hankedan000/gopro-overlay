@@ -95,6 +95,18 @@ private:
     void
     render();
 
+    void
+    setProjectDirty(
+            bool dirty);
+
+    virtual
+    void
+    closeEvent(
+            QCloseEvent *event) override;
+
+    bool
+    maybeSave();
+
 private slots:
     void
     onActionSaveProject();
@@ -127,6 +139,10 @@ private:
     TrackEditor *trackEditor_;
     ScrubbableVideo *previewWindow_;
     RenderEngineWizard_TopBottom *reWizTopBot_;
+
+    // set true if anything in the project has been modified and could use
+    // a save to disk. set false once project is saved.
+    bool projectDirty_;
 };
 
 #endif // PROJECTWINDOW_H

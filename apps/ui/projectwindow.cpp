@@ -12,6 +12,8 @@ const int ENTITY_NAME_COLUMN       = 0;
 const int ENTITY_TYPE_COLUMN       = 1;
 const int ENTITY_VISIBILITY_COLUMN = 2;
 
+const QString WINDOW_TITLE = "Render Editor";
+
 ProjectWindow::ProjectWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::ProjectWindow),
@@ -23,9 +25,11 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     entitiesTableModel_(new QStandardItemModel(0,3,this)),
     trackEditor_(new TrackEditor(this)),
     previewWindow_(new ScrubbableVideo()),
-    reWizTopBot_(new RenderEngineWizard_TopBottom(this,&proj_))
+    reWizTopBot_(new RenderEngineWizard_TopBottom(this,&proj_)),
+    projectDirty_(false)
 {
     ui->setupUi(this);
+    this->setWindowTitle(WINDOW_TITLE);
     previewWindow_->setWindowTitle("Render Preview");
     previewResolutionActionGroup_->addAction(ui->action960_x_540);
     previewResolutionActionGroup_->addAction(ui->action1280_x_720);
@@ -97,12 +101,22 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
             return;
         }
 
-        QStandardItem *entityNameItem = entitiesTableModel_->item(topLeft.row(),ENTITY_NAME_COLUMN);
+        const auto row = topLeft.row();
+        const auto col = topLeft.column();
+        QStandardItem *entityNameItem = entitiesTableModel_->item(row,ENTITY_NAME_COLUMN);
         // recover the encoded pointer to a RenderedEntity within the name's data()
         QVariant v = entityNameItem->data();
         auto re = reinterpret_cast<gpo::RenderEngine::RenderedEntity *>(v.toULongLong());
+        if (col == ENTITY_VISIBILITY_COLUMN)
+        {
+            QStandardItem *visItem = entitiesTableModel_->item(row,col);
+            re->rObj->setVisible(visItem->checkState() == Qt::CheckState::Checked);
+            setProjectDirty(true);
+            render();
+        }
     });
 
+    setProjectDirty(false);
     configureMenuActions();
     populateRecentProjects();
     updateTrackPane();
@@ -124,13 +138,16 @@ ProjectWindow::closeProject()
 {
     currProjectDir_.clear();
     configureMenuActions();
+    setProjectDirty(false);
 }
 
 bool
 ProjectWindow::saveProject(
         const std::string &projectDir)
 {
-    return proj_.save(projectDir);
+    bool success = proj_.save(projectDir);
+    setProjectDirty( ! success);
+    return success;
 }
 
 bool
@@ -143,6 +160,7 @@ ProjectWindow::loadProject(
     if (loadOkay)
     {
         currProjectDir_ = projectDir;
+        setProjectDirty(false);
 
         // add project to the recent projects history
         QStringList recentProjects = settings.value(
@@ -193,6 +211,7 @@ ProjectWindow::importVideoSource(
     if (importOkay)
     {
         reloadDataSourceTable();
+        setProjectDirty(true);
     }
     return importOkay;
 }
@@ -401,6 +420,50 @@ ProjectWindow::render()
 }
 
 void
+ProjectWindow::setProjectDirty(
+        bool dirty)
+{
+    projectDirty_ = dirty;
+    if (currProjectDir_.empty())
+    {
+        setWindowTitle(WINDOW_TITLE);
+    }
+    else
+    {
+        setWindowTitle(QStringLiteral("%1 - %2%3")
+                       .arg(WINDOW_TITLE)
+                       .arg(currProjectDir_.c_str())
+                       .arg((dirty ? " *" : "")));
+    }
+}
+
+void
+ProjectWindow::closeEvent(
+        QCloseEvent *event)
+{
+    if (maybeSave())
+    {
+        onActionSaveProject();
+    }
+    QApplication::closeAllWindows();
+}
+
+bool
+ProjectWindow::maybeSave()
+{
+    if (projectDirty_)
+    {
+        auto msgBox = new QMessageBox(
+                    QMessageBox::Icon::Warning,
+                    "Unsaved Changes",
+                    "Your project has unsaved changes!\nDo you want to save before closing?",
+                    QMessageBox::Yes | QMessageBox::No);
+        return msgBox->exec() == QMessageBox::Yes;
+    }
+    return false;
+}
+
+void
 ProjectWindow::onActionSaveProject()
 {
     saveProject(currProjectDir_);
@@ -456,6 +519,7 @@ ProjectWindow::onEngineCreated(
         gpo::RenderEnginePtr newEngine)
 {
     proj_.setEngine(newEngine);
+    setProjectDirty(true);
     reloadRenderEntitiesTable();
     updatePreviewWindowWithNewEngine(
                 newEngine,
