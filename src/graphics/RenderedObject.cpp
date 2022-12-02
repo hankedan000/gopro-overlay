@@ -317,7 +317,9 @@ namespace gpo
 				}
 			}
 		}
-		
+
+		okay = subDecode(node["subclass"]) && okay;
+
 		return okay;
 	}
 

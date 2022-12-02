@@ -142,7 +142,7 @@ namespace YAML
 			const Node& node,
 			cv::Scalar& rhs)
 		{
-			if( ! node.IsSequence() || node.size() != 2) {
+			if( ! node.IsSequence() || node.size() != 4) {
 				return false;
 			}
 

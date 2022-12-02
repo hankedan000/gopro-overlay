@@ -84,7 +84,7 @@ namespace gpo
 		node["text"] = text_;
 		node["fontFace"] = fontFace_;
 		node["scale"] = scale_;
-		// node["color"] = color_;// TODO serial cv::Scalar
+		node["color"] = color_;
 		node["thickness"] = thickness_;
 		return node;
 	}
@@ -93,11 +93,11 @@ namespace gpo
 	TextObject::subDecode(
 		const YAML::Node& node)
 	{
-		text_ = node["text"].as<std::string>();
-		fontFace_ = node["fontFace"].as<int>();
-		scale_ = node["scale"].as<double>();
-		// color_ = node["color"].as<cv::Scalar>()// TODO serial cv::Scalar
-		thickness_ = node["thickness"].as<int>();
+		YAML_TO_FIELD(node,"text",text_);
+		YAML_TO_FIELD(node,"fontFace",fontFace_);
+		YAML_TO_FIELD(node,"scale",scale_);
+		YAML_TO_FIELD(node,"color",color_);
+		YAML_TO_FIELD(node,"thickness",thickness_);
 		return true;
 	}
 
