@@ -28,6 +28,11 @@ namespace gpo
 		void
 		seekToIdx(
 			size_t idx);
+
+		void
+		seekRelative(
+			size_t amount,
+			bool forward);
 	
 		void
 		seekToTime(

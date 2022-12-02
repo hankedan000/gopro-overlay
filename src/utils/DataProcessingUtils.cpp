@@ -32,16 +32,25 @@ namespace utils
 		double sectorStartTimeOffset = 0;
 		gpo::GateType_E gateType = (*tpoItr)->getGateType();
 		gpo::DetectionGate gate = (*tpoItr)->getEntryGate();
+		size_t onTrackFindInitialIdx = 0;
+		size_t onTrackFindWindow = tSamps->size();// search everywhere initially
 		for (size_t ii=0; ii<tSamps->size(); ii++)
 		{
 			auto &samp = tSamps->at(ii);
 			cv::Vec2d currCoord(samp.gpSamp.gps.coord.lat,samp.gpSamp.gps.coord.lon);
+			auto findRes = track->findClosestPointWithIdx(
+						currCoord,
+						onTrackFindInitialIdx,
+						onTrackFindWindow);
+			samp.onTrackLL = std::get<1>(findRes);
+			onTrackFindInitialIdx = std::get<2>(findRes);
+			onTrackFindWindow = 100;// reduce search space once we've found initial location
 
 			bool movedToNextObject = false;
 			do
 			{
 				movedToNextObject = false;
-				bool crossed = ii != 0 && gate.detect(prevCoord,currCoord);
+				bool crossed = ii != 0 && gate.detect(prevCoord,samp.onTrackLL);
 				if (crossed && gateType == gpo::GateType_E::eGT_Start)
 				{
 					lapStartTimeOffset = samp.gpSamp.t_offset;
@@ -136,7 +145,7 @@ namespace utils
 			samp.sector = currSector;
 			samp.sectorTimeOffset = (currSector == -1 ? 0.0 : samp.gpSamp.t_offset - sectorStartTimeOffset);
 
-			prevCoord = currCoord;
+			prevCoord = samp.onTrackLL;
 		}
 
 		return true;

@@ -54,6 +54,35 @@ namespace gpo
 	}
 
 	void
+	TelemetrySeeker::seekRelative(
+		size_t amount,
+		bool forward)
+	{
+		if (forward)
+		{
+			if ((amount + seekedIdx_) < size())
+			{
+				seekedIdx_ = size() - 1;
+			}
+			else
+			{
+				seekedIdx_ += amount;
+			}
+		}
+		else
+		{
+			if (amount > seekedIdx_)
+			{
+				seekedIdx_ = 0;
+			}
+			else
+			{
+				seekedIdx_ -= amount;
+			}
+		}
+	}
+
+	void
 	TelemetrySeeker::seekToTime(
 		double timeOffset)
 	{

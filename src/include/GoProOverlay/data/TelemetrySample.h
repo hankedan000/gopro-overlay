@@ -2,6 +2,7 @@
 
 #include <GoProTelem/SampleTypes.h>
 #include <memory>
+#include <opencv2/opencv.hpp>
 #include <vector>
 
 namespace gpo
@@ -10,6 +11,11 @@ namespace gpo
 	{
 	public:
 		gpt::CombinedSample gpSamp;
+
+		// corrected location of vehicle on the track.
+		// currently uses a simple nearest distance algorithm based on where the
+		// GPS said the vehicle was.
+		cv::Vec2d onTrackLL;
 
 		// -1 if not within a track
 		// starts at 1 and counts up from there

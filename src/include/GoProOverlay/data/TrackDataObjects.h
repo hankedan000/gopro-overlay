@@ -357,6 +357,12 @@ namespace gpo
 		findClosestPointWithIdx(
 			cv::Vec2d p) const;
 
+		std::tuple<bool,cv::Vec2d, size_t>
+		findClosestPointWithIdx(
+			cv::Vec2d p,
+			size_t initialIdx,
+			size_t window) const;
+
 		bool
 		getSortedPathObjects(
 			std::vector<const TrackPathObject *> &objs) const;

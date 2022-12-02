@@ -43,6 +43,11 @@ namespace gpo
 		seekAllToIdx(
 			size_t idx);
 
+		void
+		seekAllRelative(
+			size_t amount,
+			bool forward);
+
 		/**
 		 * @return
 		 * the lowest number of laps a seeker has in the group
@@ -82,9 +87,9 @@ namespace gpo
 		 *                :
 		 *                :
 		 *      <----- relative seek limits ---->
-		 *     -10        0                    +22
+		 *     +10        0                    +22
 		 */
-		std::pair<long, long>
+		std::pair<size_t, size_t>
 		relativeSeekLimits() const;
 
 	private:

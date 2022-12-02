@@ -501,10 +501,25 @@ namespace gpo
 	Track::findClosestPointWithIdx(
 		cv::Vec2d p) const
 	{
+		return findClosestPointWithIdx(p,0,path_.size());
+	}
+
+	std::tuple<bool,cv::Vec2d, size_t>
+	Track::findClosestPointWithIdx(
+		cv::Vec2d p,
+		size_t initialIdx,
+		size_t window) const
+	{
 		double closestDist = -1;
 		cv::Vec2d closestPoint;
 		size_t closestIdx;
-		for (size_t i=0; i<path_.size(); i++)
+		size_t startIdx = initialIdx - window;
+		if (window > initialIdx)
+		{
+			startIdx = 0;
+		}
+		size_t endIdx = std::min(initialIdx + window,path_.size());
+		for (size_t i=startIdx; i<endIdx; i++)
 		{
 			const auto &point = path_[i];
 			double dist = cv::norm(p,point,cv::NORM_L2);

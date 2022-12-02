@@ -109,6 +109,27 @@ namespace gpo
 		}
 	}
 
+	void
+	GroupedSeeker::seekAllRelative(
+		size_t amount,
+		bool forward)
+	{
+		auto limits = relativeSeekLimits();
+		if (forward && amount > limits.second)
+		{
+			amount = limits.second;
+		}
+		else if ( ! forward && amount > limits.first)
+		{
+			amount = limits.first;
+		}
+
+		for (auto &seeker : seekers_)
+		{
+			seeker->seekRelative(amount,forward);
+		}
+	}
+
 	unsigned int
 	GroupedSeeker::minLapCount() const
 	{
@@ -161,7 +182,7 @@ namespace gpo
 		}
 	}
 
-	std::pair<long, long>
+	std::pair<size_t, size_t>
 	GroupedSeeker::relativeSeekLimits() const
 	{
 		if (seekers_.empty())
@@ -169,7 +190,7 @@ namespace gpo
 			return {0,0};
 		}
 
-		std::pair<long, long> limits;
+		std::pair<size_t, size_t> limits;
 		limits.first = std::numeric_limits<decltype(limits.first)>::max();
 		limits.second = std::numeric_limits<decltype(limits.second)>::max();
 		for (auto &seeker : seekers_)
@@ -178,10 +199,9 @@ namespace gpo
 			{
 				return {0,0};// corner case where a seeker doesn't have any samples
 			}
-			limits.first = std::min(limits.first, (long)(seeker->seekedIdx()));
-			limits.second = std::min(limits.second, (long)(seeker->size() - seeker->seekedIdx() - 1));
+			limits.first = std::min(limits.first, seeker->seekedIdx());
+			limits.second = std::min(limits.second, (seeker->size() - seeker->seekedIdx() - 1));
 		}
-		limits.first *= -1;
 		return limits;
 	}
 }
