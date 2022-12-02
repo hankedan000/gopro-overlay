@@ -161,18 +161,7 @@ ProjectWindow::loadProject(
     {
         currProjectDir_ = projectDir;
         setProjectDirty(false);
-
-        // add project to the recent projects history
-        QStringList recentProjects = settings.value(
-                    RECENT_PROJECT_KEY,
-                    QStringList()).toStringList();
-        recentProjects.removeAll(projectDir.c_str());
-        recentProjects.push_front(projectDir.c_str());
-        if (recentProjects.size() >= MAX_RECENT_PROJECTS)
-        {
-            recentProjects.pop_back();// remove oldests
-        }
-        settings.setValue(RECENT_PROJECT_KEY, recentProjects);
+        addProjectToRecentHistory(projectDir);
 
         // update menus that change based on project
         reloadDataSourceTable();
@@ -424,17 +413,17 @@ ProjectWindow::setProjectDirty(
         bool dirty)
 {
     projectDirty_ = dirty;
-    if (currProjectDir_.empty())
+    QString title = WINDOW_TITLE;
+    if ( ! currProjectDir_.empty())
     {
-        setWindowTitle(WINDOW_TITLE);
+        title += " - ";
+        title += currProjectDir_.c_str();
     }
-    else
+    if (projectDirty_)
     {
-        setWindowTitle(QStringLiteral("%1 - %2%3")
-                       .arg(WINDOW_TITLE)
-                       .arg(currProjectDir_.c_str())
-                       .arg((dirty ? " *" : "")));
+        title += " *";
     }
+    setWindowTitle(title);
 }
 
 void
@@ -443,7 +432,14 @@ ProjectWindow::closeEvent(
 {
     if (maybeSave())
     {
-        onActionSaveProject();
+        if (currProjectDir_.empty())
+        {
+            onActionSaveProjectAs();
+        }
+        else
+        {
+            onActionSaveProject();
+        }
     }
     QApplication::closeAllWindows();
 }
@@ -464,6 +460,22 @@ ProjectWindow::maybeSave()
 }
 
 void
+ProjectWindow::addProjectToRecentHistory(
+        const std::string &projectDir)
+{
+    QStringList recentProjects = settings.value(
+                RECENT_PROJECT_KEY,
+                QStringList()).toStringList();
+    recentProjects.removeAll(projectDir.c_str());
+    recentProjects.push_front(projectDir.c_str());
+    if (recentProjects.size() >= MAX_RECENT_PROJECTS)
+    {
+        recentProjects.pop_back();// remove oldests
+    }
+    settings.setValue(RECENT_PROJECT_KEY, recentProjects);
+}
+
+void
 ProjectWindow::onActionSaveProject()
 {
     saveProject(currProjectDir_);
@@ -481,6 +493,7 @@ ProjectWindow::onActionSaveProjectAs()
     {
         currProjectDir_ = filepath;
         configureMenuActions();
+        addProjectToRecentHistory(filepath);
     }
 }
 

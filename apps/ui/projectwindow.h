@@ -107,6 +107,10 @@ private:
     bool
     maybeSave();
 
+    void
+    addProjectToRecentHistory(
+            const std::string &projectDir);
+
 private slots:
     void
     onActionSaveProject();
