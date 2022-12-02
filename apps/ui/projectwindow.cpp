@@ -62,7 +62,6 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
                         "Track Exists",
                         "Your project already has a Track defined.\nIf you continue, it will be overwritten.",
                         QMessageBox::Ok | QMessageBox::Cancel);
-            msgBox->setModal(true);
             int res = msgBox->exec();
             if (res != QMessageBox::Ok)
             {
@@ -73,8 +72,11 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         QString sourceName = ui->newTrackSourceCombo->currentText();
         auto &dsm = proj_.dataSourceManager();
         auto dScr = dsm.getSourceByName(sourceName.toStdString());
-        proj_.setTrack(dScr->makeTrack());
+        auto newTrack = dScr->makeTrack();
+        proj_.setTrack(newTrack);
+        setProjectDirty(true);
 
+        trackEditor_->setTrack(newTrack);
         updateTrackPane();
     });
     connect(ui->entryRadio, &QRadioButton::toggled, this, [this]{seekEngineToAlignment();render();});
@@ -82,6 +84,12 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
 
     // connect engines wizards.
     connect(reWizTopBot_, &RenderEngineWizard_TopBottom::created, this, &ProjectWindow::onEngineCreated);
+
+    connect(trackEditor_, &TrackEditor::trackModified, this, [this]{
+        setProjectDirty(true);
+        proj_.reprocessDatumTrack();
+        updateAlignmentPane();
+    });
 
     // attach table models
     ui->tableDataSources->setModel(sourcesTableModel_);
@@ -173,11 +181,7 @@ ProjectWindow::loadProject(
                     false,// don't show until we seek below
                     false);// holdoff render untill we seek below
 
-        auto gSeeker = proj_.getEngine()->getSeeker();
-        ui->lapSpinBox->setMinimum(gSeeker->minLapCount());
-        ui->lapSpinBox->setMaximum(gSeeker->maxLapCount());
-        ui->lapSpinBox->setValue(ui->lapSpinBox->minimum());
-        seekEngineToAlignment();
+        updateAlignmentPane();
         render();
         previewWindow_->show();
 
@@ -369,6 +373,16 @@ ProjectWindow::updatePreviewWindowWithNewEngine(
     {
         render();
     }
+}
+
+void
+ProjectWindow::updateAlignmentPane()
+{
+    auto gSeeker = proj_.getEngine()->getSeeker();
+    ui->lapSpinBox->setMinimum(gSeeker->minLapCount());
+    ui->lapSpinBox->setMaximum(gSeeker->maxLapCount());
+    ui->lapSpinBox->setValue(ui->lapSpinBox->minimum());
+    seekEngineToAlignment();
 }
 
 void

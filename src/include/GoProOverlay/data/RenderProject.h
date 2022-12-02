@@ -34,6 +34,9 @@ public:
 	hasTrack() const;
 
 	void
+	reprocessDatumTrack();
+
+	void
 	setEngine(
 		RenderEnginePtr engine);
 

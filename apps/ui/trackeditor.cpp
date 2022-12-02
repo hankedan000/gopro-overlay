@@ -167,12 +167,14 @@ TrackEditor::trackViewGatePlaced(
     {
         case TrackView::PlacementMode::ePM_StartGate:
             track_->setStart(pathIdx);
+            emit trackModified();
             trackView_->setPlacementMode(TrackView::PlacementMode::ePM_None);
             ui->setStartButton->setChecked(false);
             ui->statusbar->clearMessage();
             break;
         case TrackView::PlacementMode::ePM_FinishGate:
             track_->setFinish(pathIdx);
+            emit trackModified();
             trackView_->setPlacementMode(TrackView::PlacementMode::ePM_None);
             ui->setFinishButton->setChecked(false);
             ui->statusbar->clearMessage();
@@ -184,6 +186,7 @@ TrackEditor::trackViewGatePlaced(
             break;
         case TrackView::PlacementMode::ePM_SectorExit:
             addNewSector(sectorEntryIdx_,pathIdx);
+            emit trackModified();
             trackView_->setPlacementMode(TrackView::PlacementMode::ePM_None);
             ui->statusbar->clearMessage();
             break;

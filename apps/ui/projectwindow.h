@@ -90,6 +90,9 @@ private:
             bool updateRender);
 
     void
+    updateAlignmentPane();
+
+    void
     seekEngineToAlignment();
 
     void

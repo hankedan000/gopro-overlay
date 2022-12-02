@@ -33,6 +33,10 @@ public:
     setTrack(
             gpo::Track *track);
 
+signals:
+    void
+    trackModified();
+
 private slots:
     void
     setStartToggled(

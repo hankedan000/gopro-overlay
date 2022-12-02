@@ -76,6 +76,15 @@ namespace gpo
 	}
 
 	void
+	RenderProject::reprocessDatumTrack()
+	{
+		for (size_t i=0; i<dsm_.sourceCount(); i++)
+		{
+			dsm_.getSource(i)->reprocessDatumTrack();
+		}
+	}
+
+	void
 	RenderProject::setEngine(
 		RenderEnginePtr engine)
 	{
