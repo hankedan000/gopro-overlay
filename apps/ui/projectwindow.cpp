@@ -203,8 +203,8 @@ ProjectWindow::loadProject(
                     false);// holdoff render untill we seek below
 
         updateAlignmentPane();
-        render();
         previewWindow_->show();
+        render();
 
         if (proj_.hasTrack())
         {
