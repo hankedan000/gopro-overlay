@@ -361,7 +361,7 @@ namespace gpo
 		findClosestPointWithIdx(
 			cv::Vec2d p,
 			size_t initialIdx,
-			size_t window) const;
+			std::pair<size_t,size_t> window) const;
 
 		bool
 		getSortedPathObjects(

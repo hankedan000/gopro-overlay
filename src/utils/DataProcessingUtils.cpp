@@ -33,7 +33,7 @@ namespace utils
 		gpo::GateType_E gateType = (*tpoItr)->getGateType();
 		gpo::DetectionGate gate = (*tpoItr)->getEntryGate();
 		size_t onTrackFindInitialIdx = 0;
-		size_t onTrackFindWindow = tSamps->size();// search everywhere initially
+		std::pair<size_t,size_t> onTrackFindWindow = {0,tSamps->size()};// search everywhere initially
 		for (size_t ii=0; ii<tSamps->size(); ii++)
 		{
 			auto &samp = tSamps->at(ii);
@@ -44,7 +44,7 @@ namespace utils
 						onTrackFindWindow);
 			samp.onTrackLL = std::get<1>(findRes);
 			onTrackFindInitialIdx = std::get<2>(findRes);
-			onTrackFindWindow = 100;// reduce search space once we've found initial location
+			onTrackFindWindow = {5,100};// reduce search space once we've found initial location
 
 			bool movedToNextObject = false;
 			do
