@@ -32,6 +32,12 @@ namespace gpo
 		rFrame_.create(size,CV_8UC3);
 	}
 
+	cv::Size
+	RenderEngine::getRenderSize() const
+	{
+		return rFrame_.size();
+	}
+
 	void
 	RenderEngine::addEntity(
 		RenderedEntity re)

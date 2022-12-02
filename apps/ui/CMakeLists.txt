@@ -8,6 +8,8 @@ set(QT_WIDGETS_SOURCES
         renderenginewizard_topbottom.h
         renderenginewizard_topbottom.cpp
         renderenginewizard_topbottom.ui
+        renderthread.h
+        renderthread.cpp
         scrubbablevideo.h
         scrubbablevideo.cpp
         scrubbablevideo.ui

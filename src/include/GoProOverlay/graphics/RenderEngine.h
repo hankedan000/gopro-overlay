@@ -30,6 +30,9 @@ namespace gpo
 		setRenderSize(
 			cv::Size size);
 
+		cv::Size
+		getRenderSize() const;
+
 		void
 		addEntity(
 			RenderedEntity re);

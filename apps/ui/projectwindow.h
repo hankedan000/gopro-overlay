@@ -9,6 +9,7 @@
 #include <GoProOverlay/data/RenderProject.h>
 
 #include "renderenginewizard_topbottom.h"
+#include "renderthread.h"
 #include "scrubbablevideo.h"
 #include "trackeditor.h"
 
@@ -150,6 +151,8 @@ private:
     // set true if anything in the project has been modified and could use
     // a save to disk. set false once project is saved.
     bool projectDirty_;
+
+    RenderThread *rThread_;
 };
 
 #endif // PROJECTWINDOW_H

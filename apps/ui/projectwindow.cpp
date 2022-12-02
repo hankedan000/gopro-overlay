@@ -81,6 +81,19 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     });
     connect(ui->entryRadio, &QRadioButton::toggled, this, [this]{seekEngineToAlignment();render();});
     connect(ui->exitRadio, &QRadioButton::toggled, this, [this]{seekEngineToAlignment();render();});
+    connect(ui->exportButton, &QPushButton::clicked, this, [this]{
+        rThread_ = new RenderThread(
+                    proj_.getEngine(),
+                    "render.mp4",
+                    60);// FIXME get FPS from source video
+        connect(rThread_, &RenderThread::progressChanged, this, [this](qulonglong progress, qulonglong total){
+            printf("progress: %lld/%lld\n",progress,total);
+        });
+        connect(rThread_, &RenderThread::finished, this, [this]{
+            printf("render finished!\n");
+        });
+        rThread_->start();
+    });
 
     // connect engines wizards.
     connect(reWizTopBot_, &RenderEngineWizard_TopBottom::created, this, &ProjectWindow::onEngineCreated);
