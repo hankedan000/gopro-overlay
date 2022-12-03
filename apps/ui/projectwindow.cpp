@@ -23,6 +23,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     proj_(),
     sourcesTableModel_(new QStandardItemModel(0,3,this)),
     entitiesTableModel_(new QStandardItemModel(0,3,this)),
+    alignmentTableModel_(new QStandardItemModel(0,2,this)),
     trackEditor_(new TrackEditor(this)),
     previewWindow_(new ScrubbableVideo()),
     reWizTopBot_(new RenderEngineWizard_TopBottom(this,&proj_)),
@@ -31,6 +32,8 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     ui->setupUi(this);
     this->setWindowTitle(WINDOW_TITLE);
     ui->stopButton->setVisible(false);
+    ui->customAlignmentTable->setVisible(false);
+    ui->customAlignmentCheckBox->setChecked(false);
     previewWindow_->setWindowTitle("Render Preview");
     previewResolutionActionGroup_->addAction(ui->action960_x_540);
     previewResolutionActionGroup_->addAction(ui->action1280_x_720);
@@ -135,6 +138,9 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     connect(ui->stopButton, &QPushButton::clicked, this, [this]{
         rThread_->stopRender();
     });
+    connect(ui->customAlignmentCheckBox, &QCheckBox::stateChanged, this, [this]{
+        ui->customAlignmentTable->setVisible(ui->customAlignmentCheckBox->isChecked());
+    });
 
     // connect engines wizards.
     connect(reWizTopBot_, &RenderEngineWizard_TopBottom::created, this, &ProjectWindow::onEngineCreated);
@@ -150,6 +156,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     clearDataSourcesTable();// calling this to set table headers
     ui->renderEntitiesTable->setModel(entitiesTableModel_);
     clearRenderEntitiesTable();// calling this to set table headers
+    ui->customAlignmentTable->setModel(alignmentTableModel_);
 
     connect(entitiesTableModel_, &QStandardItemModel::dataChanged, this, [this](
             const QModelIndex &topLeft,
@@ -436,6 +443,28 @@ ProjectWindow::updateAlignmentPane()
     ui->lapSpinBox->setMinimum(gSeeker->minLapCount());
     ui->lapSpinBox->setMaximum(gSeeker->maxLapCount());
     ui->lapSpinBox->setValue(ui->lapSpinBox->minimum());
+
+    // update custom alignment table
+    alignmentTableModel_->clear();
+    alignmentTableModel_->setHorizontalHeaderLabels({"Name", "Index"});
+    for (size_t i=0; i<gSeeker->seekerCount(); i++)
+    {
+        auto seeker = gSeeker->getSeeker(i);
+
+        QList<QStandardItem *> row;
+
+        QStandardItem *nameItem = new QStandardItem;
+        nameItem->setText("Source");
+        nameItem->setData(QVariant(reinterpret_cast<qulonglong>((void*)(seeker.get()))));
+        row.append(nameItem);
+
+        QStandardItem *indexItem = new QStandardItem;
+        indexItem->setText(std::to_string(seeker->seekedIdx()).c_str());
+        row.append(indexItem);
+
+        alignmentTableModel_->appendRow(row);
+    }
+
     seekEngineToAlignment();
 }
 

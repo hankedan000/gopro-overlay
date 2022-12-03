@@ -145,6 +145,16 @@
                 </item>
                </layout>
               </item>
+              <item>
+               <widget class="QCheckBox" name="customAlignmentCheckBox">
+                <property name="text">
+                 <string>Custom</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QTableView" name="customAlignmentTable"/>
+              </item>
              </layout>
             </widget>
            </item>
