@@ -23,7 +23,6 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     proj_(),
     sourcesTableModel_(new QStandardItemModel(0,3,this)),
     entitiesTableModel_(new QStandardItemModel(0,3,this)),
-    alignmentTableModel_(new QStandardItemModel(0,2,this)),
     trackEditor_(new TrackEditor(this)),
     previewWindow_(new ScrubbableVideo()),
     reWizTopBot_(new RenderEngineWizard_TopBottom(this,&proj_)),
@@ -32,7 +31,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     ui->setupUi(this);
     this->setWindowTitle(WINDOW_TITLE);
     ui->stopButton->setVisible(false);
-    ui->customAlignmentTable->setVisible(false);
+    ui->customAlignmentTableWidget->hide();
     ui->customAlignmentCheckBox->setChecked(false);
     previewWindow_->setWindowTitle("Render Preview");
     previewResolutionActionGroup_->addAction(ui->action960_x_540);
@@ -139,7 +138,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         rThread_->stopRender();
     });
     connect(ui->customAlignmentCheckBox, &QCheckBox::stateChanged, this, [this]{
-        ui->customAlignmentTable->setVisible(ui->customAlignmentCheckBox->isChecked());
+        ui->customAlignmentTableWidget->setVisible(ui->customAlignmentCheckBox->isChecked());
     });
 
     // connect engines wizards.
@@ -156,7 +155,6 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     clearDataSourcesTable();// calling this to set table headers
     ui->renderEntitiesTable->setModel(entitiesTableModel_);
     clearRenderEntitiesTable();// calling this to set table headers
-    ui->customAlignmentTable->setModel(alignmentTableModel_);
 
     connect(entitiesTableModel_, &QStandardItemModel::dataChanged, this, [this](
             const QModelIndex &topLeft,
@@ -445,24 +443,23 @@ ProjectWindow::updateAlignmentPane()
     ui->lapSpinBox->setValue(ui->lapSpinBox->minimum());
 
     // update custom alignment table
-    alignmentTableModel_->clear();
-    alignmentTableModel_->setHorizontalHeaderLabels({"Name", "Index"});
+    auto table = ui->customAlignmentTableWidget;
+    table->setColumnCount(2);
+    table->setRowCount(gSeeker->seekerCount());
     for (size_t i=0; i<gSeeker->seekerCount(); i++)
     {
         auto seeker = gSeeker->getSeeker(i);
 
-        QList<QStandardItem *> row;
+        auto lineEdit = new QLineEdit(table);
+        lineEdit->setText("Source");
+        table->setCellWidget(i,0,lineEdit);
 
-        QStandardItem *nameItem = new QStandardItem;
-        nameItem->setText("Source");
-        nameItem->setData(QVariant(reinterpret_cast<qulonglong>((void*)(seeker.get()))));
-        row.append(nameItem);
-
-        QStandardItem *indexItem = new QStandardItem;
-        indexItem->setText(std::to_string(seeker->seekedIdx()).c_str());
-        row.append(indexItem);
-
-        alignmentTableModel_->appendRow(row);
+        auto spinbox = new QSpinBox(table);
+        connect(spinbox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, [this,seeker](int value){
+            seeker->seekToIdx(value);
+            this->render();
+        });
+        table->setCellWidget(i,1,spinbox);
     }
 
     seekEngineToAlignment();

@@ -143,7 +143,6 @@ private:
 
     QStandardItemModel *sourcesTableModel_;
     QStandardItemModel *entitiesTableModel_;
-    QStandardItemModel *alignmentTableModel_;
 
     TrackEditor *trackEditor_;
     ScrubbableVideo *previewWindow_;
