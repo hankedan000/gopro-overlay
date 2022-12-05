@@ -8,6 +8,7 @@
 
 #include <GoProOverlay/data/RenderProject.h>
 
+#include "progressdialog.h"
 #include "renderenginewizard_topbottom.h"
 #include "renderthread.h"
 #include "scrubbablevideo.h"
@@ -94,6 +95,9 @@ private:
     updateAlignmentPane();
 
     void
+    updateCustomAlignmentTableValues();
+
+    void
     seekEngineToAlignment();
 
     void
@@ -153,6 +157,7 @@ private:
     bool projectDirty_;
 
     RenderThread *rThread_;
+    ProgressDialog *progressDialog_;
 };
 
 #endif // PROJECTWINDOW_H

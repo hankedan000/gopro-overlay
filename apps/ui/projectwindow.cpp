@@ -12,6 +12,10 @@ const int ENTITY_NAME_COLUMN       = 0;
 const int ENTITY_TYPE_COLUMN       = 1;
 const int ENTITY_VISIBILITY_COLUMN = 2;
 
+// constatns for the custom alginment table
+const int CUSTOM_ALIGN_NAME_COLUMN = 0;
+const int CUSTOM_ALIGN_SPINBOX_COLUMN = 1;
+
 const QString WINDOW_TITLE = "Render Editor";
 
 ProjectWindow::ProjectWindow(QWidget *parent) :
@@ -26,7 +30,8 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     trackEditor_(new TrackEditor(this)),
     previewWindow_(new ScrubbableVideo()),
     reWizTopBot_(new RenderEngineWizard_TopBottom(this,&proj_)),
-    projectDirty_(false)
+    projectDirty_(false),
+    progressDialog_(new ProgressDialog(this))
 {
     ui->setupUi(this);
     this->setWindowTitle(WINDOW_TITLE);
@@ -115,13 +120,22 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         trackEditor_->setTrack(newTrack);
         updateTrackPane();
     });
-    connect(ui->entryRadio, &QRadioButton::toggled, this, [this]{seekEngineToAlignment();render();});
-    connect(ui->exitRadio, &QRadioButton::toggled, this, [this]{seekEngineToAlignment();render();});
+    connect(ui->entryRadio, &QRadioButton::toggled, this, [this]{
+        updateCustomAlignmentTableValues();
+        seekEngineToAlignment();
+        render();
+    });
+    connect(ui->exitRadio, &QRadioButton::toggled, this, [this]{
+        updateCustomAlignmentTableValues();
+        seekEngineToAlignment();
+        render();
+    });
     connect(ui->exportButton, &QPushButton::clicked, this, [this]{
         rThread_ = new RenderThread(
                     proj_.getEngine(),
                     "render.mp4",
                     60);// FIXME get FPS from source video
+        connect(rThread_, &RenderThread::progressChanged, progressDialog_, &ProgressDialog::progressChanged);
         connect(rThread_, &RenderThread::progressChanged, this, [this](qulonglong progress, qulonglong total){
             printf("progress: %lld/%lld\n",progress,total);
         });
@@ -129,13 +143,20 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
             printf("render finished!\n");
             ui->exportButton->setVisible(true);
             ui->stopButton->setVisible(false);
+            progressDialog_->hide();
         });
         rThread_->start();
+        progressDialog_->setWindowTitle("Render Progress");
+        progressDialog_->reset();
+        progressDialog_->show();
         ui->exportButton->setVisible(false);
         ui->stopButton->setVisible(true);
     });
     connect(ui->stopButton, &QPushButton::clicked, this, [this]{
         rThread_->stopRender();
+    });
+    connect(progressDialog_, &ProgressDialog::abortPressed, this, [this]{
+        if (rThread_) rThread_->stopRender();
     });
     connect(ui->customAlignmentCheckBox, &QCheckBox::stateChanged, this, [this]{
         ui->customAlignmentTableWidget->setVisible(ui->customAlignmentCheckBox->isChecked());
@@ -444,25 +465,46 @@ ProjectWindow::updateAlignmentPane()
 
     // update custom alignment table
     auto table = ui->customAlignmentTableWidget;
-    table->setColumnCount(2);
+    QStringList columnTitles = {"Name","Offset"};
+    table->setColumnCount(columnTitles.size());
     table->setRowCount(gSeeker->seekerCount());
+    table->setHorizontalHeaderLabels(columnTitles);
     for (size_t i=0; i<gSeeker->seekerCount(); i++)
     {
         auto seeker = gSeeker->getSeeker(i);
 
         auto lineEdit = new QLineEdit(table);
         lineEdit->setText("Source");
-        table->setCellWidget(i,0,lineEdit);
+        table->setCellWidget(i,CUSTOM_ALIGN_NAME_COLUMN,lineEdit);
 
         auto spinbox = new QSpinBox(table);
+        spinbox->setMinimum(0);
+        spinbox->setMaximum(seeker->size());
+        spinbox->setValue(seeker->seekedIdx());
         connect(spinbox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, [this,seeker](int value){
             seeker->seekToIdx(value);
             this->render();
         });
-        table->setCellWidget(i,1,spinbox);
+        table->setCellWidget(i,CUSTOM_ALIGN_SPINBOX_COLUMN,spinbox);
     }
 
     seekEngineToAlignment();
+}
+
+void
+ProjectWindow::updateCustomAlignmentTableValues()
+{
+    // update custom alignment table values
+    auto table = ui->customAlignmentTableWidget;
+    auto gSeeker = proj_.getEngine()->getSeeker();
+
+    for (size_t i=0; i<gSeeker->seekerCount() && table->rowCount(); i++)
+    {
+        auto seeker = gSeeker->getSeeker(i);
+        QSpinBox *spinBox = (QSpinBox*)(table->cellWidget(i,CUSTOM_ALIGN_SPINBOX_COLUMN));
+
+        spinBox->setValue(seeker->seekedIdx());
+    }
 }
 
 void
