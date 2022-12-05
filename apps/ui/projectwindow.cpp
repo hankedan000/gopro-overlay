@@ -38,6 +38,10 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     ui->stopButton->setVisible(false);
     ui->customAlignmentTableWidget->hide();
     ui->customAlignmentCheckBox->setChecked(false);
+    progressDialog_->setWindowTitle("Render Progress");
+    auto flags = progressDialog_->windowFlags();// disable progress window's close button
+    flags = flags & (~Qt::WindowCloseButtonHint);
+    progressDialog_->setWindowFlags(flags);
     previewWindow_->setWindowTitle("Render Preview");
     previewResolutionActionGroup_->addAction(ui->action960_x_540);
     previewResolutionActionGroup_->addAction(ui->action1280_x_720);
@@ -146,7 +150,6 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
             progressDialog_->hide();
         });
         rThread_->start();
-        progressDialog_->setWindowTitle("Render Progress");
         progressDialog_->reset();
         progressDialog_->show();
         ui->exportButton->setVisible(false);

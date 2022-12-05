@@ -13,7 +13,6 @@ ProgressDialog::ProgressDialog(QWidget *parent) :
     if (abortButton)
     {
         connect(abortButton, &QPushButton::clicked, this, [this]{
-            printf("abort clicked!\n");
             emit abortPressed();
         });
     }
