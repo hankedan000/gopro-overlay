@@ -7,11 +7,18 @@
 
 namespace gpo
 {
+	// forward declaration
+	class DataSource;
+	using DataSourcePtr = std::shared_ptr<DataSource>;
+
 	class TelemetrySeeker
 	{
 	public:
 		TelemetrySeeker(
-			TelemetrySamplesPtr samples);
+			DataSourcePtr dSrc);
+
+		std::string
+		getDataSourceName() const;
 
 		void
 		prev();
@@ -64,7 +71,7 @@ namespace gpo
 		analyze();
 
 	private:
-		TelemetrySamplesPtr samples_;
+		DataSourcePtr dataSrc_;
 		size_t seekedIdx_;
 
 		struct LapIndices

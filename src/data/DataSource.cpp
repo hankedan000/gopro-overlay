@@ -123,9 +123,25 @@ namespace gpo
 			newSrc->samples_->at(i).gpSamp = videoTelem.at(i);
 		}
 
-		newSrc->seeker = TelemetrySeekerPtr(new TelemetrySeeker(newSrc->samples_));
+		newSrc->seeker = TelemetrySeekerPtr(new TelemetrySeeker(newSrc));
 		newSrc->telemSrc = TelemetrySourcePtr(new TelemetrySource(newSrc));
 		newSrc->videoSrc = VideoSourcePtr(new VideoSource(newSrc));
+
+		return newSrc;
+	}
+
+	DataSourcePtr
+	DataSource::makeDataFromTelemetry(
+		const gpo::TelemetrySamples &tSamps)
+	{
+		auto newSrc = DataSourcePtr(new DataSource());
+		newSrc->samples_ = TelemetrySamplesPtr(new TelemetrySamples());
+		newSrc->samples_->resize(tSamps.size());
+		newSrc->samples_->assign(tSamps.begin(),tSamps.end());
+
+		newSrc->seeker = TelemetrySeekerPtr(new TelemetrySeeker(newSrc));
+		newSrc->telemSrc = TelemetrySourcePtr(new TelemetrySource(newSrc));
+		newSrc->videoSrc = nullptr;
 
 		return newSrc;
 	}

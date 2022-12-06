@@ -2,14 +2,22 @@
 
 #include <stdexcept>
 
+#include "GoProOverlay/data/DataSource.h"
+
 namespace gpo
 {
 	TelemetrySeeker::TelemetrySeeker(
-		TelemetrySamplesPtr samples)
-	 : samples_(samples)
+			DataSourcePtr dSrc)
+	 : dataSrc_(dSrc)
 	 , seekedIdx_(0)
 	 , lapIndicesMap_()
 	{
+	}
+
+	std::string
+	TelemetrySeeker::getDataSourceName() const
+	{
+		return dataSrc_->getSourceName();
 	}
 
 	void
@@ -112,7 +120,7 @@ namespace gpo
 	size_t
 	TelemetrySeeker::size() const
 	{
-		return samples_->size();
+		return dataSrc_->samples_->size();
 	}
 
 	unsigned int
@@ -142,7 +150,7 @@ namespace gpo
 		bool inLap = false;
 		for (size_t i=0; i<size(); i++)
 		{
-			const auto &samp = samples_->at(i);
+			const auto &samp = dataSrc_->samples_->at(i);
 			if (prevSampLap == -1 && samp.lap > 0)
 			{
 				// entered a lap

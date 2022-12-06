@@ -62,6 +62,11 @@ namespace gpo
 		loadDataFromVideo(
 			const std::string &videoFile);
 
+		static
+		DataSourcePtr
+		makeDataFromTelemetry(
+			const gpo::TelemetrySamples &tSamps);
+
 	public:
 		TelemetrySeekerPtr seeker;
 		TelemetrySourcePtr telemSrc;
@@ -71,6 +76,7 @@ namespace gpo
 		// allow DataSourceManager to modify sourceName_ and originFile_
 		friend class DataSourceManager;
 
+		friend class TelemetrySeeker;
 		friend class TelemetrySource;
 		friend class VideoSource;
 
