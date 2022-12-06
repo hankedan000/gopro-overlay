@@ -477,7 +477,8 @@ ProjectWindow::updateAlignmentPane()
         auto seeker = gSeeker->getSeeker(i);
 
         auto lineEdit = new QLineEdit(table);
-        lineEdit->setText("Source");
+        lineEdit->setText(seeker->getDataSourceName().c_str());
+        lineEdit->setReadOnly(true);
         table->setCellWidget(i,CUSTOM_ALIGN_NAME_COLUMN,lineEdit);
 
         auto spinbox = new QSpinBox(table);
