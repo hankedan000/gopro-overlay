@@ -55,6 +55,9 @@ namespace gpo
 		size_t
 		entityCount() const;
 
+		double
+		getHighestFPS() const;
+
 		GroupedSeekerPtr
 		getSeeker();
 

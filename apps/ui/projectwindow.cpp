@@ -135,10 +135,11 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         render();
     });
     connect(ui->exportButton, &QPushButton::clicked, this, [this]{
+        auto engine = proj_.getEngine();
         rThread_ = new RenderThread(
-                    proj_.getEngine(),
+                    engine,
                     "render.mp4",
-                    60);// FIXME get FPS from source video
+                    engine->getHighestFPS());
         connect(rThread_, &RenderThread::progressChanged, progressDialog_, &ProgressDialog::progressChanged);
         connect(rThread_, &RenderThread::progressChanged, this, [this](qulonglong progress, qulonglong total){
             printf("progress: %lld/%lld\n",progress,total);

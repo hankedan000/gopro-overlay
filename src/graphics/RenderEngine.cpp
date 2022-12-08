@@ -88,6 +88,7 @@ namespace gpo
 	RenderEngine::removeEntity(
 		size_t idx)
 	{
+		// FIXME need to rebuild grouped seeker
 		entities_.erase(std::next(entities_.begin(), idx));
 	}
 
@@ -95,6 +96,21 @@ namespace gpo
 	RenderEngine::entityCount() const
 	{
 		return entities_.size();
+	}
+
+	double
+	RenderEngine::getHighestFPS() const
+	{
+		double fps = 0.0;
+		for (const auto &entity : entities_)
+		{
+			for (size_t i=0; i<entity.rObj->numVideoSources(); i++)
+			{
+				auto vSrc = entity.rObj->getVideoSource(i);
+				fps = std::max(fps, vSrc->fps());
+			}
+		}
+		return fps;
 	}
 
 	GroupedSeekerPtr

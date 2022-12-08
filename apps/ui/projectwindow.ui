@@ -23,14 +23,14 @@
       <widget class="QWidget" name="verticalLayoutWidget">
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
-         <widget class="QTableView" name="tableDataSources"/>
-        </item>
-        <item>
          <widget class="QLabel" name="label">
           <property name="text">
            <string>1. Data Sources</string>
           </property>
          </widget>
+        </item>
+        <item>
+         <widget class="QTableView" name="tableDataSources"/>
         </item>
         <item>
          <widget class="QLabel" name="label_3">
