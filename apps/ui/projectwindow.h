@@ -10,6 +10,7 @@
 
 #include "progressdialog.h"
 #include "renderenginewizard_topbottom.h"
+#include "renderentitypropertiestab.h"
 #include "renderthread.h"
 #include "scrubbablevideo.h"
 #include "trackeditor.h"
@@ -158,6 +159,8 @@ private:
 
     RenderThread *rThread_;
     ProgressDialog *progressDialog_;
+
+    RenderEntityPropertiesTab *renderEntityPropertiesTab_;
 };
 
 #endif // PROJECTWINDOW_H

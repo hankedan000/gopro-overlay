@@ -11,6 +11,9 @@ set(QT_WIDGETS_SOURCES
         renderenginewizard_topbottom.h
         renderenginewizard_topbottom.cpp
         renderenginewizard_topbottom.ui
+        renderentitypropertiestab.h
+        renderentitypropertiestab.cpp
+        renderentitypropertiestab.ui
         renderthread.h
         renderthread.cpp
         scrubbablevideo.h

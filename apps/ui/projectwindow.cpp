@@ -31,13 +31,16 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     previewWindow_(new ScrubbableVideo()),
     reWizTopBot_(new RenderEngineWizard_TopBottom(this,&proj_)),
     projectDirty_(false),
-    progressDialog_(new ProgressDialog(this))
+    progressDialog_(new ProgressDialog(this)),
+    renderEntityPropertiesTab_(new RenderEntityPropertiesTab(this))
 {
     ui->setupUi(this);
     this->setWindowTitle(WINDOW_TITLE);
     ui->stopButton->setVisible(false);
     ui->customAlignmentTableWidget->hide();
     ui->customAlignmentCheckBox->setChecked(false);
+    ui->propertiesTab->setLayout(new QGridLayout(this));
+    ui->propertiesTab->layout()->addWidget(renderEntityPropertiesTab_);
     progressDialog_->setWindowTitle("Render Progress");
     auto flags = progressDialog_->windowFlags();// disable progress window's close button
     flags = flags & (~Qt::WindowCloseButtonHint);
@@ -206,6 +209,18 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
             setProjectDirty(true);
             render();
         }
+    });
+    connect(ui->renderEntitiesTable, &QTableView::clicked, this, [this](const QModelIndex &index){
+        const auto row = index.row();
+        QStandardItem *entityNameItem = entitiesTableModel_->item(row,ENTITY_NAME_COLUMN);
+        // recover the encoded pointer to a RenderedEntity within the name's data()
+        QVariant v = entityNameItem->data();
+        auto re = reinterpret_cast<gpo::RenderEngine::RenderedEntity *>(v.toULongLong());
+        renderEntityPropertiesTab_->setEntity(re);
+    });
+    connect(renderEntityPropertiesTab_, &RenderEntityPropertiesTab::propertyChanged, this, [this]{
+        setProjectDirty(true);
+        render();
     });
 
     setProjectDirty(false);
@@ -403,6 +418,7 @@ ProjectWindow::clearRenderEntitiesTable()
 {
     entitiesTableModel_->clear();
     entitiesTableModel_->setHorizontalHeaderLabels({"Name", "Type", "Visible"});
+    renderEntityPropertiesTab_->setEntity(nullptr);
 }
 
 void

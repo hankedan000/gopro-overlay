@@ -183,6 +183,7 @@ namespace gpo
 	{
 		setRenderSize(node["renderSize"].as<cv::Size>());
 
+		entities_.clear();
 		if (node["entities"])
 		{
 			const YAML::Node &yEntities = node["entities"];
@@ -219,6 +220,7 @@ namespace gpo
 				addEntity(re);
 			}
 		}
+		// FIXME need to rebuild grouped seeker
 
 		return true;
 	}
