@@ -48,15 +48,56 @@ void
 RenderEntityPropertiesTab::setEntity(
         gpo::RenderEngine::RenderedEntity *entity)
 {
-    entity_ = entity;
+    ui->frictionCircle_GroupBox->hide();
+    ui->lapTimer_GroupBox->hide();
+    ui->speedometer_GroupBox->hide();
+    ui->telemetryPrintout_GroupBox->hide();
+    ui->textObject_GroupBox->hide();
+    ui->trackMap_GroupBox->hide();
+    ui->video_GroupBox->hide();
 
-    if (entity_)
+    // null it first so we don't emit propertyChanged() signals when we update the fields programatically
+    entity_ = nullptr;
+    // ------------------------------------------------------------------
+    // BEGIN - region where propertyChanged() signals won't fire
+    // ------------------------------------------------------------------
+    if (entity)
     {
-        ui->entityName_LineEdit->setText(entity_->name().c_str());
-        ui->entityPositionX_spin->setValue(entity_->rPos.x);
-        ui->entityPositionY_spin->setValue(entity_->rPos.y);
-        ui->entitySizeWidth_spin->setValue(entity_->rSize.width);
-        ui->entitySizeHeight_spin->setValue(entity_->rSize.height);
+        ui->entityName_LineEdit->setText(entity->name().c_str());
+        ui->entityPositionX_spin->setValue(entity->rPos.x);
+        ui->entityPositionY_spin->setValue(entity->rPos.y);
+        ui->entitySizeWidth_spin->setValue(entity->rSize.width);
+        ui->entitySizeHeight_spin->setValue(entity->rSize.height);
+
+        std::string objectTypeName = entity->rObj->typeName();
+        if (objectTypeName == "FrictionCircleObject")
+        {
+            ui->frictionCircle_GroupBox->show();
+        }
+        else if (objectTypeName == "LapTimerObject")
+        {
+            ui->lapTimer_GroupBox->show();
+        }
+        else if (objectTypeName == "SpeedometerObject")
+        {
+            ui->speedometer_GroupBox->show();
+        }
+        else if (objectTypeName == "TelemetryPrintoutObject")
+        {
+            ui->telemetryPrintout_GroupBox->show();
+        }
+        else if (objectTypeName == "TextObject")
+        {
+            ui->textObject_GroupBox->show();
+        }
+        else if (objectTypeName == "TrackMapObject")
+        {
+            ui->trackMap_GroupBox->show();
+        }
+        else if (objectTypeName == "VideoObject")
+        {
+            ui->video_GroupBox->show();
+        }
     }
     else
     {
@@ -66,4 +107,8 @@ RenderEntityPropertiesTab::setEntity(
         ui->entitySizeWidth_spin->setValue(0);
         ui->entitySizeHeight_spin->setValue(0);
     }
+    entity_ = entity;
+    // ------------------------------------------------------------------
+    // END - region where propertyChanged() signals won't fire
+    // ------------------------------------------------------------------
 }
