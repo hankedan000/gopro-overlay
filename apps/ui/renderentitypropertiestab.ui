@@ -258,14 +258,48 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton">
+          <widget class="ColorPicker" name="frictionCircleBorder_ColorPicker">
            <property name="text">
-            <string>PushButton</string>
+            <string/>
            </property>
           </widget>
          </item>
          <item>
           <spacer name="horizontalSpacer_5">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_10">
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_11">
+           <property name="text">
+            <string>Tail Length:</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QSpinBox" name="taillength_spin">
+           <property name="maximum">
+            <number>100</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_8">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -289,9 +323,9 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_2">
+          <widget class="ColorPicker" name="frictionCircleTail_ColorPicker">
            <property name="text">
-            <string>PushButton</string>
+            <string/>
            </property>
           </widget>
          </item>
@@ -320,9 +354,9 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_3">
+          <widget class="ColorPicker" name="frictionCircleDot_ColorPicker">
            <property name="text">
-            <string>PushButton</string>
+            <string/>
            </property>
           </widget>
          </item>
@@ -349,7 +383,7 @@
          <property name="sizeHint" stdset="0">
           <size>
            <width>20</width>
-           <height>177</height>
+           <height>142</height>
           </size>
          </property>
         </spacer>
@@ -402,6 +436,13 @@
    </layout>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ColorPicker</class>
+   <extends>QPushButton</extends>
+   <header>ColorPicker.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

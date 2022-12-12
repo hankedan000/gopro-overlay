@@ -21,6 +21,30 @@ namespace gpo
 		setTailLength(
 			size_t tailLength);
 
+		size_t
+		getTailLength() const;
+
+		void
+		setBorderColor(
+			cv::Scalar rgbColor);
+
+		cv::Scalar
+		getBorderColor() const;
+
+		void
+		setTailColor(
+			cv::Scalar rgbColor);
+
+		cv::Scalar
+		getTailColor() const;
+
+		void
+		setCurrentDotColor(
+			cv::Scalar rgbColor);
+
+		cv::Scalar
+		getCurrentDotColor() const;
+
 		virtual
 		void
 		render(
@@ -39,6 +63,10 @@ namespace gpo
 			const YAML::Node& node) override;
 
 	private:
+		void
+		redrawOutline();
+
+	private:
 		// map outline
 		cv::Mat outlineImg_;
 
@@ -49,6 +77,7 @@ namespace gpo
 		cv::Point center_;
 
 		cv::Scalar borderColor_;
+		cv::Scalar tailColor_;
 		cv::Scalar currentDotColor_;
 
 	};

@@ -1,6 +1,8 @@
 #include "renderentitypropertiestab.h"
 #include "ui_renderentitypropertiestab.h"
 
+#include "GoProOverlay/graphics/FrictionCircleObject.h"
+
 RenderEntityPropertiesTab::RenderEntityPropertiesTab(QWidget *parent) :
     QTabWidget(parent),
     ui(new Ui::RenderEntityPropertiesTab),
@@ -34,6 +36,40 @@ RenderEntityPropertiesTab::RenderEntityPropertiesTab(QWidget *parent) :
         if (entity_)
         {
             entity_->rSize.height = newValue;
+            emit propertyChanged();
+        }
+    });
+
+    // handlers for FrictionCircle properties
+    connect(ui->frictionCircleBorder_ColorPicker, &ColorPicker::pickedCV, this, [this](cv::Scalar newColor){
+        if (entity_)
+        {
+            auto frictionCircle = reinterpret_cast<gpo::FrictionCircleObject*>(entity_->rObj);
+            frictionCircle->setBorderColor(newColor);
+            emit propertyChanged();
+        }
+    });
+    connect(ui->taillength_spin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int newValue){
+        if (entity_)
+        {
+            auto frictionCircle = reinterpret_cast<gpo::FrictionCircleObject*>(entity_->rObj);
+            frictionCircle->setTailLength(newValue);
+            emit propertyChanged();
+        }
+    });
+    connect(ui->frictionCircleTail_ColorPicker, &ColorPicker::pickedCV, this, [this](cv::Scalar newColor){
+        if (entity_)
+        {
+            auto frictionCircle = reinterpret_cast<gpo::FrictionCircleObject*>(entity_->rObj);
+            frictionCircle->setTailColor(newColor);
+            emit propertyChanged();
+        }
+    });
+    connect(ui->frictionCircleDot_ColorPicker, &ColorPicker::pickedCV, this, [this](cv::Scalar newColor){
+        if (entity_)
+        {
+            auto frictionCircle = reinterpret_cast<gpo::FrictionCircleObject*>(entity_->rObj);
+            frictionCircle->setCurrentDotColor(newColor);
             emit propertyChanged();
         }
     });
@@ -72,6 +108,12 @@ RenderEntityPropertiesTab::setEntity(
         std::string objectTypeName = entity->rObj->typeName();
         if (objectTypeName == "FrictionCircleObject")
         {
+            auto frictionCircle = reinterpret_cast<gpo::FrictionCircleObject*>(entity->rObj);
+            ui->frictionCircleBorder_ColorPicker->setColorCV(frictionCircle->getBorderColor());
+            ui->taillength_spin->setValue(frictionCircle->getTailLength());
+            ui->frictionCircleTail_ColorPicker->setColorCV(frictionCircle->getTailColor());
+            ui->frictionCircleDot_ColorPicker->setColorCV(frictionCircle->getCurrentDotColor());
+
             ui->frictionCircle_GroupBox->show();
         }
         else if (objectTypeName == "LapTimerObject")

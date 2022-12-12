@@ -1,4 +1,7 @@
 set(QT_WIDGETS_SOURCES
+        ColorPicker.h
+        ColorPicker.cpp
+        ColorPicker.ui
         cvimageview.h
         cvimageview.cpp
         cvimageview.ui

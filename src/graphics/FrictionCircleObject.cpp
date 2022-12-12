@@ -14,19 +14,10 @@ namespace gpo
 	 , margin_px_(40)
 	 , center_(radius_px_+margin_px_,radius_px_+margin_px_)
 	 , borderColor_(RGBA_COLOR(2,155,250,255))
+	 , tailColor_(RGBA_COLOR(2,155,250,255))
 	 , currentDotColor_(RGBA_COLOR(255,255,255,255))
 	{
-		// draw outer circle
-		cv::circle(outlineImg_,center_,radius_px_,borderColor_,8);
-
-		cv::putText(
-			outlineImg_, // target image
-			"1.0g", // text
-			cv::Point(center_.x+(radius_px_+20)*0.707,center_.y-(radius_px_+20)*0.707),// bottom-right (0.707 is sin(45deg))
-			cv::FONT_HERSHEY_DUPLEX,// font face
-			1.0,// font scale
-			borderColor_, // font color
-			2);// thickness
+		redrawOutline();
 	}
 
 	std::string
@@ -48,6 +39,52 @@ namespace gpo
 		tailLength_ = tailLength;
 	}
 
+	size_t
+	FrictionCircleObject::getTailLength() const
+	{
+		return tailLength_;
+	}
+
+	void
+	FrictionCircleObject::setBorderColor(
+		cv::Scalar rgbColor)
+	{
+		borderColor_ = rgbColor;
+		redrawOutline();
+	}
+
+	cv::Scalar
+	FrictionCircleObject::getBorderColor() const
+	{
+		return borderColor_;
+	}
+
+	void
+	FrictionCircleObject::setTailColor(
+		cv::Scalar rgbColor)
+	{
+		tailColor_ = rgbColor;
+	}
+
+	cv::Scalar
+	FrictionCircleObject::getTailColor() const
+	{
+		return tailColor_;
+	}
+
+	void
+	FrictionCircleObject::setCurrentDotColor(
+		cv::Scalar rgbColor)
+	{
+		currentDotColor_ = rgbColor;
+	}
+
+	cv::Scalar
+	FrictionCircleObject::getCurrentDotColor() const
+	{
+		return currentDotColor_;
+	}
+
 	void
 	FrictionCircleObject::render(
 		cv::Mat &intoImg,
@@ -62,7 +99,7 @@ namespace gpo
 
 		auto telemSrc = tSources_.front();
 
-		// draw trail
+		// draw tail
 		int startIdx = telemSrc->seekedIdx() - tailLength_;
 		if (startIdx < 0)
 		{
@@ -71,7 +108,7 @@ namespace gpo
 		for (size_t i=startIdx; i<=telemSrc->seekedIdx() && i<telemSrc->size(); i++)
 		{
 			bool isLast = i == telemSrc->seekedIdx();
-			auto color = (isLast ? currentDotColor_ : RGBA_COLOR(247,162,2,255));
+			auto color = (isLast ? currentDotColor_ : tailColor_);
 			int dotRadius = (isLast ? 20 : 6);
 			const auto &accl = telemSrc->at(i).gpSamp.accl;
 
@@ -106,6 +143,9 @@ namespace gpo
 		YAML::Node node;
 
 		node["tailLength"] = tailLength_;
+		node["borderColor"] = borderColor_;
+		node["tailColor"] = tailColor_;
+		node["currentDotColor"] = currentDotColor_;
 
 		return node;
 	}
@@ -115,8 +155,29 @@ namespace gpo
 		const YAML::Node& node)
 	{
 		tailLength_ = node["tailLength"].as<size_t>();
+		borderColor_ = node["borderColor"].as<cv::Scalar>();
+		tailColor_ = node["tailColor"].as<cv::Scalar>();
+		currentDotColor_ = node["currentDotColor"].as<cv::Scalar>();
 
 		return true;
+	}
+
+	void
+	FrictionCircleObject::redrawOutline()
+	{
+		outlineImg_.setTo(RGBA_COLOR(0,0,0,0));
+
+		// draw outer circle
+		cv::circle(outlineImg_,center_,radius_px_,borderColor_,8);
+
+		cv::putText(
+			outlineImg_, // target image
+			"1.0g", // text
+			cv::Point(center_.x+(radius_px_+20)*0.707,center_.y-(radius_px_+20)*0.707),// bottom-right (0.707 is sin(45deg))
+			cv::FONT_HERSHEY_DUPLEX,// font face
+			1.0,// font scale
+			borderColor_, // font color
+			2);// thickness
 	}
 
 }
