@@ -12,12 +12,6 @@
 namespace gpo
 {
 
-	std::string
-	RenderEngine::RenderedEntity::name() const
-	{
-		return rObj->typeName() + "<" + std::to_string((size_t)this) + ">";
-	}
-
 	RenderEngine::RenderEngine()
 	 : rFrame_()
 	 , entities_()
@@ -52,6 +46,12 @@ namespace gpo
 		if ( ! re.rObj)
 		{
 			throw std::runtime_error("rObj is null. can't add entity to engine");
+		}
+
+		// give entity a unique name if it doesn't have once already
+		if (re.name.empty())
+		{
+			re.name = re.rObj->typeName() + "<" + std::to_string((size_t)&re) + ">";
 		}
 
 		entities_.push_back(re);
@@ -170,6 +170,7 @@ namespace gpo
 			yEntity["rObj"] = ent.rObj->encode();
 			yEntity["rSize"] = ent.rSize;
 			yEntity["rPos"] = ent.rPos;
+			yEntity["name"] = ent.name;
 			yEntities.push_back(yEntity);
 		}
 
@@ -194,6 +195,7 @@ namespace gpo
 				const YAML::Node yEntity = yEntities[i];
 				YAML_TO_FIELD(yEntity,"rSize",re.rSize);
 				YAML_TO_FIELD(yEntity,"rPos",re.rPos);
+				YAML_TO_FIELD(yEntity,"name",re.name);
 
 				const YAML::Node yR_Obj = yEntity["rObj"];
 				const std::string typeName = yR_Obj["typeName"].as<std::string>();
@@ -278,6 +280,7 @@ namespace gpo
 		auto topVideo = new VideoObject();
 		topVideo->addVideoSource(topData->videoSrc);
 		RenderEngine::RenderedEntity topVideoRE;
+		topVideoRE.name = "topVideo";
 		topVideoRE.rObj = topVideo;
 		topVideoRE.rSize = topVideoRE.rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 2.0);
 		topVideoRE.rPos = cv::Point(RENDERED_VIDEO_SIZE.width-topVideoRE.rSize.width, 0);
@@ -285,6 +288,7 @@ namespace gpo
 		auto botVideo = new VideoObject();
 		botVideo->addVideoSource(botData->videoSrc);
 		RenderEngine::RenderedEntity botVideoRE;
+		botVideoRE.name = "botVideo";
 		botVideoRE.rObj = botVideo;
 		botVideoRE.rSize = botVideoRE.rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 2.0);
 		botVideoRE.rPos = cv::Point(RENDERED_VIDEO_SIZE.width-botVideoRE.rSize.width, RENDERED_VIDEO_SIZE.height-botVideoRE.rSize.height);
@@ -292,6 +296,7 @@ namespace gpo
 
 		auto trackMap = new gpo::TrackMapObject();
 		RenderEngine::RenderedEntity trackMapRE;
+		trackMapRE.name = "trackmap";
 		trackMapRE.rObj = trackMap;
 		trackMapRE.rSize = trackMap->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
 		trackMapRE.rPos = cv::Point(0,0);
@@ -304,6 +309,7 @@ namespace gpo
 
 		auto topFC = new gpo::FrictionCircleObject();
 		RenderEngine::RenderedEntity topFC_RE;
+		topFC_RE.name = "topFrictionCircle";
 		topFC_RE.rObj = topFC;
 		topFC_RE.rSize = topFC->getScaledSizeFromTargetHeight(topVideoRE.rSize.height / 2.0);
 		topFC_RE.rPos = cv::Point(RENDERED_VIDEO_SIZE.width - topVideoRE.rSize.width - topFC_RE.rSize.width, 0);
@@ -312,6 +318,7 @@ namespace gpo
 		engine->addEntity(topFC_RE);
 		auto botFC = new gpo::FrictionCircleObject();
 		RenderEngine::RenderedEntity botFC_RE;
+		botFC_RE.name = "botFrictionCircle";
 		botFC_RE.rObj = botFC;
 		botFC_RE.rSize = botFC->getScaledSizeFromTargetHeight(botVideoRE.rSize.height / 2.0);
 		botFC_RE.rPos = cv::Point(RENDERED_VIDEO_SIZE.width - botVideoRE.rSize.width - botFC_RE.rSize.width, RENDERED_VIDEO_SIZE.height - botVideoRE.rSize.height);
@@ -321,6 +328,7 @@ namespace gpo
 
 		auto topLapTimer = new gpo::LapTimerObject();
 		RenderEngine::RenderedEntity topLapTimerRE;
+		topLapTimerRE.name = "topLapTimer";
 		topLapTimerRE.rObj = topLapTimer;
 		topLapTimerRE.rSize = topLapTimer->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 10.0);
 		topLapTimerRE.rPos = cv::Point(0,RENDERED_VIDEO_SIZE.height / 2 - topLapTimerRE.rSize.height);
@@ -328,6 +336,7 @@ namespace gpo
 		engine->addEntity(topLapTimerRE);
 		auto botLapTimer = new gpo::LapTimerObject();
 		RenderEngine::RenderedEntity botLapTimerRE;
+		botLapTimerRE.name = "botLapTimer";
 		botLapTimerRE.rObj = botLapTimer;
 		botLapTimerRE.rSize = topLapTimerRE.rSize;
 		botLapTimerRE.rPos = cv::Point(0,RENDERED_VIDEO_SIZE.height / 2);
@@ -337,6 +346,7 @@ namespace gpo
 		const bool showDebug = false;
 		auto topPrintoutObject = new gpo::TelemetryPrintoutObject();
 		RenderEngine::RenderedEntity topPrintoutRE;
+		topPrintoutRE.name = "topPrintout";
 		topPrintoutRE.rObj = topPrintoutObject;
 		topPrintoutRE.rSize = topPrintoutObject->getNativeSize();
 		topPrintoutRE.rPos = cv::Point(RENDERED_VIDEO_SIZE.width-topVideoRE.rSize.width, 0);
@@ -346,6 +356,7 @@ namespace gpo
 		engine->addEntity(topPrintoutRE);
 		auto botPrintoutObject = new gpo::TelemetryPrintoutObject();
 		RenderEngine::RenderedEntity botPrintoutRE;
+		botPrintoutRE.name = "botPrintout";
 		botPrintoutRE.rObj = botPrintoutObject;
 		botPrintoutRE.rSize = topPrintoutObject->getNativeSize();
 		botPrintoutRE.rPos = cv::Point(RENDERED_VIDEO_SIZE.width-botVideoRE.rSize.width, RENDERED_VIDEO_SIZE.height-botVideoRE.rSize.height);
@@ -356,6 +367,7 @@ namespace gpo
 
 		auto topSpeedoObject = new gpo::SpeedometerObject();
 		RenderEngine::RenderedEntity topSpeedoRE;
+		topSpeedoRE.name = "topSpeedometer";
 		topSpeedoRE.rObj = topSpeedoObject;
 		topSpeedoRE.rSize = topSpeedoObject->getScaledSizeFromTargetHeight(topVideoRE.rSize.height / 4.0);
 		topSpeedoRE.rPos = cv::Point(RENDERED_VIDEO_SIZE.width - topVideoRE.rSize.width - topSpeedoRE.rSize.width, topVideoRE.rSize.height - topSpeedoRE.rSize.height);
@@ -363,6 +375,7 @@ namespace gpo
 		engine->addEntity(topSpeedoRE);
 		auto botSpeedoObject = new gpo::SpeedometerObject();
 		RenderEngine::RenderedEntity botSpeedoRE;
+		botSpeedoRE.name = "botSpeedometer";
 		botSpeedoRE.rObj = botSpeedoObject;
 		botSpeedoRE.rSize = botSpeedoObject->getScaledSizeFromTargetHeight(botVideoRE.rSize.height / 4.0);
 		botSpeedoRE.rPos = cv::Point(RENDERED_VIDEO_SIZE.width - botVideoRE.rSize.width - botSpeedoRE.rSize.width, RENDERED_VIDEO_SIZE.height - botSpeedoRE.rSize.height);
@@ -375,6 +388,7 @@ namespace gpo
 		topTextObject->setScale(2);
 		topTextObject->setThickness(2);
 		RenderEngine::RenderedEntity topTextRE;
+		topTextRE.name = "topText";
 		topTextRE.rObj = topTextObject;
 		topTextRE.rPos = cv::Point(RENDERED_VIDEO_SIZE.width - topVideoRE.rSize.width, 50);
 		engine->addEntity(topTextRE);
@@ -384,6 +398,7 @@ namespace gpo
 		botTextObject->setScale(2);
 		botTextObject->setThickness(2);
 		RenderEngine::RenderedEntity botTextRE;
+		botTextRE.name = "botText";
 		botTextRE.rObj = botTextObject;
 		botTextRE.rPos = cv::Point(RENDERED_VIDEO_SIZE.width - botVideoRE.rSize.width, topVideoRE.rSize.height + 50);
 		engine->addEntity(botTextRE);

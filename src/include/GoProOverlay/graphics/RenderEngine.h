@@ -18,9 +18,7 @@ namespace gpo
 			RenderedObject *rObj;
 			cv::Size rSize;
 			cv::Point rPos;
-
-			std::string
-			name() const;
+			std::string name;
 		};
 
 	public:

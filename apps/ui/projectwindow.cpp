@@ -434,7 +434,7 @@ ProjectWindow::reloadRenderEntitiesTable()
         QList<QStandardItem *> row;
 
         QStandardItem *nameItem = new QStandardItem;
-        nameItem->setText(entity.name().c_str());
+        nameItem->setText(entity.name.c_str());
         nameItem->setData(QVariant(reinterpret_cast<qulonglong>((void*)(&entity))));
         row.append(nameItem);
 

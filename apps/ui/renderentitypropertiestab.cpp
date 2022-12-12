@@ -84,6 +84,8 @@ void
 RenderEntityPropertiesTab::setEntity(
         gpo::RenderEngine::RenderedEntity *entity)
 {
+    ui->entityProperties_ScrollArea->hide();
+
     ui->frictionCircle_GroupBox->hide();
     ui->lapTimer_GroupBox->hide();
     ui->speedometer_GroupBox->hide();
@@ -99,12 +101,18 @@ RenderEntityPropertiesTab::setEntity(
     // ------------------------------------------------------------------
     if (entity)
     {
-        ui->entityName_LineEdit->setText(entity->name().c_str());
+        // RenderEntity UI elements
+        ui->entityName_LineEdit->setText(entity->name.c_str());
         ui->entityPositionX_spin->setValue(entity->rPos.x);
         ui->entityPositionY_spin->setValue(entity->rPos.y);
         ui->entitySizeWidth_spin->setValue(entity->rSize.width);
         ui->entitySizeHeight_spin->setValue(entity->rSize.height);
 
+        ui->entityProperties_ScrollArea->show();
+
+        // --------------------------------
+
+        // RenderObject UI elements
         std::string objectTypeName = entity->rObj->typeName();
         if (objectTypeName == "FrictionCircleObject")
         {
@@ -140,14 +148,6 @@ RenderEntityPropertiesTab::setEntity(
         {
             ui->video_GroupBox->show();
         }
-    }
-    else
-    {
-        ui->entityName_LineEdit->setText("");
-        ui->entityPositionX_spin->setValue(0);
-        ui->entityPositionY_spin->setValue(0);
-        ui->entitySizeWidth_spin->setValue(0);
-        ui->entitySizeHeight_spin->setValue(0);
     }
     entity_ = entity;
     // ------------------------------------------------------------------
