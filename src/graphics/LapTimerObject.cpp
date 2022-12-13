@@ -64,6 +64,9 @@ namespace gpo
 	LapTimerObject::subEncode() const
 	{
 		YAML::Node node;
+
+		node["textColor"] = textColor_;
+
 		return node;
 	}
 
@@ -71,6 +74,7 @@ namespace gpo
 	LapTimerObject::subDecode(
 		const YAML::Node& node)
 	{
+		YAML_TO_FIELD(node, "textColor", textColor_);
 		return true;
 	}
 

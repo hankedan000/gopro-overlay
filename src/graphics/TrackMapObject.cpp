@@ -159,6 +159,8 @@ namespace gpo
 	TrackMapObject::subEncode() const
 	{
 		YAML::Node node;
+		node["trackThickness_px"] = trackThickness_px_;
+		node["dotRadius_px"] = dotRadius_px_;
 		return node;
 	}
 
@@ -166,6 +168,8 @@ namespace gpo
 	TrackMapObject::subDecode(
 		const YAML::Node& node)
 	{
+		YAML_TO_FIELD(node,"trackThickness_px",trackThickness_px_);
+		YAML_TO_FIELD(node,"dotRadius_px",dotRadius_px_);
 		return true;
 	}
 

@@ -122,6 +122,7 @@ namespace gpo
 	{
 		YAML::Node node;
 		node["fontFace"] = fontFace_;
+		node["fontColor"] = fontColor_;
 		return node;
 	}
 
@@ -129,7 +130,8 @@ namespace gpo
 	TelemetryPrintoutObject::subDecode(
 		const YAML::Node& node)
 	{
-		fontFace_ = node["fontFace"].as<int>();
+		YAML_TO_FIELD(node,"fontFace",fontFace_);
+		YAML_TO_FIELD(node,"fontColor",fontColor_);
 		return true;
 	}
 
