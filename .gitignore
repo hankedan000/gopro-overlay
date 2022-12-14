@@ -12,3 +12,5 @@ _deps
 
 # ignore build directory
 build/
+
+.vscode/
