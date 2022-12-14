@@ -184,6 +184,21 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     ui->renderEntitiesTable->setModel(entitiesTableModel_);
     clearRenderEntitiesTable();// calling this to set table headers
 
+    connect(ui->removeEntity_ToolButton, &QToolButton::clicked, this, [this]{
+        auto selectionModel = ui->renderEntitiesTable->selectionModel();
+        auto selectedIndexs = selectionModel->selectedIndexes();
+        if (selectedIndexs.empty())
+        {
+            return;// nothing to remove
+        }
+
+        // only support removal of 1 row right now
+        proj_.getEngine()->removeEntity(selectedIndexs.at(0).row());
+        setProjectDirty(true);
+        reloadRenderEntitiesTable();
+        render();
+    });
+
     connect(entitiesTableModel_, &QStandardItemModel::dataChanged, this, [this](
             const QModelIndex &topLeft,
             const QModelIndex &bottomRight,
@@ -281,8 +296,11 @@ ProjectWindow::loadProject(
                     false);// holdoff render untill we seek below
 
         updateAlignmentPane();
-        previewWindow_->show();
-        render();
+        if (proj_.getEngine()->entityCount() > 0)
+        {
+            previewWindow_->show();
+            render();
+        }
 
         if (proj_.hasTrack())
         {
@@ -303,6 +321,7 @@ ProjectWindow::importVideoSource(
     if (importOkay)
     {
         reloadDataSourceTable();
+        updateTrackPane();
         setProjectDirty(true);
     }
     return importOkay;
