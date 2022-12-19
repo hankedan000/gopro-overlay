@@ -37,6 +37,20 @@ public:
 	hasTrack() const;
 
 	void
+	setLeadInSeconds(
+		double dur_secs);
+
+	double
+	getLeadInSeconds() const;
+
+	void
+	setLeadOutSeconds(
+		double dur_secs);
+
+	double
+	getLeadOutSeconds() const;
+
+	void
 	reprocessDatumTrack();
 
 	void
@@ -70,6 +84,12 @@ private:
 	DataSourceManager dsm_;
 	RenderEnginePtr engine_;
 	Track *track_;
+
+	// amount of time in seconds to start render before the alignment point
+	double renderLeadIn_sec_;
+
+	// amount of time in seconds to stop rendering after all sources crossed finish element
+	double renderLeadOut_sec_;
 
 };
 

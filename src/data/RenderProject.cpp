@@ -84,6 +84,32 @@ namespace gpo
 	}
 
 	void
+	RenderProject::setLeadInSeconds(
+		double dur_secs)
+	{
+		renderLeadIn_sec_ = dur_secs;
+	}
+
+	double
+	RenderProject::getLeadInSeconds() const
+	{
+		return renderLeadIn_sec_;
+	}
+
+	void
+	RenderProject::setLeadOutSeconds(
+		double dur_secs)
+	{
+		renderLeadOut_sec_ = dur_secs;
+	}
+
+	double
+	RenderProject::getLeadOutSeconds() const
+	{
+		return renderLeadOut_sec_;
+	}
+
+	void
 	RenderProject::reprocessDatumTrack()
 	{
 		for (size_t i=0; i<dsm_.sourceCount(); i++)
@@ -214,6 +240,9 @@ namespace gpo
 		node["dsm"] = dsm_.encode();
 		node["engine"] = engine_->encode();
 
+		node["renderLeadIn_sec"] = renderLeadIn_sec_;
+		node["renderLeadOut_sec"] = renderLeadOut_sec_;
+
 		return node;
 	}
 
@@ -225,6 +254,9 @@ namespace gpo
 
 		okay = okay && dsm_.decode(node["dsm"]);
 		okay = okay && engine_->decode(node["engine"],dsm_);
+
+		YAML_TO_FIELD_W_DEFAULT(node,"renderLeadIn_sec",renderLeadIn_sec_,0.0);
+		YAML_TO_FIELD_W_DEFAULT(node,"renderLeadOut_sec",renderLeadOut_sec_,0.0);
 
 		return okay;
 	}

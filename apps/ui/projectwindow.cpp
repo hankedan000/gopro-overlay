@@ -168,6 +168,20 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     connect(ui->customAlignmentCheckBox, &QCheckBox::stateChanged, this, [this]{
         ui->customAlignmentTableWidget->setVisible(ui->customAlignmentCheckBox->isChecked());
     });
+    connect(ui->leadIn_SpinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, [this](double value){
+        proj_.setLeadInSeconds(value);
+        setProjectDirty(true);
+    });
+    connect(ui->jumpToLeadIn_ToolButton, &QToolButton::clicked, this, [this]{
+        printf("jump to lead-in not implemented\n");
+    });
+    connect(ui->leadOut_SpinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, [this](double value){
+        proj_.setLeadOutSeconds(value);
+        setProjectDirty(true);
+    });
+    connect(ui->jumpToLeadOut_ToolButton, &QToolButton::clicked, this, [this]{
+        printf("jump to lead-out not implemented\n");
+    });
 
     // connect engines wizards.
     connect(reWizTopBot_, &RenderEngineWizard_TopBottom::created, this, &ProjectWindow::onEngineCreated);
@@ -296,6 +310,8 @@ ProjectWindow::loadProject(
                     false);// holdoff render untill we seek below
 
         updateAlignmentPane();
+        ui->leadIn_SpinBox->setValue(proj_.getLeadInSeconds());
+        ui->leadOut_SpinBox->setValue(proj_.getLeadOutSeconds());
         if (proj_.getEngine()->entityCount() > 0)
         {
             previewWindow_->show();
