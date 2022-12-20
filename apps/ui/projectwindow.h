@@ -99,6 +99,12 @@ private:
     updateCustomAlignmentTableValues();
 
     void
+    applyAlignmentToProject();
+
+    void
+    resetAlignmentFromProject();
+
+    void
     seekEngineToAlignment();
 
     void

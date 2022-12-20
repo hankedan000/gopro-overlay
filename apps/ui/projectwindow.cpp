@@ -128,14 +128,27 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         updateTrackPane();
     });
     connect(ui->entryRadio, &QRadioButton::toggled, this, [this]{
+        ui->resetAlignment_PushButton->setEnabled(true);
+        ui->applyAlignment_PushButton->setEnabled(true);
+    });
+    connect(ui->exitRadio, &QRadioButton::toggled, this, [this]{
+        ui->resetAlignment_PushButton->setEnabled(true);
+        ui->applyAlignment_PushButton->setEnabled(true);
+    });
+    connect(ui->previewAlignment_PushButton, &QPushButton::clicked, this, [this]{
         updateCustomAlignmentTableValues();
         seekEngineToAlignment();
         render();
     });
-    connect(ui->exitRadio, &QRadioButton::toggled, this, [this]{
-        updateCustomAlignmentTableValues();
-        seekEngineToAlignment();
-        render();
+    connect(ui->resetAlignment_PushButton, &QPushButton::clicked, this, [this]{
+        resetAlignmentFromProject();
+        ui->resetAlignment_PushButton->setEnabled(false);
+        ui->applyAlignment_PushButton->setEnabled(false);
+    });
+    connect(ui->applyAlignment_PushButton, &QPushButton::clicked, this, [this]{
+        applyAlignmentToProject();
+        ui->resetAlignment_PushButton->setEnabled(false);
+        ui->applyAlignment_PushButton->setEnabled(false);
     });
     connect(ui->exportButton, &QPushButton::clicked, this, [this]{
         auto engine = proj_.getEngine();
@@ -167,6 +180,8 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     });
     connect(ui->customAlignmentCheckBox, &QCheckBox::stateChanged, this, [this]{
         ui->customAlignmentTableWidget->setVisible(ui->customAlignmentCheckBox->isChecked());
+        ui->resetAlignment_PushButton->setEnabled(true);
+        ui->applyAlignment_PushButton->setEnabled(true);
     });
     connect(ui->leadIn_SpinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, [this](double value){
         proj_.setLeadInSeconds(value);
@@ -296,7 +311,6 @@ ProjectWindow::loadProject(
     if (loadOkay)
     {
         currProjectDir_ = projectDir;
-        setProjectDirty(false);
         addProjectToRecentHistory(projectDir);
 
         // update menus that change based on project
@@ -322,6 +336,8 @@ ProjectWindow::loadProject(
         {
             trackEditor_->setTrack(proj_.getTrack());
         }
+
+        setProjectDirty(false);
     }
 
     configureMenuActions();
@@ -538,12 +554,16 @@ ProjectWindow::updateAlignmentPane()
         spinbox->setMaximum(seeker->size());
         spinbox->setValue(seeker->seekedIdx());
         connect(spinbox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, [this,seeker](int value){
-            seeker->seekToIdx(value);
-            this->render();
+            if (ui->customAlignmentCheckBox->isChecked())
+            {
+                ui->resetAlignment_PushButton->setEnabled(true);
+                ui->applyAlignment_PushButton->setEnabled(true);
+            }
         });
         table->setCellWidget(i,CUSTOM_ALIGN_SPINBOX_COLUMN,spinbox);
     }
 
+    resetAlignmentFromProject();
     seekEngineToAlignment();
 }
 
@@ -554,12 +574,90 @@ ProjectWindow::updateCustomAlignmentTableValues()
     auto table = ui->customAlignmentTableWidget;
     auto gSeeker = proj_.getEngine()->getSeeker();
 
-    for (size_t i=0; i<gSeeker->seekerCount() && table->rowCount(); i++)
+    for (size_t i=0; i<gSeeker->seekerCount() && i<table->rowCount(); i++)
     {
         auto seeker = gSeeker->getSeeker(i);
         QSpinBox *spinBox = (QSpinBox*)(table->cellWidget(i,CUSTOM_ALIGN_SPINBOX_COLUMN));
 
         spinBox->setValue(seeker->seekedIdx());
+    }
+}
+
+void
+ProjectWindow::applyAlignmentToProject()
+{
+    if (ui->customAlignmentCheckBox->isChecked())
+    {
+        // handle custom alignment
+        auto table = ui->customAlignmentTableWidget;
+        auto gSeeker = proj_.getEngine()->getSeeker();
+        gpo::CustomAlignment customAlignment;
+        for (size_t i=0; i<gSeeker->seekerCount() && i<table->rowCount(); i++)
+        {
+            auto seeker = gSeeker->getSeeker(i);
+            QSpinBox *spinBox = (QSpinBox*)(table->cellWidget(i,CUSTOM_ALIGN_SPINBOX_COLUMN));
+            customAlignment.idxBySourceName[seeker->getDataSourceName()] = spinBox->value();
+        }
+
+        gpo::RenderAlignmentInfo rai;
+        rai.initFrom(customAlignment);
+        proj_.setAlignmentInfo(rai);
+    }
+    else
+    {
+        // handle case as "lap" alignment. UI doesn't support "sector" aligntment right now
+        gpo::LapAlignment lapAlignment;
+        lapAlignment.lap = ui->lapSpinBox->value();
+        lapAlignment.side = gpo::ElementSide_E::eES_Entry;
+        if (ui->exitRadio->isChecked())
+        {
+            lapAlignment.side = gpo::ElementSide_E::eES_Exit;
+        }
+
+        gpo::RenderAlignmentInfo rai;
+        rai.initFrom(lapAlignment);
+        proj_.setAlignmentInfo(rai);
+    }
+
+    setProjectDirty(true);
+}
+
+void
+ProjectWindow::resetAlignmentFromProject()
+{
+    auto rai = proj_.getAlignmentInfo();
+
+    ui->customAlignmentCheckBox->setChecked(rai.type == gpo::RenderAlignmentType_E::eRAT_Custom);
+
+    if (rai.type == gpo::RenderAlignmentType_E::eRAT_Lap)
+    {
+        ui->lapSpinBox->setValue(rai.alignInfo.lap->lap);
+        switch (rai.alignInfo.lap->side)
+        {
+            case gpo::ElementSide_E::eES_Entry:
+                ui->entryRadio->setChecked(true);
+                break;
+            case gpo::ElementSide_E::eES_Exit:
+                ui->exitRadio->setChecked(true);
+                break;
+        }
+    }
+    else if (rai.type == gpo::RenderAlignmentType_E::eRAT_Custom)
+    {
+        auto table = ui->customAlignmentTableWidget;
+        for (const auto &customEntry : rai.alignInfo.custom->idxBySourceName)
+        {
+            for (size_t i=0; i<table->rowCount(); i++)
+            {
+                auto nameEdit = (QLineEdit*)(table->cellWidget(i,CUSTOM_ALIGN_NAME_COLUMN));
+                if (nameEdit->text().toStdString() == customEntry.first)
+                {
+                    QSpinBox *spinBox = (QSpinBox*)(table->cellWidget(i,CUSTOM_ALIGN_SPINBOX_COLUMN));
+                    spinBox->setValue(customEntry.second);
+                    break;
+                }
+            }
+        }
     }
 }
 

@@ -109,6 +109,23 @@ namespace gpo
 		return renderLeadOut_sec_;
 	}
 
+	const RenderAlignmentInfo &
+	RenderProject::getAlignmentInfo() const
+	{
+		return currRenderAlignmentInfo_;
+	}
+
+	void
+	RenderProject::setAlignmentInfo(
+		const RenderAlignmentInfo &renderAlignmentInfo)
+	{
+		currRenderAlignmentInfo_ = renderAlignmentInfo;
+		if (renderAlignmentInfo.type != RenderAlignmentType_E::eRAT_Custom)
+		{
+			lastNonCustomAlignmentInfo_ = renderAlignmentInfo;
+		}
+	}
+
 	void
 	RenderProject::reprocessDatumTrack()
 	{
@@ -243,6 +260,9 @@ namespace gpo
 		node["renderLeadIn_sec"] = renderLeadIn_sec_;
 		node["renderLeadOut_sec"] = renderLeadOut_sec_;
 
+		node["lastNonCustomAlignmentInfo"] = lastNonCustomAlignmentInfo_;
+		node["currRenderAlignmentInfo"] = currRenderAlignmentInfo_;
+
 		return node;
 	}
 
@@ -257,6 +277,10 @@ namespace gpo
 
 		YAML_TO_FIELD_W_DEFAULT(node,"renderLeadIn_sec",renderLeadIn_sec_,0.0);
 		YAML_TO_FIELD_W_DEFAULT(node,"renderLeadOut_sec",renderLeadOut_sec_,0.0);
+
+		auto defaultAlignInfo = RenderAlignmentInfo();
+		YAML_TO_FIELD_W_DEFAULT(node,"lastNonCustomAlignmentInfo",lastNonCustomAlignmentInfo_,defaultAlignInfo);
+		YAML_TO_FIELD_W_DEFAULT(node,"currRenderAlignmentInfo",currRenderAlignmentInfo_,defaultAlignInfo);
 
 		return okay;
 	}
