@@ -136,9 +136,12 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         ui->applyAlignment_PushButton->setEnabled(true);
     });
     connect(ui->previewAlignment_PushButton, &QPushButton::clicked, this, [this]{
-        updateCustomAlignmentTableValues();
         seekEngineToAlignment(getAlignmentInfoFromUI());
         render();
+        if ( ! ui->customAlignmentCheckBox->isChecked())
+        {
+            updateCustomAlignmentTableValues();
+        }
     });
     connect(ui->resetAlignment_PushButton, &QPushButton::clicked, this, [this]{
         resetAlignmentFromProject();
@@ -179,7 +182,9 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         if (rThread_) rThread_->stopRender();
     });
     connect(ui->customAlignmentCheckBox, &QCheckBox::stateChanged, this, [this]{
-        ui->customAlignmentTableWidget->setVisible(ui->customAlignmentCheckBox->isChecked());
+        auto checked = ui->customAlignmentCheckBox->isChecked();
+        ui->customAlignmentTableWidget->setVisible(checked);
+        ui->lapAlignment_VBox->setVisible( ! checked);
         ui->resetAlignment_PushButton->setEnabled(true);
         ui->applyAlignment_PushButton->setEnabled(true);
     });
@@ -570,6 +575,10 @@ ProjectWindow::updateAlignmentPane()
 
     resetAlignmentFromProject();
     seekEngineToAlignment(getAlignmentInfoFromUI());
+    if ( ! ui->customAlignmentCheckBox->isChecked())
+    {
+        updateCustomAlignmentTableValues();
+    }
 }
 
 void
