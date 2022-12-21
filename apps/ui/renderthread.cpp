@@ -1,15 +1,18 @@
 #include "renderthread.h"
 
+#include "GoProOverlay/graphics/RenderEngine.h"
+
 RenderThread::RenderThread(
-        gpo::RenderEnginePtr engine,
+        gpo::RenderProject project,
         QString exportFile,
         double fps)
- : engine_(engine)
+ : project_(project)
  , vWriter_(exportFile.toStdString(),
             cv::VideoWriter::fourcc('M','P','4','V'),
             fps,
-            engine->getRenderSize(),
+            project.getEngine()->getRenderSize(),
             true)// isColor
+ , renderFPS_(fps)
  , stop_(false)
 {
 }
@@ -17,10 +20,14 @@ RenderThread::RenderThread(
 void
 RenderThread::run()
 {
-    auto gSeeker = engine_->getSeeker();
+    auto engine = project_.getEngine();
+    auto gSeeker = engine->getSeeker();
+
+    // seek to render alignment point first
+    gSeeker->seekToAlignmentInfo(project_.getAlignmentInfo());
 
     // start render a little bit before the alignment point (lead-in)
-    const size_t LEAD_IN_FRAMES = 60 * 1;// 1s worth
+    const size_t LEAD_IN_FRAMES = renderFPS_ * project_.getLeadInSeconds();
     auto seekLimits = gSeeker->relativeSeekLimits();
     if (LEAD_IN_FRAMES < seekLimits.first)
     {
@@ -37,8 +44,8 @@ RenderThread::run()
     qulonglong total = seekLimits.second;
     while ( ! stop_ && progress < total)
     {
-        engine_->render();
-        vWriter_.write(engine_->getFrame());
+        engine->render();
+        vWriter_.write(engine->getFrame());
         gSeeker->nextAll();
         emit progressChanged(progress++,total);
     }

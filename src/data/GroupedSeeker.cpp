@@ -106,6 +106,47 @@ namespace gpo
 	}
 
 	void
+	GroupedSeeker::seekToAlignmentInfo(
+		const RenderAlignmentInfo &renderAlignInfo)
+	{
+		switch (renderAlignInfo.type)
+		{
+			case gpo::RenderAlignmentType_E::eRAT_Custom:
+			{
+				const auto &customAlign = renderAlignInfo.alignInfo.custom;
+				for (auto seeker : seekers_)
+				{
+					auto alignItr = customAlign->idxBySourceName.find(seeker->getDataSourceName());
+					if (alignItr != customAlign->idxBySourceName.end())
+					{
+						seeker->seekToIdx(alignItr->second);
+					}
+				}
+				break;
+			}
+			case gpo::RenderAlignmentType_E::eRAT_Lap:
+			{
+				const auto &lapAlign = renderAlignInfo.alignInfo.lap;
+				if (lapAlign->side == gpo::ElementSide_E::eES_Entry)
+				{
+					seekAllToLapEntry(lapAlign->lap);
+				}
+				else
+				{
+					seekAllToLapExit(lapAlign->lap);
+				}
+				break;
+			}
+			case gpo::RenderAlignmentType_E::eRAT_None:
+				seekAllToIdx(0);
+				break;
+			default:
+				printf("RenderAlignmentType_E (%d) is not supported!\n", (int)renderAlignInfo.type);
+				break;
+		}
+	}
+
+	void
 	GroupedSeeker::seekAllToIdx(
 		size_t idx)
 	{
@@ -133,6 +174,26 @@ namespace gpo
 		for (auto &seeker : seekers_)
 		{
 			seeker->seekRelative(amount,forward);
+		}
+	}
+
+	void
+	GroupedSeeker::seekAllRelativeTime(
+		double offset_secs)
+	{
+		auto limits = relativeSeekLimitsTime();
+		if (offset_secs > 0.0 && offset_secs > limits.second)
+		{
+			offset_secs = limits.second;
+		}
+		else if (offset_secs < 0.0 && offset_secs < limits.first)
+		{
+			offset_secs = limits.first;
+		}
+
+		for (auto &seeker : seekers_)
+		{
+			seeker->seekRelativeTime(offset_secs);
 		}
 	}
 
@@ -209,5 +270,29 @@ namespace gpo
 			limits.second = std::min(limits.second, (seeker->size() - seeker->seekedIdx() - 1));
 		}
 		return limits;
+	}
+
+	std::pair<double, double>
+	GroupedSeeker::relativeSeekLimitsTime() const
+	{
+		if (seekers_.empty())
+		{
+			return {0.0,0.0};
+		}
+
+		std::pair<double,double> timeLimits;
+		timeLimits.first = std::numeric_limits<decltype(timeLimits.first)>::max();
+		timeLimits.second = std::numeric_limits<decltype(timeLimits.second)>::min();
+		auto limits = relativeSeekLimits();
+		for (auto &seeker : seekers_)
+		{
+			const auto seekedIdx = seeker->seekedIdx();
+			const auto currTime = seeker->getTimeAt(seekedIdx);
+			const auto backwardsTimeLimit = seeker->getTimeAt(seekedIdx - limits.first) - currTime;
+			const auto forwardsTimeLimit = seeker->getTimeAt(seekedIdx + limits.second) - currTime;
+			timeLimits.first = std::min(timeLimits.first,backwardsTimeLimit);
+			timeLimits.second = std::max(timeLimits.second,forwardsTimeLimit);
+		}
+		return timeLimits;
 	}
 }

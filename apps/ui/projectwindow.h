@@ -98,6 +98,9 @@ private:
     void
     updateCustomAlignmentTableValues();
 
+    gpo::RenderAlignmentInfo
+    getAlignmentInfoFromUI();
+
     void
     applyAlignmentToProject();
 
@@ -105,7 +108,8 @@ private:
     resetAlignmentFromProject();
 
     void
-    seekEngineToAlignment();
+    seekEngineToAlignment(
+            const gpo::RenderAlignmentInfo &renderAlignInfo);
 
     void
     render();

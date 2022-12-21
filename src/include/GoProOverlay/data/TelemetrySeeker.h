@@ -40,6 +40,10 @@ namespace gpo
 		seekRelative(
 			size_t amount,
 			bool forward);
+
+		void
+		seekRelativeTime(
+			double offset_secs);
 	
 		void
 		seekToTime(
@@ -61,6 +65,10 @@ namespace gpo
 
 		unsigned int
 		lapCount() const;
+
+		double
+		getTimeAt(
+			size_t idx) const;
 
 		std::pair<size_t, size_t>
 		getLapEntryExit(

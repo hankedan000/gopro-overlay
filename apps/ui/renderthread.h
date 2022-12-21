@@ -4,7 +4,7 @@
 #include <opencv2/opencv.hpp>
 #include <QThread>
 
-#include "GoProOverlay/graphics/RenderEngine.h"
+#include "GoProOverlay/data/RenderProject.h"
 
 class RenderThread : public QThread
 {
@@ -12,7 +12,7 @@ class RenderThread : public QThread
 
 public:
     RenderThread(
-            gpo::RenderEnginePtr engine,
+            gpo::RenderProject project,
             QString exportFile,
             double fps);
 
@@ -30,8 +30,9 @@ signals:
             qulonglong total);
 
 private:
-    gpo::RenderEnginePtr engine_;
+    gpo::RenderProject project_;
     cv::VideoWriter vWriter_;
+    double renderFPS_;
 
     bool stop_;
 

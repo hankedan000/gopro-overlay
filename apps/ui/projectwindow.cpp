@@ -137,7 +137,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     });
     connect(ui->previewAlignment_PushButton, &QPushButton::clicked, this, [this]{
         updateCustomAlignmentTableValues();
-        seekEngineToAlignment();
+        seekEngineToAlignment(getAlignmentInfoFromUI());
         render();
     });
     connect(ui->resetAlignment_PushButton, &QPushButton::clicked, this, [this]{
@@ -153,7 +153,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     connect(ui->exportButton, &QPushButton::clicked, this, [this]{
         auto engine = proj_.getEngine();
         rThread_ = new RenderThread(
-                    engine,
+                    proj_,
                     "render.mp4",
                     engine->getHighestFPS());
         connect(rThread_, &RenderThread::progressChanged, progressDialog_, &ProgressDialog::progressChanged);
@@ -188,7 +188,12 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         setProjectDirty(true);
     });
     connect(ui->jumpToLeadIn_ToolButton, &QToolButton::clicked, this, [this]{
-        printf("jump to lead-in not implemented\n");
+        auto engine = proj_.getEngine();
+        auto gSeeker = engine->getSeeker();
+        gSeeker->seekToAlignmentInfo(proj_.getAlignmentInfo());
+        auto leadIn = ui->leadIn_SpinBox->value();
+        gSeeker->seekAllRelativeTime(leadIn * -1.0);// -1 because lead-in is defined as seconds before alignment point
+        render();
     });
     connect(ui->leadOut_SpinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, [this](double value){
         proj_.setLeadOutSeconds(value);
@@ -564,7 +569,7 @@ ProjectWindow::updateAlignmentPane()
     }
 
     resetAlignmentFromProject();
-    seekEngineToAlignment();
+    seekEngineToAlignment(getAlignmentInfoFromUI());
 }
 
 void
@@ -583,9 +588,11 @@ ProjectWindow::updateCustomAlignmentTableValues()
     }
 }
 
-void
-ProjectWindow::applyAlignmentToProject()
+gpo::RenderAlignmentInfo
+ProjectWindow::getAlignmentInfoFromUI()
 {
+    gpo::RenderAlignmentInfo rai;
+
     if (ui->customAlignmentCheckBox->isChecked())
     {
         // handle custom alignment
@@ -599,9 +606,7 @@ ProjectWindow::applyAlignmentToProject()
             customAlignment.idxBySourceName[seeker->getDataSourceName()] = spinBox->value();
         }
 
-        gpo::RenderAlignmentInfo rai;
         rai.initFrom(customAlignment);
-        proj_.setAlignmentInfo(rai);
     }
     else
     {
@@ -614,11 +619,17 @@ ProjectWindow::applyAlignmentToProject()
             lapAlignment.side = gpo::ElementSide_E::eES_Exit;
         }
 
-        gpo::RenderAlignmentInfo rai;
         rai.initFrom(lapAlignment);
-        proj_.setAlignmentInfo(rai);
     }
 
+    return rai;
+}
+
+void
+ProjectWindow::applyAlignmentToProject()
+{
+    auto rai = getAlignmentInfoFromUI();
+    proj_.setAlignmentInfo(rai);
     setProjectDirty(true);
 }
 
@@ -662,26 +673,12 @@ ProjectWindow::resetAlignmentFromProject()
 }
 
 void
-ProjectWindow::seekEngineToAlignment()
+ProjectWindow::seekEngineToAlignment(
+        const gpo::RenderAlignmentInfo &renderAlignInfo)
 {
-    int lap = ui->lapSpinBox->value();
     auto engine = proj_.getEngine();
     auto gSeeker = engine->getSeeker();
-    if (lap > 0)
-    {
-        if (ui->entryRadio->isChecked())
-        {
-            gSeeker->seekAllToLapEntry(lap);
-        }
-        else
-        {
-            gSeeker->seekAllToLapExit(lap);
-        }
-    }
-    else
-    {
-        gSeeker->seekAllToIdx(0);
-    }
+    gSeeker->seekToAlignmentInfo(renderAlignInfo);
 }
 
 void

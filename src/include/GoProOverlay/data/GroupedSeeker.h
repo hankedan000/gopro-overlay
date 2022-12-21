@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 
+#include <GoProOverlay/data/RenderProject.h>
 #include "GoProOverlay/data/TelemetrySeeker.h"
 
 namespace gpo
@@ -43,6 +44,10 @@ namespace gpo
 			bool onlyIfAllHaveNext = true);
 
 		void
+		seekToAlignmentInfo(
+			const RenderAlignmentInfo &renderAlignInfo);
+
+		void
 		seekAllToIdx(
 			size_t idx);
 
@@ -50,6 +55,10 @@ namespace gpo
 		seekAllRelative(
 			size_t amount,
 			bool forward);
+
+		void
+		seekAllRelativeTime(
+			double offset_secs);
 
 		/**
 		 * @return
@@ -94,6 +103,14 @@ namespace gpo
 		 */
 		std::pair<size_t, size_t>
 		relativeSeekLimits() const;
+
+		/**
+		 * Same logical meaning as relativeSeekLimits(), but limits are in terms of time.
+		 * Intended to be used with the seekAllRelativeTime().
+		 * Note: returned times are signed, so the first will be negative.
+		 */
+		std::pair<double, double>
+		relativeSeekLimitsTime() const;
 
 	private:
 		std::vector<TelemetrySeekerPtr> seekers_;

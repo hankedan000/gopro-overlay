@@ -70,11 +70,11 @@ namespace gpo
 		{
 			if ((amount + seekedIdx_) < size())
 			{
-				seekedIdx_ = size() - 1;
+				seekedIdx_ += amount;
 			}
 			else
 			{
-				seekedIdx_ += amount;
+				seekedIdx_ = size() - 1;
 			}
 		}
 		else
@@ -86,6 +86,43 @@ namespace gpo
 			else
 			{
 				seekedIdx_ -= amount;
+			}
+		}
+	}
+
+	void
+	TelemetrySeeker::seekRelativeTime(
+		double offset_secs)
+	{
+		auto currTimeOffset = getTimeAt(seekedIdx_);
+		const auto targetTimeOffset = currTimeOffset + offset_secs;
+		const auto maxTimeOffset = getTimeAt(size() - 1);
+		if (offset_secs > 0.0)
+		{
+			if (targetTimeOffset < maxTimeOffset)
+			{
+				while (currTimeOffset < targetTimeOffset)
+				{
+					currTimeOffset = getTimeAt(++seekedIdx_);
+				}
+			}
+			else
+			{
+				seekedIdx_ = size() - 1;
+			}
+		}
+		else
+		{
+			if (targetTimeOffset <= 0.0)
+			{
+				seekedIdx_ = 0;
+			}
+			else
+			{
+				while (currTimeOffset > targetTimeOffset)
+				{
+					currTimeOffset = getTimeAt(--seekedIdx_);
+				}
 			}
 		}
 	}
@@ -127,6 +164,13 @@ namespace gpo
 	TelemetrySeeker::lapCount() const
 	{
 		return lapIndicesMap_.size();
+	}
+
+	double
+	TelemetrySeeker::getTimeAt(
+		size_t idx) const
+	{
+		return dataSrc_->telemSrc->at(idx).gpSamp.t_offset;
 	}
 
 	std::pair<size_t, size_t>
