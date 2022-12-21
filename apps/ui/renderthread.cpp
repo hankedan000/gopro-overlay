@@ -25,21 +25,11 @@ RenderThread::run()
 
     // seek to render alignment point first
     gSeeker->seekToAlignmentInfo(project_.getAlignmentInfo());
-
     // start render a little bit before the alignment point (lead-in)
-    const size_t LEAD_IN_FRAMES = renderFPS_ * project_.getLeadInSeconds();
-    auto seekLimits = gSeeker->relativeSeekLimits();
-    if (LEAD_IN_FRAMES < seekLimits.first)
-    {
-        gSeeker->seekAllRelative(LEAD_IN_FRAMES, false);
-    }
-    else// do the best we can do...
-    {
-        gSeeker->seekAllRelative(seekLimits.first, false);
-    }
+    gSeeker->seekAllRelativeTime(project_.getLeadInSeconds() * -1.0);// -1 to go backwards in time
 
     // get new limits after lead-in seeking
-    seekLimits = gSeeker->relativeSeekLimits();
+    auto seekLimits = gSeeker->relativeSeekLimits();
     qulonglong progress = 0;
     qulonglong total = seekLimits.second;
     while ( ! stop_ && progress < total)
