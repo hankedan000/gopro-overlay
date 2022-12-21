@@ -92,10 +92,14 @@ namespace gpo
 
 	void
 	TelemetrySeeker::seekRelativeTime(
-		double offset_secs)
+		double offset_secs,
+		double quanta_secs)
 	{
-		auto currTimeOffset = getTimeAt(seekedIdx_);
-		const auto targetTimeOffset = currTimeOffset + offset_secs;
+		auto quantize = [](double value, double quanta){
+			return std::round(value / quanta) * quanta;
+		};
+		auto currTimeOffset = quantize(getTimeAt(seekedIdx_),quanta_secs);
+		const auto targetTimeOffset = quantize(currTimeOffset + offset_secs,quanta_secs);
 		const auto maxTimeOffset = getTimeAt(size() - 1);
 		if (offset_secs > 0.0)
 		{
@@ -103,7 +107,7 @@ namespace gpo
 			{
 				while (currTimeOffset < targetTimeOffset)
 				{
-					currTimeOffset = getTimeAt(++seekedIdx_);
+					currTimeOffset = quantize(getTimeAt(++seekedIdx_),quanta_secs);
 				}
 			}
 			else
@@ -121,7 +125,7 @@ namespace gpo
 			{
 				while (currTimeOffset > targetTimeOffset)
 				{
-					currTimeOffset = getTimeAt(--seekedIdx_);
+					currTimeOffset = quantize(getTimeAt(--seekedIdx_),quanta_secs);
 				}
 			}
 		}

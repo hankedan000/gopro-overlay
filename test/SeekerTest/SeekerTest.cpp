@@ -157,6 +157,52 @@ SeekerTest::lapIndexLookup()
 	CPPUNIT_ASSERT_EQUAL(9UL, entryExit.second);
 }
 
+void
+SeekerTest::seekRelativeTime()
+{
+	const size_t PATH_LENGTH = 10;
+	gpo::TelemetrySamples tSamps;
+	tSamps.resize(PATH_LENGTH);
+	for (unsigned int i=0; i<PATH_LENGTH; i++)
+	{
+		auto &samp = tSamps.at(i);
+		samp.gpSamp.t_offset = 0.010 * i;
+		samp.gpSamp.gps.coord.lat = i;
+		samp.gpSamp.gps.coord.lon = 0;
+	}
+
+	// ----------------------------------------------
+
+	auto dataSrc = gpo::DataSource::makeDataFromTelemetry(tSamps);
+	auto seeker = dataSrc->seeker;
+
+	CPPUNIT_ASSERT_EQUAL(0UL, seeker->seekedIdx());
+
+	// seeking forward by 0.010s will bump us 1 index forward
+	seeker->seekRelativeTime(0.010);
+	CPPUNIT_ASSERT_EQUAL(1UL, seeker->seekedIdx());
+
+	// seeking by 0.0s should do nothing
+	seeker->seekRelativeTime(0.0);
+	CPPUNIT_ASSERT_EQUAL(1UL, seeker->seekedIdx());
+
+	// seek way past the end, and make sure seeker stops at limits
+	seeker->seekRelativeTime(1.1234);
+	CPPUNIT_ASSERT_EQUAL(9UL, seeker->seekedIdx());
+
+	// seek backwards by 2 steps
+	seeker->seekRelativeTime(-0.02);
+	CPPUNIT_ASSERT_EQUAL(7UL, seeker->seekedIdx());
+
+	// seek backwards by 1 step
+	seeker->seekRelativeTime(-0.01);
+	CPPUNIT_ASSERT_EQUAL(6UL, seeker->seekedIdx());
+
+	// seek way past the beginning, and make sure seeker stops at limits
+	seeker->seekRelativeTime(-1.1234);
+	CPPUNIT_ASSERT_EQUAL(0UL, seeker->seekedIdx());
+}
+
 int main()
 {
 	CppUnit::TextUi::TestRunner runner;

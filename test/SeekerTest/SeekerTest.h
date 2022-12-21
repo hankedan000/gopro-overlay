@@ -8,6 +8,7 @@ class SeekerTest : public CppUnit::TestFixture
 {
 	CPPUNIT_TEST_SUITE(SeekerTest);
 	CPPUNIT_TEST(lapIndexLookup);
+	CPPUNIT_TEST(seekRelativeTime);
 	CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -17,6 +18,7 @@ public:
 
 protected:
 	void lapIndexLookup();
+	void seekRelativeTime();
 
 private:
 

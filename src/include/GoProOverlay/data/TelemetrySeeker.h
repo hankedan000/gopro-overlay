@@ -43,7 +43,8 @@ namespace gpo
 
 		void
 		seekRelativeTime(
-			double offset_secs);
+			double offset_secs,
+			double quanta_secs = 0.0001);
 	
 		void
 		seekToTime(
