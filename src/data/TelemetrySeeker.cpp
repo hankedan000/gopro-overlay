@@ -11,6 +11,7 @@ namespace gpo
 	 : dataSrc_(dSrc)
 	 , seekedIdx_(0)
 	 , lapIndicesMap_()
+	 , rate_hz_(0.0)
 	{
 	}
 
@@ -171,6 +172,12 @@ namespace gpo
 	}
 
 	double
+	TelemetrySeeker::rateHz() const
+	{
+		return rate_hz_;
+	}
+
+	double
 	TelemetrySeeker::getTimeAt(
 		size_t idx) const
 	{
@@ -190,6 +197,13 @@ namespace gpo
 	TelemetrySeeker::analyze()
 	{
 		lapIndicesMap_.clear();
+
+		rate_hz_ = 0.0;
+		if (size() >= 2)
+		{
+			const auto cycles = size() - 1;
+			rate_hz_ = cycles / getTimeAt(cycles);
+		}
 
 		LapIndices li;
 		int prevLap = -1;

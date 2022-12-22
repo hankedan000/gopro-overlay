@@ -68,6 +68,9 @@ namespace gpo
 		lapCount() const;
 
 		double
+		rateHz() const;
+
+		double
 		getTimeAt(
 			size_t idx) const;
 
@@ -82,6 +85,7 @@ namespace gpo
 	private:
 		DataSourcePtr dataSrc_;
 		size_t seekedIdx_;
+		double rate_hz_;
 
 		struct LapIndices
 		{
