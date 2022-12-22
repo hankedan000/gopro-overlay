@@ -54,12 +54,14 @@ namespace gpo
 		{
 			delete track_;
 		}
-
 		track_ = track;
+
+		#pragma omp parallel for
 		for (size_t i=0; i<dsm_.sourceCount(); i++)
 		{
-			dsm_.getSource(i)->setDatumTrack(track);
+			dsm_.getSource(i)->setDatumTrack(track,true);// true - process immediately
 		}
+
 		for (size_t e=0; e<engine_->entityCount(); e++)
 		{
 			auto &entity = engine_->getEntity(e);
@@ -129,6 +131,7 @@ namespace gpo
 	void
 	RenderProject::reprocessDatumTrack()
 	{
+		#pragma omp parallel for
 		for (size_t i=0; i<dsm_.sourceCount(); i++)
 		{
 			dsm_.getSource(i)->reprocessDatumTrack();

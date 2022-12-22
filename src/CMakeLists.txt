@@ -38,6 +38,12 @@ target_link_libraries("${LIBNAME}"
 		${OpenCV_LIBS}
 		yaml-cpp)
 
+# optionally use OpenMP for parallel processing
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+	target_link_libraries("${LIBNAME}" PUBLIC OpenMP::OpenMP_CXX)
+endif()
+
 # build a list of public header files to install
 list(APPEND ${LIBNAME_ALL_UPPER}_PUBLIC_HEADERS
 )
