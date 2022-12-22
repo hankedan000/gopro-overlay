@@ -20,6 +20,7 @@ namespace gpo
 	 , pxPerDeg_(1.0)
 	 , trackThickness_px_(DEFAULT_TRACK_THICKNESS_RATIO * TRACK_MAP_RENDER_WIDTH)
 	 , dotRadius_px_(DEFAULT_DOT_RADIUS_RATIO * TRACK_MAP_RENDER_WIDTH)
+	 , dotColors_()
 	{
 	}
 
@@ -161,6 +162,14 @@ namespace gpo
 		YAML::Node node;
 		node["trackThickness_px"] = trackThickness_px_;
 		node["dotRadius_px"] = dotRadius_px_;
+
+		YAML::Node dotColorsNode;
+		for (auto color : dotColors_)
+		{
+			dotColorsNode.push_back(color);
+		}
+		node["dotColors"] = dotColorsNode;
+
 		return node;
 	}
 
@@ -170,6 +179,17 @@ namespace gpo
 	{
 		YAML_TO_FIELD(node,"trackThickness_px",trackThickness_px_);
 		YAML_TO_FIELD(node,"dotRadius_px",dotRadius_px_);
+
+		if (node["dotColors"])
+		{
+			auto dotColorsNode = node["dotColors"];
+			dotColors_.resize(dotColorsNode.size());
+			for (size_t dd=0; dd<dotColors_.size(); dd++)
+			{
+				dotColors_.at(dd) = dotColorsNode[dd].as<cv::Scalar>();
+			}
+		}
+
 		return true;
 	}
 
