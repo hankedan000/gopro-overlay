@@ -86,10 +86,7 @@ namespace gpo
 	}
 
 	void
-	FrictionCircleObject::render(
-		cv::Mat &intoImg,
-		int originX, int originY,
-		cv::Size renderSize)
+	FrictionCircleObject::render()
 	{
 		outlineImg_.copyTo(outImg_);
 		if ( ! requirementsMet())
@@ -132,9 +129,6 @@ namespace gpo
 					2);// thickness
 			}
 		}
-
-		// let base class perform its own rendering too
-		RenderedObject::render(intoImg,originX,originY,renderSize);
 	}
 
 	YAML::Node

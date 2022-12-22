@@ -45,10 +45,7 @@ namespace gpo
 	}
 
 	void
-	TrackMapObject::render(
-		cv::Mat &intoImg,
-		int originX, int originY,
-		cv::Size renderSize)
+	TrackMapObject::render()
 	{
 		outlineImg_.copyTo(outImg_);
 		if ( ! requirementsMet())
@@ -67,9 +64,6 @@ namespace gpo
 			auto dotPoint = coordToPoint(coord);
 			cv::circle(outImg_,dotPoint,dotRadius_px_,dotColors_.at(ss),cv::FILLED);
 		}
-
-		// render result into final image
-		RenderedObject::render(intoImg,originX,originY,renderSize);
 	}
 
 	void

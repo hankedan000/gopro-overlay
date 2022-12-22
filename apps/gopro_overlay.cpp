@@ -192,7 +192,8 @@ int main(int argc, char *argv[])
 
 		try
 		{
-			videoObject.render(rFrame,0,0,RENDERED_VIDEO_SIZE);
+			videoObject.render();
+			videoObject.drawInto(rFrame,0,0,RENDERED_VIDEO_SIZE);
 		}
 		catch (const std::runtime_error &re)
 		{
@@ -200,25 +201,30 @@ int main(int argc, char *argv[])
 			continue;
 		}
 
-		speedoObject.render(
+		speedoObject.render();
+		speedoObject.drawInto(
 			rFrame,
 			0,
 			rFrame.rows - speedoRenderSize.height,
 			speedoRenderSize);
 
-		frictionCircle.render(
+		frictionCircle.render();
+		frictionCircle.drawInto(
 			rFrame,
 			rFrame.cols - fcRenderSize.width,
 			rFrame.rows - fcRenderSize.height,
 			fcRenderSize);
 
-		trackMap.render(rFrame,0,0,tmRenderSize);
+		trackMap.render();
+		trackMap.drawInto(rFrame,0,0,tmRenderSize);
 
-		lapTimer.render(rFrame,rFrame.cols/2,0,ltRenderSize);
+		lapTimer.render();
+		lapTimer.drawInto(rFrame,rFrame.cols/2,0,ltRenderSize);
 
 		if (printoutObject.isVisible())
 		{
-			printoutObject.render(rFrame,0,rFrame.rows/2);
+			printoutObject.render();
+			printoutObject.drawInto(rFrame,0,rFrame.rows/2);
 		}
 
 		// write frame to video file

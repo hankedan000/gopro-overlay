@@ -38,13 +38,17 @@ namespace gpo
 
 		virtual
 		void
-		render(
+		render() override;
+
+		virtual
+		void
+		drawInto(
 			cv::Mat &intoImg,
 			int originX, int originY);
 
 		virtual
 		void
-		render(
+		drawInto(
 			cv::Mat &intoImg,
 			int originX, int originY,
 			cv::Size renderSize);

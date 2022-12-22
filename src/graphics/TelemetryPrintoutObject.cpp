@@ -40,18 +40,7 @@ namespace gpo
 	}
 
 	void
-	TelemetryPrintoutObject::render(
-		cv::Mat &intoImg,
-		int originX, int originY)
-	{
-		render(intoImg,originX,originY,outImg_.size());
-	}
-
-	void
-	TelemetryPrintoutObject::render(
-		cv::Mat &intoImg,
-		int originX, int originY,
-		cv::Size renderSize)
+	TelemetryPrintoutObject::render()
 	{
 		if ( ! requirementsMet())
 		{
@@ -113,8 +102,6 @@ namespace gpo
 			1.0,// font scale
 			fontColor_, //font color
 			1);// thickness
-
-		RenderedObject::render(intoImg,originX,originY,renderSize);
 	}
 
 	YAML::Node

@@ -21,15 +21,15 @@ namespace gpo
 	}
 
 	void
-	RenderedObject::render(
+    RenderedObject::drawInto(
 		cv::Mat &intoImg,
 		int originX, int originY)
 	{
-		render(intoImg,originX,originY,outImg_.size());
+        drawInto(intoImg,originX,originY,outImg_.size());
 	}
 
 	void
-	RenderedObject::render(
+    RenderedObject::drawInto(
 		cv::Mat &intoImg,
 		int originX, int originY,
 		cv::Size renderSize)

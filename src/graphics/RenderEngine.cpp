@@ -124,7 +124,8 @@ namespace gpo
 	{
 		rFrame_.setTo(cv::Scalar(0,0,0));// clear frame
 
-		// render all entities into frame
+		// render all entities. this can be done in parallel
+		#pragma omp parallel for num_threads(8)
 		for (const auto &ent : entities_)
 		{
 			if ( ! ent.rObj->isVisible())
@@ -134,7 +135,8 @@ namespace gpo
 
 			try
 			{
-				ent.rObj->render(rFrame_,ent.rPos.x, ent.rPos.y,ent.rSize);
+				ent.rObj->render();
+				ent.rObj->drawInto(rFrame_,ent.rPos.x, ent.rPos.y,ent.rSize);
 			}
 			catch (const std::exception &e)
 			{

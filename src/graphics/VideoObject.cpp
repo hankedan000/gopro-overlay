@@ -21,10 +21,7 @@ namespace gpo
 	}
 
 	void
-	VideoObject::render(
-		cv::Mat &intoImg,
-		int originX, int originY,
-		cv::Size renderSize)
+	VideoObject::render()
 	{
 		if ( ! requirementsMet())
 		{
@@ -38,7 +35,15 @@ namespace gpo
 		{
 			throw std::runtime_error("getFrame() failed on frameIdx " + std::to_string(frameIdx));
 		}
+		prevRenderedFrameIdx_ = frameIdx;
+	}
 
+	void
+    VideoObject::drawInto(
+		cv::Mat &intoImg,
+		int originX, int originY,
+		cv::Size renderSize)
+	{
 		cv::Mat *imgToRender = &outImg_;
 		if (renderSize.width != getNativeWidth() || renderSize.height != getNativeHeight())
 		{
@@ -55,7 +60,6 @@ namespace gpo
 		{
 			cv::rectangle(intoImg,roi,CV_RGB(255,255,255));
 		}
-		prevRenderedFrameIdx_ = frameIdx;
 	}
 
 	void

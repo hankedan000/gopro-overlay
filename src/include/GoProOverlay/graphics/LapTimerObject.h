@@ -19,10 +19,7 @@ namespace gpo
 
 		virtual
 		void
-		render(
-			cv::Mat &intoImg,
-			int originX, int originY,
-			cv::Size renderSize) override;
+		render() override;
 
 	protected:
 		virtual

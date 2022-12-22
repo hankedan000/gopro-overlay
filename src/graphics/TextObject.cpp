@@ -54,7 +54,13 @@ namespace gpo
 	}
 
 	void
-	TextObject::render(
+	TextObject::render()
+	{
+		// do no rendering. we draw text directly into the image in drawInto()
+	}
+
+	void
+	TextObject::drawInto(
 		cv::Mat &intoImg,
 		int originX, int originY)
 	{
@@ -69,12 +75,12 @@ namespace gpo
 	}
 
 	void
-	TextObject::render(
+	TextObject::drawInto(
 		cv::Mat &intoImg,
 		int originX, int originY,
 		cv::Size renderSize)
 	{
-		render(intoImg,originX,originY);
+		drawInto(intoImg,originX,originY);
 	}
 
 	YAML::Node

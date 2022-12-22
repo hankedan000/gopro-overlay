@@ -24,10 +24,7 @@ namespace gpo
 	}
 
 	void
-	SpeedometerObject::render(
-		cv::Mat &intoImg,
-		int originX, int originY,
-		cv::Size renderSize)
+	SpeedometerObject::render()
 	{
 		if ( ! requirementsMet())
 		{
@@ -50,9 +47,6 @@ namespace gpo
 			2.0 * 2,// font scale
 			RGBA_COLOR(2,155,250,255), // font color
 			2 * 2);// thickness
-
-		// let base class perform its own rendering too
-		RenderedObject::render(intoImg,originX,originY,renderSize);
 	}
 
 	YAML::Node

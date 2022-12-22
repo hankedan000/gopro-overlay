@@ -27,10 +27,7 @@ namespace gpo
 	}
 
 	void
-	LapTimerObject::render(
-		cv::Mat &intoImg,
-		int originX, int originY,
-		cv::Size renderSize)
+	LapTimerObject::render()
 	{
 		bgImg_.copyTo(outImg_);
 		if ( ! requirementsMet())
@@ -55,9 +52,6 @@ namespace gpo
 			2.0,// font scale
 			textColor_, //font color
 			2);// thickness
-
-		// let base class perform its own rendering too
-		RenderedObject::render(intoImg,originX,originY,renderSize);
 	}
 
 	YAML::Node
