@@ -31,6 +31,7 @@ signals:
 
 private:
     gpo::RenderProject project_;
+    QString exportFile_;
     cv::VideoWriter vWriter_;
     double renderFPS_;
 

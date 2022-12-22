@@ -160,9 +160,6 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
                     "render.mp4",
                     engine->getHighestFPS());
         connect(rThread_, &RenderThread::progressChanged, progressDialog_, &ProgressDialog::progressChanged);
-        connect(rThread_, &RenderThread::progressChanged, this, [this](qulonglong progress, qulonglong total){
-            printf("progress: %lld/%lld\n",progress,total);
-        });
         connect(rThread_, &RenderThread::finished, this, [this]{
             printf("render finished!\n");
             ui->exportButton->setVisible(true);
