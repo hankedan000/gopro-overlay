@@ -35,6 +35,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     renderEntityPropertiesTab_(new RenderEntityPropertiesTab(this))
 {
     ui->setupUi(this);
+    renderEntityPropertiesTab_->setProject(&proj_);
     this->setWindowTitle(WINDOW_TITLE);
     ui->stopButton->setVisible(false);
     ui->customAlignmentTableWidget->hide();

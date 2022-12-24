@@ -3,9 +3,11 @@
 
 #include "GoProOverlay/graphics/FrictionCircleObject.h"
 
-RenderEntityPropertiesTab::RenderEntityPropertiesTab(QWidget *parent) :
+RenderEntityPropertiesTab::RenderEntityPropertiesTab(
+        QWidget *parent) :
     QTabWidget(parent),
     ui(new Ui::RenderEntityPropertiesTab),
+    project_(nullptr),
     entity_(nullptr)
 {
     ui->setupUi(this);
@@ -81,6 +83,13 @@ RenderEntityPropertiesTab::~RenderEntityPropertiesTab()
 }
 
 void
+RenderEntityPropertiesTab::setProject(
+        gpo::RenderProject *project)
+{
+    project_ = project;
+}
+
+void
 RenderEntityPropertiesTab::setEntity(
         gpo::RenderEngine::RenderedEntity *entity)
 {
@@ -112,7 +121,80 @@ RenderEntityPropertiesTab::setEntity(
 
         // --------------------------------
 
-        // RenderObject UI elements
+        // common RenderedObject UI elements
+        QStringList videoSourceNames;
+        QStringList telemetrySourceNames;
+        for (size_t ss=0; project_ != nullptr && ss<project_->dataSourceManager().sourceCount(); ss++)
+        {
+            auto dataSrc = project_->dataSourceManager().getSource(ss);
+            const auto sourceName = dataSrc->getSourceName();
+            if (dataSrc->hasVideo())
+            {
+                videoSourceNames.append(sourceName.c_str());
+            }
+            if (dataSrc->hasTelemetry())
+            {
+                telemetrySourceNames.append(sourceName.c_str());
+            }
+        }
+
+        auto sourceReqs = entity->rObj->dataSourceRequirements();
+        size_t minVideoSources = sourceReqs.numVideoSources;
+        if (minVideoSources == gpo::DSR_ONE_OR_MORE)
+        {
+            minVideoSources = std::max(0UL,entity->rObj->numVideoSources());
+        }
+        else if (minVideoSources == gpo::DSR_ONE_OR_MORE)
+        {
+            minVideoSources = std::max(1UL,entity->rObj->numVideoSources());
+        }
+        size_t minTelemSources = sourceReqs.numTelemetrySources;
+        if (minTelemSources == gpo::DSR_ONE_OR_MORE)
+        {
+            minTelemSources = std::max(0UL,entity->rObj->numTelemetrySources());
+        }
+        else if (minTelemSources == gpo::DSR_ONE_OR_MORE)
+        {
+            minTelemSources = std::max(1UL,entity->rObj->numTelemetrySources());
+        }
+
+        auto videoTable = ui->videoSources_TableView;
+        videoTable->setRowCount(minVideoSources);
+        videoTable->setColumnCount(1);
+        for (size_t vv=0; vv<minVideoSources; vv++)
+        {
+            std::string selectedSourceName = "";// empty means not set yet
+            if (vv < entity->rObj->numVideoSources())
+            {
+                selectedSourceName = entity->rObj->getVideoSource(vv)->getDataSourceName();
+            }
+
+            QComboBox *videoComboBox = new QComboBox(videoTable);
+            videoComboBox->addItems(videoSourceNames);
+            videoComboBox->setCurrentText(selectedSourceName.c_str());
+            videoTable->setCellWidget(vv,0,videoComboBox);
+        }
+
+        auto telemetryTable = ui->telemetrySources_TableView;
+        telemetryTable->setRowCount(minTelemSources);
+        telemetryTable->setColumnCount(1);
+        for (size_t tt=0; tt<minTelemSources; tt++)
+        {
+            std::string selectedSourceName = "";// empty means not set yet
+            if (tt < entity->rObj->numTelemetrySources())
+            {
+                selectedSourceName = entity->rObj->getTelemetrySource(tt)->getDataSourceName();
+            }
+
+            QComboBox *telemetryComboBox = new QComboBox(telemetryTable);
+            telemetryComboBox->addItems(telemetrySourceNames);
+            telemetryComboBox->setCurrentText(selectedSourceName.c_str());
+            telemetryTable->setCellWidget(tt,0,telemetryComboBox);
+        }
+
+        // --------------------------------
+
+        // RenderedObject subclass UI elements
         std::string objectTypeName = entity->rObj->typeName();
         if (objectTypeName == "FrictionCircleObject")
         {

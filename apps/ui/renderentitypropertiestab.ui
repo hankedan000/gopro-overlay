@@ -17,7 +17,7 @@
    <enum>QTabWidget::West</enum>
   </property>
   <property name="currentIndex">
-   <number>0</number>
+   <number>1</number>
   </property>
   <widget class="QWidget" name="entityTab">
    <attribute name="title">
@@ -252,13 +252,89 @@
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>780</width>
-         <height>595</height>
+         <width>766</width>
+         <height>619</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout_3">
-        <item row="0" column="0">
+        <item row="2" column="0">
          <layout class="QVBoxLayout" name="verticalLayout_5">
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QGroupBox" name="dataSource_GroupBox">
+            <property name="title">
+             <string>Data Sources</string>
+            </property>
+            <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1,1,1">
+             <item>
+              <layout class="QVBoxLayout" name="verticalLayout_3">
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="label_12">
+                 <property name="text">
+                  <string>Video</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QTableWidget" name="videoSources_TableView"/>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QVBoxLayout" name="verticalLayout_7">
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="label_13">
+                 <property name="text">
+                  <string>Telemetry</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QTableWidget" name="telemetrySources_TableView"/>
+               </item>
+              </layout>
+             </item>
+             <item>
+              <layout class="QVBoxLayout" name="verticalLayout_6">
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="label_14">
+                 <property name="text">
+                  <string>Track</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="track_ComboBox"/>
+               </item>
+               <item>
+                <spacer name="verticalSpacer_3">
+                 <property name="orientation">
+                  <enum>Qt::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>20</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
+          </item>
           <item>
            <widget class="QGroupBox" name="frictionCircle_GroupBox">
             <property name="title">

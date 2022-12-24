@@ -1,8 +1,10 @@
 #ifndef RENDERENTITYPROPERTIESTAB_H
 #define RENDERENTITYPROPERTIESTAB_H
 
+#include <QStandardItemModel>
 #include <QTabWidget>
 
+#include <GoProOverlay/data/RenderProject.h>
 #include <GoProOverlay/graphics/RenderEngine.h>
 
 namespace Ui {
@@ -14,8 +16,13 @@ class RenderEntityPropertiesTab : public QTabWidget
     Q_OBJECT
 
 public:
-    explicit RenderEntityPropertiesTab(QWidget *parent = nullptr);
+    explicit RenderEntityPropertiesTab(
+            QWidget *parent = nullptr);
     ~RenderEntityPropertiesTab();
+
+    void
+    setProject(
+            gpo::RenderProject *project);
 
     void
     setEntity(
@@ -27,6 +34,8 @@ signals:
 
 private:
     Ui::RenderEntityPropertiesTab *ui;
+
+    gpo::RenderProject *project_;
 
     gpo::RenderEngine::RenderedEntity *entity_;
 
