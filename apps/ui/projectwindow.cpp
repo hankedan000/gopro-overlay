@@ -102,6 +102,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
 
     // connect buttons
     connect(ui->topBottomWizard, &QPushButton::pressed, this, [this]{reWizTopBot_->show();});
+    connect(ui->singleVideoWizard, &QPushButton::pressed, this, [this]{printf("single video wizard not implemented!\n");});
     connect(ui->editTrackButton, &QPushButton::pressed, this, [this]{trackEditor_->show();});
     connect(ui->newTrackButton, &QPushButton::pressed, this, [this]{
         if (proj_.hasTrack())
