@@ -125,7 +125,7 @@ namespace gpo
 		rFrame_.setTo(cv::Scalar(0,0,0));// clear frame
 
 		// render all entities. this can be done in parallel
-		#pragma omp parallel for num_threads(8)
+		#pragma omp parallel for
 		for (const auto &ent : entities_)
 		{
 			if ( ! ent.rObj->isVisible())
@@ -136,6 +136,30 @@ namespace gpo
 			try
 			{
 				ent.rObj->render();
+			}
+			catch (const std::exception &e)
+			{
+				printf("caught std::exception while processing rObj<%s>. what() = %s\n",
+					ent.rObj->typeName().c_str(),
+					e.what());
+			}
+			catch (...)
+			{
+				printf("caught unknown exception while processing rObj<%s>.\n",
+					ent.rObj->typeName().c_str());
+			}
+		}
+
+		// draw all entities into frame
+		for (const auto &ent : entities_)
+		{
+			if ( ! ent.rObj->isVisible())
+			{
+				continue;
+			}
+
+			try
+			{
 				ent.rObj->drawInto(rFrame_,ent.rPos.x, ent.rPos.y,ent.rSize);
 			}
 			catch (const std::exception &e)
@@ -404,6 +428,82 @@ namespace gpo
 		botTextRE.rObj = botTextObject;
 		botTextRE.rPos = cv::Point(RENDERED_VIDEO_SIZE.width - botVideoRE.rSize.width, topVideoRE.rSize.height + 50);
 		engine->addEntity(botTextRE);
+
+		return engine;
+	}
+
+	RenderEnginePtr
+	RenderEngineFactory::singleVideo(
+		gpo::DataSourcePtr data)
+	{
+		const auto RENDERED_VIDEO_SIZE = data->videoSrc->frameSize();
+		const double F_CIRCLE_HISTORY_SEC = 1.0;
+		double fps = data->videoSrc->fps();
+		int fcTailLength = F_CIRCLE_HISTORY_SEC * fps;
+
+		auto engine = RenderEnginePtr(new RenderEngine);
+		engine->setRenderSize(RENDERED_VIDEO_SIZE);
+
+		auto videoObject = new VideoObject();
+		videoObject->addVideoSource(data->videoSrc);
+		RenderEngine::RenderedEntity videoRE;
+		videoRE.name = "video";
+		videoRE.rObj = videoObject;
+		videoRE.rSize = RENDERED_VIDEO_SIZE;
+		videoRE.rPos = cv::Point(0, 0);
+		engine->addEntity(videoRE);
+
+		auto track = data->getDatumTrack();
+		if (track)
+		{
+			auto trackMap = new TrackMapObject();
+			trackMap->addTelemetrySource(data->telemSrc);
+			trackMap->setTrack(track);
+			RenderEngine::RenderedEntity trackMapRE;
+			trackMapRE.name = "trackmap";
+			trackMapRE.rObj = trackMap;
+			trackMapRE.rSize = trackMapRE.rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
+			trackMapRE.rPos = cv::Point(0, 0);
+			engine->addEntity(trackMapRE);
+		}
+
+		auto frictionCircle = new FrictionCircleObject();
+		frictionCircle->setTailLength(fcTailLength);
+		frictionCircle->addTelemetrySource(data->telemSrc);
+		RenderEngine::RenderedEntity frictionCircleRE;
+		frictionCircleRE.name = "frictionCircle";
+		frictionCircleRE.rObj = frictionCircle;
+		frictionCircleRE.rSize = frictionCircleRE.rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
+		frictionCircleRE.rPos = RENDERED_VIDEO_SIZE - frictionCircleRE.rSize;
+		engine->addEntity(frictionCircleRE);
+
+		auto speedoObject = new SpeedometerObject();
+		speedoObject->addTelemetrySource(data->telemSrc);
+		RenderEngine::RenderedEntity speedoRE;
+		speedoRE.name = "speedometer";
+		speedoRE.rObj = speedoObject;
+		speedoRE.rSize = speedoRE.rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 6.0);
+		speedoRE.rPos = cv::Size(0, RENDERED_VIDEO_SIZE.height - speedoRE.rSize.height);
+		engine->addEntity(speedoRE);
+
+		auto lapTimer = new LapTimerObject();
+		lapTimer->addTelemetrySource(data->telemSrc);
+		RenderEngine::RenderedEntity timerRE;
+		timerRE.name = "lapTimer";
+		timerRE.rObj = lapTimer;
+		timerRE.rSize = timerRE.rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 10.0);
+		timerRE.rPos = cv::Size(RENDERED_VIDEO_SIZE.width / 2.0 - timerRE.rSize.width / 2.0, 0);
+		engine->addEntity(timerRE);
+
+		auto printoutObject = new TelemetryPrintoutObject();
+		printoutObject->addTelemetrySource(data->telemSrc);
+		printoutObject->setVisible(false);
+		RenderEngine::RenderedEntity printoutRE;
+		printoutRE.name = "topPrintout";
+		printoutRE.rObj = printoutObject;
+		printoutRE.rSize = printoutRE.rObj->getNativeSize();
+		printoutRE.rPos = videoRE.rPos;
+		engine->addEntity(printoutRE);
 
 		return engine;
 	}

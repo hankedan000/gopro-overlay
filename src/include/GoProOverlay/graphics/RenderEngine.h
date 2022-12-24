@@ -90,6 +90,11 @@ namespace gpo
 		topBottomAB_Compare(
 			gpo::DataSourcePtr topData,
 			gpo::DataSourcePtr botData);
+
+		static
+		RenderEnginePtr
+		singleVideo(
+			gpo::DataSourcePtr data);
 	};
 
 }

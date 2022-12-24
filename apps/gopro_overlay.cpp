@@ -7,6 +7,7 @@
 #include "GoProOverlay/data/DataSource.h"
 #include "GoProOverlay/graphics/FrictionCircleObject.h"
 #include "GoProOverlay/graphics/LapTimerObject.h"
+#include "GoProOverlay/graphics/RenderEngine.h"
 #include "GoProOverlay/graphics/SpeedometerObject.h"
 #include "GoProOverlay/graphics/TelemetryPrintoutObject.h"
 #include "GoProOverlay/graphics/TrackMapObject.h"
@@ -128,52 +129,34 @@ int main(int argc, char *argv[])
 	auto track = data->makeTrack();
 	data->setDatumTrack(track);
 
+	auto engine = gpo::RenderEngineFactory::singleVideo(data);
+
 	const auto RENDERED_VIDEO_SIZE = data->videoSrc->frameSize();
 	const auto PREVIEW_VIDEO_SIZE = cv::Size(1280,720);
-	const double F_CIRCLE_HISTORY_SEC = 1.0;
 	double frameCount = data->videoSrc->frameCount();
 	double fps = data->videoSrc->fps();
 	double frameTime_sec = 1.0 / fps;
 	double frameTime_usec = 1.0e6 / fps;
-	int fcTailLength = F_CIRCLE_HISTORY_SEC * fps;
 	int frameTime_ms = std::round(1.0e3 / fps);
 
-	cv::Mat rFrame(RENDERED_VIDEO_SIZE,CV_8UC3);// rendered frame
 	cv::Mat pFrame;// preview frame
 	gpo::VideoObject videoObject;
-	videoObject.addVideoSource(data->videoSrc);
-	gpo::TrackMapObject trackMap;
-	trackMap.addTelemetrySource(data->telemSrc);
-	trackMap.setTrack(track);
-	cv::Size tmRenderSize = trackMap.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
-	gpo::FrictionCircleObject frictionCircle;
-	cv::Size fcRenderSize = frictionCircle.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
-	frictionCircle.setTailLength(fcTailLength);
-	frictionCircle.addTelemetrySource(data->telemSrc);
-	gpo::LapTimerObject lapTimer;
-	cv::Size ltRenderSize = lapTimer.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 10.0);
-	lapTimer.addTelemetrySource(data->telemSrc);
-	gpo::TelemetryPrintoutObject printoutObject;
-	printoutObject.addTelemetrySource(data->telemSrc);
-	printoutObject.setVisible(opts.renderDebugInfo);
-	gpo::SpeedometerObject speedoObject;
-	speedoObject.addTelemetrySource(data->telemSrc);
-	cv::Size speedoRenderSize = speedoObject.getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 6.0);
+
 	cv::VideoWriter vWriter(
 		opts.outputFile,
 		cv::VideoWriter::fourcc('M','P','4','V'),
 		fps,
 		RENDERED_VIDEO_SIZE,
 		true);
-	char tmpStr[1024];
-	double timeOffset_sec = 0.0;
 	tqdm bar;// for render progress
 	uint64_t prevFrameStart_usec = 0;
 	int64_t frameTimeErr_usec = 0;// (+) means measured frame time was longer than targeted FPS
 	size_t initFrameIdx = 0;
-	for (size_t frameIdx=initFrameIdx; ! stop_app && frameIdx<frameCount; frameIdx++)
+	size_t netFramesToRender = frameCount - initFrameIdx;
+	data->seeker->seekToIdx(initFrameIdx);
+	for (size_t ff=0; ! stop_app && ff<netFramesToRender; ff++)
 	{
-		data->seeker->seekToIdx(frameIdx);
+		data->seeker->next();
 		uint64_t frameStart_usec = getTicks_usec();
 		if (prevFrameStart_usec != 0)
 		{
@@ -185,55 +168,18 @@ int main(int argc, char *argv[])
 		// show render progress
 		if ( ! opts.showPreview)
 		{
-			auto total = frameCount - initFrameIdx;
-			auto curr = frameIdx - initFrameIdx;
-			bar.progress(curr,total);
+			bar.progress(ff,netFramesToRender);
 		}
 
-		try
-		{
-			videoObject.render();
-			videoObject.drawInto(rFrame,0,0,RENDERED_VIDEO_SIZE);
-		}
-		catch (const std::runtime_error &re)
-		{
-			printf("caught std::runtime_error on videoObject.render().\n what(): %s\n",re.what());
-			continue;
-		}
-
-		speedoObject.render();
-		speedoObject.drawInto(
-			rFrame,
-			0,
-			rFrame.rows - speedoRenderSize.height,
-			speedoRenderSize);
-
-		frictionCircle.render();
-		frictionCircle.drawInto(
-			rFrame,
-			rFrame.cols - fcRenderSize.width,
-			rFrame.rows - fcRenderSize.height,
-			fcRenderSize);
-
-		trackMap.render();
-		trackMap.drawInto(rFrame,0,0,tmRenderSize);
-
-		lapTimer.render();
-		lapTimer.drawInto(rFrame,rFrame.cols/2,0,ltRenderSize);
-
-		if (printoutObject.isVisible())
-		{
-			printoutObject.render();
-			printoutObject.drawInto(rFrame,0,rFrame.rows/2);
-		}
+		engine->render();
 
 		// write frame to video file
-		vWriter.write(rFrame);
+		vWriter.write(engine->getFrame());
 
 		// Display the frame live
 		if (opts.showPreview)
 		{
-			cv::resize(rFrame,pFrame,PREVIEW_VIDEO_SIZE);
+			cv::resize(engine->getFrame(),pFrame,PREVIEW_VIDEO_SIZE);
 			cv::imshow("Preview", pFrame);
 			double processingTime_usec = getTicks_usec() - frameStart_usec;
 			int waitTime_ms = std::round((frameTime_usec - processingTime_usec) / 1000.0);
@@ -255,7 +201,6 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		timeOffset_sec += frameTime_sec;
 		prevFrameStart_usec = frameStart_usec;
 	}
 
