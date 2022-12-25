@@ -9,6 +9,7 @@
 #include <GoProOverlay/data/RenderProject.h>
 
 #include "progressdialog.h"
+#include "RenderEngineWizardSingleVideo.h"
 #include "renderenginewizard_topbottom.h"
 #include "renderentitypropertiestab.h"
 #include "renderthread.h"
@@ -161,6 +162,8 @@ private:
 
     TrackEditor *trackEditor_;
     ScrubbableVideo *previewWindow_;
+
+    RenderEngineWizardSingleVideo *reWizSingle_;
     RenderEngineWizard_TopBottom *reWizTopBot_;
 
     // set true if anything in the project has been modified and could use

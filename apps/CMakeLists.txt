@@ -31,7 +31,7 @@ add_executable(TrackEditorApp
 
 target_link_libraries(TrackEditorApp PUBLIC
 	GoProOverlay
-	MyWidgets
+        AppWidgets
 )
 
 add_executable(ProjectApp
@@ -40,5 +40,5 @@ add_executable(ProjectApp
 
 target_link_libraries(ProjectApp PUBLIC
 	GoProOverlay
-	MyWidgets
+        AppWidgets
 )

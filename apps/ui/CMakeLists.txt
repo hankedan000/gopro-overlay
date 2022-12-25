@@ -11,6 +11,9 @@ set(QT_WIDGETS_SOURCES
         projectwindow.h
         projectwindow.cpp
         projectwindow.ui
+        RenderEngineWizardSingleVideo.h
+        RenderEngineWizardSingleVideo.cpp
+        RenderEngineWizardSingleVideo.ui
         renderenginewizard_topbottom.h
         renderenginewizard_topbottom.cpp
         renderenginewizard_topbottom.ui
@@ -30,15 +33,15 @@ set(QT_WIDGETS_SOURCES
 	trackview.ui
 )
 
-add_library(MyWidgets STATIC
+add_library(AppWidgets STATIC
 	${QT_WIDGETS_SOURCES}
 )
 
-target_include_directories(MyWidgets PUBLIC
+target_include_directories(AppWidgets PUBLIC
 	"${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
-target_link_libraries(MyWidgets PUBLIC
+target_link_libraries(AppWidgets PUBLIC
 	Qt${QT_VERSION_MAJOR}::Widgets
 	GoProOverlay
 )

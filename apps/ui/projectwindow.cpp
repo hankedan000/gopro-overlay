@@ -29,6 +29,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     entitiesTableModel_(new QStandardItemModel(0,3,this)),
     trackEditor_(new TrackEditor(this)),
     previewWindow_(new ScrubbableVideo()),
+    reWizSingle_(new RenderEngineWizardSingleVideo(this,&proj_)),
     reWizTopBot_(new RenderEngineWizard_TopBottom(this,&proj_)),
     projectDirty_(false),
     progressDialog_(new ProgressDialog(this)),
@@ -102,7 +103,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
 
     // connect buttons
     connect(ui->topBottomWizard, &QPushButton::pressed, this, [this]{reWizTopBot_->show();});
-    connect(ui->singleVideoWizard, &QPushButton::pressed, this, [this]{printf("single video wizard not implemented!\n");});
+    connect(ui->singleVideoWizard, &QPushButton::pressed, this, [this]{reWizSingle_->show();});
     connect(ui->editTrackButton, &QPushButton::pressed, this, [this]{trackEditor_->show();});
     connect(ui->newTrackButton, &QPushButton::pressed, this, [this]{
         if (proj_.hasTrack())
@@ -207,7 +208,8 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         printf("jump to lead-out not implemented\n");
     });
 
-    // connect engines wizards.
+    // connect engine wizards
+    connect(reWizSingle_, &RenderEngineWizardSingleVideo::created, this, &ProjectWindow::onEngineCreated);
     connect(reWizTopBot_, &RenderEngineWizard_TopBottom::created, this, &ProjectWindow::onEngineCreated);
 
     connect(trackEditor_, &TrackEditor::trackModified, this, [this]{

@@ -499,7 +499,7 @@ namespace gpo
 		printoutObject->addTelemetrySource(data->telemSrc);
 		printoutObject->setVisible(false);
 		RenderEngine::RenderedEntity printoutRE;
-		printoutRE.name = "topPrintout";
+		printoutRE.name = "printout";
 		printoutRE.rObj = printoutObject;
 		printoutRE.rSize = printoutRE.rObj->getNativeSize();
 		printoutRE.rPos = videoRE.rPos;
