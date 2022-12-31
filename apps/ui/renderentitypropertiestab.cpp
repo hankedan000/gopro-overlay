@@ -139,29 +139,15 @@ RenderEntityPropertiesTab::setEntity(
         }
 
         auto sourceReqs = entity->rObj->dataSourceRequirements();
-        size_t minVideoSources = sourceReqs.numVideoSources;
-        if (minVideoSources == gpo::DSR_ONE_OR_MORE)
-        {
-            minVideoSources = std::max(0UL,entity->rObj->numVideoSources());
-        }
-        else if (minVideoSources == gpo::DSR_ONE_OR_MORE)
-        {
-            minVideoSources = std::max(1UL,entity->rObj->numVideoSources());
-        }
-        size_t minTelemSources = sourceReqs.numTelemetrySources;
-        if (minTelemSources == gpo::DSR_ONE_OR_MORE)
-        {
-            minTelemSources = std::max(0UL,entity->rObj->numTelemetrySources());
-        }
-        else if (minTelemSources == gpo::DSR_ONE_OR_MORE)
-        {
-            minTelemSources = std::max(1UL,entity->rObj->numTelemetrySources());
-        }
+        size_t videoSlotsToPopulate = std::max((size_t)sourceReqs.minVideos(),entity->rObj->numVideoSources());
+        size_t telemSlotsToPopulate = std::max((size_t)sourceReqs.minTelemetry(),entity->rObj->numTelemetrySources());
 
         auto videoTable = ui->videoSources_TableView;
-        videoTable->setRowCount(minVideoSources);
+        videoTable->setRowCount(videoSlotsToPopulate);
         videoTable->setColumnCount(1);
-        for (size_t vv=0; vv<minVideoSources; vv++)
+        videoTable->horizontalHeader()->hide();
+        videoTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+        for (size_t vv=0; vv<videoSlotsToPopulate; vv++)
         {
             std::string selectedSourceName = "";// empty means not set yet
             if (vv < entity->rObj->numVideoSources())
@@ -176,9 +162,12 @@ RenderEntityPropertiesTab::setEntity(
         }
 
         auto telemetryTable = ui->telemetrySources_TableView;
-        telemetryTable->setRowCount(minTelemSources);
+        telemetryTable->setRowCount(telemSlotsToPopulate);
         telemetryTable->setColumnCount(1);
-        for (size_t tt=0; tt<minTelemSources; tt++)
+        telemetryTable->horizontalHeader()->hide();
+        telemetryTable->horizontalHeader()->stretchLastSection();
+        telemetryTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+        for (size_t tt=0; tt<telemSlotsToPopulate; tt++)
         {
             std::string selectedSourceName = "";// empty means not set yet
             if (tt < entity->rObj->numTelemetrySources())

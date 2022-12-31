@@ -22,6 +22,7 @@ namespace gpo
 
 	struct DataSourceRequirements
 	{
+	public:
 		DataSourceRequirements()
 		 : DataSourceRequirements(0,0,0)
 		{}
@@ -31,6 +32,36 @@ namespace gpo
 		 , numTelemetrySources(nts)
 		 , numTracks(nt)
 		{}
+
+		unsigned int
+		minVideos() const
+		{
+			return minFromDSR(numVideoSources);
+		}
+
+		unsigned int
+		minTelemetry() const
+		{
+			return minFromDSR(numTelemetrySources);
+		}
+
+		unsigned int
+		minTracks() const
+		{
+			return minFromDSR(numTracks);
+		}
+
+		static
+		unsigned int
+		minFromDSR(
+			int count)
+		{
+			if (count == DSR_ZERO_OR_MORE)
+				return 0;
+			else if (count == DSR_ONE_OR_MORE)
+				return 1;
+			return count;
+		}
 
 		// these can also be set to 'DSR_*' constants
 		int numVideoSources;
