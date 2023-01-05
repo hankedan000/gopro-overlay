@@ -110,8 +110,8 @@ namespace gpo
 			const auto &accl = telemSrc->at(i).gpSamp.accl;
 
 			auto drawPoint = cv::Point(
-				(accl.x / -9.8) * radius_px_ + center_.x,
-				(accl.z / 9.8) * radius_px_ + center_.y);
+				(accl.x / 9.8) * radius_px_ + center_.x,
+				(accl.y / -9.8) * radius_px_ + center_.y);
 			cv::circle(outImg_,drawPoint,dotRadius,color,cv::FILLED);
 
 			if (isLast)
