@@ -116,7 +116,7 @@ namespace gpo
 
 			if (isLast)
 			{
-				double netG = std::sqrt((accl.x*accl.x) + (accl.z*accl.z)) / 9.8;
+				double netG = std::sqrt((accl.x*accl.x) + (accl.y*accl.y)) / 9.8;
 				char tmpStr[1024];
 				sprintf(tmpStr,"%.1fg",netG);
 				cv::putText(
