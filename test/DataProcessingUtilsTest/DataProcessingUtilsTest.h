@@ -8,6 +8,7 @@ class DataProcessingUtilsTest : public CppUnit::TestFixture
 {
 	CPPUNIT_TEST_SUITE(DataProcessingUtilsTest);
 	CPPUNIT_TEST(trackTimes);
+	CPPUNIT_TEST(smoothMovingAvg);
 	CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -17,6 +18,7 @@ public:
 
 protected:
 	void trackTimes();
+	void smoothMovingAvg();
 
 private:
 

@@ -100,6 +100,112 @@ DataProcessingUtilsTest::trackTimes()
 	}
 }
 
+void
+DataProcessingUtilsTest::smoothMovingAvg()
+{
+	const size_t N = 10;
+	double dataA[N];
+	double dataB[N];
+
+	// window of 1 should do no averaging
+	dataA[0] = 0.0;
+	dataA[1] = 1.0;
+	dataA[2] = 2.0;
+	dataA[3] = 3.0;
+	dataA[4] = 4.0;
+	dataA[5] = 5.0;
+	dataA[6] = 6.0;
+	dataA[7] = 7.0;
+	dataA[8] = 8.0;
+	dataA[9] = 9.0;
+	utils::smoothMovingAvg<double>(dataA,dataB,N,sizeof(double),sizeof(double),1);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(0.000, dataB[0], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(1.000, dataB[1], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(2.000, dataB[2], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(3.000, dataB[3], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(4.000, dataB[4], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(5.000, dataB[5], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(6.000, dataB[6], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(7.000, dataB[7], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(8.000, dataB[8], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(9.000, dataB[9], 0.001);
+
+	// ----------------
+
+	// window of 3
+	dataA[0] = 0.0;// windowSum = 1.0,  windowSize = 2, mean = 0.500
+	dataA[1] = 1.0;// windowSum = 3.0,  windowSize = 3, mean = 1.000
+	dataA[2] = 2.0;// windowSum = 6.0,  windowSize = 3, mean = 2.000
+	dataA[3] = 3.0;// windowSum = 9.0,  windowSize = 3, mean = 3.000
+	dataA[4] = 4.0;// windowSum = 12.0, windowSize = 3, mean = 4.000
+	dataA[5] = 5.0;// windowSum = 15.0, windowSize = 3, mean = 5.000
+	dataA[6] = 6.0;// windowSum = 18.0, windowSize = 3, mean = 6.000
+	dataA[7] = 7.0;// windowSum = 21.0, windowSize = 3, mean = 7.000
+	dataA[8] = 8.0;// windowSum = 24.0, windowSize = 3, mean = 8.000
+	dataA[9] = 9.0;// windowSum = 17.0, windowSize = 2, mean = 8.500
+	utils::smoothMovingAvg<double>(dataA,dataB,N,sizeof(double),sizeof(double),3);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(0.500, dataB[0], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(1.000, dataB[1], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(2.000, dataB[2], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(3.000, dataB[3], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(4.000, dataB[4], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(5.000, dataB[5], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(6.000, dataB[6], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(7.000, dataB[7], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(8.000, dataB[8], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(8.500, dataB[9], 0.001);
+
+	// ----------------
+
+	// window of 5
+	dataA[0] = 0.3;// windowSum = 1.4,  windowSize = 3, mean = 0.466
+	dataA[1] = 0.5;// windowSum = 2.3,  windowSize = 4, mean = 0.575
+	dataA[2] = 0.6;// windowSum = 3.5,  windowSize = 5, mean = 0.700
+	dataA[3] = 0.9;// windowSum = 5.2,  windowSize = 5, mean = 1.040
+	dataA[4] = 1.2;// windowSum = 7.7,  windowSize = 5, mean = 1.540
+	dataA[5] = 2.0;// windowSum = 10.6, windowSize = 5, mean = 2.120
+	dataA[6] = 3.0;// windowSum = 15.7, windowSize = 5, mean = 3.140
+	dataA[7] = 3.5;// windowSum = 19.0, windowSize = 5, mean = 3.900
+	dataA[8] = 6.0;// windowSum = 17.5, windowSize = 4, mean = 4.375
+	dataA[9] = 5.0;// windowSum = 14.5, windowSize = 3, mean = 4.833
+	utils::smoothMovingAvg<double>(dataA,dataB,N,sizeof(double),sizeof(double),5);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(0.466, dataB[0], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(0.575, dataB[1], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(0.700, dataB[2], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(1.040, dataB[3], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(1.540, dataB[4], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(2.120, dataB[5], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(3.140, dataB[6], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(3.900, dataB[7], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(4.375, dataB[8], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(4.833, dataB[9], 0.001);
+
+	// ----------------
+
+	// window of 5 in-place
+	dataA[0] = 0.3;// windowSum = 1.4,  windowSize = 3, mean = 0.466
+	dataA[1] = 0.5;// windowSum = 2.3,  windowSize = 4, mean = 0.575
+	dataA[2] = 0.6;// windowSum = 3.5,  windowSize = 5, mean = 0.700
+	dataA[3] = 0.9;// windowSum = 5.2,  windowSize = 5, mean = 1.040
+	dataA[4] = 1.2;// windowSum = 7.7,  windowSize = 5, mean = 1.540
+	dataA[5] = 2.0;// windowSum = 10.6, windowSize = 5, mean = 2.120
+	dataA[6] = 3.0;// windowSum = 15.7, windowSize = 5, mean = 3.140
+	dataA[7] = 3.5;// windowSum = 19.0, windowSize = 5, mean = 3.900
+	dataA[8] = 6.0;// windowSum = 17.5, windowSize = 4, mean = 4.375
+	dataA[9] = 5.0;// windowSum = 14.5, windowSize = 3, mean = 4.833
+	utils::smoothMovingAvg<double>(dataA,dataA,N,sizeof(double),sizeof(double),5);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(0.466, dataA[0], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(0.575, dataA[1], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(0.700, dataA[2], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(1.040, dataA[3], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(1.540, dataA[4], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(2.120, dataA[5], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(3.140, dataA[6], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(3.900, dataA[7], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(4.375, dataA[8], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(4.833, dataA[9], 0.001);
+}
+
 int main()
 {
 	CppUnit::TextUi::TestRunner runner;
