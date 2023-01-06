@@ -3,6 +3,8 @@
 TelemetryPlotDialog::TelemetryPlotDialog(
         QWidget *parent)
  : PlotDialog(parent)
+ , xComponent_(X_Component::eXC_Samples)
+ , yComponent_(Y_Component::eYC_Unknown)
 {
     plot()->setInteraction(QCP::Interaction::iRangeDrag,true);
     plot()->setInteraction(QCP::Interaction::iRangeZoom,true);
@@ -19,15 +21,14 @@ TelemetryPlotDialog::addSource(
 {
     SourceObjects sourceObjs;
     sourceObjs.telemSrc = telemSrc;
-    sourceObjs.xData.resize(telemSrc->size());
-    sourceObjs.yData.resize(telemSrc->size());
-    setX_Data(sourceObjs,false);
-    setY_Data(sourceObjs,telemComponent_);
+    QVector<double> xData(telemSrc->size()), yData(telemSrc->size());
     plot()->addGraph();
     sourceObjs.graph = plot()->graph(plot()->graphCount() - 1);
+    sourceObjs.graph->setData(xData,yData,true);
     sourceObjs.graph->setName(telemSrc->getDataSourceName().c_str());
     sourceObjs.graph->setPen(QPen(DEFAULT_COLORS[sources_.size() % N_DEFAULT_COLORS]));
-    sourceObjs.graph->setData(sourceObjs.xData,sourceObjs.yData,true);
+    setX_Data(sourceObjs,xComponent_);
+    setY_Data(sourceObjs,yComponent_);
     plot()->rescaleAxes();
 
     sources_.push_back(sourceObjs);
@@ -87,21 +88,62 @@ TelemetryPlotDialog::numSources() const
 }
 
 void
-TelemetryPlotDialog::setTelemetryComponent(
-        TelemetryComponent comp,
+TelemetryPlotDialog::realignData(
         bool replot)
 {
-    if (telemComponent_ == comp)
+    for (auto &sourceObjs : sources_)
+    {
+        setX_Data(sourceObjs, xComponent_);
+//        sourceObjs.graph->setData(sourceObjs.xData,sourceObjs.yData,true);
+    }
+
+    if (replot)
+    {
+        plot()->replot();
+    }
+}
+
+void
+TelemetryPlotDialog::setX_Component(
+        X_Component comp,
+        bool replot)
+{
+    if (xComponent_ == comp)
     {
         // nothing to do
         return;
     }
 
     // perform updates
-    telemComponent_ = comp;
+    xComponent_ = comp;
     for (auto &sourceObjs : sources_)
     {
-        setY_Data(sourceObjs,telemComponent_);
+        setX_Data(sourceObjs,xComponent_);
+    }
+    plot()->rescaleAxes();
+
+    if (replot)
+    {
+        plot()->replot();
+    }
+}
+
+void
+TelemetryPlotDialog::setY_Component(
+        Y_Component comp,
+        bool replot)
+{
+    if (yComponent_ == comp)
+    {
+        // nothing to do
+        return;
+    }
+
+    // perform updates
+    yComponent_ = comp;
+    for (auto &sourceObjs : sources_)
+    {
+        setY_Data(sourceObjs,yComponent_);
     }
     plot()->rescaleAxes();
 
@@ -114,18 +156,27 @@ TelemetryPlotDialog::setTelemetryComponent(
 void
 TelemetryPlotDialog::setX_Data(
         SourceObjects &sourceObjs,
-        bool isTime)
+        X_Component comp)
 {
-    auto &xData = sourceObjs.xData;
-    for (size_t i=0; i<sourceObjs.telemSrc->size() && i<sourceObjs.xData.size(); i++)
+    auto &telemSrc = sourceObjs.telemSrc;
+    size_t seekedIdx = telemSrc->seekedIdx();
+    auto &seekedSamp = telemSrc->at(seekedIdx);
+    auto dataPtr = sourceObjs.graph->data();
+    auto dataItr = dataPtr->begin();
+    for (size_t i=0; i<telemSrc->size() && dataItr!=dataPtr->end(); i++, dataItr++)
     {
-        if (isTime)
+        switch (comp)
         {
-            xData[i] = sourceObjs.telemSrc->at(i).gpSamp.t_offset;
-        }
-        else
-        {
-            xData[i] = i;
+        case X_Component::eXC_Samples:
+            dataItr->key = (double)(i) - seekedIdx;
+            break;
+        case X_Component::eXC_Time:
+            dataItr->key = telemSrc->at(i).gpSamp.t_offset - seekedSamp.gpSamp.t_offset;
+            break;
+        default:
+            printf("%s - unsupported X_Component (%d)\n",__func__,(int)(comp));
+            dataItr->key = 0;
+            break;
         }
     }
 }
@@ -133,42 +184,43 @@ TelemetryPlotDialog::setX_Data(
 void
 TelemetryPlotDialog::setY_Data(
         SourceObjects &sourceObjs,
-        TelemetryComponent comp)
+        Y_Component comp)
 {
-    auto &yData = sourceObjs.yData;
-    for (size_t i=0; i<sourceObjs.telemSrc->size() && i<sourceObjs.yData.size(); i++)
+    auto dataPtr = sourceObjs.graph->data();
+    auto dataItr = dataPtr->begin();
+    for (size_t i=0; i<sourceObjs.telemSrc->size() && dataItr!=dataPtr->end(); i++, dataItr++)
     {
         auto &tSamp = sourceObjs.telemSrc->at(i);
         switch (comp)
         {
-            case TelemetryComponent::eTC_Unknown:
-                yData[i] = 0;
-                break;
-            case TelemetryComponent::eTC_Time:
-                yData[i] = tSamp.gpSamp.t_offset;
-                break;
-            case TelemetryComponent::eTC_AcclX:
-                yData[i] = tSamp.gpSamp.accl.x;
-                break;
-            case TelemetryComponent::eTC_AcclY:
-                yData[i] = tSamp.gpSamp.accl.y;
-                break;
-            case TelemetryComponent::eTC_AcclZ:
-                yData[i] = tSamp.gpSamp.accl.z;
-                break;
-            case TelemetryComponent::eTC_GyroX:
-                yData[i] = tSamp.gpSamp.gyro.x;
-                break;
-            case TelemetryComponent::eTC_GyroY:
-                yData[i] = tSamp.gpSamp.gyro.y;
-                break;
-            case TelemetryComponent::eTC_GyroZ:
-                yData[i] = tSamp.gpSamp.gyro.z;
-                break;
-            default:
-                printf("%s - unsupported TelemetryComponent (%d)\n",__func__,(int)(comp));
-                yData[i] = 0;
-                break;
+        case Y_Component::eYC_Unknown:
+            dataItr->value = 0;
+            break;
+        case Y_Component::eYC_Time:
+            dataItr->value = tSamp.gpSamp.t_offset;
+            break;
+        case Y_Component::eYC_AcclX:
+            dataItr->value = tSamp.gpSamp.accl.x;
+            break;
+        case Y_Component::eYC_AcclY:
+            dataItr->value = tSamp.gpSamp.accl.y;
+            break;
+        case Y_Component::eYC_AcclZ:
+            dataItr->value = tSamp.gpSamp.accl.z;
+            break;
+        case Y_Component::eYC_GyroX:
+            dataItr->value = tSamp.gpSamp.gyro.x;
+            break;
+        case Y_Component::eYC_GyroY:
+            dataItr->value = tSamp.gpSamp.gyro.y;
+            break;
+        case Y_Component::eYC_GyroZ:
+            dataItr->value = tSamp.gpSamp.gyro.z;
+            break;
+        default:
+            printf("%s - unsupported Y_Component (%d)\n",__func__,(int)(comp));
+            dataItr->value = 0;
+            break;
         }
     }
 }

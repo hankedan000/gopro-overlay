@@ -54,7 +54,8 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     previewResolutionActionGroup_->addAction(ui->action1920_x_1080);
 
     telemPlotAcclX_->setWindowTitle("Acceleration X");
-    telemPlotAcclX_->setTelemetryComponent(TelemetryPlotDialog::TelemetryComponent::eTC_AcclX);
+    telemPlotAcclX_->setX_Component(TelemetryPlotDialog::X_Component::eXC_Samples);
+    telemPlotAcclX_->setY_Component(TelemetryPlotDialog::Y_Component::eYC_AcclX);
     telemPlotAcclX_->show();
 
     // menu actions
@@ -706,6 +707,7 @@ ProjectWindow::seekEngineToAlignment(
     auto engine = proj_.getEngine();
     auto gSeeker = engine->getSeeker();
     gSeeker->seekToAlignmentInfo(renderAlignInfo);
+    telemPlotAcclX_->realignData();
 }
 
 void

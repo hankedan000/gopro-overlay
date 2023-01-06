@@ -13,12 +13,18 @@ class TelemetryPlotDialog : public PlotDialog
     Q_OBJECT
 
 public:
-    enum TelemetryComponent
+    enum X_Component
     {
-        eTC_Unknown,
-        eTC_Time,
-        eTC_AcclX,eTC_AcclY,eTC_AcclZ,
-        eTC_GyroX,eTC_GyroY,eTC_GyroZ
+        eXC_Samples,
+        eXC_Time
+    };
+
+    enum Y_Component
+    {
+        eYC_Unknown,
+        eYC_Time,
+        eYC_AcclX,eYC_AcclY,eYC_AcclZ,
+        eYC_GyroX,eYC_GyroY,eYC_GyroZ
     };
 
 private:
@@ -26,9 +32,9 @@ private:
         Qt::red,
         Qt::green,
         Qt::blue,
-        Qt::yellow,
         Qt::magenta,
         Qt::cyan,
+        Qt::yellow,
         Qt::black,
         Qt::gray,
     };
@@ -37,10 +43,6 @@ private:
     struct SourceObjects
     {
         gpo::TelemetrySourcePtr telemSrc;
-
-        // QCustomPlot's x/y data
-        QVector<double> xData;
-        QVector<double> yData;
 
         // QCustomPlot graph for this telemetry data source
         QCPGraph *graph;
@@ -72,23 +74,33 @@ public:
     numSources() const;
 
     void
-    setTelemetryComponent(
-            TelemetryComponent comp,
+    realignData(
+            bool replot = true);
+
+    void
+    setX_Component(
+            X_Component comp,
+            bool replot = true);
+
+    void
+    setY_Component(
+            Y_Component comp,
             bool replot = true);
 
 private:
     void
     setX_Data(
             SourceObjects &sourceObjs,
-            bool isTime);
+            X_Component comp);
 
     void
     setY_Data(
             SourceObjects &sourceObjs,
-            TelemetryComponent comp);
+            Y_Component comp);
 
 private:
-    TelemetryComponent telemComponent_;
+    X_Component xComponent_;
+    Y_Component yComponent_;
     std::vector<SourceObjects> sources_;
 
 };
