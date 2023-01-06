@@ -73,7 +73,7 @@ namespace gpo
 			fontColor_, //font color
 			1);// thickness
 
-		sprintf(tmpStr,"accl: %s",telemSamp.gpSamp.accl.toString().c_str());
+		sprintf(tmpStr,"accl: %s",gpt::toString(telemSamp.gpSamp.accl).c_str());
 		cv::putText(
 			outImg_, //target image
 			tmpStr, //text
@@ -83,7 +83,7 @@ namespace gpo
 			fontColor_, //font color
 			1);// thickness
 
-		sprintf(tmpStr,"gps: %s",telemSamp.gpSamp.gps.coord.toString().c_str());
+		sprintf(tmpStr,"gps: %s",gpt::toString(telemSamp.gpSamp.gps.coord).c_str());
 		cv::putText(
 			outImg_, //target image
 			tmpStr, //text

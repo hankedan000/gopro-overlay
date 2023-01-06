@@ -7,9 +7,8 @@
 
 namespace gpo
 {
-	class TelemetrySample
+	struct TelemetrySample
 	{
-	public:
 		gpt::CombinedSample gpSamp;
 
 		// corrected location of vehicle on the track.
