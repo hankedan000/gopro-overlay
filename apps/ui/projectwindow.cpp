@@ -33,7 +33,8 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     reWizTopBot_(new RenderEngineWizard_TopBottom(this,&proj_)),
     projectDirty_(false),
     progressDialog_(new ProgressDialog(this)),
-    renderEntityPropertiesTab_(new RenderEntityPropertiesTab(this))
+    renderEntityPropertiesTab_(new RenderEntityPropertiesTab(this)),
+    telemPlotAcclX_(new TelemetryPlotDialog(this))
 {
     ui->setupUi(this);
     renderEntityPropertiesTab_->setProject(&proj_);
@@ -51,6 +52,10 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     previewResolutionActionGroup_->addAction(ui->action960_x_540);
     previewResolutionActionGroup_->addAction(ui->action1280_x_720);
     previewResolutionActionGroup_->addAction(ui->action1920_x_1080);
+
+    telemPlotAcclX_->setWindowTitle("Acceleration X");
+    telemPlotAcclX_->setTelemetryComponent(TelemetryPlotDialog::TelemetryComponent::eTC_AcclX);
+    telemPlotAcclX_->show();
 
     // menu actions
     connect(ui->actionNew_Project, &QAction::triggered, this, [this]{
@@ -397,6 +402,18 @@ ProjectWindow::reloadDataSourceTable()
                     dsm.getSourceOrigin(i),
                     dsm.getSource(i));
     }
+
+    // TODO should probably do this else where
+    telemPlotAcclX_->clear();
+    for (size_t i=0; i<dsm.sourceCount(); i++)
+    {
+        auto dataSrc = dsm.getSource(i);
+        if (dataSrc->hasTelemetry())
+        {
+            telemPlotAcclX_->addSource(dataSrc->telemSrc,false);// hold off replotting until the end
+        }
+    }
+    telemPlotAcclX_->plot()->replot();
 }
 
 void
@@ -421,8 +438,8 @@ ProjectWindow::addSourceToTable(
 
     sourcesTableModel_->appendRow(row);
 
-    // add a button the table to show source's track view
-    auto buttonIndex = sourcesTableModel_->index(sourcesTableModel_->rowCount()-1,2);
+    // add a button that shows source's track view
+    auto trackButtonIndex = sourcesTableModel_->index(sourcesTableModel_->rowCount()-1,2);
     auto showTrackButton = new QPushButton(this);
     showTrackButton->setText("Show Track");
     showTrackButton->setEnabled(false);
@@ -436,7 +453,7 @@ ProjectWindow::addSourceToTable(
             trackview->show();
         });
     }
-    ui->tableDataSources->setIndexWidget(buttonIndex,showTrackButton);
+    ui->tableDataSources->setIndexWidget(trackButtonIndex,showTrackButton);
 }
 
 void
@@ -770,6 +787,49 @@ ProjectWindow::addProjectToRecentHistory(
         recentProjects.pop_back();// remove oldests
     }
     settings.setValue(RECENT_PROJECT_KEY, recentProjects);
+}
+
+void
+ProjectWindow::plotTelemetry(
+        gpo::DataSourcePtr dataSrc)
+{
+    auto telem = dataSrc->telemSrc;
+
+    auto acclDialog = new PlotDialog(this);
+    auto acclPlot = acclDialog->plot();
+    const size_t N_SAMPS = telem->size();
+    QVector<double> accl_keys(N_SAMPS);
+    QVector<double> acclX_values(N_SAMPS),acclY_values(N_SAMPS),acclZ_values(N_SAMPS);
+    for (size_t i=0; i<N_SAMPS; i++)
+    {
+        auto &acclSamp = telem->at(i).gpSamp.accl;
+        accl_keys[i] = i;
+        acclX_values[i] = acclSamp.x;
+        acclY_values[i] = acclSamp.y;
+        acclZ_values[i] = acclSamp.z;
+    }
+    acclPlot->plotLayout()->insertRow(0);
+    acclPlot->plotLayout()->addElement(0,0,new QCPTextElement(acclPlot,"Acceleration"));
+    acclPlot->addGraph();
+    acclPlot->graph(0)->setPen(QPen(Qt::red));
+    acclPlot->graph(0)->setData(accl_keys,acclX_values,true);
+    acclPlot->graph(0)->setName("accl_x");
+    acclPlot->addGraph();
+    acclPlot->graph(1)->setPen(QPen(Qt::green));
+    acclPlot->graph(1)->setData(accl_keys,acclY_values,true);
+    acclPlot->graph(1)->setName("accl_y");
+    acclPlot->addGraph();
+    acclPlot->graph(2)->setPen(QPen(Qt::blue));
+    acclPlot->graph(2)->setData(accl_keys,acclZ_values,true);
+    acclPlot->graph(2)->setName("accl_z");
+    acclPlot->xAxis->setRange(0,N_SAMPS);
+    acclPlot->xAxis->setLabel("samples");
+    acclPlot->yAxis->setRange(-15,15);
+    acclPlot->yAxis->setLabel("acceleration (m/s^2)");
+    acclPlot->legend->setVisible(true);
+    acclPlot->setInteraction(QCP::iRangeDrag,true);
+    acclPlot->setInteraction(QCP::iRangeZoom,true);
+    acclDialog->show();
 }
 
 void

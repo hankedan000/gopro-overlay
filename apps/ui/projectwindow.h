@@ -8,12 +8,14 @@
 
 #include <GoProOverlay/data/RenderProject.h>
 
+#include "PlotDialog.h"
 #include "progressdialog.h"
 #include "RenderEngineWizardSingleVideo.h"
 #include "renderenginewizard_topbottom.h"
 #include "renderentitypropertiestab.h"
 #include "renderthread.h"
 #include "scrubbablevideo.h"
+#include "TelemetryPlotDialog.h"
 #include "trackeditor.h"
 
 namespace Ui {
@@ -131,6 +133,10 @@ private:
     addProjectToRecentHistory(
             const std::string &projectDir);
 
+    void
+    plotTelemetry(
+            gpo::DataSourcePtr dataSrc);
+
 private slots:
     void
     onActionSaveProject();
@@ -174,6 +180,8 @@ private:
     ProgressDialog *progressDialog_;
 
     RenderEntityPropertiesTab *renderEntityPropertiesTab_;
+
+    TelemetryPlotDialog *telemPlotAcclX_;
 };
 
 #endif // PROJECTWINDOW_H

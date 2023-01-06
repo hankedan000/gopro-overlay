@@ -1,3 +1,5 @@
+add_subdirectory(qcustomplot)
+
 set(QT_WIDGETS_SOURCES
         ColorPicker.h
         ColorPicker.cpp
@@ -5,6 +7,9 @@ set(QT_WIDGETS_SOURCES
         cvimageview.h
         cvimageview.cpp
         cvimageview.ui
+        PlotDialog.h
+        PlotDialog.cpp
+        PlotDialog.ui
         progressdialog.h
         progressdialog.cpp
         progressdialog.ui
@@ -25,6 +30,8 @@ set(QT_WIDGETS_SOURCES
         scrubbablevideo.h
         scrubbablevideo.cpp
         scrubbablevideo.ui
+        TelemetryPlotDialog.h
+        TelemetryPlotDialog.cpp
 	trackeditor.h
 	trackeditor.cpp
 	trackeditor.ui
@@ -44,4 +51,5 @@ target_include_directories(AppWidgets PUBLIC
 target_link_libraries(AppWidgets PUBLIC
 	Qt${QT_VERSION_MAJOR}::Widgets
 	GoProOverlay
+        QCustomPlot
 )
