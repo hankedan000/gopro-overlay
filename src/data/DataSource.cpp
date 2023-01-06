@@ -60,6 +60,25 @@ namespace gpo
 		}
 
 		bool okay = utils::computeTrackTimes(datumTrack_,samples_);
+
+		// smooth accelerometer data
+		if (false)
+		{
+			// TODO put this in a better place
+			size_t acclFieldOffsets[] = {
+				offsetof(gpo::TelemetrySample, gpSamp.accl.x),
+				offsetof(gpo::TelemetrySample, gpSamp.accl.y),
+				offsetof(gpo::TelemetrySample, gpSamp.accl.z)
+			};
+			utils::smoothMovingAvgStructured<gpo::TelemetrySample,decltype(gpt::AcclSample::x)>(
+				samples_->data(),
+				samples_->data(),
+				acclFieldOffsets,
+				3,// 3 fields; x,y,z
+				samples_->size(),
+				30);
+		}
+
 		if (okay)
 		{
 			seeker->analyze();

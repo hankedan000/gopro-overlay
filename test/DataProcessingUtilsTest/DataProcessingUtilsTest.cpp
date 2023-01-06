@@ -118,7 +118,7 @@ DataProcessingUtilsTest::smoothMovingAvg()
 	dataA[7] = 7.0;
 	dataA[8] = 8.0;
 	dataA[9] = 9.0;
-	utils::smoothMovingAvg<double>(dataA,dataB,N,sizeof(double),sizeof(double),1);
+	utils::smoothMovingAvg<double>(dataA,dataB,N,1);
 	CPPUNIT_ASSERT_DOUBLES_EQUAL(0.000, dataB[0], 0.001);
 	CPPUNIT_ASSERT_DOUBLES_EQUAL(1.000, dataB[1], 0.001);
 	CPPUNIT_ASSERT_DOUBLES_EQUAL(2.000, dataB[2], 0.001);
@@ -143,7 +143,7 @@ DataProcessingUtilsTest::smoothMovingAvg()
 	dataA[7] = 7.0;// windowSum = 21.0, windowSize = 3, mean = 7.000
 	dataA[8] = 8.0;// windowSum = 24.0, windowSize = 3, mean = 8.000
 	dataA[9] = 9.0;// windowSum = 17.0, windowSize = 2, mean = 8.500
-	utils::smoothMovingAvg<double>(dataA,dataB,N,sizeof(double),sizeof(double),3);
+	utils::smoothMovingAvg<double>(dataA,dataB,N,3);
 	CPPUNIT_ASSERT_DOUBLES_EQUAL(0.500, dataB[0], 0.001);
 	CPPUNIT_ASSERT_DOUBLES_EQUAL(1.000, dataB[1], 0.001);
 	CPPUNIT_ASSERT_DOUBLES_EQUAL(2.000, dataB[2], 0.001);
@@ -168,7 +168,7 @@ DataProcessingUtilsTest::smoothMovingAvg()
 	dataA[7] = 3.5;// windowSum = 19.0, windowSize = 5, mean = 3.900
 	dataA[8] = 6.0;// windowSum = 17.5, windowSize = 4, mean = 4.375
 	dataA[9] = 5.0;// windowSum = 14.5, windowSize = 3, mean = 4.833
-	utils::smoothMovingAvg<double>(dataA,dataB,N,sizeof(double),sizeof(double),5);
+	utils::smoothMovingAvg<double>(dataA,dataB,N,5);
 	CPPUNIT_ASSERT_DOUBLES_EQUAL(0.466, dataB[0], 0.001);
 	CPPUNIT_ASSERT_DOUBLES_EQUAL(0.575, dataB[1], 0.001);
 	CPPUNIT_ASSERT_DOUBLES_EQUAL(0.700, dataB[2], 0.001);
@@ -193,7 +193,7 @@ DataProcessingUtilsTest::smoothMovingAvg()
 	dataA[7] = 3.5;// windowSum = 19.0, windowSize = 5, mean = 3.900
 	dataA[8] = 6.0;// windowSum = 17.5, windowSize = 4, mean = 4.375
 	dataA[9] = 5.0;// windowSum = 14.5, windowSize = 3, mean = 4.833
-	utils::smoothMovingAvg<double>(dataA,dataA,N,sizeof(double),sizeof(double),5);
+	utils::smoothMovingAvg<double>(dataA,dataA,N,5);
 	CPPUNIT_ASSERT_DOUBLES_EQUAL(0.466, dataA[0], 0.001);
 	CPPUNIT_ASSERT_DOUBLES_EQUAL(0.575, dataA[1], 0.001);
 	CPPUNIT_ASSERT_DOUBLES_EQUAL(0.700, dataA[2], 0.001);
@@ -204,6 +204,48 @@ DataProcessingUtilsTest::smoothMovingAvg()
 	CPPUNIT_ASSERT_DOUBLES_EQUAL(3.900, dataA[7], 0.001);
 	CPPUNIT_ASSERT_DOUBLES_EQUAL(4.375, dataA[8], 0.001);
 	CPPUNIT_ASSERT_DOUBLES_EQUAL(4.833, dataA[9], 0.001);
+}
+
+void
+DataProcessingUtilsTest::smoothMovingAvgStructured()
+{
+	struct TestStruct
+	{
+		double a;
+		int b;
+		double c;
+		long long d;
+		char e[10];
+		double f;
+	};
+	const size_t N = 10;
+	TestStruct dataA[N];
+	TestStruct dataB[N];
+	for (size_t i=0; i<N; i++)
+	{
+		dataA[i].a = i;
+		dataA[i].c = i*2;
+		dataA[i].f = i*3;
+	}
+
+	// window of 1 should do no averaging
+	size_t fieldOffsets[] = {
+		offsetof(TestStruct, a),
+		offsetof(TestStruct, c),
+		offsetof(TestStruct, f)
+	};
+	utils::smoothMovingAvgStructured<TestStruct,double>(dataA,dataB,fieldOffsets,3,N,3);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(0.500, dataB[0].a, 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(1.000, dataB[1].a, 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(2.000, dataB[2].a, 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(3.000, dataB[3].a, 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(4.000, dataB[4].a, 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(5.000, dataB[5].a, 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(6.000, dataB[6].a, 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(7.000, dataB[7].a, 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(8.000, dataB[8].a, 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(8.500, dataB[9].a, 0.001);
+	// TODO check 'c' and 'f' fields too
 }
 
 int main()
