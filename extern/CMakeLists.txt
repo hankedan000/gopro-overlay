@@ -1,5 +1,6 @@
 add_subdirectory(gopro-telem)
 add_subdirectory(yaml-cpp)
+add_subdirectory(qcustomplot)
 
 # check to see that tqdm was cloned successfully
 find_path(TQDM_INCLUDE_DIR

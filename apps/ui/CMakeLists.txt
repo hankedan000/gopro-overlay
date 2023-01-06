@@ -1,5 +1,3 @@
-add_subdirectory(qcustomplot)
-
 set(QT_WIDGETS_SOURCES
         ColorPicker.h
         ColorPicker.cpp

@@ -12,21 +12,7 @@ target_link_libraries(topbottom_overlay
 	GoProOverlay
 	tqdm)
 
-
-
-
-
-set(CMAKE_AUTOUIC ON)# Qt UI compiler (for *.ui files)
-set(CMAKE_AUTOMOC ON)# Qt Meta Object compiler
-set(CMAKE_AUTORCC ON)
-
-find_package(QT NAMES Qt6 Qt5)
-find_package(Qt${QT_VERSION_MAJOR}
-    REQUIRED COMPONENTS
-        Widgets
-        PrintSupport# needed by QCustomPlot
-)
-
+# Qt Apps
 add_subdirectory(ui)
 
 add_executable(TrackEditorApp
@@ -35,7 +21,7 @@ add_executable(TrackEditorApp
 
 target_link_libraries(TrackEditorApp PUBLIC
 	GoProOverlay
-        AppWidgets
+	AppWidgets
 )
 
 add_executable(ProjectApp
@@ -44,5 +30,5 @@ add_executable(ProjectApp
 
 target_link_libraries(ProjectApp PUBLIC
 	GoProOverlay
-        AppWidgets
+	AppWidgets
 )

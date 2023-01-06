@@ -31,6 +31,18 @@ if(GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
 	endif()
 endif()
 
+# include Qt
+set(CMAKE_AUTOUIC ON)# Qt UI compiler (for *.ui files)
+set(CMAKE_AUTOMOC ON)# Qt Meta Object compiler
+set(CMAKE_AUTORCC ON)
+
+find_package(QT NAMES Qt6 Qt5)
+find_package(Qt${QT_VERSION_MAJOR}
+    REQUIRED COMPONENTS
+        Widgets
+        PrintSupport# needed by QCustomPlot
+)
+
 # use cppunit for testing
 find_package(cppunit)
 # enable testing if root project is us
