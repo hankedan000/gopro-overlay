@@ -3,6 +3,7 @@
 #include "GoProOverlay/graphics/FrictionCircleObject.h"
 #include "GoProOverlay/graphics/LapTimerObject.h"
 #include "GoProOverlay/graphics/SpeedometerObject.h"
+#include "GoProOverlay/graphics/TelemetryPlotObject.h"
 #include "GoProOverlay/graphics/TelemetryPrintoutObject.h"
 #include "GoProOverlay/graphics/TextObject.h"
 #include "GoProOverlay/graphics/TrackMapObject.h"
@@ -428,6 +429,17 @@ namespace gpo
 		botTextRE.rObj = botTextObject;
 		botTextRE.rPos = cv::Point(RENDERED_VIDEO_SIZE.width - botVideoRE.rSize.width, topVideoRE.rSize.height + 50);
 		engine->addEntity(botTextRE);
+
+		auto plotObject = new gpo::TelemetryPlotObject;
+		plotObject->addTelemetrySource(topData->telemSrc);
+		plotObject->addTelemetrySource(botData->telemSrc);
+		plotObject->setVisible(false);
+		RenderEngine::RenderedEntity plotRE;
+		plotRE.name = "plot";
+		plotRE.rObj = plotObject;
+		plotRE.rSize = plotObject->getNativeSize();
+		plotRE.rPos = cv::Point(0, 900);
+		engine->addEntity(plotRE);
 
 		return engine;
 	}
