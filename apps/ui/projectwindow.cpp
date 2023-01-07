@@ -54,8 +54,8 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     previewResolutionActionGroup_->addAction(ui->action1920_x_1080);
 
     telemPlotAcclX_->setWindowTitle("Acceleration X");
-    telemPlotAcclX_->setX_Component(TelemetryPlotDialog::X_Component::eXC_Samples);
-    telemPlotAcclX_->setY_Component(TelemetryPlotDialog::Y_Component::eYC_AcclX);
+    telemPlotAcclX_->plot()->setX_Component(TelemetryPlot::X_Component::eXC_Samples);
+    telemPlotAcclX_->plot()->setY_Component(TelemetryPlot::Y_Component::eYC_AcclX);
     telemPlotAcclX_->show();
 
     // menu actions
@@ -405,13 +405,13 @@ ProjectWindow::reloadDataSourceTable()
     }
 
     // TODO should probably do this else where
-    telemPlotAcclX_->clear();
+    telemPlotAcclX_->plot()->clear();
     for (size_t i=0; i<dsm.sourceCount(); i++)
     {
         auto dataSrc = dsm.getSource(i);
         if (dataSrc->hasTelemetry())
         {
-            telemPlotAcclX_->addSource(dataSrc->telemSrc,false);// hold off replotting until the end
+            telemPlotAcclX_->plot()->addSource(dataSrc->telemSrc,false);// hold off replotting until the end
         }
     }
     telemPlotAcclX_->plot()->replot();
@@ -707,7 +707,7 @@ ProjectWindow::seekEngineToAlignment(
     auto engine = proj_.getEngine();
     auto gSeeker = engine->getSeeker();
     gSeeker->seekToAlignmentInfo(renderAlignInfo);
-    telemPlotAcclX_->realignData();
+    telemPlotAcclX_->plot()->realignData();
 }
 
 void
@@ -797,7 +797,7 @@ ProjectWindow::plotTelemetry(
 {
     auto telem = dataSrc->telemSrc;
 
-    auto acclDialog = new PlotDialog(this);
+    auto acclDialog = new TelemetryPlotDialog(this);
     auto acclPlot = acclDialog->plot();
     const size_t N_SAMPS = telem->size();
     QVector<double> accl_keys(N_SAMPS);

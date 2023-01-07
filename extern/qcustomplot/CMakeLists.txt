@@ -13,5 +13,5 @@ target_include_directories(QCustomPlot PUBLIC
 
 target_link_libraries(QCustomPlot PUBLIC
 	Qt${QT_VERSION_MAJOR}::Widgets
-        Qt${QT_VERSION_MAJOR}::PrintSupport
+	Qt${QT_VERSION_MAJOR}::PrintSupport
 )

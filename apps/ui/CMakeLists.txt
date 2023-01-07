@@ -5,9 +5,6 @@ set(QT_WIDGETS_SOURCES
         cvimageview.h
         cvimageview.cpp
         cvimageview.ui
-        PlotDialog.h
-        PlotDialog.cpp
-        PlotDialog.ui
         progressdialog.h
         progressdialog.cpp
         progressdialog.ui
@@ -30,12 +27,17 @@ set(QT_WIDGETS_SOURCES
         scrubbablevideo.ui
         TelemetryPlotDialog.h
         TelemetryPlotDialog.cpp
+        TelemetryPlotDialog.ui
 	trackeditor.h
 	trackeditor.cpp
 	trackeditor.ui
 	trackview.h
 	trackview.cpp
 	trackview.ui
+
+        # MOC needs to know where this... grumble grumble
+        # see https://stackoverflow.com/questions/14010922/qt-undefined-reference-to-vtable
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../src/include/GoProOverlay/graphics/TelemetryPlot.h
 )
 
 add_library(AppWidgets STATIC

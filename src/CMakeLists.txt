@@ -9,11 +9,13 @@ add_library("${LIBNAME}" STATIC
 	"${CMAKE_CURRENT_SOURCE_DIR}/data/TelemetrySource.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/data/TrackDataObjects.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/data/VideoSource.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/LapTimerObject.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/FrictionCircleObject.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/LapTimerObject.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/RenderedObject.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/RenderEngine.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/SpeedometerObject.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/TelemetryPlot.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/TelemetryPrintoutObject.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/TextObject.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/TrackMapObject.cpp"
@@ -36,6 +38,7 @@ target_link_libraries("${LIBNAME}"
 	PUBLIC
 		GoProTelem::GoProTelem
 		${OpenCV_LIBS}
+		QCustomPlot
 		yaml-cpp)
 
 # optionally use OpenMP for parallel processing

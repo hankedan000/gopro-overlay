@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>PlotDialog</class>
- <widget class="QDialog" name="PlotDialog">
+ <class>TelemetryPlotDialog</class>
+ <widget class="QDialog" name="TelemetryPlotDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -17,7 +17,7 @@
    <item row="0" column="0">
     <layout class="QVBoxLayout" name="verticalLayout" stretch="1">
      <item>
-      <widget class="QCustomPlot" name="plot" native="true"/>
+      <widget class="TelemetryPlot" name="plot" native="true"/>
      </item>
     </layout>
    </item>
@@ -25,9 +25,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QCustomPlot</class>
+   <class>TelemetryPlot</class>
    <extends>QWidget</extends>
-   <header>qcustomplot.h</header>
+   <header>GoProOverlay/graphics/TelemetryPlot.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

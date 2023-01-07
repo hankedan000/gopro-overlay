@@ -8,7 +8,7 @@
 
 #include <GoProOverlay/data/RenderProject.h>
 
-#include "PlotDialog.h"
+#include "TelemetryPlotDialog.h"
 #include "progressdialog.h"
 #include "RenderEngineWizardSingleVideo.h"
 #include "renderenginewizard_topbottom.h"
