@@ -127,6 +127,12 @@ TelemetryPlot::setX_Component(
 	}
 }
 
+TelemetryPlot::X_Component
+TelemetryPlot::getX_Component() const
+{
+	return xComponent_;
+}
+
 void
 TelemetryPlot::setY_Component(
 		Y_Component comp,
@@ -150,6 +156,12 @@ TelemetryPlot::setY_Component(
 	{
 		this->replot();
 	}
+}
+
+TelemetryPlot::Y_Component
+TelemetryPlot::getY_Component() const
+{
+	return yComponent_;
 }
 
 void

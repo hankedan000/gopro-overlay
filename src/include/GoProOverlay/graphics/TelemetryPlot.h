@@ -12,16 +12,23 @@ class TelemetryPlot : public QCustomPlot
 public:
 	enum X_Component
 	{
-		eXC_Samples,
-		eXC_Time
+		eXC_Samples = 0,
+		eXC_Time = 1
 	};
 
 	enum Y_Component
 	{
-		eYC_Unknown,
-		eYC_Time,
-		eYC_AcclX,eYC_AcclY,eYC_AcclZ,
-		eYC_GyroX,eYC_GyroY,eYC_GyroZ
+		eYC_Unknown = 0,
+
+		eYC_Time = 1,
+
+		eYC_AcclX = 2,
+		eYC_AcclY = 3,
+		eYC_AcclZ = 4,
+
+		eYC_GyroX = 5,
+		eYC_GyroY = 6,
+		eYC_GyroZ = 7
 	};
 
 private:
@@ -80,10 +87,16 @@ public:
 			X_Component comp,
 			bool replot = true);
 
+	X_Component
+	getX_Component() const;
+
 	void
 	setY_Component(
 			Y_Component comp,
 			bool replot = true);
+
+	Y_Component
+	getY_Component() const;
 
 private:
 	void
