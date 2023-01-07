@@ -197,6 +197,15 @@ namespace gpo
 		}
 	}
 
+	void
+	GroupedSeeker::setAlignmentHere()
+	{
+		for (auto &seeker : seekers_)
+		{
+			seeker->setAlignmentIdx(seeker->seekedIdx());
+		}
+	}
+
 	unsigned int
 	GroupedSeeker::minLapCount() const
 	{

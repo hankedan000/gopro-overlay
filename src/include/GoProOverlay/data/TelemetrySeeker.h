@@ -37,6 +37,13 @@ namespace gpo
 			size_t idx);
 
 		void
+		setAlignmentIdx(
+			size_t idx);
+
+		size_t
+		getAlignmentIdx() const;
+
+		void
 		seekRelative(
 			size_t amount,
 			bool forward);
@@ -85,6 +92,7 @@ namespace gpo
 	private:
 		DataSourcePtr dataSrc_;
 		size_t seekedIdx_;
+		size_t alignmentIdx_;
 		double rate_hz_;
 
 		struct LapIndices

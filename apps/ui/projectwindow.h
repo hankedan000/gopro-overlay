@@ -112,7 +112,8 @@ private:
 
     void
     seekEngineToAlignment(
-            const gpo::RenderAlignmentInfo &renderAlignInfo);
+            const gpo::RenderAlignmentInfo &renderAlignInfo,
+            bool setAsNewAlignmentPoint);
 
     void
     render();

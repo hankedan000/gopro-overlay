@@ -10,8 +10,9 @@ namespace gpo
 			DataSourcePtr dSrc)
 	 : dataSrc_(dSrc)
 	 , seekedIdx_(0)
-	 , lapIndicesMap_()
+	 , alignmentIdx_(0)
 	 , rate_hz_(0.0)
+	 , lapIndicesMap_()
 	{
 	}
 
@@ -60,6 +61,19 @@ namespace gpo
 			throw std::out_of_range("idx " + std::to_string(idx) + " is > size of " + std::to_string(size()));
 		}
 		seekedIdx_ = idx;
+	}
+
+	void
+	TelemetrySeeker::setAlignmentIdx(
+		size_t idx)
+	{
+		alignmentIdx_ = idx;
+	}
+
+	size_t
+	TelemetrySeeker::getAlignmentIdx() const
+	{
+		return alignmentIdx_;
 	}
 
 	void

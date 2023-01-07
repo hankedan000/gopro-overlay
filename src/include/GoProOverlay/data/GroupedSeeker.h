@@ -60,6 +60,9 @@ namespace gpo
 		seekAllRelativeTime(
 			double offset_secs);
 
+		void
+		setAlignmentHere();
+
 		/**
 		 * @return
 		 * the lowest number of laps a seeker has in the group

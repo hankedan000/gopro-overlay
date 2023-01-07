@@ -145,7 +145,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         ui->applyAlignment_PushButton->setEnabled(true);
     });
     connect(ui->previewAlignment_PushButton, &QPushButton::clicked, this, [this]{
-        seekEngineToAlignment(getAlignmentInfoFromUI());
+        seekEngineToAlignment(getAlignmentInfoFromUI(),false);
         render();
         if ( ! ui->customAlignmentCheckBox->isChecked())
         {
@@ -159,6 +159,8 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     });
     connect(ui->applyAlignment_PushButton, &QPushButton::clicked, this, [this]{
         applyAlignmentToProject();
+        seekEngineToAlignment(getAlignmentInfoFromUI(),true);
+        render();
         ui->resetAlignment_PushButton->setEnabled(false);
         ui->applyAlignment_PushButton->setEnabled(false);
     });
@@ -341,6 +343,7 @@ ProjectWindow::loadProject(
                     false);// holdoff render untill we seek below
 
         updateAlignmentPane();
+        seekEngineToAlignment(getAlignmentInfoFromUI(),true);
         ui->leadIn_SpinBox->setValue(proj_.getLeadInSeconds());
         ui->leadOut_SpinBox->setValue(proj_.getLeadOutSeconds());
         if (proj_.getEngine()->entityCount() > 0)
@@ -593,7 +596,6 @@ ProjectWindow::updateAlignmentPane()
     }
 
     resetAlignmentFromProject();
-    seekEngineToAlignment(getAlignmentInfoFromUI());
     if ( ! ui->customAlignmentCheckBox->isChecked())
     {
         updateCustomAlignmentTableValues();
@@ -702,11 +704,16 @@ ProjectWindow::resetAlignmentFromProject()
 
 void
 ProjectWindow::seekEngineToAlignment(
-        const gpo::RenderAlignmentInfo &renderAlignInfo)
+        const gpo::RenderAlignmentInfo &renderAlignInfo,
+        bool setAsNewAlignmentPoint)
 {
     auto engine = proj_.getEngine();
     auto gSeeker = engine->getSeeker();
     gSeeker->seekToAlignmentInfo(renderAlignInfo);
+    if (setAsNewAlignmentPoint)
+    {
+        gSeeker->setAlignmentHere();
+    }
     telemPlotAcclX_->plot()->realignData();
 }
 
