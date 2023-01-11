@@ -242,6 +242,12 @@ TelemetryPlot::setY_Data(
 		case Y_Component::eYC_GyroZ:
 			dataItr->value = tSamp.gpSamp.gyro.z;
 			break;
+		case Y_Component::eYC_GPS_Speed2D:
+			dataItr->value = tSamp.gpSamp.gps.speed2D;
+			break;
+		case Y_Component::eYC_GPS_Speed3D:
+			dataItr->value = tSamp.gpSamp.gps.speed3D;
+			break;
 		default:
 			printf("%s - unsupported Y_Component (%d)\n",__func__,(int)(comp));
 			dataItr->value = 0;

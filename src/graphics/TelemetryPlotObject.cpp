@@ -20,7 +20,8 @@ namespace gpo
         }
 		plot_ = new TelemetryPlot(nullptr);
         plot_->resize(PLOT_RENDER_WIDTH,PLOT_RENDER_HEIGHT);
-        plot_->setY_Component(TelemetryPlot::Y_Component::eYC_AcclX,false);
+		// default to plotting GPS speed
+        plot_->setY_Component(TelemetryPlot::Y_Component::eYC_GPS_Speed2D,false);
 	}
 
 	TelemetryPlotObject::~TelemetryPlotObject()

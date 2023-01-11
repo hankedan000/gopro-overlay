@@ -28,7 +28,10 @@ public:
 
 		eYC_GyroX = 5,
 		eYC_GyroY = 6,
-		eYC_GyroZ = 7
+		eYC_GyroZ = 7,
+
+		eYC_GPS_Speed2D = 8,
+		eYC_GPS_Speed3D = 9
 	};
 
 private:
