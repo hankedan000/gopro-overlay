@@ -9,6 +9,18 @@ TelemetryPlot::TelemetryPlot(
 	setInteraction(QCP::Interaction::iRangeDrag,true);
 	setInteraction(QCP::Interaction::iRangeZoom,true);
 	legend->setVisible(true);
+
+	connect(this, &QCustomPlot::beforeReplot, this, [this]{
+		for (auto &sourceObjs : sources_)
+		{
+			auto alignmentIdx = sourceObjs.telemSrc->seeker()->getAlignmentIdx();
+			if (alignmentIdx != sourceObjs.alignmentIdxAtLastReplot)
+			{
+				setX_Data(sourceObjs, xComponent_);
+				sourceObjs.alignmentIdxAtLastReplot = alignmentIdx;
+			}
+		}
+	});
 }
 
 TelemetryPlot::~TelemetryPlot()
@@ -27,6 +39,7 @@ TelemetryPlot::addSource(
 	sourceObjs.graph->setData(xData,yData,true);
 	sourceObjs.graph->setName(telemSrc->getDataSourceName().c_str());
 	sourceObjs.graph->setPen(QPen(DEFAULT_COLORS[sources_.size() % N_DEFAULT_COLORS]));
+	sourceObjs.alignmentIdxAtLastReplot = telemSrc->seeker()->getAlignmentIdx();
 	setX_Data(sourceObjs,xComponent_);
 	setY_Data(sourceObjs,yComponent_);
 	rescaleAxes();

@@ -50,6 +50,12 @@ private:
 
 		// QCustomPlot graph for this telemetry data source
 		QCPGraph *graph;
+
+		// the telemetry's seeker alignment index at the last time replot() was called.
+		// this is checked prior to a replot operation. if the value doesn't match the
+		// the telemetry's current alignment index, then the data's key values will be
+		// computed such that they reflect the new alignment index.
+		size_t alignmentIdxAtLastReplot;
 	};
 
 public:
