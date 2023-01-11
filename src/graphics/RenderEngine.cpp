@@ -233,6 +233,8 @@ namespace gpo
 					re.rObj = new LapTimerObject();
 				else if (typeName == "SpeedometerObject")
 					re.rObj = new SpeedometerObject();
+				else if (typeName == "TelemetryPlotObject")
+					re.rObj = new TelemetryPlotObject();
 				else if (typeName == "TelemetryPrintoutObject")
 					re.rObj = new TelemetryPrintoutObject();
 				else if (typeName == "TextObject")
