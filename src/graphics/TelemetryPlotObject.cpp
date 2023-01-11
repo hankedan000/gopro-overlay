@@ -10,7 +10,7 @@ namespace gpo
 	 : RenderedObject(PLOT_RENDER_WIDTH,PLOT_RENDER_HEIGHT)
 	 , app_(nullptr)
 	 , plot_(nullptr)
-	 , plotWidthTime_sec_(0)
+	 , plotWidthTime_sec_(2.0)
 	 , calculatedFPS_(0)
 	{
         if (QApplication::instance() == nullptr)
@@ -50,6 +50,21 @@ namespace gpo
 	void
 	TelemetryPlotObject::render()
 	{
+		if (tSources_.size() > 0)
+		{
+			auto telemSrc = tSources_.front();
+			auto seeker = telemSrc->seeker();
+			auto offsetFromAlignment = (long long)(seeker->seekedIdx()) - seeker->getAlignmentIdx();
+
+			// compute x-range to have right side aligned with 1st dataset's current
+			// seeked location, and the width sized to fit N amount of seconds worth of data.
+			size_t windowWidthSamples = std::round(plotWidthTime_sec_ * calculatedFPS_);
+			double xRangeUpper = offsetFromAlignment;
+			double xRangeLower = xRangeUpper - windowWidthSamples;
+			plot_->xAxis->setRange(xRangeLower, xRangeUpper);
+			plot_->replot(QCustomPlot::RefreshPriority::rpImmediateRefresh);
+		}
+
         auto pixmap = plot_->toPixmap(PLOT_RENDER_WIDTH,PLOT_RENDER_HEIGHT);
         auto image = pixmap.toImage();
         // make a temporary cv::Mat with the QImage's memory

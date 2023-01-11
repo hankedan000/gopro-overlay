@@ -169,9 +169,10 @@ TelemetryPlot::setX_Data(
 		SourceObjects &sourceObjs,
 		X_Component comp)
 {
-	auto &telemSrc = sourceObjs.telemSrc;
-	size_t seekedIdx = telemSrc->seekedIdx();
-	auto &seekedSamp = telemSrc->at(seekedIdx);
+	auto telemSrc = sourceObjs.telemSrc;
+	auto seeker = telemSrc->seeker();
+	size_t alignmentIdx = seeker->getAlignmentIdx();
+	auto &alignmentSamp = telemSrc->at(alignmentIdx);
 	auto dataPtr = sourceObjs.graph->data();
 	auto dataItr = dataPtr->begin();
 	for (size_t i=0; i<telemSrc->size() && dataItr!=dataPtr->end(); i++, dataItr++)
@@ -179,10 +180,10 @@ TelemetryPlot::setX_Data(
 		switch (comp)
 		{
 		case X_Component::eXC_Samples:
-			dataItr->key = (double)(i) - seekedIdx;
+			dataItr->key = (double)(i) - alignmentIdx;
 			break;
 		case X_Component::eXC_Time:
-			dataItr->key = telemSrc->at(i).gpSamp.t_offset - seekedSamp.gpSamp.t_offset;
+			dataItr->key = telemSrc->at(i).gpSamp.t_offset - alignmentSamp.gpSamp.t_offset;
 			break;
 		default:
 			printf("%s - unsupported X_Component (%d)\n",__func__,(int)(comp));

@@ -433,7 +433,6 @@ namespace gpo
 		auto plotObject = new gpo::TelemetryPlotObject;
 		plotObject->addTelemetrySource(topData->telemSrc);
 		plotObject->addTelemetrySource(botData->telemSrc);
-		plotObject->setVisible(false);
 		RenderEngine::RenderedEntity plotRE;
 		plotRE.name = "plot";
 		plotRE.rObj = plotObject;
