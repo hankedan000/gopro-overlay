@@ -25,6 +25,24 @@ namespace gpo
 		render() override;
 
 		void
+		setTelemetryColor(
+			gpo::TelemetrySourcePtr telemSrc,
+			QColor color);
+
+		std::pair<bool,QColor>
+		getTelemetryColor(
+			gpo::TelemetrySourcePtr telemSrc) const;
+
+		void
+		setTelemetryLabel(
+			gpo::TelemetrySourcePtr telemSrc,
+			const std::string &label);
+
+		std::pair<bool,std::string>
+		getTelemetryLabel(
+			gpo::TelemetrySourcePtr telemSrc) const;
+
+		void
 		setX_Component(
 				TelemetryPlot::X_Component comp);
 

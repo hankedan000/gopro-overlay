@@ -63,18 +63,25 @@ private:
 
 public:
 	explicit TelemetryPlot(
-			QWidget *parent = nullptr);
+		QWidget *parent = nullptr);
 	~TelemetryPlot();
 
 	void
 	addSource(
-			gpo::TelemetrySourcePtr telemSrc,
-			bool replot = true);
+		gpo::TelemetrySourcePtr telemSrc,
+		bool replot = true);
+
+	void
+	addSource(
+		gpo::TelemetrySourcePtr telemSrc,
+		const std::string &label,
+		QColor color,
+		bool replot = true);
 
 	void
 	removeSource(
-			size_t idx,
-			bool replot = true);
+		size_t idx,
+		bool replot = true);
 
 	void
 	clear(
@@ -82,32 +89,59 @@ public:
 
 	gpo::TelemetrySourcePtr
 	getSource(
-			size_t idx);
+		size_t idx);
 
 	size_t
 	numSources() const;
 
 	void
 	realignData(
-			bool replot = true);
+		bool replot = true);
+
+	void
+	setTelemetryColor(
+		gpo::TelemetrySourcePtr telemSrc,
+		QColor color,
+		bool replot = true);
+
+	std::pair<bool,QColor>
+	getTelemetryColor(
+		gpo::TelemetrySourcePtr telemSrc) const;
+
+	void
+	setTelemetryLabel(
+		gpo::TelemetrySourcePtr telemSrc,
+		const std::string &label,
+		bool replot = true);
+
+	std::pair<bool,std::string>
+	getTelemetryLabel(
+		gpo::TelemetrySourcePtr telemSrc) const;
 
 	void
 	setX_Component(
-			X_Component comp,
-			bool replot = true);
+		X_Component comp,
+		bool replot = true);
 
 	X_Component
 	getX_Component() const;
 
 	void
 	setY_Component(
-			Y_Component comp,
-			bool replot = true);
+		Y_Component comp,
+		bool replot = true);
 
 	Y_Component
 	getY_Component() const;
 
 private:
+	void
+	addSource_(
+			gpo::TelemetrySourcePtr telemSrc,
+			const std::string &label,
+			QColor color,
+			bool replot = true);
+	
 	void
 	setX_Data(
 			SourceObjects &sourceObjs,
@@ -122,5 +156,7 @@ private:
 	X_Component xComponent_;
 	Y_Component yComponent_;
 	std::vector<SourceObjects> sources_;
+
+	QCPTextElement *plotTitle_;
 
 };

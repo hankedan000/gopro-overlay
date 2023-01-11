@@ -74,10 +74,40 @@ namespace gpo
 	}
 
 	void
+	TelemetryPlotObject::setTelemetryColor(
+		gpo::TelemetrySourcePtr telemSrc,
+		QColor color)
+	{
+		plot_->setTelemetryColor(telemSrc,color,false);// hold off replot until render()
+	}
+
+	std::pair<bool,QColor>
+	TelemetryPlotObject::getTelemetryColor(
+		gpo::TelemetrySourcePtr telemSrc) const
+	{
+		return plot_->getTelemetryColor(telemSrc);
+	}
+
+	void
+	TelemetryPlotObject::setTelemetryLabel(
+		gpo::TelemetrySourcePtr telemSrc,
+		const std::string &label)
+	{
+		plot_->setTelemetryLabel(telemSrc,label,false);// hold off replot until render()
+	}
+
+	std::pair<bool,std::string>
+	TelemetryPlotObject::getTelemetryLabel(
+		gpo::TelemetrySourcePtr telemSrc) const
+	{
+		return plot_->getTelemetryLabel(telemSrc);
+	}
+
+	void
 	TelemetryPlotObject::setX_Component(
 			TelemetryPlot::X_Component comp)
 	{
-		plot_->setX_Component(comp);
+		plot_->setX_Component(comp,false);// hold off replot until render()
 	}
 
 	TelemetryPlot::X_Component
@@ -90,7 +120,7 @@ namespace gpo
 	TelemetryPlotObject::setY_Component(
 			TelemetryPlot::Y_Component comp)
 	{
-		plot_->setY_Component(comp);
+		plot_->setY_Component(comp,false);// hold off replot until render()
 	}
 
 	TelemetryPlot::Y_Component

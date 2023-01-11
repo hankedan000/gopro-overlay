@@ -434,7 +434,11 @@ namespace gpo
 
 		auto plotObject = new gpo::TelemetryPlotObject;
 		plotObject->addTelemetrySource(topData->telemSrc);
+		plotObject->setTelemetryLabel(topData->telemSrc,"Run A");
+		// plotObject->setTelemetryColor(topData->telemSrc,QColor(TOP_COLOR[2],TOP_COLOR[1],TOP_COLOR[0],TOP_COLOR[3]));// OpenCV is BGRA; Qt is RGBA
 		plotObject->addTelemetrySource(botData->telemSrc);
+		plotObject->setTelemetryLabel(botData->telemSrc,"Run B");
+		// plotObject->setTelemetryColor(botData->telemSrc,QColor(BOT_COLOR[2],BOT_COLOR[1],BOT_COLOR[0],BOT_COLOR[3]));// OpenCV is BGRA; Qt is RGBA
 		RenderEngine::RenderedEntity plotRE;
 		plotRE.name = "plot";
 		plotRE.rObj = plotObject;

@@ -5,11 +5,17 @@ TelemetryPlot::TelemetryPlot(
 : QCustomPlot(parent)
 , xComponent_(X_Component::eXC_Samples)
 , yComponent_(Y_Component::eYC_Unknown)
+, plotTitle_(new QCPTextElement(this,"",15))
 {
 	setInteraction(QCP::Interaction::iRangeDrag,true);
 	setInteraction(QCP::Interaction::iRangeZoom,true);
 	legend->setVisible(true);
 
+	// add the title element to the plot
+	plotLayout()->insertRow(0);
+	plotLayout()->addElement(0,0, plotTitle_);
+
+	// check and correct for data realignments before each replot()
 	connect(this, &QCustomPlot::beforeReplot, this, [this]{
 		for (auto &sourceObjs : sources_)
 		{
@@ -31,25 +37,18 @@ TelemetryPlot::addSource(
 		gpo::TelemetrySourcePtr telemSrc,
 		bool replot)
 {
-	SourceObjects sourceObjs;
-	sourceObjs.telemSrc = telemSrc;
-	QVector<double> xData(telemSrc->size()), yData(telemSrc->size());
-	addGraph();
-	sourceObjs.graph = graph(graphCount() - 1);
-	sourceObjs.graph->setData(xData,yData,true);
-	sourceObjs.graph->setName(telemSrc->getDataSourceName().c_str());
-	sourceObjs.graph->setPen(QPen(DEFAULT_COLORS[sources_.size() % N_DEFAULT_COLORS]));
-	sourceObjs.alignmentIdxAtLastReplot = telemSrc->seeker()->getAlignmentIdx();
-	setX_Data(sourceObjs,xComponent_);
-	setY_Data(sourceObjs,yComponent_);
-	rescaleAxes();
-
-	sources_.push_back(sourceObjs);
-
-	if (replot)
-	{
-		this->replot();
-	}
+	QColor color = DEFAULT_COLORS[sources_.size() % N_DEFAULT_COLORS];
+	addSource_(telemSrc,telemSrc->getDataSourceName(),color,replot);
+}
+			
+void
+TelemetryPlot::addSource(
+		gpo::TelemetrySourcePtr telemSrc,
+		const std::string &label,
+		QColor color,
+		bool replot)
+{
+	addSource_(telemSrc,label,color,replot);
 }
 
 void
@@ -116,6 +115,74 @@ TelemetryPlot::realignData(
 }
 
 void
+TelemetryPlot::setTelemetryColor(
+	gpo::TelemetrySourcePtr telemSrc,
+	QColor color,
+	bool replot)
+{
+	for (auto &sourceObjs : sources_)
+	{
+		if (sourceObjs.telemSrc.get() == telemSrc.get())
+		{
+			sourceObjs.graph->pen().setColor(color);
+		}
+	}
+
+	if (replot)
+	{
+		this->replot();
+	}
+}
+
+std::pair<bool,QColor>
+TelemetryPlot::getTelemetryColor(
+	gpo::TelemetrySourcePtr telemSrc) const
+{
+	for (const auto &sourceObjs : sources_)
+	{
+		if (sourceObjs.telemSrc.get() == telemSrc.get())
+		{
+			return {true,sourceObjs.graph->pen().color()};
+		}
+	}
+	return {false,Qt::black};
+}
+
+void
+TelemetryPlot::setTelemetryLabel(
+	gpo::TelemetrySourcePtr telemSrc,
+	const std::string &label,
+	bool replot)
+{
+	for (auto &sourceObjs : sources_)
+	{
+		if (sourceObjs.telemSrc.get() == telemSrc.get())
+		{
+			sourceObjs.graph->setName(label.c_str());
+		}
+	}
+
+	if (replot)
+	{
+		this->replot();
+	}
+}
+
+std::pair<bool,std::string>
+TelemetryPlot::getTelemetryLabel(
+	gpo::TelemetrySourcePtr telemSrc) const
+{
+	for (const auto &sourceObjs : sources_)
+	{
+		if (sourceObjs.telemSrc.get() == telemSrc.get())
+		{
+			return {true,sourceObjs.graph->name().toStdString()};
+		}
+	}
+	return {false,""};
+}
+
+void
 TelemetryPlot::setX_Component(
 		X_Component comp,
 		bool replot)
@@ -178,6 +245,34 @@ TelemetryPlot::getY_Component() const
 }
 
 void
+TelemetryPlot::addSource_(
+		gpo::TelemetrySourcePtr telemSrc,
+		const std::string &label,
+		QColor color,
+		bool replot)
+{
+	SourceObjects sourceObjs;
+	sourceObjs.telemSrc = telemSrc;
+	QVector<double> xData(telemSrc->size()), yData(telemSrc->size());
+	addGraph();
+	sourceObjs.graph = graph(graphCount() - 1);
+	sourceObjs.graph->setData(xData,yData,true);
+	sourceObjs.graph->setName(label.c_str());
+	sourceObjs.graph->setPen(QPen(color));
+	sourceObjs.alignmentIdxAtLastReplot = telemSrc->seeker()->getAlignmentIdx();
+	setX_Data(sourceObjs,xComponent_);
+	setY_Data(sourceObjs,yComponent_);
+	rescaleAxes();
+
+	sources_.push_back(sourceObjs);
+
+	if (replot)
+	{
+		this->replot();
+	}
+}
+
+void
 TelemetryPlot::setX_Data(
 		SourceObjects &sourceObjs,
 		X_Component comp)
@@ -220,37 +315,48 @@ TelemetryPlot::setY_Data(
 		{
 		case Y_Component::eYC_Unknown:
 			dataItr->value = 0;
+			plotTitle_->setText("");
 			break;
 		case Y_Component::eYC_Time:
 			dataItr->value = tSamp.gpSamp.t_offset;
+			plotTitle_->setText("Time");
 			break;
 		case Y_Component::eYC_AcclX:
 			dataItr->value = tSamp.gpSamp.accl.x;
+			plotTitle_->setText("X Acceleration");
 			break;
 		case Y_Component::eYC_AcclY:
 			dataItr->value = tSamp.gpSamp.accl.y;
+			plotTitle_->setText("Y Acceleration");
 			break;
 		case Y_Component::eYC_AcclZ:
 			dataItr->value = tSamp.gpSamp.accl.z;
+			plotTitle_->setText("Z Acceleration");
 			break;
 		case Y_Component::eYC_GyroX:
 			dataItr->value = tSamp.gpSamp.gyro.x;
+			plotTitle_->setText("X Gyroscope");
 			break;
 		case Y_Component::eYC_GyroY:
 			dataItr->value = tSamp.gpSamp.gyro.y;
+			plotTitle_->setText("Y Gyroscope");
 			break;
 		case Y_Component::eYC_GyroZ:
 			dataItr->value = tSamp.gpSamp.gyro.z;
+			plotTitle_->setText("Z Gyroscope");
 			break;
 		case Y_Component::eYC_GPS_Speed2D:
 			dataItr->value = tSamp.gpSamp.gps.speed2D;
+			plotTitle_->setText("GPS 2D Speed");
 			break;
 		case Y_Component::eYC_GPS_Speed3D:
 			dataItr->value = tSamp.gpSamp.gps.speed3D;
+			plotTitle_->setText("GPS 3D Speed");
 			break;
 		default:
 			printf("%s - unsupported Y_Component (%d)\n",__func__,(int)(comp));
 			dataItr->value = 0;
+			plotTitle_->setText("**INVALID Y COMPONENT**");
 			break;
 		}
 	}
