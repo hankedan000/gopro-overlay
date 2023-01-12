@@ -8,6 +8,7 @@ set(QT_WIDGETS_SOURCES
 	progressdialog.h
 	progressdialog.cpp
 	progressdialog.ui
+	ProgressTimer.h
 	projectwindow.h
 	projectwindow.cpp
 	projectwindow.ui

@@ -3,6 +3,8 @@
 
 #include <QDialog>
 
+#include "ProgressTimer.h"
+
 namespace Ui {
 class ProgressDialog;
 }
@@ -30,6 +32,8 @@ public slots:
 
 private:
     Ui::ProgressDialog *ui;
+    ProgressTimer timer_;
+    
 };
 
 #endif // PROGRESSDIALOG_H
