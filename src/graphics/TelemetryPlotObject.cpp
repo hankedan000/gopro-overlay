@@ -8,15 +8,18 @@ namespace gpo
 
 	TelemetryPlotObject::TelemetryPlotObject()
 	 : RenderedObject(PLOT_RENDER_WIDTH,PLOT_RENDER_HEIGHT)
-	 , app_(nullptr)
+	 , fakeApp_()
 	 , plot_(nullptr)
 	 , plotWidthTime_sec_(2.0)
 	 , calculatedFPS_(0)
 	{
+		fakeApp_.app = nullptr;
         if (QApplication::instance() == nullptr)
         {
-            int argn = 0;
-            app_ = new QApplication(argn,nullptr);
+			fakeApp_.argc = 1;
+			fakeApp_.argv[0] = (char *)malloc(100);
+			strcpy(fakeApp_.argv[0],"FakeQtApp");
+            fakeApp_.app = new QApplication(fakeApp_.argc,fakeApp_.argv);
         }
 		plot_ = new TelemetryPlot(nullptr);
         plot_->resize(PLOT_RENDER_WIDTH,PLOT_RENDER_HEIGHT);
@@ -30,9 +33,10 @@ namespace gpo
 		{
 			delete(plot_);
 		}
-		if (app_)
+		if (fakeApp_.app)
 		{
-			delete(app_);
+			delete(fakeApp_.app);
+			delete(fakeApp_.argv[0]);
 		}
 	}
 

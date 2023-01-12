@@ -79,7 +79,21 @@ namespace gpo
 			const YAML::Node& node) override;
 
 	private:
-    	QApplication *app_;
+		// TelemetryPlot is a Qt widget, and all QWidgets require an instance to a QApplication.
+		// Since not all applications using this class are Qt GUIs, we will detect if a QApplication
+		// is already running within the process, and if not we'll construct our own.
+		// It's a pretty bad hack, but I can't see a way around it.
+		// There's also a requirement that QApplications need a valid set of argc & argv to exist
+		// for the lifetime of the app. See the below post about weird seg faults that can occur if
+		// this isn't the case.
+		// https://stackoverflow.com/questions/35566459/segfault-when-accessing-qapplicationarguments
+		struct FakeQtApp
+		{
+			int argc;
+			char *argv[1];
+    		QApplication *app;
+		} fakeApp_;
+
         TelemetryPlot *plot_;
 
 		// the number of visible samples to display horizontally (in seconds)
