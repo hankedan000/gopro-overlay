@@ -251,6 +251,15 @@ TelemetryPlot::addSource_(
 		QColor color,
 		bool replot)
 {
+	// prevent telemSrc from being added again
+	for (const auto &sourceObjs : sources_)
+	{
+		if (sourceObjs.telemSrc.get() == telemSrc.get())
+		{
+			return;
+		}
+	}
+
 	SourceObjects sourceObjs;
 	sourceObjs.telemSrc = telemSrc;
 	QVector<double> xData(telemSrc->size()), yData(telemSrc->size());
