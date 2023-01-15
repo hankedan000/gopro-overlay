@@ -137,6 +137,10 @@ public:
 	Y_Component
 	getY_Component() const;
 
+	void
+	setPlotTitle(
+		const std::string &title);
+
 private:
 	void
 	addSource_(
