@@ -14,13 +14,13 @@
 #include "GoProOverlay/graphics/VideoObject.h"
 #include "tqdm.h"
 
-const char *PROG_NAME = "gopro_overlay";
+const char *PROG_NAME = "single_overlay";
 bool stop_app = false;
 
 struct ProgOptions
 {
 	std::string inputFile;
-	std::string outputFile = "render.mp4";
+	std::string outputFile = "single_render.mp4";
 	int showPreview = 0;
 	int renderDebugInfo = 0;
 };
@@ -130,6 +130,16 @@ int main(int argc, char *argv[])
 	data->setDatumTrack(track);
 
 	auto engine = gpo::RenderEngineFactory::singleVideo(data);
+
+	// disable LapTimerObjects (useless without a meaningful track datum)
+	for (size_t ee=0; ee<engine->entityCount(); ee++)
+	{
+		auto &entity = engine->getEntity(ee);
+		if (entity.rObj->typeName() == "LapTimerObject")
+		{
+			entity.rObj->setVisible(false);
+		}
+	}
 
 	const auto RENDERED_VIDEO_SIZE = data->videoSrc->frameSize();
 	const auto PREVIEW_VIDEO_SIZE = cv::Size(1280,720);

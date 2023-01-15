@@ -1,7 +1,7 @@
-add_executable(gopro_overlay
-	gopro_overlay.cpp)
+add_executable(single_overlay
+	single_overlay.cpp)
 
-target_link_libraries(gopro_overlay
+target_link_libraries(single_overlay
 	GoProOverlay
 	tqdm)
 
