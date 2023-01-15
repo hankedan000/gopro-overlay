@@ -6,6 +6,7 @@ TelemetryPlotDialog::TelemetryPlotDialog(QWidget *parent) :
     ui(new Ui::TelemetryPlotDialog)
 {
     ui->setupUi(this);
+    plot()->applyDarkTheme();
 }
 
 TelemetryPlotDialog::~TelemetryPlotDialog()

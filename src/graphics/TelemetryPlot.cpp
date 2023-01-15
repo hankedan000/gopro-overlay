@@ -33,6 +33,35 @@ TelemetryPlot::~TelemetryPlot()
 {}
 
 void
+TelemetryPlot::applyDarkTheme()
+{
+	const auto BORDER_COLOR = Qt::gray;
+	const auto TICK_COLOR = Qt::gray;
+	const auto TEXT_COLOR = Qt::gray;
+	
+	// style items within the chart
+    setBackground(QBrush(QRgb(0x1b1e20)));
+    xAxis->setBasePen(QPen(BORDER_COLOR, 1));
+    yAxis->setBasePen(QPen(BORDER_COLOR, 1));
+    xAxis->setTickPen(QPen(TICK_COLOR, 1));
+    yAxis->setTickPen(QPen(TICK_COLOR, 1));
+    xAxis->setSubTickPen(QPen(TICK_COLOR, 1));
+    yAxis->setSubTickPen(QPen(TICK_COLOR, 1));
+
+	// style text
+	xAxis->setLabelColor(TEXT_COLOR);
+	yAxis->setLabelColor(TEXT_COLOR);
+    xAxis->setTickLabelColor(TEXT_COLOR);
+    yAxis->setTickLabelColor(TEXT_COLOR);
+	plotTitle_->setTextColor(TEXT_COLOR);
+
+	// style the legend
+	legend->setBrush(QBrush(QRgb(0x2A2E32)));
+	legend->setTextColor(TEXT_COLOR);
+	legend->setBorderPen(QPen(BORDER_COLOR, 1));
+}
+
+void
 TelemetryPlot::addSource(
 		gpo::TelemetrySourcePtr telemSrc,
 		bool replot)
@@ -298,9 +327,11 @@ TelemetryPlot::setX_Data(
 		{
 		case X_Component::eXC_Samples:
 			dataItr->key = (double)(i) - alignmentIdx;
+			xAxis->setLabel("samples");
 			break;
 		case X_Component::eXC_Time:
 			dataItr->key = telemSrc->at(i).gpSamp.t_offset - alignmentSamp.gpSamp.t_offset;
+			xAxis->setLabel("time (s)");
 			break;
 		default:
 			printf("%s - unsupported X_Component (%d)\n",__func__,(int)(comp));
@@ -329,38 +360,47 @@ TelemetryPlot::setY_Data(
 		case Y_Component::eYC_Time:
 			dataItr->value = tSamp.gpSamp.t_offset;
 			plotTitle_->setText("Time");
+			yAxis->setLabel("time offset (s)");
 			break;
 		case Y_Component::eYC_AcclX:
 			dataItr->value = tSamp.gpSamp.accl.x;
 			plotTitle_->setText("X Acceleration");
+			yAxis->setLabel("acceleration (m/s^2)");
 			break;
 		case Y_Component::eYC_AcclY:
 			dataItr->value = tSamp.gpSamp.accl.y;
 			plotTitle_->setText("Y Acceleration");
+			yAxis->setLabel("acceleration (m/s^2)");
 			break;
 		case Y_Component::eYC_AcclZ:
 			dataItr->value = tSamp.gpSamp.accl.z;
 			plotTitle_->setText("Z Acceleration");
+			yAxis->setLabel("acceleration (m/s^2)");
 			break;
 		case Y_Component::eYC_GyroX:
 			dataItr->value = tSamp.gpSamp.gyro.x;
 			plotTitle_->setText("X Gyroscope");
+			yAxis->setLabel("angular velocity (rad/s)");
 			break;
 		case Y_Component::eYC_GyroY:
 			dataItr->value = tSamp.gpSamp.gyro.y;
 			plotTitle_->setText("Y Gyroscope");
+			yAxis->setLabel("angular velocity (rad/s)");
 			break;
 		case Y_Component::eYC_GyroZ:
 			dataItr->value = tSamp.gpSamp.gyro.z;
 			plotTitle_->setText("Z Gyroscope");
+			yAxis->setLabel("angular velocity (rad/s)");
 			break;
 		case Y_Component::eYC_GPS_Speed2D:
 			dataItr->value = tSamp.gpSamp.gps.speed2D;
 			plotTitle_->setText("GPS 2D Speed");
+			yAxis->setLabel("velocity (m/s)");
 			break;
 		case Y_Component::eYC_GPS_Speed3D:
 			dataItr->value = tSamp.gpSamp.gps.speed3D;
 			plotTitle_->setText("GPS 3D Speed");
+			yAxis->setLabel("velocity (m/s)");
 			break;
 		default:
 			printf("%s - unsupported Y_Component (%d)\n",__func__,(int)(comp));

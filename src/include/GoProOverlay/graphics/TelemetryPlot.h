@@ -66,6 +66,9 @@ public:
 		QWidget *parent = nullptr);
 	~TelemetryPlot();
 
+    void
+    applyDarkTheme();
+
 	void
 	addSource(
 		gpo::TelemetrySourcePtr telemSrc,
