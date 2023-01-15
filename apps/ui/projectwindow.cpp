@@ -343,7 +343,16 @@ ProjectWindow::loadProject(
                     false);// holdoff render untill we seek below
 
         updateAlignmentPane();
-        seekEngineToAlignment(getAlignmentInfoFromUI(),true);
+        // FIXME see issue #7
+        // https://github.com/hankedan000/gopro-overlay/issues/7
+        // try-catch is just a hack to prevent app from crashing in the interim
+        try
+        {
+            seekEngineToAlignment(getAlignmentInfoFromUI(),true);
+        } catch (...)
+        {
+            printf("caught exception!\n");
+        }
         ui->leadIn_SpinBox->setValue(proj_.getLeadInSeconds());
         ui->leadOut_SpinBox->setValue(proj_.getLeadOutSeconds());
         if (proj_.getEngine()->entityCount() > 0)
