@@ -10,7 +10,7 @@ namespace gpo
 	 : RenderedObject(PLOT_RENDER_WIDTH,PLOT_RENDER_HEIGHT)
 	 , fakeApp_()
 	 , plot_(nullptr)
-	 , plotWidthTime_sec_(2.0)
+	 , plotWidthTime_sec_(6.0)
 	 , calculatedFPS_(0)
 	{
 		fakeApp_.app = nullptr;
@@ -22,9 +22,11 @@ namespace gpo
             fakeApp_.app = new QApplication(fakeApp_.argc,fakeApp_.argv);
         }
 		plot_ = new TelemetryPlot(nullptr);
-        plot_->resize(PLOT_RENDER_WIDTH,PLOT_RENDER_HEIGHT);
+		plot_->setMaximumSize(PLOT_RENDER_WIDTH, PLOT_RENDER_HEIGHT);
+		plot_->setMinimumSize(PLOT_RENDER_WIDTH, PLOT_RENDER_HEIGHT);
 		// default to plotting GPS speed
         plot_->setY_Component(TelemetryPlot::Y_Component::eYC_GPS_Speed2D,false);
+		plot_->applyDarkTheme();
 	}
 
 	TelemetryPlotObject::~TelemetryPlotObject()
@@ -125,6 +127,21 @@ namespace gpo
 			TelemetryPlot::Y_Component comp)
 	{
 		plot_->setY_Component(comp,false);// hold off replot until render()
+
+		// touch up plot titles so they are more understandable to the 'layperson'
+		// when rendering videos "X,Y,Z Acceleration" doesn't mean must to people
+		switch (comp)
+		{
+			case TelemetryPlot::Y_Component::eYC_AcclX:
+				plot_->setPlotTitle("Left/Right Acceleration");
+				break;
+			case TelemetryPlot::Y_Component::eYC_AcclY:
+				plot_->setPlotTitle("Front/Back Acceleration");
+				break;
+			default:
+				// leave TelemetryPlot's default title
+				break;
+		}
 	}
 
 	TelemetryPlot::Y_Component
@@ -174,6 +191,16 @@ namespace gpo
             }
 			// FIXME add a way to remove sources too
         }
+
+		// FIXME add support to save/restore telemetry-specific properties.
+		// assume we're restoring the top/bottom video style when there are 2 sources
+		if (tSources_.size() == 2)
+		{
+			plot_->setTelemetryLabel(tSources_[0], "Run A",false);
+			plot_->setTelemetryLabel(tSources_[1], "Run B",false);
+			plot_->setTelemetryColor(tSources_[0], QColor(255,0,0,255),false);
+			plot_->setTelemetryColor(tSources_[1], QColor(0,255,255,255),false);
+		}
 	}
 
 	YAML::Node
