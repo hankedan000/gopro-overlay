@@ -191,16 +191,6 @@ namespace gpo
             }
 			// FIXME add a way to remove sources too
         }
-
-		// FIXME add support to save/restore telemetry-specific properties.
-		// assume we're restoring the top/bottom video style when there are 2 sources
-		if (tSources_.size() == 2)
-		{
-			plot_->setTelemetryLabel(tSources_[0], "Run A",false);
-			plot_->setTelemetryLabel(tSources_[1], "Run B",false);
-			plot_->setTelemetryColor(tSources_[0], QColor(255,0,0,255),false);
-			plot_->setTelemetryColor(tSources_[1], QColor(0,255,255,255),false);
-		}
 	}
 
 	YAML::Node
@@ -246,6 +236,9 @@ namespace gpo
 
 		if (node["plotTitle"])
 		{
+			// setPlotTitle() needs to be called after setY_Component() in the case
+			// where there is a user-defined plot title. if not, then the Y_Component's
+			// default title would prevail.
 			plot_->setPlotTitle(node["plotTitle"].as<std::string>());
 		}
 		if (node["telemetryProperties"])
