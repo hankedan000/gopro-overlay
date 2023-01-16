@@ -280,6 +280,12 @@ TelemetryPlot::setPlotTitle(
 	plotTitle_->setText(title.c_str());
 }
 
+std::string
+TelemetryPlot::getPlotTitle() const
+{
+	return plotTitle_->text().toStdString();
+}
+
 void
 TelemetryPlot::addSource_(
 		gpo::TelemetrySourcePtr telemSrc,

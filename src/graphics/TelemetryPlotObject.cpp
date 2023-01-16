@@ -211,6 +211,18 @@ namespace gpo
 		node["xComponent"] = (int)getX_Component();
 		node["yComponent"] = (int)getY_Component();
 		node["plotWidthTime_sec"] = plotWidthTime_sec_;
+		node["plotTitle"] = plot_->getPlotTitle();
+
+		YAML::Node telemetryProperties;
+		for (const auto &telemSrc : tSources_)
+		{
+			YAML::Node graphProps;
+			graphProps["sourceName"] = telemSrc->getDataSourceName();
+			graphProps["label"] = plot_->getTelemetryLabel(telemSrc).second;
+			graphProps["color"] = plot_->getTelemetryColor(telemSrc).second.name(QColor::NameFormat::HexArgb).toStdString();
+			telemetryProperties.push_back(graphProps);
+		}
+		node["telemetryProperties"] = telemetryProperties;
 
 		return node;
 	}
@@ -231,6 +243,45 @@ namespace gpo
 		setY_Component(yComponent);
 
 		YAML_TO_FIELD(node,"plotWidthTime_sec",plotWidthTime_sec_);
+
+		if (node["plotTitle"])
+		{
+			plot_->setPlotTitle(node["plotTitle"].as<std::string>());
+		}
+		if (node["telemetryProperties"])
+		{
+			const auto &telemetryProperties = node["telemetryProperties"];
+			for (size_t i=0; i<telemetryProperties.size(); i++)
+			{
+				const auto &graphProps = telemetryProperties[i];
+				auto sourceName = graphProps["sourceName"].as<std::string>();
+				gpo::TelemetrySourcePtr telemSrc = nullptr;
+				for (auto &ts : tSources_)
+				{
+					if (ts->getDataSourceName() == sourceName)
+					{
+						telemSrc = ts;
+						break;
+					}
+				}
+
+				if (telemSrc != nullptr)
+				{
+					auto label = graphProps["label"].as<std::string>();
+					plot_->setTelemetryLabel(telemSrc,label);
+					auto colorStr = graphProps["color"].as<std::string>();
+					QColor color;
+					color.setNamedColor(colorStr.c_str());
+					plot_->setTelemetryColor(telemSrc,color);
+				}
+				else
+				{
+					printf("%s - unable to find %s in tSources_. properties will not be restored.\n",
+						__func__,
+						sourceName.c_str());
+				}
+			}
+		}
 
 		return true;
 	}
