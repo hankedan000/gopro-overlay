@@ -318,6 +318,8 @@ namespace gpo
 			}
 		}
 
+		// always call subclass's decode last because some of them are depending
+		// on having their telemetry source lists populated already.
 		okay = subDecode(node["subclass"]) && okay;
 
 		return okay;

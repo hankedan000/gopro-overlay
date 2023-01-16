@@ -141,6 +141,9 @@ public:
 	setPlotTitle(
 		const std::string &title);
 
+	std::string
+	getPlotTitle() const;
+
 private:
 	void
 	addSource_(

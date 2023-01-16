@@ -153,7 +153,14 @@ TelemetryPlot::setTelemetryColor(
 	{
 		if (sourceObjs.telemSrc.get() == telemSrc.get())
 		{
-			sourceObjs.graph->pen().setColor(color);
+			// Just calling QPen::setColor() wasn't enough. Seems like the
+			// QCustomPlot library doesn't let you change the pen color without
+			// calling QCPGraph::setPen() all over again. To preserve other pen
+			// settings, we acquire a copy of the original pen and set only the
+			// new color to it.
+			auto penCopy = sourceObjs.graph->pen();
+			penCopy.setColor(color);
+			sourceObjs.graph->setPen(penCopy);
 		}
 	}
 
@@ -278,6 +285,12 @@ TelemetryPlot::setPlotTitle(
 	const std::string &title)
 {
 	plotTitle_->setText(title.c_str());
+}
+
+std::string
+TelemetryPlot::getPlotTitle() const
+{
+	return plotTitle_->text().toStdString();
 }
 
 void

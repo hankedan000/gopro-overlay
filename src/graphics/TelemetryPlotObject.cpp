@@ -191,16 +191,6 @@ namespace gpo
             }
 			// FIXME add a way to remove sources too
         }
-
-		// FIXME add support to save/restore telemetry-specific properties.
-		// assume we're restoring the top/bottom video style when there are 2 sources
-		if (tSources_.size() == 2)
-		{
-			plot_->setTelemetryLabel(tSources_[0], "Run A",false);
-			plot_->setTelemetryLabel(tSources_[1], "Run B",false);
-			plot_->setTelemetryColor(tSources_[0], QColor(255,0,0,255),false);
-			plot_->setTelemetryColor(tSources_[1], QColor(0,255,255,255),false);
-		}
 	}
 
 	YAML::Node
@@ -211,6 +201,18 @@ namespace gpo
 		node["xComponent"] = (int)getX_Component();
 		node["yComponent"] = (int)getY_Component();
 		node["plotWidthTime_sec"] = plotWidthTime_sec_;
+		node["plotTitle"] = plot_->getPlotTitle();
+
+		YAML::Node telemetryProperties;
+		for (const auto &telemSrc : tSources_)
+		{
+			YAML::Node graphProps;
+			graphProps["sourceName"] = telemSrc->getDataSourceName();
+			graphProps["label"] = plot_->getTelemetryLabel(telemSrc).second;
+			graphProps["color"] = plot_->getTelemetryColor(telemSrc).second.name(QColor::NameFormat::HexArgb).toStdString();
+			telemetryProperties.push_back(graphProps);
+		}
+		node["telemetryProperties"] = telemetryProperties;
 
 		return node;
 	}
@@ -231,6 +233,48 @@ namespace gpo
 		setY_Component(yComponent);
 
 		YAML_TO_FIELD(node,"plotWidthTime_sec",plotWidthTime_sec_);
+
+		if (node["plotTitle"])
+		{
+			// setPlotTitle() needs to be called after setY_Component() in the case
+			// where there is a user-defined plot title. if not, then the Y_Component's
+			// default title would prevail.
+			plot_->setPlotTitle(node["plotTitle"].as<std::string>());
+		}
+		if (node["telemetryProperties"])
+		{
+			const auto &telemetryProperties = node["telemetryProperties"];
+			for (size_t i=0; i<telemetryProperties.size(); i++)
+			{
+				const auto &graphProps = telemetryProperties[i];
+				auto sourceName = graphProps["sourceName"].as<std::string>();
+				gpo::TelemetrySourcePtr telemSrc = nullptr;
+				for (auto &ts : tSources_)
+				{
+					if (ts->getDataSourceName() == sourceName)
+					{
+						telemSrc = ts;
+						break;
+					}
+				}
+
+				if (telemSrc != nullptr)
+				{
+					auto label = graphProps["label"].as<std::string>();
+					plot_->setTelemetryLabel(telemSrc,label);
+					auto colorStr = graphProps["color"].as<std::string>();
+					QColor color;
+					color.setNamedColor(colorStr.c_str());
+					plot_->setTelemetryColor(telemSrc,color);
+				}
+				else
+				{
+					printf("%s - unable to find %s in tSources_. properties will not be restored.\n",
+						__func__,
+						sourceName.c_str());
+				}
+			}
+		}
 
 		return true;
 	}
