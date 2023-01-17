@@ -42,6 +42,9 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     ui->stopButton->setVisible(false);
     ui->customAlignmentTableWidget->hide();
     ui->customAlignmentCheckBox->setChecked(false);
+    // disable these boxes until track is defined
+    ui->renderEngineBox->setEnabled(false);
+    ui->alignAndExportBox->setEnabled(false);
     ui->propertiesTab->setLayout(new QGridLayout(this));
     ui->propertiesTab->layout()->addWidget(renderEntityPropertiesTab_);
     progressDialog_->setWindowTitle("Render Progress");
@@ -87,6 +90,9 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
                     false,// we'll close it out selves below
                     false);// hold off render until below
         updateAlignmentPane();
+        // disable these boxes until track is defined
+        ui->renderEngineBox->setEnabled(false);
+        ui->alignAndExportBox->setEnabled(false);
         previewWindow_->hide();
         render();
         trackEditor_->hide();
@@ -131,6 +137,8 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         auto dScr = dsm.getSourceByName(sourceName.toStdString());
         auto newTrack = dScr->makeTrack();
         proj_.setTrack(newTrack);
+        ui->renderEngineBox->setEnabled(true);
+        ui->alignAndExportBox->setEnabled(true);
         setProjectDirty(true);
 
         trackEditor_->setTrack(newTrack);
@@ -364,6 +372,8 @@ ProjectWindow::loadProject(
         if (proj_.hasTrack())
         {
             trackEditor_->setTrack(proj_.getTrack());
+            ui->renderEngineBox->setEnabled(true);
+            ui->alignAndExportBox->setEnabled(true);
         }
 
         setProjectDirty(false);
