@@ -70,10 +70,18 @@ namespace gpo
 	TrackMapObject::sourcesValid()
 	{
 		// init dot colors based on number of sources
-		size_t newColorsNeeded = tSources_.size() - dotColors_.size();
-		for (size_t i=0; i<newColorsNeeded; i++)
+		if (dotColors_.size() > tSources_.size())
 		{
-			dotColors_.push_back(DEFAULT_DOT_COLORS[dotColors_.size()%NUM_DEFAULT_DOT_COLORS]);
+			// remove excess dot colors
+			dotColors_.resize(tSources_.size());
+		}
+		else
+		{
+			size_t newColorsNeeded = tSources_.size() - dotColors_.size();
+			for (size_t i=0; i<newColorsNeeded; i++)
+			{
+				dotColors_.push_back(DEFAULT_DOT_COLORS[dotColors_.size()%NUM_DEFAULT_DOT_COLORS]);
+			}
 		}
 
 		// use first source as the basis for the track map outline
