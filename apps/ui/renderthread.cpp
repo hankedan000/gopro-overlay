@@ -1,8 +1,10 @@
 #include "renderthread.h"
 
+#include <filesystem>
 #include "GoProOverlay/graphics/RenderEngine.h"
 
-const std::string RAW_RENDER_FILENAME = "raw_render.mp4";
+const std::filesystem::path TEMP_DIR = "./render_tmp/";
+const std::filesystem::path RAW_RENDER_FILENAME = "raw_render.mp4";
 
 RenderThread::RenderThread(
         gpo::RenderProject project,
@@ -10,11 +12,7 @@ RenderThread::RenderThread(
         double fps)
  : project_(project)
  , exportFile_(exportFile)
- , vWriter_(RAW_RENDER_FILENAME,
-            cv::VideoWriter::fourcc('M','P','4','V'),
-            fps,
-            project.getEngine()->getRenderSize(),
-            true)// isColor
+ , vWriter_()
  , renderFPS_(fps)
  , stop_(false)
 {
@@ -43,11 +41,21 @@ RenderThread::run()
         printf("  %s: %0.6fs\n",sourceName.c_str(),startTime_sec);
     }
 
+    // create temporary directory and open export video file
+    std::filesystem::create_directories(TEMP_DIR);
+    std::filesystem::path rawRenderFilePath = TEMP_DIR / RAW_RENDER_FILENAME;
+    vWriter_.open(
+        rawRenderFilePath.c_str(),
+        cv::VideoWriter::fourcc('M','P','4','V'),
+        renderFPS_,
+        engine->getRenderSize(),
+        true);// isColor
+    
     // get new limits after lead-in seeking
     auto seekLimits = gSeeker->relativeSeekLimits();
     qulonglong progress = 0;
     qulonglong total = seekLimits.second;
-    while ( ! stop_ && progress < total)
+    while (vWriter_.isOpened() && ! stop_ && progress < total)
     {
         engine->render();
         vWriter_.write(engine->getFrame());
@@ -63,6 +71,7 @@ RenderThread::run()
         // 2 -> 1st audio source is in left. 2nd audio source is in right.
         #define AUDIO_APPROACH 1
 
+        char ffmpegCmd[10000];
 #if (AUDIO_APPROACH == 1)
         auto sourceForAudio = gSeeker->getSeeker(seekerCount - 1)->getDataSourceName();
         auto sourceStartTime_sec = startTimesBySource[sourceForAudio];
@@ -72,16 +81,18 @@ RenderThread::run()
         printf("audioSourceFile = '%s'\n", audioSourceFile.c_str());
 
         // extract audio from seeked source file using ffmpeg
-        char ffmpegCmd[2048];
-        sprintf(ffmpegCmd,"ffmpeg -ss %0.6fs -i %s -y tmp_audio.wav",
+        const std::filesystem::path tmpAudioPath = TEMP_DIR / "tmp_audio.wav";
+        sprintf(ffmpegCmd,"ffmpeg -ss %0.6fs -i %s -y %s",
             sourceStartTime_sec,
-            audioSourceFile.c_str());
+            audioSourceFile.c_str(),
+            tmpAudioPath.c_str());
         printf("extracting audio...\ncmd = %s\n",ffmpegCmd);
         system(ffmpegCmd);
 
         // remux audio into raw render
-        sprintf(ffmpegCmd,"ffmpeg -i %s -i tmp_audio.wav -map 0:v:0 -map 1:a:0 -c:v copy -y %s",
-            RAW_RENDER_FILENAME.c_str(),
+        sprintf(ffmpegCmd,"ffmpeg -i %s -i %s -map 0:v:0 -map 1:a:0 -c:v copy -y %s",
+            rawRenderFilePath.c_str(),
+            tmpAudioPath.c_str(),
             exportFile_.toStdString().c_str());
         printf("remuxing audio...\ncmd = %s\n",ffmpegCmd);
         system(ffmpegCmd);
@@ -94,10 +105,11 @@ RenderThread::run()
         printf("audioSourceFile = '%s'\n", leftSourceFile.c_str());
 
         // extract left audio from seeked source file using ffmpeg
-        char ffmpegCmd[2048];
-        sprintf(ffmpegCmd,"ffmpeg -ss %0.6fs -i %s -y tmp_left_audio.wav",
+        const std::filesystem::path tmpLeftAudioPath = TEMP_DIR / "tmp_left_audio.wav";
+        sprintf(ffmpegCmd,"ffmpeg -ss %0.6fs -i %s -y %s",
             leftStartTime_sec,
-            leftSourceFile.c_str());
+            leftSourceFile.c_str(),
+            tmpLeftAudioPath.c_str());
         printf("extracting audio...\ncmd = %s\n",ffmpegCmd);
         system(ffmpegCmd);
 
@@ -109,25 +121,34 @@ RenderThread::run()
         printf("audioSourceFile = '%s'\n", rightSourceFile.c_str());
 
         // extract right audio from seeked source file using ffmpeg
-        sprintf(ffmpegCmd,"ffmpeg -ss %0.6fs -i %s -y tmp_right_audio.wav",
+        const std::filesystem::path tmpRightAudioPath = TEMP_DIR / "tmp_right_audio.wav";
+        sprintf(ffmpegCmd,"ffmpeg -ss %0.6fs -i %s -y %s",
             rightStartTime_sec,
-            rightSourceFile.c_str());
+            rightSourceFile.c_str(),
+            tmpRightAudioPath.c_str());
         printf("extracting audio...\ncmd = %s\n",ffmpegCmd);
         system(ffmpegCmd);
 
         // merge audio sources into one
-        sprintf(ffmpegCmd,"ffmpeg -i tmp_left_audio.wav -i tmp_right_audio.wav -filter_complex \"amerge=inputs=2,pan=stereo|c0<c0+c1|c1<c2+c3\" -y tmp_audio_lr_merge.wav");
+        const std::filesystem::path tmpMergedAudioPath = TEMP_DIR / "tmp_audio_lr_merge.wav";
+        sprintf(ffmpegCmd,"ffmpeg -i %s -i %s -filter_complex \"amerge=inputs=2,pan=stereo|c0<c0+c1|c1<c2+c3\" -y %s",
+            tmpLeftAudioPath.c_str(),
+            tmpRightAudioPath.c_str(),
+            tmpMergedAudioPath.c_str());
         printf("merge left/right into one audio file...\ncmd = %s\n",ffmpegCmd);
         system(ffmpegCmd);
 
         // remux audio into raw render
-        sprintf(ffmpegCmd,"ffmpeg -i %s -i tmp_audio_lr_merge.wav -map 0:v:0 -map 1:a:0 -c:v copy -y %s",
-            RAW_RENDER_FILENAME.c_str(),
+        sprintf(ffmpegCmd,"ffmpeg -i %s -i %s -map 0:v:0 -map 1:a:0 -c:v copy -y %s",
+            rawRenderFilePath.c_str(),
+            tmpMergedAudioPath.c_str(),
             exportFile_.toStdString().c_str());
         printf("remuxing audio...\ncmd = %s\n",ffmpegCmd);
         system(ffmpegCmd);
 #endif
 
+        // cleanup temporary files
+        std::filesystem::remove_all(TEMP_DIR);
     }
 }
 
