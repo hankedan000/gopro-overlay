@@ -70,9 +70,10 @@ namespace gpo
 	TrackMapObject::sourcesValid()
 	{
 		// init dot colors based on number of sources
-		for (size_t i=0; i<tSources_.size(); i++)
+		size_t newColorsNeeded = tSources_.size() - dotColors_.size();
+		for (size_t i=0; i<newColorsNeeded; i++)
 		{
-			dotColors_.push_back(DEFAULT_DOT_COLORS[i%NUM_DEFAULT_DOT_COLORS]);
+			dotColors_.push_back(DEFAULT_DOT_COLORS[dotColors_.size()%NUM_DEFAULT_DOT_COLORS]);
 		}
 
 		// use first source as the basis for the track map outline
@@ -176,11 +177,12 @@ namespace gpo
 
 		if (node["dotColors"])
 		{
-			auto dotColorsNode = node["dotColors"];
-			dotColors_.resize(dotColorsNode.size());
-			for (size_t dd=0; dd<dotColors_.size(); dd++)
+			const auto &dotColorsNode = node["dotColors"];
+			dotColors_.clear();
+			dotColors_.reserve(dotColorsNode.size());
+			for (size_t dd=0; dd<dotColorsNode.size(); dd++)
 			{
-				dotColors_.at(dd) = dotColorsNode[dd].as<cv::Scalar>();
+				dotColors_.push_back(dotColorsNode[dd].as<cv::Scalar>());
 			}
 		}
 
