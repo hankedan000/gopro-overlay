@@ -34,14 +34,38 @@ RenderEntityPropertiesTab::RenderEntityPropertiesTab(
     connect(ui->entitySizeWidth_spin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int newValue){
         if (entity_)
         {
-            entity_->rSize.width = newValue;
+            auto newSize = entity_->rSize;
+            if (ui->keepRatio_CheckBox->isChecked())
+            {
+                auto nativeSize = entity_->rObj->getNativeSize();
+                double ratio = (double)(newValue)/nativeSize.width;
+                newSize.width = nativeSize.width * ratio;
+                newSize.height = nativeSize.height * ratio;
+            }
+            else
+            {
+                newSize.width = newValue;
+            }
+            entity_->rSize = newSize;
             emit propertyChanged();
         }
     });
     connect(ui->entitySizeHeight_spin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int newValue){
         if (entity_)
         {
-            entity_->rSize.height = newValue;
+            auto newSize = entity_->rSize;
+            if (ui->keepRatio_CheckBox->isChecked())
+            {
+                auto nativeSize = entity_->rObj->getNativeSize();
+                double ratio = (double)(newValue)/nativeSize.height;
+                newSize.width = nativeSize.width * ratio;
+                newSize.height = nativeSize.height * ratio;
+            }
+            else
+            {
+                newSize.height = newValue;
+            }
+            entity_->rSize = newSize;
             emit propertyChanged();
         }
     });
