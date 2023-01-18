@@ -266,6 +266,11 @@ TelemetryPlot::setY_Component(
 	{
 		setY_Data(sourceObjs,yComponent_);
 	}
+	auto yCompInfo = getY_ComponentInfo(comp);
+	setPlotTitle(yCompInfo.plotTitle);
+	char axisTitle[1024];
+	sprintf(axisTitle,"%s (%s)",yCompInfo.axisTitle,yCompInfo.unit);
+	yAxis->setLabel(axisTitle);
 	rescaleAxes();
 
 	if (replot)
@@ -291,6 +296,20 @@ std::string
 TelemetryPlot::getPlotTitle() const
 {
 	return plotTitle_->text().toStdString();
+}
+
+const TelemetryPlot::Y_ComponentEnumInfo &
+TelemetryPlot::getY_ComponentInfo(
+	const TelemetryPlot::Y_Component &comp)
+{
+	for (const auto &info : Y_COMP_ENUM_INFO)
+	{
+		if (info.yComp == comp)
+		{
+			return info;
+		}
+	}
+	throw std::runtime_error("unable to find Y_ComponentEnumInfo for " + std::to_string((int)comp));
 }
 
 void
@@ -375,57 +394,37 @@ TelemetryPlot::setY_Data(
 		{
 		case Y_Component::eYC_Unknown:
 			dataItr->value = 0;
-			setPlotTitle("");
 			break;
 		case Y_Component::eYC_Time:
 			dataItr->value = tSamp.gpSamp.t_offset;
-			setPlotTitle("Time");
-			yAxis->setLabel("time offset (s)");
 			break;
 		case Y_Component::eYC_AcclX:
 			dataItr->value = tSamp.gpSamp.accl.x;
-			setPlotTitle("X Acceleration");
-			yAxis->setLabel("acceleration (m/s^2)");
 			break;
 		case Y_Component::eYC_AcclY:
 			dataItr->value = tSamp.gpSamp.accl.y;
-			setPlotTitle("Y Acceleration");
-			yAxis->setLabel("acceleration (m/s^2)");
 			break;
 		case Y_Component::eYC_AcclZ:
 			dataItr->value = tSamp.gpSamp.accl.z;
-			setPlotTitle("Z Acceleration");
-			yAxis->setLabel("acceleration (m/s^2)");
 			break;
 		case Y_Component::eYC_GyroX:
 			dataItr->value = tSamp.gpSamp.gyro.x;
-			setPlotTitle("X Gyroscope");
-			yAxis->setLabel("angular velocity (rad/s)");
 			break;
 		case Y_Component::eYC_GyroY:
 			dataItr->value = tSamp.gpSamp.gyro.y;
-			setPlotTitle("Y Gyroscope");
-			yAxis->setLabel("angular velocity (rad/s)");
 			break;
 		case Y_Component::eYC_GyroZ:
 			dataItr->value = tSamp.gpSamp.gyro.z;
-			setPlotTitle("Z Gyroscope");
-			yAxis->setLabel("angular velocity (rad/s)");
 			break;
 		case Y_Component::eYC_GPS_Speed2D:
 			dataItr->value = tSamp.gpSamp.gps.speed2D;
-			setPlotTitle("GPS 2D Speed");
-			yAxis->setLabel("velocity (m/s)");
 			break;
 		case Y_Component::eYC_GPS_Speed3D:
 			dataItr->value = tSamp.gpSamp.gps.speed3D;
-			setPlotTitle("GPS 3D Speed");
-			yAxis->setLabel("velocity (m/s)");
 			break;
 		default:
 			printf("%s - unsupported Y_Component (%d)\n",__func__,(int)(comp));
 			dataItr->value = 0;
-			setPlotTitle("**INVALID Y COMPONENT**");
 			break;
 		}
 	}

@@ -2,6 +2,7 @@
 #include "ui_renderentitypropertiestab.h"
 
 #include "GoProOverlay/graphics/FrictionCircleObject.h"
+#include "GoProOverlay/graphics/TelemetryPlotObject.h"
 
 RenderEntityPropertiesTab::RenderEntityPropertiesTab(
         QWidget *parent) :
@@ -13,6 +14,9 @@ RenderEntityPropertiesTab::RenderEntityPropertiesTab(
     ui->setupUi(this);
     setEntity(entity_);
 
+    // =============================================
+    // RenderedObject
+    // =============================================
     connect(ui->entityPositionX_spin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int newValue){
         if (entity_)
         {
@@ -42,7 +46,9 @@ RenderEntityPropertiesTab::RenderEntityPropertiesTab(
         }
     });
 
-    // handlers for FrictionCircle properties
+    // =============================================
+    // FrictionCircleObject
+    // =============================================
     connect(ui->frictionCircleBorder_ColorPicker, &ColorPicker::pickedCV, this, [this](cv::Scalar newColor){
         if (entity_)
         {
@@ -75,6 +81,25 @@ RenderEntityPropertiesTab::RenderEntityPropertiesTab(
             emit propertyChanged();
         }
     });
+
+    // =============================================
+    // TelemetryPlotObject
+    // =============================================
+    // init y-component combobox
+    for (const auto &info : TelemetryPlot::Y_COMP_ENUM_INFO)
+    {
+        ui->yComponent_ComboBox->addItem(info.name,(qint32)info.yComp);
+    }
+    connect(ui->yComponent_ComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index){
+        int yCompInt = ui->yComponent_ComboBox->itemData(index).toInt();
+        auto yComp = (TelemetryPlot::Y_Component)yCompInt;
+        if (entity_)
+        {
+            auto telemPlot = reinterpret_cast<gpo::TelemetryPlotObject*>(entity_->rObj);
+            telemPlot->setY_Component(yComp);
+            emit propertyChanged();
+        }
+    });
 }
 
 RenderEntityPropertiesTab::~RenderEntityPropertiesTab()
@@ -98,6 +123,7 @@ RenderEntityPropertiesTab::setEntity(
     ui->frictionCircle_GroupBox->hide();
     ui->lapTimer_GroupBox->hide();
     ui->speedometer_GroupBox->hide();
+    ui->telemetryPlot_GroupBox->hide();
     ui->telemetryPrintout_GroupBox->hide();
     ui->textObject_GroupBox->hide();
     ui->trackMap_GroupBox->hide();
@@ -202,6 +228,23 @@ RenderEntityPropertiesTab::setEntity(
         else if (objectTypeName == "SpeedometerObject")
         {
             ui->speedometer_GroupBox->show();
+        }
+        else if (objectTypeName == "TelemetryPlotObject")
+        {
+            auto telemPlot = reinterpret_cast<gpo::TelemetryPlotObject*>(entity->rObj);
+            auto plotsY_Comp = telemPlot->getY_Component();
+            for (size_t i=0; i<ui->yComponent_ComboBox->count(); i++)
+            {
+                int yCompInt = ui->yComponent_ComboBox->itemData(i).toInt();
+                auto yComp = (TelemetryPlot::Y_Component)yCompInt;
+                if (yComp == plotsY_Comp)
+                {
+                    ui->yComponent_ComboBox->setCurrentIndex(i);
+                    break;
+                }
+            }
+
+            ui->telemetryPlot_GroupBox->show();
         }
         else if (objectTypeName == "TelemetryPrintoutObject")
         {

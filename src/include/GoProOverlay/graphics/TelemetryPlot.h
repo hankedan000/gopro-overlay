@@ -1,9 +1,9 @@
 #pragma once
 
-#include "qcustomplot.h"
 #include <vector>
 
 #include "GoProOverlay/data/DataSource.h"
+#include "qcustomplot.h"
 
 class TelemetryPlot : public QCustomPlot
 {
@@ -32,6 +32,28 @@ public:
 
 		eYC_GPS_Speed2D = 8,
 		eYC_GPS_Speed3D = 9
+	};
+
+	struct Y_ComponentEnumInfo
+	{
+		Y_Component yComp;
+		const char *name;
+		const char *plotTitle;
+		const char *axisTitle;
+		const char *unit;
+	};
+	static constexpr Y_ComponentEnumInfo Y_COMP_ENUM_INFO[] = {
+	//  yComp                  name                    plotTitle              axisTitle                unit
+		{eYC_Unknown,          "eYC_Unknown",          "",                    "unknown",               ""},
+		{eYC_Time,             "eYC_Time",             "Time",                "time",                  "s"},
+		{eYC_AcclX,            "eYC_AcclX",            "X Acceleration",      "acceleration",          "m/s^s"},
+		{eYC_AcclY,            "eYC_AcclY",            "Y Acceleration",      "acceleration",          "m/s^s"},
+		{eYC_AcclZ,            "eYC_AcclZ",            "Z Acceleration",      "acceleration",          "m/s^s"},
+		{eYC_GyroX,            "eYC_GyroX",            "X Gyroscope",         "angular velocity",      "rad/s"},
+		{eYC_GyroY,            "eYC_GyroY",            "Y Gyroscope",         "angular velocity",      "rad/s"},
+		{eYC_GyroZ,            "eYC_GyroZ",            "Z Gyroscope",         "angular velocity",      "rad/s"},
+		{eYC_GPS_Speed2D,      "eYC_GPS_Speed2D",      "GPS Speed (2D)",      "gps speed (2D)",        "m/s"},
+		{eYC_GPS_Speed3D,      "eYC_GPS_Speed3D",      "GPS Speed (3D)",      "gps speed (3D)",        "m/s"}
 	};
 
 private:
@@ -143,6 +165,11 @@ public:
 
 	std::string
 	getPlotTitle() const;
+
+	static
+	const Y_ComponentEnumInfo &
+	getY_ComponentInfo(
+		const Y_Component &comp);
 
 private:
 	void

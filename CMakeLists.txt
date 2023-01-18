@@ -6,6 +6,8 @@ find_package( OpenCV REQUIRED )
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+# enable compiler warnings and treat them as errors
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
 
 # add project's module directory to CMAKE_MODULE_PATH
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")

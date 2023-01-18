@@ -251,9 +251,9 @@
        <property name="geometry">
         <rect>
          <x>0</x>
-         <y>0</y>
+         <y>-69</y>
          <width>766</width>
-         <height>619</height>
+         <height>698</height>
         </rect>
        </property>
        <layout class="QGridLayout" name="gridLayout_3">
@@ -496,6 +496,45 @@
             <property name="title">
              <string>Speedometer</string>
             </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="telemetryPlot_GroupBox">
+            <property name="title">
+             <string>Telemetry Plot</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_8">
+             <item>
+              <layout class="QHBoxLayout" name="horizontalLayout_5">
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="label_15">
+                 <property name="text">
+                  <string>Y-axis Component:</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="yComponent_ComboBox"/>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_9">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </item>
+            </layout>
            </widget>
           </item>
           <item>
