@@ -37,6 +37,8 @@ private:
     cv::Mat frameBuffer_;
     CvImageView *imgView_;
     gpo::RenderEnginePtr engine_;
+    gpo::RenderEngine::RenderedEntity *focusedEntity_;
+
 };
 
 #endif // SCRUBBABLEVIDEO_H

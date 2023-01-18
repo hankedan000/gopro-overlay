@@ -1,11 +1,14 @@
 #include "scrubbablevideo.h"
 #include "ui_scrubbablevideo.h"
 
+#include <QMouseEvent>
+
 ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::ScrubbableVideo),
     imgView_(new CvImageView(this)),
-    engine_(nullptr)
+    engine_(nullptr),
+    focusedEntity_(nullptr)
 {
     ui->setupUi(this);
     ui->mainLayout->layout()->addWidget(imgView_);
@@ -30,6 +33,57 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
         engine_->getSeeker()->prevAll();
         engine_->render();
         showImage(engine_->getFrame());
+    });
+
+    // CvImageView mouse event handlers
+    connect(imgView_, &CvImageView::onMouseMove, this, [this](QMouseEvent *event){
+        if (engine_ == nullptr)
+        {
+            return;
+        }
+
+        // video preview displays a scaled version of the engine's rendered image.
+        // for the mouse event location to be comparable, we need to map it into
+        // render image's coordinate space.
+        auto renderSize = engine_->getRenderSize();
+        double scale = (double)(renderSize.height) / frameSize_.height;
+        auto evtPosMapped = QPoint(scale * event->x(), scale * event->y());
+
+        bool mouseGrabbed = false;
+        auto prevFocusedEntity = focusedEntity_;
+        // iterate backwards because we entity that are rendered above others
+        // should grab the mouse first
+        for (int e=(engine_->entityCount()-1); e>=0; e--)
+        {
+            auto &entity = engine_->getEntity(e);
+            if ( ! mouseGrabbed &&
+                evtPosMapped.x() >= entity.rPos.x && evtPosMapped.x() <= (entity.rPos.x + entity.rSize.width) &&
+                evtPosMapped.y() >= entity.rPos.y && evtPosMapped.y() <= (entity.rPos.y + entity.rSize.height))
+            {
+                focusedEntity_ = &entity;
+                entity.rObj->setBoundingBoxVisible(true);
+                mouseGrabbed = true;
+            }
+            else
+            {
+                entity.rObj->setBoundingBoxVisible(false);
+            }
+        }
+
+        if ( ! mouseGrabbed)
+        {
+            focusedEntity_ = nullptr;
+        }
+        // if focuse changed, trigger a re-render
+        if (prevFocusedEntity != focusedEntity_)
+        {
+            engine_->render();
+            showImage(engine_->getFrame());
+        }
+    });
+    connect(imgView_, &CvImageView::onMousePress, this, [this](QMouseEvent *event){
+    });
+    connect(imgView_, &CvImageView::onMouseRelease, this, [this](QMouseEvent *event){
     });
 
     setSize(cv::Size(640,480));// default size
