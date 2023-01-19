@@ -127,6 +127,13 @@ namespace gpo
 		bool
 		isBoundingBoxVisible() const;
 
+		void
+		setBoundingBoxThickness(
+			unsigned int thickness);
+
+		unsigned int
+		getBoundingBoxThickness() const;
+
 		virtual
 		DataSourceRequirements
 		dataSourceRequirements() const;
@@ -224,6 +231,7 @@ namespace gpo
 
 		bool visible_;
 		bool boundingBoxVisible_;
+		unsigned int boundingBoxThickness_;
 
 		std::vector<VideoSourcePtr> vSources_;
 		std::vector<TelemetrySourcePtr> tSources_;

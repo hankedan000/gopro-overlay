@@ -58,7 +58,7 @@ namespace gpo
 
 		if (boundingBoxVisible_)
 		{
-			cv::rectangle(intoImg,roi,CV_RGB(255,255,255));
+			cv::rectangle(intoImg,roi,CV_RGB(255,255,255),boundingBoxThickness_);
 		}
 	}
 
