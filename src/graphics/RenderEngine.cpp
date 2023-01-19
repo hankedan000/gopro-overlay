@@ -1,5 +1,7 @@
 #include "GoProOverlay/graphics/RenderEngine.h"
 
+#include <spdlog/spdlog.h>
+
 #include "GoProOverlay/graphics/FrictionCircleObject.h"
 #include "GoProOverlay/graphics/LapTimerObject.h"
 #include "GoProOverlay/graphics/SpeedometerObject.h"
@@ -140,13 +142,13 @@ namespace gpo
 			}
 			catch (const std::exception &e)
 			{
-				printf("caught std::exception while processing rObj<%s>. what() = %s\n",
+				spdlog::error("caught std::exception while processing rObj<{}>. what() = {}",
 					ent.rObj->typeName().c_str(),
 					e.what());
 			}
 			catch (...)
 			{
-				printf("caught unknown exception while processing rObj<%s>.\n",
+				spdlog::error("caught unknown exception while processing rObj<{}>.",
 					ent.rObj->typeName().c_str());
 			}
 		}
@@ -165,13 +167,13 @@ namespace gpo
 			}
 			catch (const std::exception &e)
 			{
-				printf("caught std::exception while processing rObj<%s>. what() = %s\n",
+				spdlog::error("caught std::exception while processing rObj<{}>. what() = {}",
 					ent.rObj->typeName().c_str(),
 					e.what());
 			}
 			catch (...)
 			{
-				printf("caught unknown exception while processing rObj<%s>.\n",
+				spdlog::error("caught unknown exception while processing rObj<{}>.",
 					ent.rObj->typeName().c_str());
 			}
 		}
