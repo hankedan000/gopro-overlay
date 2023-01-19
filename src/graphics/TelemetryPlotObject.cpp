@@ -1,5 +1,7 @@
 #include "GoProOverlay/graphics/TelemetryPlotObject.h"
 
+#include <spdlog/spdlog.h>
+
 namespace gpo
 {
 
@@ -269,8 +271,7 @@ namespace gpo
 				}
 				else
 				{
-					printf("%s - unable to find %s in tSources_. properties will not be restored.\n",
-						__func__,
+					spdlog::error("unable to find {} in tSources_. properties will not be restored.",
 						sourceName.c_str());
 				}
 			}

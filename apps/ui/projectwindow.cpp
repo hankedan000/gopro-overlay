@@ -3,6 +3,7 @@
 
 #include <QFileDialog>
 #include <QMessageBox>
+#include <spdlog/spdlog.h>
 
 const QString RECENT_PROJECT_KEY = "RECENT_PROJECTS";
 const int MAX_RECENT_PROJECTS = 10;
@@ -180,7 +181,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
                     engine->getHighestFPS());
         connect(rThread_, &RenderThread::progressChanged, progressDialog_, &ProgressDialog::progressChanged);
         connect(rThread_, &RenderThread::finished, this, [this]{
-            printf("render finished!\n");
+            spdlog::info("render finished!");
             ui->exportButton->setVisible(true);
             ui->stopButton->setVisible(false);
             progressDialog_->hide();
@@ -221,7 +222,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         setProjectDirty(true);
     });
     connect(ui->jumpToLeadOut_ToolButton, &QToolButton::clicked, this, [this]{
-        printf("jump to lead-out not implemented\n");
+        spdlog::warn("jump to lead-out not implemented");
     });
 
     // connect engine wizards
@@ -263,7 +264,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         int editHeight = topLeft.row() - bottomRight.row();
         if (editWidth != 0 || editHeight != 0)
         {
-            printf("multi-cell edit in EntityTable is not supported\n");
+            spdlog::warn("multi-cell edit in EntityTable is not supported");
             return;
         }
 
@@ -381,7 +382,7 @@ ProjectWindow::loadProject(
             seekEngineToAlignment(getAlignmentInfoFromUI(),true);
         } catch (...)
         {
-            printf("caught exception!\n");
+            spdlog::error("caught exception!");
         }
         ui->leadIn_SpinBox->setValue(proj_.getLeadInSeconds());
         ui->leadOut_SpinBox->setValue(proj_.getLeadOutSeconds());

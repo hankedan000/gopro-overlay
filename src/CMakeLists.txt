@@ -45,6 +45,7 @@ target_link_libraries("${LIBNAME}"
 		GoProTelem::GoProTelem
 		${OpenCV_LIBS}
 		QCustomPlot
+		spdlog::spdlog
 		yaml-cpp)
 
 # optionally use OpenMP for parallel processing

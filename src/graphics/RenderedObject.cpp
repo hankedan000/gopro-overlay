@@ -1,5 +1,7 @@
 #include "GoProOverlay/graphics/RenderedObject.h"
 
+#include <spdlog/spdlog.h>
+
 namespace gpo
 {
 	RenderedObject::RenderedObject(
@@ -305,7 +307,7 @@ namespace gpo
 				}
 				else
 				{
-					printf("failed to lookup video DataSource for sourceName '%s'\n", sourceName.c_str());
+					spdlog::error("failed to lookup video DataSource for sourceName '{}'", sourceName.c_str());
 					okay = false;
 				}
 			}
@@ -325,7 +327,7 @@ namespace gpo
 				}
 				else
 				{
-					printf("failed to lookup telemetry DataSource for sourceName '%s'\n", sourceName.c_str());
+					spdlog::error("failed to lookup telemetry DataSource for sourceName '{}'", sourceName.c_str());
 					okay = false;
 				}
 			}

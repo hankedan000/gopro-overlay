@@ -1,5 +1,7 @@
 #include "GoProOverlay/graphics/TelemetryPlot.h"
 
+#include <spdlog/spdlog.h>
+
 TelemetryPlot::TelemetryPlot(
 		QWidget *parent)
 : QCustomPlot(parent)
@@ -373,7 +375,7 @@ TelemetryPlot::setX_Data(
 			xAxis->setLabel("time (s)");
 			break;
 		default:
-			printf("%s - unsupported X_Component (%d)\n",__func__,(int)(comp));
+			spdlog::warn("unsupported X_Component ({})",(int)(comp));
 			dataItr->key = 0;
 			break;
 		}
@@ -423,7 +425,7 @@ TelemetryPlot::setY_Data(
 			dataItr->value = tSamp.gpSamp.gps.speed3D;
 			break;
 		default:
-			printf("%s - unsupported Y_Component (%d)\n",__func__,(int)(comp));
+			spdlog::warn("unsupported Y_Component ({})",(int)(comp));
 			dataItr->value = 0;
 			break;
 		}

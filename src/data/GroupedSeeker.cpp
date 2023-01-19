@@ -1,6 +1,7 @@
 #include "GoProOverlay/data/GroupedSeeker.h"
 
 #include <limits>
+#include <spdlog/spdlog.h>
 
 namespace gpo
 {
@@ -141,7 +142,7 @@ namespace gpo
 				seekAllToIdx(0);
 				break;
 			default:
-				printf("RenderAlignmentType_E (%d) is not supported!\n", (int)renderAlignInfo.type);
+				spdlog::error("RenderAlignmentType_E ({}) is not supported!",(int)renderAlignInfo.type);
 				break;
 		}
 	}
