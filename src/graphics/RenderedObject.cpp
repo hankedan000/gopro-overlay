@@ -63,7 +63,7 @@ namespace gpo
 
 		if (boundingBoxVisible_)
 		{
-			cv::rectangle(intoImg,roi,CV_RGB(255,255,255));
+			cv::rectangle(intoImg,roi,CV_RGB(255,255,255),boundingBoxThickness_);
 		}
 	}
 
@@ -117,6 +117,19 @@ namespace gpo
 	RenderedObject::isBoundingBoxVisible() const
 	{
 		return boundingBoxVisible_;
+	}
+
+	void
+	RenderedObject::setBoundingBoxThickness(
+		unsigned int thickness)
+	{
+		boundingBoxThickness_ = thickness;
+	}
+
+	unsigned int
+	RenderedObject::getBoundingBoxThickness() const
+	{
+		return boundingBoxThickness_;
 	}
 
 	DataSourceRequirements

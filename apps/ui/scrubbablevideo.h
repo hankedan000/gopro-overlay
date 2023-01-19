@@ -23,6 +23,9 @@ public:
     setSize(
             cv::Size size);
 
+    cv::Size
+    getSize() const;
+
     void
     showImage(
             const cv::Mat &img);
@@ -33,7 +36,6 @@ public:
 
 private:
     Ui::ScrubbableVideo *ui;
-    cv::Size frameSize_;
     cv::Mat frameBuffer_;
     CvImageView *imgView_;
     gpo::RenderEnginePtr engine_;

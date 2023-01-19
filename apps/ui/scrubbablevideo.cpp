@@ -46,8 +46,23 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
         // for the mouse event location to be comparable, we need to map it into
         // render image's coordinate space.
         auto renderSize = engine_->getRenderSize();
-        double scale = (double)(renderSize.height) / frameSize_.height;
+        auto frameSize = getSize();
+        double scale = (double)(renderSize.height) / frameSize.height;
         auto evtPosMapped = QPoint(scale * event->x(), scale * event->y());
+        if (false)
+        {
+            printf("=======================\n");
+            printf("frameSize_: w = %d; h = %d;\n",frameSize.width,frameSize.height);
+            printf("renderSize: w = %d; h = %d;\n",renderSize.width,renderSize.height);
+            printf("scale = %f;\n",scale);
+            printf("evtPosMapped: x = %d; y = %d\n",evtPosMapped.x(),evtPosMapped.y());
+            printf("event: x = %d; y = %d\n",event->x(),event->y());
+            printf("=======================\n");
+        }
+
+        // this is computed such that the bounding box will be at least 1px
+        // thick even in the scaled preview image size.
+        unsigned int boundingBoxThickness = std::ceil(scale * 1);
 
         bool mouseGrabbed = false;
         auto prevFocusedEntity = focusedEntity_;
@@ -62,6 +77,7 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
             {
                 focusedEntity_ = &entity;
                 entity.rObj->setBoundingBoxVisible(true);
+                entity.rObj->setBoundingBoxThickness(boundingBoxThickness);
                 mouseGrabbed = true;
             }
             else
@@ -86,7 +102,7 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
     connect(imgView_, &CvImageView::onMouseRelease, this, [this](QMouseEvent *event){
     });
 
-    setSize(cv::Size(640,480));// default size
+    setSize(cv::Size(960,540));// default size
 }
 
 ScrubbableVideo::~ScrubbableVideo()
@@ -98,7 +114,6 @@ void
 ScrubbableVideo::setSize(
         cv::Size size)
 {
-    frameSize_ = size;
     frameBuffer_.create(size.height,size.width,CV_8UC3);
 
     if (isVisible() && engine_)
@@ -107,29 +122,17 @@ ScrubbableVideo::setSize(
     }
 }
 
+cv::Size
+ScrubbableVideo::getSize() const
+{
+    return cv::Size(frameBuffer_.cols,frameBuffer_.rows);
+}
+
 void
 ScrubbableVideo::showImage(
         const cv::Mat &img)
 {
-    cv::Size imgSize = img.size();
-    // width over height (WOH) ratio:
-    //  * if WOH is <1.0 then image is taller than it is wide
-    //  * if WOH is >1.0 then image is wider than it is tall
-    double imgWOH = (double)(imgSize.width) / imgSize.height;
-    double frameWOH = (double)(frameSize_.width) / frameSize_.height;
-    cv::Size newSize;
-    if (imgWOH > frameWOH)
-    {
-        newSize.width = frameSize_.width;
-        newSize.height = frameSize_.width / imgWOH;
-    }
-    else
-    {
-        newSize.width = frameSize_.height * imgWOH;
-        newSize.height = frameSize_.height;
-    }
-
-    cv::resize(img,frameBuffer_,newSize);
+    cv::resize(img,frameBuffer_,getSize());
     imgView_->setImage(frameBuffer_);
 }
 

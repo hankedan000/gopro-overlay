@@ -28,6 +28,11 @@ RenderThread::run()
     gSeeker->seekToAlignmentInfo(project_.getAlignmentInfo());
     // start render a little bit before the alignment point (lead-in)
     gSeeker->seekAllRelativeTime(project_.getLeadInSeconds() * -1.0);// -1 to go backwards in time
+    // disable bounding boxes prior to render
+    for (size_t ee=0; ee<engine->entityCount(); ee++)
+    {
+        engine->getEntity(ee).rObj->setBoundingBoxVisible(false);
+    }
 
     const auto seekerCount = gSeeker->seekerCount();
     std::unordered_map<std::string, double> startTimesBySource;
