@@ -39,7 +39,15 @@ private:
     cv::Mat frameBuffer_;
     CvImageView *imgView_;
     gpo::RenderEnginePtr engine_;
+
+    // entity the mouse is currently floating over
     gpo::RenderEngine::RenderedEntity *focusedEntity_;
+    // entity the mouse is grabbing (clicked and held)
+    gpo::RenderEngine::RenderedEntity *grabbedEntity_;
+    // local mouse position when mouse press event occurred
+    QPoint mousePosWhenGrabbed_;
+    // the entities original render location when mouse press event occurred
+    QPoint entityPosWhenGrabbed_;
 
 };
 

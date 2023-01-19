@@ -8,7 +8,8 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
     ui(new Ui::ScrubbableVideo),
     imgView_(new CvImageView(this)),
     engine_(nullptr),
-    focusedEntity_(nullptr)
+    focusedEntity_(nullptr),
+    grabbedEntity_(nullptr)
 {
     ui->setupUi(this);
     ui->mainLayout->layout()->addWidget(imgView_);
@@ -47,59 +48,89 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
         // render image's coordinate space.
         auto renderSize = engine_->getRenderSize();
         auto frameSize = getSize();
-        double scale = (double)(renderSize.height) / frameSize.height;
-        auto evtPosMapped = QPoint(scale * event->x(), scale * event->y());
+        double scaleFactorRoF = (double)(renderSize.height) / frameSize.height;
+        auto evtPosMapped = QPoint(scaleFactorRoF * event->x(), scaleFactorRoF * event->y());
         if (false)
         {
             printf("=======================\n");
             printf("frameSize_: w = %d; h = %d;\n",frameSize.width,frameSize.height);
             printf("renderSize: w = %d; h = %d;\n",renderSize.width,renderSize.height);
-            printf("scale = %f;\n",scale);
+            printf("scaleFactorRoF = %f;\n",scaleFactorRoF);
             printf("evtPosMapped: x = %d; y = %d\n",evtPosMapped.x(),evtPosMapped.y());
             printf("event: x = %d; y = %d\n",event->x(),event->y());
             printf("=======================\n");
         }
 
-        // this is computed such that the bounding box will be at least 1px
-        // thick even in the scaled preview image size.
-        unsigned int boundingBoxThickness = std::ceil(scale * 1);
+        bool rerender = false;
 
-        bool mouseGrabbed = false;
-        auto prevFocusedEntity = focusedEntity_;
-        // iterate backwards because we entity that are rendered above others
-        // should grab the mouse first
-        for (int e=(engine_->entityCount()-1); e>=0; e--)
+        if (grabbedEntity_ == nullptr)
         {
-            auto &entity = engine_->getEntity(e);
-            if ( ! mouseGrabbed &&
-                evtPosMapped.x() >= entity.rPos.x && evtPosMapped.x() <= (entity.rPos.x + entity.rSize.width) &&
-                evtPosMapped.y() >= entity.rPos.y && evtPosMapped.y() <= (entity.rPos.y + entity.rSize.height))
+            // this is computed such that the bounding box will be at least 1px
+            // thick even in the scaled preview image size.
+            unsigned int boundingBoxThickness = std::ceil(scaleFactorRoF * 1);
+
+            // not holding an entity yet, so perform mouse focusing logic
+            bool focusAcquired = false;
+            auto prevFocusedEntity = focusedEntity_;
+            // iterate backwards because we entity that are rendered above others
+            // should grab the mouse first
+            for (int e=(engine_->entityCount()-1); e>=0; e--)
             {
-                focusedEntity_ = &entity;
-                entity.rObj->setBoundingBoxVisible(true);
-                entity.rObj->setBoundingBoxThickness(boundingBoxThickness);
-                mouseGrabbed = true;
+                auto &entity = engine_->getEntity(e);
+                if ( ! focusAcquired &&
+                    evtPosMapped.x() >= entity.rPos.x && evtPosMapped.x() <= (entity.rPos.x + entity.rSize.width) &&
+                    evtPosMapped.y() >= entity.rPos.y && evtPosMapped.y() <= (entity.rPos.y + entity.rSize.height))
+                {
+                    focusedEntity_ = &entity;
+                    entity.rObj->setBoundingBoxVisible(true);
+                    entity.rObj->setBoundingBoxThickness(boundingBoxThickness);
+                    focusAcquired = true;
+                }
+                else
+                {
+                    entity.rObj->setBoundingBoxVisible(false);
+                }
             }
-            else
+
+            if ( ! focusAcquired)
             {
-                entity.rObj->setBoundingBoxVisible(false);
+                focusedEntity_ = nullptr;
             }
+
+            // trigger a rerender if focus changed
+            rerender = rerender || prevFocusedEntity != focusedEntity_;
+        }
+        else
+        {
+            // holding an entity, so move entity based on mouse location
+            QPoint mouseDelta = event->pos() - mousePosWhenGrabbed_;
+            QPoint entityNewPos = entityPosWhenGrabbed_ + mouseDelta * scaleFactorRoF;
+            grabbedEntity_->rPos.x = entityNewPos.x();
+            grabbedEntity_->rPos.y = entityNewPos.y();
+            rerender = true;
         }
 
-        if ( ! mouseGrabbed)
-        {
-            focusedEntity_ = nullptr;
-        }
-        // if focuse changed, trigger a re-render
-        if (prevFocusedEntity != focusedEntity_)
+        // perform preview rerender
+        if (rerender)
         {
             engine_->render();
             showImage(engine_->getFrame());
         }
     });
     connect(imgView_, &CvImageView::onMousePress, this, [this](QMouseEvent *event){
+        if (focusedEntity_)
+        {
+            grabbedEntity_ = focusedEntity_;
+            mousePosWhenGrabbed_ = event->pos();
+            entityPosWhenGrabbed_.setX(focusedEntity_->rPos.x);
+            entityPosWhenGrabbed_.setY(focusedEntity_->rPos.y);
+        }
     });
     connect(imgView_, &CvImageView::onMouseRelease, this, [this](QMouseEvent *event){
+        if (grabbedEntity_)
+        {
+            grabbedEntity_ = nullptr;
+        }
     });
 
     setSize(cv::Size(960,540));// default size
