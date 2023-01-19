@@ -34,6 +34,16 @@ public:
     setEngine(
             gpo::RenderEnginePtr engine);
 
+signals:
+    void
+    onEntitySelected(
+            gpo::RenderEngine::RenderedEntity *entity);
+
+    void
+    onEntityMoved(
+            gpo::RenderEngine::RenderedEntity *entity,
+            QPoint moveVector);
+
 private:
     Ui::ScrubbableVideo *ui;
     cv::Mat frameBuffer_;

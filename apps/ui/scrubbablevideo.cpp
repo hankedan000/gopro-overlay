@@ -124,11 +124,20 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
             mousePosWhenGrabbed_ = event->pos();
             entityPosWhenGrabbed_.setX(focusedEntity_->rPos.x);
             entityPosWhenGrabbed_.setY(focusedEntity_->rPos.y);
+            emit onEntitySelected(grabbedEntity_);
         }
     });
     connect(imgView_, &CvImageView::onMouseRelease, this, [this](QMouseEvent *event){
         if (grabbedEntity_)
         {
+            // determine in the entity was moved while it was being held
+            QPoint moveVector(grabbedEntity_->rPos.x,grabbedEntity_->rPos.y);
+            moveVector -= entityPosWhenGrabbed_;
+            if (moveVector.manhattanLength() > 0)
+            {
+                emit onEntityMoved(grabbedEntity_,moveVector);
+            }
+
             grabbedEntity_ = nullptr;
         }
     });

@@ -294,6 +294,28 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         render();
     });
 
+    // scrubbable video signal handlers
+    connect(previewWindow_, &ScrubbableVideo::onEntitySelected, this, [this](gpo::RenderEngine::RenderedEntity *entity){
+        // when an entity is selected in the video preview, highlight it in the entity table
+        // and also display it in the properties pane.
+        for (size_t r=0; r<entitiesTableModel_->rowCount(); r++)
+        {
+            QStandardItem *entityNameItem = entitiesTableModel_->item(r,ENTITY_NAME_COLUMN);
+            // recover the encoded pointer to a RenderedEntity within the name's data()
+            QVariant v = entityNameItem->data();
+            auto re = reinterpret_cast<gpo::RenderEngine::RenderedEntity *>(v.toULongLong());
+            if (re == entity)
+            {
+                ui->renderEntitiesTable->selectRow(r);
+                renderEntityPropertiesTab_->setEntity(re);
+                break;
+            }
+        }
+    });
+    connect(previewWindow_, &ScrubbableVideo::onEntityMoved, this, [this](gpo::RenderEngine::RenderedEntity *entity, QPoint moveVector){
+        setProjectDirty(true);
+    });
+
     setProjectDirty(false);
     configureMenuActions();
     populateRecentProjects();
