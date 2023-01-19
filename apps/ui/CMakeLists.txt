@@ -53,4 +53,5 @@ target_link_libraries(AppWidgets PUBLIC
 	Qt${QT_VERSION_MAJOR}::Widgets
 	GoProOverlay
 	QCustomPlot
+	spdlog::spdlog
 )

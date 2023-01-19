@@ -2,6 +2,7 @@
 #include "ui_scrubbablevideo.h"
 
 #include <QMouseEvent>
+#include <spdlog/spdlog.h>
 
 ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
     QWidget(parent),
@@ -50,16 +51,13 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
         auto frameSize = getSize();
         double scaleFactorRoF = (double)(renderSize.height) / frameSize.height;
         auto evtPosMapped = QPoint(scaleFactorRoF * event->x(), scaleFactorRoF * event->y());
-        if (false)
-        {
-            printf("=======================\n");
-            printf("frameSize_: w = %d; h = %d;\n",frameSize.width,frameSize.height);
-            printf("renderSize: w = %d; h = %d;\n",renderSize.width,renderSize.height);
-            printf("scaleFactorRoF = %f;\n",scaleFactorRoF);
-            printf("evtPosMapped: x = %d; y = %d\n",evtPosMapped.x(),evtPosMapped.y());
-            printf("event: x = %d; y = %d\n",event->x(),event->y());
-            printf("=======================\n");
-        }
+        spdlog::debug("=======================");
+        spdlog::debug("frameSize_: w = {}; h = {};",frameSize.width,frameSize.height);
+        spdlog::debug("renderSize: w = {}; h = {};",renderSize.width,renderSize.height);
+        spdlog::debug("scaleFactorRoF = {};",scaleFactorRoF);
+        spdlog::debug("evtPosMapped: x = {}; y = {}",evtPosMapped.x(),evtPosMapped.y());
+        spdlog::debug("event: x = {}; y = {}",event->x(),event->y());
+        spdlog::debug("=======================");
 
         bool rerender = false;
 

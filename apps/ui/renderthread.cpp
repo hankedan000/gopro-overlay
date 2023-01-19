@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include "GoProOverlay/graphics/RenderEngine.h"
+#include <spdlog/spdlog.h>
 
 const std::filesystem::path TEMP_DIR = "./render_tmp/";
 const std::filesystem::path RAW_RENDER_FILENAME = "raw_render.mp4";
@@ -36,14 +37,14 @@ RenderThread::run()
 
     const auto seekerCount = gSeeker->seekerCount();
     std::unordered_map<std::string, double> startTimesBySource;
-    printf("--- Start times by source\n");
+    spdlog::info("--- Start times by source");
     for (size_t ss=0; ss<seekerCount; ss++)
     {
         auto seeker = gSeeker->getSeeker(ss);
         auto sourceName = seeker->getDataSourceName();
         auto startTime_sec = seeker->getTimeAt(seeker->seekedIdx());
         startTimesBySource.insert({sourceName,startTime_sec});
-        printf("  %s: %0.6fs\n",sourceName.c_str(),startTime_sec);
+        spdlog::info("  {0}: {1:0.6f}s",sourceName.c_str(),startTime_sec);
     }
 
     // create temporary directory and open export video file
@@ -80,10 +81,10 @@ RenderThread::run()
 #if (AUDIO_APPROACH == 1)
         auto sourceForAudio = gSeeker->getSeeker(seekerCount - 1)->getDataSourceName();
         auto sourceStartTime_sec = startTimesBySource[sourceForAudio];
-        printf("dumping audio from source '%s'\n", sourceForAudio.c_str());
+        spdlog::debug("dumping audio from source '{}'", sourceForAudio.c_str());
         auto dataSource = project_.dataSourceManager().getSourceByName(sourceForAudio);
         auto audioSourceFile = dataSource->getOrigin();
-        printf("audioSourceFile = '%s'\n", audioSourceFile.c_str());
+        spdlog::debug("audioSourceFile = '{}'", audioSourceFile.c_str());
 
         // extract audio from seeked source file using ffmpeg
         const std::filesystem::path tmpAudioPath = TEMP_DIR / "tmp_audio.wav";
@@ -91,7 +92,7 @@ RenderThread::run()
             sourceStartTime_sec,
             audioSourceFile.c_str(),
             tmpAudioPath.c_str());
-        printf("extracting audio...\ncmd = %s\n",ffmpegCmd);
+        spdlog::debug("extracting audio...\ncmd = {}",ffmpegCmd);
         system(ffmpegCmd);
 
         // remux audio into raw render
@@ -99,15 +100,15 @@ RenderThread::run()
             rawRenderFilePath.c_str(),
             tmpAudioPath.c_str(),
             exportFile_.toStdString().c_str());
-        printf("remuxing audio...\ncmd = %s\n",ffmpegCmd);
+        spdlog::debug("remuxing audio...\ncmd = {}",ffmpegCmd);
         system(ffmpegCmd);
 # elif (AUDIO_APPROACH == 2)
         auto sourceForLeftAudio = gSeeker->getSeeker(0)->getDataSourceName();
         auto leftStartTime_sec = startTimesBySource[sourceForLeftAudio];
-        printf("dumping audio from source '%s'\n", sourceForLeftAudio.c_str());
+        spdlog::debug("dumping audio from source '{}'", sourceForLeftAudio.c_str());
         auto leftSource = project_.dataSourceManager().getSourceByName(sourceForLeftAudio);
         auto leftSourceFile = leftSource->getOrigin();
-        printf("audioSourceFile = '%s'\n", leftSourceFile.c_str());
+        spdlog::debug("audioSourceFile = '{}'", leftSourceFile.c_str());
 
         // extract left audio from seeked source file using ffmpeg
         const std::filesystem::path tmpLeftAudioPath = TEMP_DIR / "tmp_left_audio.wav";
@@ -115,15 +116,15 @@ RenderThread::run()
             leftStartTime_sec,
             leftSourceFile.c_str(),
             tmpLeftAudioPath.c_str());
-        printf("extracting audio...\ncmd = %s\n",ffmpegCmd);
+        spdlog::debug("extracting audio...\ncmd = {}",ffmpegCmd);
         system(ffmpegCmd);
 
         auto sourceForRightAudio = gSeeker->getSeeker(1)->getDataSourceName();
         auto rightStartTime_sec = startTimesBySource[sourceForRightAudio];
-        printf("dumping audio from source '%s'\n", sourceForRightAudio.c_str());
+        spdlog::debug("dumping audio from source '{}'", sourceForRightAudio.c_str());
         auto rightSource = project_.dataSourceManager().getSourceByName(sourceForRightAudio);
         auto rightSourceFile = rightSource->getOrigin();
-        printf("audioSourceFile = '%s'\n", rightSourceFile.c_str());
+        spdlog::debug("audioSourceFile = '{}'", rightSourceFile.c_str());
 
         // extract right audio from seeked source file using ffmpeg
         const std::filesystem::path tmpRightAudioPath = TEMP_DIR / "tmp_right_audio.wav";
@@ -131,7 +132,7 @@ RenderThread::run()
             rightStartTime_sec,
             rightSourceFile.c_str(),
             tmpRightAudioPath.c_str());
-        printf("extracting audio...\ncmd = %s\n",ffmpegCmd);
+        spdlog::debug("extracting audio...\ncmd = {}",ffmpegCmd);
         system(ffmpegCmd);
 
         // merge audio sources into one
@@ -140,7 +141,7 @@ RenderThread::run()
             tmpLeftAudioPath.c_str(),
             tmpRightAudioPath.c_str(),
             tmpMergedAudioPath.c_str());
-        printf("merge left/right into one audio file...\ncmd = %s\n",ffmpegCmd);
+        spdlog::debug("merge left/right into one audio file...\ncmd = {}",ffmpegCmd);
         system(ffmpegCmd);
 
         // remux audio into raw render
@@ -148,7 +149,7 @@ RenderThread::run()
             rawRenderFilePath.c_str(),
             tmpMergedAudioPath.c_str(),
             exportFile_.toStdString().c_str());
-        printf("remuxing audio...\ncmd = %s\n",ffmpegCmd);
+        spdlog::debug("remuxing audio...\ncmd = {}",ffmpegCmd);
         system(ffmpegCmd);
 #endif
 
