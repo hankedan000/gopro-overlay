@@ -337,15 +337,20 @@ ProjectWindow::isProjectOpened() const
 void
 ProjectWindow::closeProject()
 {
-    currProjectDir_.clear();
-    configureMenuActions();
-    setProjectDirty(false);
+    if ( ! currProjectDir_.empty())
+    {
+        spdlog::info("closing project '{}'",currProjectDir_);
+        currProjectDir_.clear();
+        configureMenuActions();
+        setProjectDirty(false);
+    }
 }
 
 bool
 ProjectWindow::saveProject(
         const std::string &projectDir)
 {
+    spdlog::info("saving project to '{}'",projectDir);
     bool success = proj_.save(projectDir);
     setProjectDirty( ! success);
     return success;
@@ -356,6 +361,7 @@ ProjectWindow::loadProject(
         const std::string &projectDir)
 {
     closeProject();
+    spdlog::info("loading project '{}'",projectDir);
 
     bool loadOkay = proj_.load(projectDir);
     if (loadOkay)
@@ -400,6 +406,10 @@ ProjectWindow::loadProject(
         }
 
         setProjectDirty(false);
+    }
+    else
+    {
+        spdlog::error("Failed to open project at path '{}'",projectDir);
     }
 
     configureMenuActions();
@@ -910,7 +920,7 @@ ProjectWindow::onActionLoadProject()
 {
     std::string filepath = QFileDialog::getExistingDirectory(
                 this,
-                "Save Project",
+                "Open Project",
                 QDir::homePath()).toStdString();
 
     loadProject(filepath);

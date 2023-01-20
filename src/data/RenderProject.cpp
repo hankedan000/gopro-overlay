@@ -4,6 +4,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <spdlog/spdlog.h>
 
 const std::string PROJECT_FILENAME = "project.yaml";
 const std::string TRACK_FILENAME = "track.yaml";
@@ -156,17 +157,27 @@ namespace gpo
 
 	bool
 	RenderProject::isValidProject(
-		const std::string &dir)
+		const std::string &dir,
+		bool noisy)
 	{
-		const std::filesystem::path path(dir);
-		if ( ! std::filesystem::exists(path))
+		const std::filesystem::path projectDir(dir);
+		if ( ! std::filesystem::exists(projectDir))
 		{
+			if (noisy)
+			{
+				spdlog::warn("directory doesn't exists. '{}'",projectDir.c_str());
+			}
 			return false;
 		}
-		else if (std::filesystem::is_directory(path))
+		else if (std::filesystem::is_directory(projectDir))
 		{
-			const std::filesystem::path projPath = path / PROJECT_FILENAME;
-			return std::filesystem::exists(projPath);
+			const std::filesystem::path projectFilePath = projectDir / PROJECT_FILENAME;
+			bool projectFileExists = std::filesystem::exists(projectFilePath);
+			if ( ! projectFileExists && noisy)
+			{
+				spdlog::warn("directory '{}' doesn't contain a '{}' file.",projectDir.c_str(),PROJECT_FILENAME);
+			}
+			return projectFileExists;
 		}
 		return false;
 	}
@@ -181,12 +192,14 @@ namespace gpo
 			// make project directory if it doesn't exist already
 			if ( ! std::filesystem::create_directories(projectRoot))
 			{
+				spdlog::error("failed to create project root directory '{}'",projectRoot.c_str());
 				return false;
 			}
 		}
 		else if ( ! std::filesystem::is_directory(projectRoot))
 		{
 			// path exists, but it's not a directory, so bail out
+			spdlog::error("projectRoot must be a directory. '{}'",projectRoot.c_str());
 			return false;
 		}
 
@@ -213,7 +226,7 @@ namespace gpo
 	RenderProject::load(
 		const std::string &dirPath)
 	{
-		if ( ! isValidProject(dirPath))
+		if ( ! isValidProject(dirPath,true))// true -> noisy
 		{
 			return false;
 		}
@@ -229,6 +242,7 @@ namespace gpo
 
 		if (std::filesystem::exists(trackPath))
 		{
+			bool trackOkay = true;
 			YAML::Node trackNode = YAML::LoadFile(trackPath);
 			if ( ! trackNode.IsNull())
 			{
@@ -240,11 +254,17 @@ namespace gpo
 				else
 				{
 					delete newTrack;
-					okay = false;
+					trackOkay = false;
 				}
 			}
 			else
 			{
+				trackOkay = false;
+			}
+
+			if ( ! trackOkay)
+			{
+				spdlog::error("failed to decode track data from '{}'",trackPath.c_str());
 				okay = false;
 			}
 		}
