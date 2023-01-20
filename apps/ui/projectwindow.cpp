@@ -521,12 +521,30 @@ ProjectWindow::populateRecentProjects()
     ui->menuLoad_Recent_Project->clear();
     ui->menuLoad_Recent_Project->setEnabled(recentProjects.size() > 0);
 
-    for (auto projectPath : recentProjects)
+    // populate recent projects dropdown menu, keeping track of ones that no longer exist
+    std::vector<QString> projectsToRemove;
+    for (const auto &projectPath : recentProjects)
     {
+        if ( ! gpo::RenderProject::isValidProject(projectPath.toStdString()))
+        {
+            spdlog::warn("recent project '{}' no longer exists. removing it from history.",projectPath.toStdString());
+            projectsToRemove.push_back(projectPath);
+            continue;
+        }
         auto action = new QAction(this);
         action->setText(projectPath);
         connect(action,&QAction::triggered,this,[this,projectPath]{ loadProject(projectPath.toStdString()); });
         ui->menuLoad_Recent_Project->addAction(action);
+    }
+
+    // remove projects from history that no longer exist
+    if (projectsToRemove.size() > 0)
+    {
+        for (const auto &project : projectsToRemove)
+        {
+            recentProjects.removeOne(project);
+        }
+        settings.setValue(RECENT_PROJECT_KEY,recentProjects);
     }
 }
 
