@@ -112,9 +112,7 @@ public:
                 smoothing = 25*3;
             }
             stats_.eta_s = (tot-curr)/stats_.avg_rate_hz;
-            double pct = (double)curr/(tot*0.01);
             if( ( tot - curr ) <= period ) {
-                pct = 100.0;
                 stats_.avg_rate_hz = tot/dt_tot;
                 curr = tot;
                 stats_.eta_s = 0;

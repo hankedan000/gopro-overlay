@@ -27,7 +27,6 @@ namespace utils
 		auto tpoItr = trackObjs.begin();
 		bool isSector = (*tpoItr)->isSector();
 		bool isEntry = true;
-		bool finished = false;
 		double lapStartTimeOffset = 0;
 		double sectorStartTimeOffset = 0;
 		gpo::GateType_E gateType = (*tpoItr)->getGateType();
@@ -65,7 +64,6 @@ namespace utils
 				}
 				else if (crossed && gateType == gpo::GateType_E::eGT_Finish)
 				{
-					finished = true;
 					currLap = -1;
 				}
 				else if (crossed && gateType == gpo::GateType_E::eGT_NOT_A_GATE)

@@ -81,6 +81,9 @@ namespace gpo
 			Track *track,
 			std::string name);
 
+		virtual
+		~TrackPathObject();
+
 		Track*
 		getTrack();
 
@@ -152,6 +155,9 @@ namespace gpo
 			size_t exitIdx,
 			double gateWidth_meters);
 
+		virtual
+		~TrackSector();
+
 		void
 		setWidth(
 			double width_meters);
@@ -219,6 +225,9 @@ namespace gpo
 			size_t pathIdx,
 			GateType_E type,
 			double gateWidth_meters);
+
+		virtual
+		~TrackGate();
 
 		void
 		setWidth(

@@ -220,10 +220,8 @@ namespace gpo
 		}
 
 		LapIndices li;
-		int prevLap = -1;
 		int prevSampLap = -1;
 		int lapWereIn = -1;
-		bool inLap = false;
 		for (size_t i=0; i<size(); i++)
 		{
 			const auto &samp = dataSrc_->samples_->at(i);
@@ -240,7 +238,6 @@ namespace gpo
 				li.exitIdx = i - 1;
 				lapIndicesMap_.insert({lapWereIn,li});
 
-				prevLap = lapWereIn;
 				lapWereIn = samp.lap;
 				li.entryIdx = i;// circuit case where finishGate == startGate
 			}

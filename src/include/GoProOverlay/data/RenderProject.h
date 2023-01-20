@@ -47,45 +47,13 @@ enum RenderAlignmentType_E
 class RenderAlignmentInfo
 {
 public:
-	// RenderAlignmentInfo()
-	//  : type(RenderAlignmentType_E::eRAT_None)
-	//  , alignInfo()
-	// {}
-
-	// RenderAlignmentInfo(
-	// 	const RenderAlignmentInfo &other)
-	// {
-	// 	this->operator=(other);
-	// }
-	
-	// RenderAlignmentInfo &
-	// operator=(
-	// 	const RenderAlignmentInfo &rhs)
-	// {
-	// 	this->type = rhs.type;
-	// 	switch (rhs.type)
-	// 	{
-	// 		case RenderAlignmentType_E::eRAT_None:
-	// 			this->alignInfo.none = rhs.alignInfo.none;
-	// 			break;
-	// 		case RenderAlignmentType_E::eRAT_Lap:
-	// 			this->alignInfo.lap = rhs.alignInfo.lap;
-	// 			break;
-	// 		case RenderAlignmentType_E::eRAT_Sector:
-	// 			this->alignInfo.sector = rhs.alignInfo.sector;
-	// 			break;
-	// 		case RenderAlignmentType_E::eRAT_Custom:
-	// 			this->alignInfo.custom = rhs.alignInfo.custom;
-	// 			break;
-	// 	}
-	// 	return *this;
-	// }
-
 	void
 	release()
 	{
 		switch (type)
 		{
+			case RenderAlignmentType_E::eRAT_None:
+				break;
 			case RenderAlignmentType_E::eRAT_Lap:
 				delete alignInfo.lap;
 				break;

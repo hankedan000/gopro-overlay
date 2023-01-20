@@ -1,8 +1,9 @@
 #include <csignal>
 #include <getopt.h>
 #include <iostream>
-#include <unistd.h>// sleep
+#include <spdlog/spdlog.h>
 #include <time.h>
+#include <unistd.h>// sleep
 
 #include "GoProOverlay/data/DataSource.h"
 #include "GoProOverlay/graphics/FrictionCircleObject.h"
@@ -153,11 +154,8 @@ int main(int argc, char *argv[])
 
 	const auto RENDERED_VIDEO_SIZE = topData->videoSrc->frameSize();
 	const auto PREVIEW_VIDEO_SIZE = cv::Size(1280,720);
-	double frameCount = topData->videoSrc->frameCount();
 	double fps = topData->videoSrc->fps();
-	double frameTime_sec = 1.0 / fps;
 	double frameTime_usec = 1.0e6 / fps;
-	int frameTime_ms = std::round(1.0e3 / fps);
 
 	cv::Mat pFrame;// preview frame
 
@@ -192,7 +190,7 @@ int main(int argc, char *argv[])
 		{
 			int64_t meas_frameTime_usec = frameStart_usec - prevFrameStart_usec;
 			frameTimeErr_usec = meas_frameTime_usec - frameTime_usec;
-			// printf("frameTimeErr_usec = %ld\n",frameTimeErr_usec);
+			spdlog::debug("frameTimeErr_usec = {}",frameTimeErr_usec);
 		}
 
 		// show render progress
@@ -223,7 +221,7 @@ int main(int argc, char *argv[])
 			{
 				// Press Q on keyboard to exit
 				auto keycode = cv::waitKey(waitTime_ms);
-				if (keycode & 0xFF == 'q')
+				if ((keycode & 0xFF) == 'q')
 				{
 					printf("Quit video playback!\n");
 					break;

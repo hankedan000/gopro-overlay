@@ -193,7 +193,6 @@ TrackDataObjectsTest::detectionGate()
 		// test Track::getDetectionGate()
 
 		const double WIDTH_METERS = 1.0;
-		const double HALF_WIDTH_DECDEG = gpo::m2dd(WIDTH_METERS/2.0);
 		auto gate = track.getDetectionGate(1,WIDTH_METERS);// around point (0,2)
 		CPPUNIT_ASSERT_DOUBLES_EQUAL(2.000003, gate.a()[1], 0.000001);
 		CPPUNIT_ASSERT_DOUBLES_EQUAL(1.999997, gate.b()[1], 0.000001);
