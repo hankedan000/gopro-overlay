@@ -75,11 +75,11 @@ RenderThread::run()
     {
         // 1 -> last audio source is in left & right.
         // 2 -> 1st audio source is in left. 2nd audio source is in right.
-        const int AUDIO_APPOACH = 1;
+        const int AUDIO_APPROACH = 1;
 
         bool audioOkay = true;
         char ffmpegCmd[10000];
-        if (AUDIO_APPOACH == 1)
+        if (AUDIO_APPROACH == 1)
         {
             auto sourceForAudio = gSeeker->getSeeker(seekerCount - 1)->getDataSourceName();
             auto sourceStartTime_sec = startTimesBySource[sourceForAudio];
@@ -113,7 +113,7 @@ RenderThread::run()
                 audioOkay = false;
             }
         }
-        else if(AUDIO_APPOACH == 2)
+        else if(AUDIO_APPROACH == 2)
         {
             auto sourceForLeftAudio = gSeeker->getSeeker(0)->getDataSourceName();
             auto leftStartTime_sec = startTimesBySource[sourceForLeftAudio];
