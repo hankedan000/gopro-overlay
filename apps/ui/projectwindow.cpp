@@ -337,15 +337,20 @@ ProjectWindow::isProjectOpened() const
 void
 ProjectWindow::closeProject()
 {
-    currProjectDir_.clear();
-    configureMenuActions();
-    setProjectDirty(false);
+    if ( ! currProjectDir_.empty())
+    {
+        spdlog::info("closing project '{}'",currProjectDir_);
+        currProjectDir_.clear();
+        configureMenuActions();
+        setProjectDirty(false);
+    }
 }
 
 bool
 ProjectWindow::saveProject(
         const std::string &projectDir)
 {
+    spdlog::info("saving project to '{}'",projectDir);
     bool success = proj_.save(projectDir);
     setProjectDirty( ! success);
     return success;
@@ -356,6 +361,7 @@ ProjectWindow::loadProject(
         const std::string &projectDir)
 {
     closeProject();
+    spdlog::info("loading project '{}'",projectDir);
 
     bool loadOkay = proj_.load(projectDir);
     if (loadOkay)
@@ -400,6 +406,10 @@ ProjectWindow::loadProject(
         }
 
         setProjectDirty(false);
+    }
+    else
+    {
+        spdlog::error("Failed to open project at path '{}'",projectDir);
     }
 
     configureMenuActions();
@@ -511,12 +521,30 @@ ProjectWindow::populateRecentProjects()
     ui->menuLoad_Recent_Project->clear();
     ui->menuLoad_Recent_Project->setEnabled(recentProjects.size() > 0);
 
-    for (auto projectPath : recentProjects)
+    // populate recent projects dropdown menu, keeping track of ones that no longer exist
+    std::vector<QString> projectsToRemove;
+    for (const auto &projectPath : recentProjects)
     {
+        if ( ! gpo::RenderProject::isValidProject(projectPath.toStdString()))
+        {
+            spdlog::warn("recent project '{}' no longer exists. removing it from history.",projectPath.toStdString());
+            projectsToRemove.push_back(projectPath);
+            continue;
+        }
         auto action = new QAction(this);
         action->setText(projectPath);
         connect(action,&QAction::triggered,this,[this,projectPath]{ loadProject(projectPath.toStdString()); });
         ui->menuLoad_Recent_Project->addAction(action);
+    }
+
+    // remove projects from history that no longer exist
+    if (projectsToRemove.size() > 0)
+    {
+        for (const auto &project : projectsToRemove)
+        {
+            recentProjects.removeOne(project);
+        }
+        settings.setValue(RECENT_PROJECT_KEY,recentProjects);
     }
 }
 
@@ -910,7 +938,7 @@ ProjectWindow::onActionLoadProject()
 {
     std::string filepath = QFileDialog::getExistingDirectory(
                 this,
-                "Save Project",
+                "Open Project",
                 QDir::homePath()).toStdString();
 
     loadProject(filepath);

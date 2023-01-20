@@ -173,7 +173,8 @@ public:
 	static
 	bool
 	isValidProject(
-		const std::string &dir);
+		const std::string &dir,
+		bool noisy = false);
 
 	bool
 	save(
