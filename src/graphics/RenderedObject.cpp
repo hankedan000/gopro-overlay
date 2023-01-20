@@ -157,7 +157,7 @@ namespace gpo
 		const auto reqs = dataSourceRequirements();
 		if (reqs.numVideoSources != DSR_ZERO_OR_MORE &&
 			reqs.numVideoSources != DSR_ONE_OR_MORE &&
-			vSources_.size() == reqs.numVideoSources)
+			vSources_.size() == (size_t)reqs.numVideoSources)
 		{
 			return false;
 		}
@@ -202,7 +202,7 @@ namespace gpo
 		const auto reqs = dataSourceRequirements();
 		if (reqs.numTelemetrySources != DSR_ZERO_OR_MORE &&
 			reqs.numTelemetrySources != DSR_ONE_OR_MORE &&
-			tSources_.size() == reqs.numTelemetrySources)
+			tSources_.size() == (size_t)reqs.numTelemetrySources)
 		{
 			return false;
 		}
@@ -362,7 +362,7 @@ namespace gpo
 		}
 		else
 		{
-			met = met && vSources_.size() == reqs.numVideoSources;
+			met = met && vSources_.size() == (size_t)reqs.numVideoSources;
 		}
 
 		return met;
@@ -384,7 +384,7 @@ namespace gpo
 		}
 		else
 		{
-			met = met && tSources_.size() == reqs.numTelemetrySources;
+			met = met && tSources_.size() == (size_t)reqs.numTelemetrySources;
 		}
 
 		return met;

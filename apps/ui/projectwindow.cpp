@@ -299,7 +299,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     connect(previewWindow_, &ScrubbableVideo::onEntitySelected, this, [this](gpo::RenderEngine::RenderedEntity *entity){
         // when an entity is selected in the video preview, highlight it in the entity table
         // and also display it in the properties pane.
-        for (size_t r=0; r<entitiesTableModel_->rowCount(); r++)
+        for (int r=0; r<entitiesTableModel_->rowCount(); r++)
         {
             QStandardItem *entityNameItem = entitiesTableModel_->item(r,ENTITY_NAME_COLUMN);
             // recover the encoded pointer to a RenderedEntity within the name's data()
@@ -651,7 +651,7 @@ ProjectWindow::updateCustomAlignmentTableValues()
     auto table = ui->customAlignmentTableWidget;
     auto gSeeker = proj_.getEngine()->getSeeker();
 
-    for (size_t i=0; i<gSeeker->seekerCount() && i<table->rowCount(); i++)
+    for (size_t i=0; i<gSeeker->seekerCount() && i<(size_t)table->rowCount(); i++)
     {
         auto seeker = gSeeker->getSeeker(i);
         QSpinBox *spinBox = (QSpinBox*)(table->cellWidget(i,CUSTOM_ALIGN_SPINBOX_COLUMN));
@@ -671,7 +671,7 @@ ProjectWindow::getAlignmentInfoFromUI()
         auto table = ui->customAlignmentTableWidget;
         auto gSeeker = proj_.getEngine()->getSeeker();
         gpo::CustomAlignment customAlignment;
-        for (size_t i=0; i<gSeeker->seekerCount() && i<table->rowCount(); i++)
+        for (size_t i=0; i<gSeeker->seekerCount() && i<(size_t)table->rowCount(); i++)
         {
             auto seeker = gSeeker->getSeeker(i);
             QSpinBox *spinBox = (QSpinBox*)(table->cellWidget(i,CUSTOM_ALIGN_SPINBOX_COLUMN));
@@ -730,7 +730,7 @@ ProjectWindow::resetAlignmentFromProject()
         auto table = ui->customAlignmentTableWidget;
         for (const auto &customEntry : rai.alignInfo.custom->idxBySourceName)
         {
-            for (size_t i=0; i<table->rowCount(); i++)
+            for (int i=0; i<table->rowCount(); i++)
             {
                 auto nameEdit = (QLineEdit*)(table->cellWidget(i,CUSTOM_ALIGN_NAME_COLUMN));
                 if (nameEdit->text().toStdString() == customEntry.first)

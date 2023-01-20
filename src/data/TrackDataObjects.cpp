@@ -61,6 +61,10 @@ namespace gpo
 	{
 	}
 
+	TrackPathObject::~TrackPathObject()
+	{
+	}
+
 	Track*
 	TrackPathObject::getTrack()
 	{
@@ -118,6 +122,10 @@ namespace gpo
 	 , entryIdx_(entryIdx)
 	 , exitIdx_(exitIdx)
 	 , gateWidth_meters_(gateWidth_meters)
+	{
+	}
+
+	TrackSector::~TrackSector()
 	{
 	}
 
@@ -222,6 +230,10 @@ namespace gpo
 	 , pathIdx_(pathIdx)
 	 , type_(type)
 	 , gateWidth_meters_(gateWidth_meters)
+	{
+	}
+
+	TrackGate::~TrackGate()
 	{
 	}
 
@@ -453,7 +465,7 @@ namespace gpo
 		else if (pA[1] == pB[1])
 		{
 			// longitudes equal; path is a vertical line at pathIdx
-			a = 0.0;halfGateWidth_dd;
+			a = 0.0;
 			b = halfGateWidth_dd;
 		}
 		else

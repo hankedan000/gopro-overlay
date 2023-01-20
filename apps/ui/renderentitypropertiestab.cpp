@@ -257,7 +257,7 @@ RenderEntityPropertiesTab::setEntity(
         {
             auto telemPlot = reinterpret_cast<gpo::TelemetryPlotObject*>(entity->rObj);
             auto plotsY_Comp = telemPlot->getY_Component();
-            for (size_t i=0; i<ui->yComponent_ComboBox->count(); i++)
+            for (int i=0; i<ui->yComponent_ComboBox->count(); i++)
             {
                 int yCompInt = ui->yComponent_ComboBox->itemData(i).toInt();
                 auto yComp = (TelemetryPlot::Y_Component)yCompInt;
