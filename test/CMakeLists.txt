@@ -1,3 +1,5 @@
+find_package(cppunit REQUIRED)
+
 add_subdirectory(LineSegmentUtils)
 add_subdirectory(SeekerTest)
 add_subdirectory(TrackDataObjects)
