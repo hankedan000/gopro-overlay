@@ -2,8 +2,9 @@ add_subdirectory(gopro-telem)
 add_subdirectory(yaml-cpp)
 add_subdirectory(qcustomplot)
 add_subdirectory(spdlog)
+add_subdirectory(csv-parser)
 
-# check to see that tqdm was cloned successfully
+# create header-only target for tqdm (if was cloned correctly)
 find_path(TQDM_INCLUDE_DIR
 	NAMES tqdm.h
 	HINTS "${CMAKE_CURRENT_SOURCE_DIR}/cpptqdm")
