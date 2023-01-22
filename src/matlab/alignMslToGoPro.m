@@ -1,19 +1,22 @@
 function [outputArg1,outputArg2] = alignMslToGoPro(mslFilePath,goProFilePath)
 %ALIGNMSLTOGOPRO Summary of this function goes here
 %   Detailed explanation goes here
-mslTelem = msq.readlog(mslFilePath);
+msqLogData = msq.readlog(mslFilePath);
+vehicleTelem = msq.logToVehicleTelem(msqLogData);
 goProTelem = gpmf.readcsv(goProFilePath);
 
-rpm = mslTelem.RPM;
+resampledVehicleTelem = telem.resampVehicleTelem(vehicleTelem,50.0);
+
+rpm = resampledVehicleTelem.engineSpeed_rpm;
 gpsSpeed = goProTelem.gps.speed2D;
 
-figure(1);
+figure();
 plot(rpm);
 title('Engine Speed');
 xlabel('samples');
 ylabel('engine speed (rpm)');
 
-figure(2);
+figure();
 plot(gpsSpeed);
 title('GPS Speed');
 xlabel('samples');
