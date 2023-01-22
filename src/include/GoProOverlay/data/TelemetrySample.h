@@ -7,6 +7,19 @@
 
 namespace gpo
 {
+	struct VehicleTelemetry
+	{
+		// time offset relative to beginning of data recording in seconds.
+		double t_offset;
+
+		float engineSpeed_rpm;
+
+		// throttle position sensor (0 to 100)
+		float tps;
+
+		float boost_psi;
+	};
+
 	struct TelemetrySample
 	{
 		gpt::CombinedSample gpSamp;

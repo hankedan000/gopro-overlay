@@ -42,6 +42,7 @@ target_include_directories("${LIBNAME}"
 
 target_link_libraries("${LIBNAME}"
 	PUBLIC
+		csv
 		GoProTelem::GoProTelem
 		${OpenCV_LIBS}
 		QCustomPlot
