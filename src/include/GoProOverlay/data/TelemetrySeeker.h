@@ -90,7 +90,7 @@ namespace gpo
 		analyze();
 
 	private:
-		DataSourcePtr dataSrc_;
+		std::weak_ptr<DataSource> dataSrc_;
 		size_t seekedIdx_;
 		size_t alignmentIdx_;
 		double rate_hz_;
