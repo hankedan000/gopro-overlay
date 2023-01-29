@@ -14,9 +14,10 @@ namespace gpo
 	std::string
 	TelemetrySource::getDataSourceName() const
 	{
-		if (dataSrc_)
+		auto dataSrcPtr = dataSrc_.lock();
+		if (dataSrcPtr)
 		{
-			return dataSrc_->getSourceName();
+			return dataSrcPtr->getSourceName();
 		}
 		return "SOURCE_UNKNOWN";
 	}
@@ -25,32 +26,32 @@ namespace gpo
 	TelemetrySource::at(
 		size_t idx) const
 	{
-		return dataSrc_->samples_->at(idx);
+		return dataSrc_.lock()->samples_->at(idx);
 	}
 
 	TelemetrySample &
 	TelemetrySource::at(
 		size_t idx)
 	{
-		return dataSrc_->samples_->at(idx);
+		return dataSrc_.lock()->samples_->at(idx);
 	}
 
 	size_t
 	TelemetrySource::seekedIdx() const
 	{
-		return dataSrc_->seeker->seekedIdx();
+		return dataSrc_.lock()->seeker->seekedIdx();
 	}
 
 	TelemetrySeekerPtr
 	TelemetrySource::seeker()
 	{
-		return dataSrc_->seeker;
+		return dataSrc_.lock()->seeker;
 	}
 
 
 	size_t
 	TelemetrySource::size() const
 	{
-		return dataSrc_->samples_->size();
+		return dataSrc_.lock()->samples_->size();
 	}
 }

@@ -12,7 +12,7 @@ namespace gpo
 	 , telemSrc(nullptr)
 	 , videoSrc(nullptr)
 	 , vCapture_()
-	 , samples_()
+	 , samples_(nullptr)
 	 , sourceName_("")
 	 , originFile_("")
 	 , datumTrack_(nullptr)
@@ -133,18 +133,18 @@ namespace gpo
 			return nullptr;
 		}
 
-		auto newSrc = DataSourcePtr(new DataSource());
+		auto newSrc = std::make_shared<DataSource>();
 		newSrc->vCapture_ = vCap;
-		newSrc->samples_ = TelemetrySamplesPtr(new TelemetrySamples());
+		newSrc->samples_ = std::make_shared<TelemetrySamples>();
 		newSrc->samples_->resize(videoTelem.size());
 		for (size_t i=0; i<videoTelem.size(); i++)
 		{
 			newSrc->samples_->at(i).gpSamp = videoTelem.at(i);
 		}
 
-		newSrc->seeker = TelemetrySeekerPtr(new TelemetrySeeker(newSrc));
-		newSrc->telemSrc = TelemetrySourcePtr(new TelemetrySource(newSrc));
-		newSrc->videoSrc = VideoSourcePtr(new VideoSource(newSrc));
+		newSrc->seeker = std::make_shared<TelemetrySeeker>(newSrc);
+		newSrc->telemSrc = std::make_shared<TelemetrySource>(newSrc);
+		newSrc->videoSrc = std::make_shared<VideoSource>(newSrc);
 
 		return newSrc;
 	}
@@ -153,13 +153,13 @@ namespace gpo
 	DataSource::makeDataFromTelemetry(
 		const gpo::TelemetrySamples &tSamps)
 	{
-		auto newSrc = DataSourcePtr(new DataSource());
-		newSrc->samples_ = TelemetrySamplesPtr(new TelemetrySamples());
+		auto newSrc = std::make_shared<DataSource>();
+		newSrc->samples_ = std::make_shared<TelemetrySamples>();
 		newSrc->samples_->resize(tSamps.size());
 		newSrc->samples_->assign(tSamps.begin(),tSamps.end());
 
-		newSrc->seeker = TelemetrySeekerPtr(new TelemetrySeeker(newSrc));
-		newSrc->telemSrc = TelemetrySourcePtr(new TelemetrySource(newSrc));
+		newSrc->seeker = std::make_shared<TelemetrySeeker>(newSrc);
+		newSrc->telemSrc = std::make_shared<TelemetrySource>(newSrc);
 		newSrc->videoSrc = nullptr;
 
 		return newSrc;

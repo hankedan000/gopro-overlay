@@ -38,7 +38,7 @@ namespace gpo
 		size() const;
 
 	private:
-		DataSourcePtr dataSrc_;
+		std::weak_ptr<DataSource> dataSrc_;
 
 	};
 

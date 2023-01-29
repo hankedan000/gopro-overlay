@@ -48,7 +48,7 @@ namespace gpo
 		frameCount();
 
 	private:
-		DataSourcePtr dataSrc_;
+		std::weak_ptr<DataSource> dataSrc_;
 		cv::Size frameSize_;
 		size_t prevFrameIdxRead_;
 

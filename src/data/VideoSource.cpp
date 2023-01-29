@@ -9,16 +9,18 @@ namespace gpo
 	 , frameSize_()
 	 , prevFrameIdxRead_(-1)
 	{
-		frameSize_.width = dataSrc_->vCapture_.get(cv::CAP_PROP_FRAME_WIDTH);
-		frameSize_.height = dataSrc_->vCapture_.get(cv::CAP_PROP_FRAME_HEIGHT);
+		auto dataSrcPtr = dataSrc_.lock();
+		frameSize_.width = dataSrcPtr->vCapture_.get(cv::CAP_PROP_FRAME_WIDTH);
+		frameSize_.height = dataSrcPtr->vCapture_.get(cv::CAP_PROP_FRAME_HEIGHT);
 	}
 
 	std::string
 	VideoSource::getDataSourceName() const
 	{
-		if (dataSrc_)
+		auto dataSrcPtr = dataSrc_.lock();
+		if (dataSrcPtr)
 		{
-			return dataSrc_->getSourceName();
+			return dataSrcPtr->getSourceName();
 		}
 		return "SOURCE_UNKNOWN";
 	}
@@ -44,7 +46,7 @@ namespace gpo
 	double
 	VideoSource::fps()
 	{
-		return dataSrc_->vCapture_.get(cv::CAP_PROP_FPS);
+		return dataSrc_.lock()->vCapture_.get(cv::CAP_PROP_FPS);
 	}
 
 	bool
@@ -52,30 +54,31 @@ namespace gpo
 		cv::Mat &outImg,
 		size_t idx)
 	{
+		auto dataSrcPtr = dataSrc_.lock();
 		// seeking can be constly, so avoid it if reading consecutive frames
 		if (idx != (prevFrameIdxRead_ + 1))
 		{
-			dataSrc_->vCapture_.set(cv::CAP_PROP_POS_FRAMES, idx);
+			dataSrcPtr->vCapture_.set(cv::CAP_PROP_POS_FRAMES, idx);
 		}
 		prevFrameIdxRead_ = idx;
-		return dataSrc_->vCapture_.read(outImg);
+		return dataSrcPtr->vCapture_.read(outImg);
 	}
 
 	size_t
 	VideoSource::seekedIdx() const
 	{
-		return dataSrc_->seeker->seekedIdx();
+		return dataSrc_.lock()->seeker->seekedIdx();
 	}
 
 	TelemetrySeekerPtr
 	VideoSource::seeker()
 	{
-		return dataSrc_->seeker;
+		return dataSrc_.lock()->seeker;
 	}
 
 	size_t
 	VideoSource::frameCount()
 	{
-		return dataSrc_->vCapture_.get(cv::CAP_PROP_FRAME_COUNT);
+		return dataSrc_.lock()->vCapture_.get(cv::CAP_PROP_FRAME_COUNT);
 	}
 }

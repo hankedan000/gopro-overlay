@@ -19,7 +19,7 @@ namespace gpo
 	std::string
 	TelemetrySeeker::getDataSourceName() const
 	{
-		return dataSrc_->getSourceName();
+		return dataSrc_.lock()->getSourceName();
 	}
 
 	void
@@ -176,7 +176,7 @@ namespace gpo
 	size_t
 	TelemetrySeeker::size() const
 	{
-		return dataSrc_->samples_->size();
+		return dataSrc_.lock()->samples_->size();
 	}
 
 	unsigned int
@@ -195,7 +195,7 @@ namespace gpo
 	TelemetrySeeker::getTimeAt(
 		size_t idx) const
 	{
-		return dataSrc_->telemSrc->at(idx).gpSamp.t_offset;
+		return dataSrc_.lock()->telemSrc->at(idx).gpSamp.t_offset;
 	}
 
 	std::pair<size_t, size_t>
@@ -222,9 +222,10 @@ namespace gpo
 		LapIndices li;
 		int prevSampLap = -1;
 		int lapWereIn = -1;
+		auto dataSrcPtr = dataSrc_.lock();
 		for (size_t i=0; i<size(); i++)
 		{
-			const auto &samp = dataSrc_->samples_->at(i);
+			const auto &samp = dataSrcPtr->samples_->at(i);
 			if (prevSampLap == -1 && samp.lap > 0)
 			{
 				// entered a lap
@@ -248,7 +249,7 @@ namespace gpo
 		if (lapWereIn != -1)
 		{
 			li.exitIdx = size() - 1;
-			lapIndicesMap_.insert({lapWereIn,li});
+				lapIndicesMap_.insert({lapWereIn,li});
 		}
 	}
 }
