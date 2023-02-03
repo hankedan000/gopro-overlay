@@ -6,6 +6,8 @@ AlignmentPlot::AlignmentPlot(QWidget *parent) :
     ui(new Ui::AlignmentPlot)
 {
     ui->setupUi(this);
+    ui->plot->setY_Component(TelemetryPlot::Y_Component::eYC_GPS_Speed2D);
+    ui->plot->setY_Component2(TelemetryPlot::Y_Component::eYC_Veh_EngineSpeed);
 }
 
 AlignmentPlot::~AlignmentPlot()
@@ -33,6 +35,7 @@ AlignmentPlot::setSourceA(
             tSrc,
             "Data A",
             Qt::red,
+            TelemetryPlot::AxisSide::eAS_Side1,
             true);// replot
     }
     srcA_ = tSrc;
@@ -58,6 +61,7 @@ AlignmentPlot::setSourceB(
             tSrc,
             "Data B",
             Qt::blue,
+            TelemetryPlot::AxisSide::eAS_Side2,
             true);// replot
     }
     srcB_ = tSrc;

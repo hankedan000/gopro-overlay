@@ -31,7 +31,15 @@ public:
 		eYC_GyroZ = 7,
 
 		eYC_GPS_Speed2D = 8,
-		eYC_GPS_Speed3D = 9
+		eYC_GPS_Speed3D = 9,
+
+		eYC_Veh_EngineSpeed = 20
+	};
+
+	enum AxisSide
+	{
+		eAS_Side1,// xAxis & yAxis
+		eAS_Side2 // xAxis2 & yAxis2
 	};
 
 	struct Y_ComponentEnumInfo
@@ -53,7 +61,8 @@ public:
 		{eYC_GyroY,            "eYC_GyroY",            "Y Gyroscope",         "angular velocity",      "rad/s"},
 		{eYC_GyroZ,            "eYC_GyroZ",            "Z Gyroscope",         "angular velocity",      "rad/s"},
 		{eYC_GPS_Speed2D,      "eYC_GPS_Speed2D",      "GPS Speed (2D)",      "gps speed (2D)",        "m/s"},
-		{eYC_GPS_Speed3D,      "eYC_GPS_Speed3D",      "GPS Speed (3D)",      "gps speed (3D)",        "m/s"}
+		{eYC_GPS_Speed3D,      "eYC_GPS_Speed3D",      "GPS Speed (3D)",      "gps speed (3D)",        "m/s"},
+		{eYC_Veh_EngineSpeed,  "eYC_Veh_EngineSpeed",  "Engine Speed",        "engine speed",          "rpm"}
 	};
 
 private:
@@ -81,6 +90,8 @@ private:
 		// the telemetry's current alignment index, then the data's key values will be
 		// computed such that they reflect the new alignment index.
 		size_t alignmentIdxAtLastReplot;
+
+		AxisSide yAxisSide;
 	};
 
 public:
@@ -101,6 +112,14 @@ public:
 		gpo::TelemetrySourcePtr telemSrc,
 		const std::string &label,
 		QColor color,
+		bool replot = true);
+
+	void
+	addSource(
+		gpo::TelemetrySourcePtr telemSrc,
+		const std::string &label,
+		QColor color,
+		AxisSide yAxisSide,
 		bool replot = true);
 
 	void
@@ -165,6 +184,14 @@ public:
 	getY_Component() const;
 
 	void
+	setY_Component2(
+		Y_Component comp,
+		bool replot = true);
+
+	Y_Component
+	getY_Component2() const;
+
+	void
 	setPlotTitle(
 		const std::string &title);
 
@@ -182,6 +209,7 @@ private:
 			gpo::TelemetrySourcePtr telemSrc,
 			const std::string &label,
 			QColor color,
+			AxisSide yAxisSide,
 			bool replot = true);
 	
 	void
@@ -196,7 +224,8 @@ private:
 
 private:
 	X_Component xComponent_;
-	Y_Component yComponent_;
+	Y_Component yComponent_; // for yAxis
+	Y_Component yComponent2_;// for yAxis2
 	std::vector<SourceObjects> sources_;
 
 	QCPTextElement *plotTitle_;

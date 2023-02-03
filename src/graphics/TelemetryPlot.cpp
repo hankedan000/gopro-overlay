@@ -69,7 +69,7 @@ TelemetryPlot::addSource(
 		bool replot)
 {
 	QColor color = DEFAULT_COLORS[sources_.size() % N_DEFAULT_COLORS];
-	addSource_(telemSrc,telemSrc->getDataSourceName(),color,replot);
+	addSource_(telemSrc,telemSrc->getDataSourceName(),color,AxisSide::eAS_Side1,replot);
 }
 			
 void
@@ -79,7 +79,18 @@ TelemetryPlot::addSource(
 		QColor color,
 		bool replot)
 {
-	addSource_(telemSrc,label,color,replot);
+	addSource_(telemSrc,label,color,AxisSide::eAS_Side1,replot);
+}
+
+void
+TelemetryPlot::addSource(
+	gpo::TelemetrySourcePtr telemSrc,
+	const std::string &label,
+	QColor color,
+	AxisSide yAxisSide,
+	bool replot)
+{
+	addSource_(telemSrc,label,color,yAxisSide,replot);
 }
 
 void
@@ -284,7 +295,10 @@ TelemetryPlot::setY_Component(
 	yComponent_ = comp;
 	for (auto &sourceObjs : sources_)
 	{
-		setY_Data(sourceObjs,yComponent_);
+		if (sourceObjs.yAxisSide == AxisSide::eAS_Side2)
+		{
+			setY_Data(sourceObjs,comp);
+		}
 	}
 	auto yCompInfo = getY_ComponentInfo(comp);
 	setPlotTitle(yCompInfo.plotTitle);
@@ -303,6 +317,45 @@ TelemetryPlot::Y_Component
 TelemetryPlot::getY_Component() const
 {
 	return yComponent_;
+}
+
+void
+TelemetryPlot::setY_Component2(
+	Y_Component comp,
+	bool replot)
+{
+	if (yComponent2_ == comp)
+	{
+		// nothing to do
+		return;
+	}
+
+	// perform updates
+	yComponent2_ = comp;
+	for (auto &sourceObjs : sources_)
+	{
+		if (sourceObjs.yAxisSide == AxisSide::eAS_Side2)
+		{
+			setY_Data(sourceObjs,comp);
+		}
+	}
+	auto yCompInfo = getY_ComponentInfo(comp);
+	setPlotTitle(yCompInfo.plotTitle);
+	char axisTitle[1024];
+	sprintf(axisTitle,"%s (%s)",yCompInfo.axisTitle,yCompInfo.unit);
+	yAxis2->setLabel(axisTitle);
+	rescaleAxes();
+
+	if (replot)
+	{
+		this->replot();
+	}
+}
+
+TelemetryPlot::Y_Component
+TelemetryPlot::getY_Component2() const
+{
+	return yComponent2_;
 }
 
 void
@@ -337,6 +390,7 @@ TelemetryPlot::addSource_(
 		gpo::TelemetrySourcePtr telemSrc,
 		const std::string &label,
 		QColor color,
+		AxisSide yAxisSide,
 		bool replot)
 {
 	// prevent telemSrc from being added again
@@ -348,17 +402,27 @@ TelemetryPlot::addSource_(
 		}
 	}
 
+	auto yCompSelected = yComponent_;
+	auto yAxisSelected = yAxis;
+	if (yAxisSide == AxisSide::eAS_Side2)
+	{
+		yCompSelected = yComponent2_;
+		yAxisSelected = yAxis2;
+		yAxis2->setVisible(true);
+	}
+
 	SourceObjects sourceObjs;
 	sourceObjs.telemSrc = telemSrc;
 	QVector<double> xData(telemSrc->size()), yData(telemSrc->size());
-	addGraph(xAxis,yAxis2);
+	addGraph(xAxis,yAxisSelected);
 	sourceObjs.graph = graph(graphCount() - 1);
 	sourceObjs.graph->setData(xData,yData,true);
 	sourceObjs.graph->setName(label.c_str());
 	sourceObjs.graph->setPen(QPen(color));
 	sourceObjs.alignmentIdxAtLastReplot = telemSrc->seeker()->getAlignmentIdx();
+	sourceObjs.yAxisSide = yAxisSide;
 	setX_Data(sourceObjs,xComponent_);
-	setY_Data(sourceObjs,yComponent_);
+	setY_Data(sourceObjs,yCompSelected);
 	rescaleAxes();
 
 	sources_.push_back(sourceObjs);
@@ -442,9 +506,8 @@ TelemetryPlot::setY_Data(
 		case Y_Component::eYC_GPS_Speed3D:
 			dataItr->value = tSamp.gpSamp.gps.speed3D;
 			break;
-		default:
-			spdlog::warn("unsupported Y_Component ({})",(int)(comp));
-			dataItr->value = 0;
+		case Y_Component::eYC_Veh_EngineSpeed:
+			dataItr->value = tSamp.vehSamp.engineSpeed_rpm;
 			break;
 		}
 	}
