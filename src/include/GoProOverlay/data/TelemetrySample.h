@@ -7,7 +7,8 @@
 
 namespace gpo
 {
-	struct VehicleTelemetry
+	// Engine Control Unit telemetry sample
+	struct ECU_Sample
 	{
 		// time offset relative to beginning of data recording in seconds.
 		double t_offset;
@@ -20,11 +21,19 @@ namespace gpo
 		float boost_psi;
 	};
 
+	struct ECU_TimedSample
+	{
+		ECU_Sample sample;
+
+		// time offset relative to data's start time (in seconds)
+		double t_offset;
+	};
+
 	struct TelemetrySample
 	{
 		gpt::CombinedSample gpSamp;
 
-		VehicleTelemetry vehSamp;
+		ECU_Sample ecuSamp;
 
 		// corrected location of vehicle on the track.
 		// currently uses a simple nearest distance algorithm based on where the

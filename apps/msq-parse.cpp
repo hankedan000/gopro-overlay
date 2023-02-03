@@ -92,20 +92,20 @@ int main(int argc, char *argv[])
 	}
 
 	spdlog::info("opening {}", opts.inputFile);
-    std::vector<gpo::VehicleTelemetry> vehicleTelemetry;
-    if ( ! utils::readMegaSquirtLog(opts.inputFile, vehicleTelemetry))
+    std::vector<gpo::ECU_TimedSample> ecuTelem;
+    if ( ! utils::readMegaSquirtLog(opts.inputFile, ecuTelem))
     {
 		spdlog::error("failed to parse megasquirt log file '{}'.", opts.inputFile);
         return -1;
     }
 
 	// compute and show some stats
-	size_t numSamps = vehicleTelemetry.size();
+	size_t numSamps = ecuTelem.size();
 	float logDur_sec = 0.0;
 	float logRate_hz = 0.0;
 	if (numSamps > 0)
 	{
-		logDur_sec = vehicleTelemetry.back().t_offset;
+		logDur_sec = ecuTelem.back().t_offset;
 	}
 	if (numSamps >= 1 && logDur_sec > 0.0)
 	{

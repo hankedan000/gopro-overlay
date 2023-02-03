@@ -10,7 +10,7 @@ namespace utils
 	bool
 	readMegaSquirtLog(
 		const std::string mslPath,
-		std::vector<gpo::VehicleTelemetry> &vehicleTelem)
+		std::vector<gpo::ECU_TimedSample> &ecuTelem)
 	{
 		bool okay = true;
 
@@ -63,8 +63,8 @@ namespace utils
 		}
 
 		size_t rowIdx = 0;
-		vehicleTelem.clear();
-		vehicleTelem.reserve(1024);// prealloc memory for ~100s log (assume 10Hz data rate)
+		ecuTelem.clear();
+		ecuTelem.reserve(1024);// prealloc memory for ~100s log (assume 10Hz data rate)
 		for (auto rowItr=reader.begin(); rowItr!=reader.end(); rowItr++,rowIdx++)
 		{
 			if (rowIdx == 0)
@@ -73,24 +73,24 @@ namespace utils
 				continue;
 			}
 
-			gpo::VehicleTelemetry vTelem;
+			gpo::ECU_TimedSample ecuSamp;
 			if (timeColIdx >= 0)
 			{
-				vTelem.t_offset = (*rowItr)[timeColIdx].get<float>();
+				ecuSamp.t_offset = (*rowItr)[timeColIdx].get<float>();
 			}
 			if (engineRPM_ColIdx >= 0)
 			{
-				vTelem.engineSpeed_rpm = (*rowItr)[engineRPM_ColIdx].get<float>();
+				ecuSamp.sample.engineSpeed_rpm = (*rowItr)[engineRPM_ColIdx].get<float>();
 			}
 			if (tpsColIdx >= 0)
 			{
-				vTelem.tps = (*rowItr)[tpsColIdx].get<float>();
+				ecuSamp.sample.tps = (*rowItr)[tpsColIdx].get<float>();
 			}
 			if (boostColIdx >= 0)
 			{
-				vTelem.boost_psi = (*rowItr)[boostColIdx].get<float>();
+				ecuSamp.sample.boost_psi = (*rowItr)[boostColIdx].get<float>();
 			}
-			vehicleTelem.push_back(vTelem);
+			ecuTelem.push_back(ecuSamp);
 		}
 
 		return okay;
@@ -243,21 +243,21 @@ namespace utils
 
 	void
 	lerp(
-		gpo::VehicleTelemetry &out,
-		const gpo::VehicleTelemetry &a,
-		const gpo::VehicleTelemetry &b,
+		gpo::ECU_TimedSample &out,
+		const gpo::ECU_TimedSample &a,
+		const gpo::ECU_TimedSample &b,
 		double ratio)
 	{
 		out.t_offset = gpt::lerp(a.t_offset, b.t_offset, ratio);
-		out.engineSpeed_rpm = gpt::lerp(a.engineSpeed_rpm, b.engineSpeed_rpm, ratio);
-		out.tps = gpt::lerp(a.tps, b.tps, ratio);
-		out.boost_psi = gpt::lerp(a.boost_psi, b.boost_psi, ratio);
+		out.sample.engineSpeed_rpm = gpt::lerp(a.sample.engineSpeed_rpm, b.sample.engineSpeed_rpm, ratio);
+		out.sample.tps = gpt::lerp(a.sample.tps, b.sample.tps, ratio);
+		out.sample.boost_psi = gpt::lerp(a.sample.boost_psi, b.sample.boost_psi, ratio);
 	}
 
 	void
 	resample(
-		std::vector<gpo::VehicleTelemetry> &out,
-		const std::vector<gpo::VehicleTelemetry> &in,
+		std::vector<gpo::ECU_TimedSample> &out,
+		const std::vector<gpo::ECU_TimedSample> &in,
 		double outRate_hz)
 	{
 		if (in.empty())

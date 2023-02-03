@@ -9,7 +9,7 @@ namespace utils
 	bool
 	readMegaSquirtLog(
 		const std::string mslPath,
-		std::vector<gpo::VehicleTelemetry> &vehicleTelem);
+		std::vector<gpo::ECU_TimedSample> &ecuTelem);
 
 	bool
 	computeTrackTimes(
@@ -124,14 +124,14 @@ namespace utils
 
 	void
 	lerp(
-		gpo::VehicleTelemetry &out,
-		const gpo::VehicleTelemetry &a,
-		const gpo::VehicleTelemetry &b,
+		gpo::ECU_Sample &out,
+		const gpo::ECU_TimedSample &a,
+		const gpo::ECU_TimedSample &b,
 		double ratio);
 
 	void
 	resample(
-		std::vector<gpo::VehicleTelemetry> &out,
-		const std::vector<gpo::VehicleTelemetry> &in,
+		std::vector<gpo::ECU_TimedSample> &out,
+		const std::vector<gpo::ECU_TimedSample> &in,
 		double outRate_hz);
 }

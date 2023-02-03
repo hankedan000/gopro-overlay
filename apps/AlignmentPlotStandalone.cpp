@@ -11,18 +11,18 @@ int main(int argc, char *argv[])
 
     auto src1 = gpo::DataSource::loadDataFromVideo("/home/daniel/Downloads/Autocross/20230115_MSCC/GH010181.MP4");
 
-    std::vector<gpo::VehicleTelemetry> vTelem;
+    std::vector<gpo::ECU_TimedSample> ecuTelem;
     utils::readMegaSquirtLog(
         "/home/daniel/Downloads/Autocross/20230115_MSCC/msq_logs/2021-05-12_09.37.04.msl",
-        vTelem);
-    std::vector<gpo::VehicleTelemetry> vTelemResamp;
-    utils::resample(vTelemResamp,vTelem,59.94);
+        ecuTelem);
+    std::vector<gpo::ECU_TimedSample> ecuTelemResamp;
+    utils::resample(ecuTelemResamp,ecuTelem,59.94);
     std::vector<gpo::TelemetrySample> tSamps;
-    tSamps.resize(vTelemResamp.size());
+    tSamps.resize(ecuTelemResamp.size());
     for (size_t i=0; i<tSamps.size(); i++)
     {
-        tSamps[i].gpSamp.t_offset = vTelemResamp[i].t_offset;
-        tSamps[i].vehSamp = vTelemResamp[i];
+        tSamps[i].gpSamp.t_offset = ecuTelemResamp[i].t_offset;
+        tSamps[i].ecuSamp = ecuTelemResamp[i].sample;
     }
     auto src2 = gpo::DataSource::makeDataFromTelemetry(tSamps);
 

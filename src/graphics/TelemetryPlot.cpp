@@ -503,7 +503,7 @@ TelemetryPlot::setY_Data(
 			dataItr->value = tSamp.gpSamp.gps.speed3D;
 			break;
 		case Y_Component::eYC_Veh_EngineSpeed:
-			dataItr->value = tSamp.vehSamp.engineSpeed_rpm;
+			dataItr->value = tSamp.ecuSamp.engineSpeed_rpm;
 			break;
 		}
 	}
