@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <memory>
 #include <vector>
 #include <yaml-cpp/yaml.h>
@@ -47,6 +48,12 @@ namespace gpo
 		bool
 		hasVideo() const;
 
+		const GoProDataAvailBitSet &
+		gpDataAvail() const;
+
+		const ECU_DataAvailBitSet &
+		ecuDataAvail() const;
+
 		/**
 		 * Produced a Track object from telemetry data.
 		 * 
@@ -61,6 +68,11 @@ namespace gpo
 		DataSourcePtr
 		loadDataFromVideo(
 			const std::string &videoFile);
+
+		static
+		DataSourcePtr
+		loadDataFromMegaSquirtLog(
+			const std::filesystem::path &logFile);
 
 		static
 		DataSourcePtr
@@ -82,6 +94,14 @@ namespace gpo
 
 		cv::VideoCapture vCapture_;
 		TelemetrySamplesPtr samples_;
+
+		// bitset defining which fields are valid in 'TelemetrySample::gpSamp'
+		// query bits using gpo::GOPRO_AVAIL_* constants
+		GoProDataAvailBitSet gpDataAvail_;
+
+		// bitset defining which fields are valid in 'TelemetrySample::ecuSamp'
+		// query bits using gpo::ECU_AVAIL_* constants
+		ECU_DataAvailBitSet ecuDataAvail_;
 
 		std::string sourceName_;
 		std::string originFile_;

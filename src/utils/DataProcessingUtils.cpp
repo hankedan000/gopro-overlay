@@ -7,12 +7,16 @@
 
 namespace utils
 {
-	bool
+	std::pair<bool, gpo::ECU_DataAvailBitSet>
 	readMegaSquirtLog(
 		const std::string mslPath,
 		std::vector<gpo::ECU_TimedSample> &ecuTelem)
 	{
-		bool okay = true;
+		std::pair<bool, gpo::ECU_DataAvailBitSet> ret;
+		auto &okay = ret.first;
+		auto &ecuDataAvail = ret.second;
+		okay = true;
+		bitset_clear(ecuDataAvail);
 
 		csv::CSVReader reader(mslPath);
 
@@ -26,18 +30,22 @@ namespace utils
 			const auto &colName = colNames.at(cc);
 			if (timeColIdx < 0 && colName.compare("Time") == 0)
 			{
+				bitset_set_bit(ecuDataAvail,gpo::ECU_AVAIL_TIME);
 				timeColIdx = cc;
 			}
 			else if (engineRPM_ColIdx < 0 && colName.compare("RPM") == 0)
 			{
+				bitset_set_bit(ecuDataAvail,gpo::ECU_AVAIL_ENGINE_SPEED);
 				engineRPM_ColIdx = cc;
 			}
 			else if (tpsColIdx < 0 && colName.compare("TPS") == 0)
 			{
+				bitset_set_bit(ecuDataAvail,gpo::ECU_AVAIL_TPS);
 				tpsColIdx = cc;
 			}
 			else if (boostColIdx < 0 && colName.compare("Boost psi") == 0)
 			{
+				bitset_set_bit(ecuDataAvail,gpo::ECU_AVAIL_BOOST);
 				boostColIdx = cc;
 			}
 		}
@@ -93,7 +101,7 @@ namespace utils
 			ecuTelem.push_back(ecuSamp);
 		}
 
-		return okay;
+		return ret;
 	}
 	
 	bool

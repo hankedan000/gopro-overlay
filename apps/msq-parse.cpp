@@ -93,7 +93,8 @@ int main(int argc, char *argv[])
 
 	spdlog::info("opening {}", opts.inputFile);
     std::vector<gpo::ECU_TimedSample> ecuTelem;
-    if ( ! utils::readMegaSquirtLog(opts.inputFile, ecuTelem))
+	auto msqRes = utils::readMegaSquirtLog(opts.inputFile, ecuTelem);
+    if ( ! msqRes.first)
     {
 		spdlog::error("failed to parse megasquirt log file '{}'.", opts.inputFile);
         return -1;

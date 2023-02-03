@@ -13,10 +13,14 @@ namespace gpo
 	 , videoSrc(nullptr)
 	 , vCapture_()
 	 , samples_(nullptr)
+	 , gpDataAvail_()
+	 , ecuDataAvail_()
 	 , sourceName_("")
 	 , originFile_("")
 	 , datumTrack_(nullptr)
 	{
+		bitset_clear(gpDataAvail_);
+		bitset_clear(ecuDataAvail_);
 	}
 
 	std::string
@@ -105,6 +109,20 @@ namespace gpo
 		return videoSrc != nullptr;
 	}
 
+	const GoProDataAvailBitSet &
+	DataSource::gpDataAvail() const
+	{
+		// TODO need to populate this structure. update GoProTelem library???
+		throw std::runtime_error("gpDataAvail_ hasn't been populated yet");
+		return gpDataAvail_;
+	}
+
+	const ECU_DataAvailBitSet &
+	DataSource::ecuDataAvail() const
+	{
+		return ecuDataAvail_;
+	}
+
 	Track *
 	DataSource::makeTrack() const
 	{
@@ -134,6 +152,7 @@ namespace gpo
 		}
 
 		auto newSrc = std::make_shared<DataSource>();
+		newSrc->originFile_ = videoFile;
 		newSrc->vCapture_ = vCap;
 		newSrc->samples_ = std::make_shared<TelemetrySamples>();
 		newSrc->samples_->resize(videoTelem.size());
@@ -145,6 +164,35 @@ namespace gpo
 		newSrc->seeker = std::make_shared<TelemetrySeeker>(newSrc);
 		newSrc->telemSrc = std::make_shared<TelemetrySource>(newSrc);
 		newSrc->videoSrc = std::make_shared<VideoSource>(newSrc);
+
+		return newSrc;
+	}
+
+	DataSourcePtr
+	DataSource::loadDataFromMegaSquirtLog(
+		const std::filesystem::path &logFile)
+	{
+		std::vector<gpo::ECU_TimedSample> ecuTelem;
+		auto res = utils::readMegaSquirtLog(logFile,ecuTelem);
+		if ( ! res.first)
+		{
+			return nullptr;
+		}
+
+		auto newSrc = std::make_shared<DataSource>();
+		newSrc->originFile_ = logFile;
+		newSrc->samples_ = std::make_shared<TelemetrySamples>();
+		newSrc->samples_->resize(ecuTelem.size());
+		for (size_t i=0; i<ecuTelem.size(); i++)
+		{
+			auto &sampOut = newSrc->samples_->at(i);
+			const auto &ecuSamp = ecuTelem.at(i);
+			sampOut.gpSamp.t_offset = ecuSamp.t_offset;
+			sampOut.ecuSamp = ecuSamp.sample;
+		}
+
+		newSrc->seeker = std::make_shared<TelemetrySeeker>(newSrc);
+		newSrc->telemSrc = std::make_shared<TelemetrySource>(newSrc);
 
 		return newSrc;
 	}
@@ -321,7 +369,6 @@ namespace gpo
 		if (dataSrc)
 		{
 			dataSrc->sourceName_ = name;
-			dataSrc->originFile_ = filepath;
 			sources_.push_back(dataSrc);
 		}
 		return dataSrc != nullptr;
