@@ -24,6 +24,8 @@ namespace gpo
 	{
 		gpt::CombinedSample gpSamp;
 
+		VehicleTelemetry vehSamp;
+
 		// corrected location of vehicle on the track.
 		// currently uses a simple nearest distance algorithm based on where the
 		// GPS said the vehicle was.

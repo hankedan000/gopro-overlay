@@ -105,6 +105,11 @@ public:
 
 	void
 	removeSource(
+		gpo::TelemetrySourcePtr telemSrc,
+		bool replot = true);
+
+	void
+	removeSource(
 		size_t idx,
 		bool replot = true);
 

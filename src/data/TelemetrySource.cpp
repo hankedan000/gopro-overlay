@@ -48,10 +48,15 @@ namespace gpo
 		return dataSrc_.lock()->seeker;
 	}
 
-
 	size_t
 	TelemetrySource::size() const
 	{
 		return dataSrc_.lock()->samples_->size();
+	}
+
+	size_t
+	TelemetrySource::size_bytes() const
+	{
+		return size() * sizeof(TelemetrySample);
 	}
 }

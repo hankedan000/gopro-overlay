@@ -84,6 +84,24 @@ TelemetryPlot::addSource(
 
 void
 TelemetryPlot::removeSource(
+	gpo::TelemetrySourcePtr telemSrc,
+	bool replot)
+{
+	for (size_t i=0; i<numSources();)
+	{
+		if (sources_.at(i).telemSrc == telemSrc)
+		{
+			removeSource(i,replot);
+		}
+		else
+		{
+			i++;
+		}
+	}
+}
+
+void
+TelemetryPlot::removeSource(
 		size_t idx,
 		bool replot)
 {
@@ -333,7 +351,7 @@ TelemetryPlot::addSource_(
 	SourceObjects sourceObjs;
 	sourceObjs.telemSrc = telemSrc;
 	QVector<double> xData(telemSrc->size()), yData(telemSrc->size());
-	addGraph();
+	addGraph(xAxis,yAxis2);
 	sourceObjs.graph = graph(graphCount() - 1);
 	sourceObjs.graph->setData(xData,yData,true);
 	sourceObjs.graph->setName(label.c_str());
