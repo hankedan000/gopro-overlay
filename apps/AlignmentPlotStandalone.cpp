@@ -15,12 +15,14 @@ int main(int argc, char *argv[])
     utils::readMegaSquirtLog(
         "/home/daniel/Downloads/Autocross/20230115_MSCC/msq_logs/2021-05-12_09.37.04.msl",
         vTelem);
+    std::vector<gpo::VehicleTelemetry> vTelemResamp;
+    utils::resample(vTelemResamp,vTelem,59.94);
     std::vector<gpo::TelemetrySample> tSamps;
-    tSamps.resize(vTelem.size());
+    tSamps.resize(vTelemResamp.size());
     for (size_t i=0; i<tSamps.size(); i++)
     {
-        tSamps[i].gpSamp.t_offset = vTelem[i].t_offset;
-        tSamps[i].vehSamp = vTelem[i];
+        tSamps[i].gpSamp.t_offset = vTelemResamp[i].t_offset;
+        tSamps[i].vehSamp = vTelemResamp[i];
     }
     auto src2 = gpo::DataSource::makeDataFromTelemetry(tSamps);
 

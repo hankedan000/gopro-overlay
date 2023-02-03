@@ -2,6 +2,7 @@
 
 #include <csv.hpp>
 #include "GoProOverlay/utils/LineSegmentUtils.h"
+#include "GoProTelem/SampleMath.h"// for lerp()
 #include <spdlog/spdlog.h>
 
 namespace utils
@@ -238,5 +239,60 @@ namespace utils
 		}
 
 		return true;
+	}
+
+	void
+	lerp(
+		gpo::VehicleTelemetry &out,
+		const gpo::VehicleTelemetry &a,
+		const gpo::VehicleTelemetry &b,
+		double ratio)
+	{
+		out.t_offset = gpt::lerp(a.t_offset, b.t_offset, ratio);
+		out.engineSpeed_rpm = gpt::lerp(a.engineSpeed_rpm, b.engineSpeed_rpm, ratio);
+		out.tps = gpt::lerp(a.tps, b.tps, ratio);
+		out.boost_psi = gpt::lerp(a.boost_psi, b.boost_psi, ratio);
+	}
+
+	void
+	resample(
+		std::vector<gpo::VehicleTelemetry> &out,
+		const std::vector<gpo::VehicleTelemetry> &in,
+		double outRate_hz)
+	{
+		if (in.empty())
+		{
+			return;
+		}
+
+		double duration_sec = in.back().t_offset;
+		size_t nSampsOut = round(outRate_hz * duration_sec);
+		out.resize(nSampsOut);
+		double outDt_sec = 1.0 / outRate_hz;
+
+		size_t takeIdx = 0;
+		double outTime_sec = 0.0;
+		for (size_t outIdx=0; outIdx<nSampsOut; outIdx++)
+		{
+			bool found = gpt::findLerpIndex(takeIdx,in,outTime_sec);
+
+			if (found)
+			{
+				const auto &sampA = in.at(takeIdx);
+				const auto &sampB = in.at(takeIdx+1);
+				const double dt = sampB.t_offset - sampA.t_offset;
+				const double ratio = (outTime_sec - sampA.t_offset) / dt;
+				lerp(out.at(outIdx),sampA,sampB,ratio);
+			}
+			else if (takeIdx == 0)
+			{
+				out.at(outIdx) = in.at(takeIdx);
+			}
+			else
+			{
+				out.at(outIdx) = in.back();
+			}
+			outTime_sec += outDt_sec;
+		}
 	}
 }

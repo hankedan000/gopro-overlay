@@ -456,10 +456,6 @@ TelemetryPlot::setX_Data(
 			dataItr->key = telemSrc->at(i).gpSamp.t_offset - alignmentSamp.gpSamp.t_offset;
 			xAxis->setLabel("time (s)");
 			break;
-		default:
-			spdlog::warn("unsupported X_Component ({})",(int)(comp));
-			dataItr->key = 0;
-			break;
 		}
 	}
 }

@@ -108,4 +108,30 @@ namespace utils
 				sizeof(STRUCT_T));
 		}
 	}
+
+	template <typename TimedSample_T>
+	double
+	getAvgRate(
+		const std::vector<TimedSample_T> &samps)
+	{
+		if (samps.size() <= 1)
+		{
+			return 0.0;
+		}
+		double nCycles = samps.size() - 1;
+		return nCycles / samps.back().t_offset;
+	}
+
+	void
+	lerp(
+		gpo::VehicleTelemetry &out,
+		const gpo::VehicleTelemetry &a,
+		const gpo::VehicleTelemetry &b,
+		double ratio);
+
+	void
+	resample(
+		std::vector<gpo::VehicleTelemetry> &out,
+		const std::vector<gpo::VehicleTelemetry> &in,
+		double outRate_hz);
 }
