@@ -1,6 +1,8 @@
 #include "AlignmentPlot.h"
 #include "ui_AlignmentPlot.h"
 
+#include <QSpinBox>
+
 AlignmentPlot::AlignmentPlot(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::AlignmentPlot)
@@ -8,6 +10,21 @@ AlignmentPlot::AlignmentPlot(QWidget *parent) :
     ui->setupUi(this);
     ui->plot->setY_Component(TelemetryPlot::Y_Component::eYC_GPS_Speed2D);
     ui->plot->setY_Component2(TelemetryPlot::Y_Component::eYC_Veh_EngineSpeed);
+
+    connect(ui->aAlignment_SpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int value){
+        auto seeker = srcA_->seeker();
+        seeker->setAlignmentIdx(value);
+        // queue the replot to avoid redundant replots.
+        // will get replotted on the next event loop iteration.
+        ui->plot->replot(QCustomPlot::RefreshPriority::rpQueuedReplot);
+    });
+    connect(ui->bAlignment_SpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int value){
+        auto seeker = srcB_->seeker();
+        seeker->setAlignmentIdx(value);
+        // queue the replot to avoid redundant replots.
+        // will get replotted on the next event loop iteration.
+        ui->plot->replot(QCustomPlot::RefreshPriority::rpQueuedReplot);
+    });
 }
 
 AlignmentPlot::~AlignmentPlot()
@@ -37,6 +54,9 @@ AlignmentPlot::setSourceA(
             Qt::red,
             TelemetryPlot::AxisSide::eAS_Side1,
             true);// replot
+
+        ui->aAlignment_SpinBox->setMaximum(tSrc->size());
+        ui->aAlignment_SpinBox->setMinimum(0);
     }
     srcA_ = tSrc;
 }
@@ -63,6 +83,9 @@ AlignmentPlot::setSourceB(
             Qt::blue,
             TelemetryPlot::AxisSide::eAS_Side2,
             true);// replot
+
+        ui->bAlignment_SpinBox->setMaximum(tSrc->size());
+        ui->bAlignment_SpinBox->setMinimum(0);
     }
     srcB_ = tSrc;
 }

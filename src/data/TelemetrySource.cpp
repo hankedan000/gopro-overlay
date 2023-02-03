@@ -59,4 +59,22 @@ namespace gpo
 	{
 		return size() * sizeof(TelemetrySample);
 	}
+
+	double
+	TelemetrySource::getTelemetryRate_hz() const
+	{
+		return dataSrc_.lock()->getTelemetryRate_hz();
+	}
+
+	const GoProDataAvailBitSet &
+	TelemetrySource::gpDataAvail() const
+	{
+		return dataSrc_.lock()->gpDataAvail();
+	}
+
+	const ECU_DataAvailBitSet &
+	TelemetrySource::ecuDataAvail() const
+	{
+		return dataSrc_.lock()->ecuDataAvail();
+	}
 }

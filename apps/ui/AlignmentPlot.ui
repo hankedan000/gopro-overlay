@@ -33,10 +33,30 @@
        <number>0</number>
       </property>
       <item>
-       <widget class="QComboBox" name="comboBox"/>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <property name="topMargin">
+         <number>10</number>
+        </property>
+        <item>
+         <widget class="QComboBox" name="comboBox"/>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="aAlignment_SpinBox"/>
+        </item>
+       </layout>
       </item>
       <item>
-       <widget class="QComboBox" name="comboBox_2"/>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <property name="topMargin">
+         <number>10</number>
+        </property>
+        <item>
+         <widget class="QComboBox" name="comboBox_2"/>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="bAlignment_SpinBox"/>
+        </item>
+       </layout>
       </item>
       <item>
        <spacer name="verticalSpacer">

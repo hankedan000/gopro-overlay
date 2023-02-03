@@ -40,6 +40,15 @@ namespace gpo
 		size_t
 		size_bytes() const;
 
+		double
+		getTelemetryRate_hz() const;
+
+		const GoProDataAvailBitSet &
+		gpDataAvail() const;
+
+		const ECU_DataAvailBitSet &
+		ecuDataAvail() const;
+
 	private:
 		std::weak_ptr<DataSource> dataSrc_;
 
