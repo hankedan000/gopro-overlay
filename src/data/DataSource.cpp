@@ -4,6 +4,7 @@
 #include <spdlog/spdlog.h>
 
 #include <GoProTelem/GoProTelem.h>
+#include <GoProTelem/SampleMath.h>
 #include <GoProOverlay/utils/DataProcessingUtils.h>
 
 namespace gpo
@@ -131,7 +132,7 @@ namespace gpo
 		{
 			return 0.0;
 		}
-		return samples_->back().t_offset / (samples_->size() - 1);
+		return (samples_->size() - 1) / samples_->back().t_offset;
 	}
 
 	void
@@ -154,7 +155,6 @@ namespace gpo
 			return;
 		}
 
-#if 0
 		// copy old samples
 		TelemetrySamples oldSamps = *samples_;
 
@@ -167,27 +167,26 @@ namespace gpo
 		double outTime_sec = 0.0;
 		for (size_t outIdx=0; outIdx<nSampsOut; outIdx++)
 		{
-			bool found = gpt::findLerpIndex(takeIdx,in,outTime_sec);
+			bool found = gpt::findLerpIndex(takeIdx,oldSamps,outTime_sec);
 
 			if (found)
 			{
-				const auto &sampA = in.at(takeIdx);
-				const auto &sampB = in.at(takeIdx+1);
+				const auto &sampA = oldSamps.at(takeIdx);
+				const auto &sampB = oldSamps.at(takeIdx+1);
 				const double dt = sampB.t_offset - sampA.t_offset;
 				const double ratio = (outTime_sec - sampA.t_offset) / dt;
-				lerp(out.at(outIdx),sampA,sampB,ratio);
+				utils::lerp(samples_->at(outIdx),sampA,sampB,ratio);
 			}
 			else if (takeIdx == 0)
 			{
-				out.at(outIdx) = in.at(takeIdx);
+				samples_->at(outIdx) = oldSamps.at(takeIdx);
 			}
 			else
 			{
-				out.at(outIdx) = in.back();
+				samples_->at(outIdx) = oldSamps.back();
 			}
 			outTime_sec += outDt_sec;
 		}
-#endif
 	}
 
 	Track *
@@ -207,7 +206,7 @@ namespace gpo
 	{
 		gpt::MP4_Source mp4;
 		mp4.open(videoFile);
-		auto videoTelem = gpt::getCombinedSamples(mp4);
+		auto videoTelem = gpt::getCombinedTimedSamples(mp4);
 		if (videoTelem.empty())
 		{
 			return nullptr;
@@ -225,7 +224,10 @@ namespace gpo
 		newSrc->samples_->resize(videoTelem.size());
 		for (size_t i=0; i<videoTelem.size(); i++)
 		{
-			newSrc->samples_->at(i).gpSamp = videoTelem.at(i);
+			auto &outSamp = newSrc->samples_->at(i);
+			const auto &gpSamp = videoTelem.at(i);
+			outSamp.t_offset = gpSamp.t_offset;
+			outSamp.gpSamp = gpSamp.sample;
 		}
 
 		newSrc->seeker = std::make_shared<TelemetrySeeker>(newSrc);

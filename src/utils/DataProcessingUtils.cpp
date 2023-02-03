@@ -251,15 +251,52 @@ namespace utils
 
 	void
 	lerp(
+		gpo::ECU_Sample &out,
+		const gpo::ECU_Sample &a,
+		const gpo::ECU_Sample &b,
+		double ratio)
+	{
+		out.engineSpeed_rpm = gpt::lerp(a.engineSpeed_rpm, b.engineSpeed_rpm, ratio);
+		out.tps = gpt::lerp(a.tps, b.tps, ratio);
+		out.boost_psi = gpt::lerp(a.boost_psi, b.boost_psi, ratio);
+	}
+
+	void
+	lerp(
 		gpo::ECU_TimedSample &out,
 		const gpo::ECU_TimedSample &a,
 		const gpo::ECU_TimedSample &b,
 		double ratio)
 	{
 		out.t_offset = gpt::lerp(a.t_offset, b.t_offset, ratio);
-		out.sample.engineSpeed_rpm = gpt::lerp(a.sample.engineSpeed_rpm, b.sample.engineSpeed_rpm, ratio);
-		out.sample.tps = gpt::lerp(a.sample.tps, b.sample.tps, ratio);
-		out.sample.boost_psi = gpt::lerp(a.sample.boost_psi, b.sample.boost_psi, ratio);
+		lerp(out.sample, a.sample, b.sample, ratio);
+	}
+
+	#define FIELD_LERP(OUT,A,B,RATIO,FIELD) OUT.FIELD = gpt::lerp(A.FIELD, B.FIELD, RATIO)
+	#define FIELD_LERP_ROUNDED(OUT,A,B,RATIO,FIELD) OUT.FIELD = std::round(gpt::lerp(A.FIELD, B.FIELD, RATIO))
+
+	void
+	lerp(
+		gpo::TelemetrySample &out,
+		const gpo::TelemetrySample &a,
+		const gpo::TelemetrySample &b,
+		double ratio)
+	{
+		static bool warnedOnce = false;
+		if ( ! warnedOnce)
+		{
+			spdlog::warn("lerp() on TelemetrySample is not a complete implementation yet");
+			warnedOnce = true;
+		}
+		
+		FIELD_LERP(out,a,b,ratio,t_offset);
+		// lerp(out.gpSamp, a.gpSamp, b.gpSamp, ratio);
+		lerp(out.ecuSamp, a.ecuSamp, b.ecuSamp, ratio);
+		// FIELD_LERP(out,a,b,ratio,onTrackLL);
+		FIELD_LERP_ROUNDED(out,a,b,ratio,lap);
+		FIELD_LERP(out,a,b,ratio,lapTimeOffset);
+		FIELD_LERP_ROUNDED(out,a,b,ratio,sector);
+		FIELD_LERP(out,a,b,ratio,sectorTimeOffset);
 	}
 
 	void

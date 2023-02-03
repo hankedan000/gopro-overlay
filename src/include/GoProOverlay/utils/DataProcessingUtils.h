@@ -125,8 +125,22 @@ namespace utils
 	void
 	lerp(
 		gpo::ECU_Sample &out,
+		const gpo::ECU_Sample &a,
+		const gpo::ECU_Sample &b,
+		double ratio);
+
+	void
+	lerp(
+		gpo::ECU_Sample &out,
 		const gpo::ECU_TimedSample &a,
 		const gpo::ECU_TimedSample &b,
+		double ratio);
+
+	void
+	lerp(
+		gpo::TelemetrySample &out,
+		const gpo::TelemetrySample &a,
+		const gpo::TelemetrySample &b,
 		double ratio);
 
 	void
