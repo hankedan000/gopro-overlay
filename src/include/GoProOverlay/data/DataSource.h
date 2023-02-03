@@ -54,6 +54,13 @@ namespace gpo
 		const ECU_DataAvailBitSet &
 		ecuDataAvail() const;
 
+		double
+		getTelemetryRate_hz() const;
+
+		void
+		resampleTelemetry(
+			double newRate_hz);
+
 		/**
 		 * Produced a Track object from telemetry data.
 		 * 

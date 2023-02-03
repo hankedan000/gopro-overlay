@@ -31,7 +31,7 @@ DataProcessingUtilsTest::trackTimes()
 		path.at(i) = cv::Vec2d(i, 0);
 
 		auto &samp = tSamps->at(i);
-		samp.gpSamp.t_offset = 0.010 * i;
+		samp.t_offset = 0.010 * i;
 		samp.gpSamp.gps.coord.lat = i;
 		samp.gpSamp.gps.coord.lon = 0;
 	}

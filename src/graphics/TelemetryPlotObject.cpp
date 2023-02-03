@@ -174,7 +174,7 @@ namespace gpo
 			if (telemSrc->size() >= 2)
 			{
 				calculatedFPS_ = 1.0 /
-					(telemSrc->at(1).gpSamp.t_offset - telemSrc->at(0).gpSamp.t_offset);
+					(telemSrc->at(1).t_offset - telemSrc->at(0).t_offset);
 			}
 
 			// only add the telemetry to the plot if it hasn't been added already

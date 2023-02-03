@@ -28,7 +28,7 @@ SeekerTest::lapIndexLookup()
 	for (unsigned int i=0; i<PATH_LENGTH; i++)
 	{
 		auto &samp = tSamps.at(i);
-		samp.gpSamp.t_offset = 0.010 * i;
+		samp.t_offset = 0.010 * i;
 		samp.gpSamp.gps.coord.lat = i;
 		samp.gpSamp.gps.coord.lon = 0;
 	}
@@ -166,7 +166,7 @@ SeekerTest::seekRelativeTime()
 	for (unsigned int i=0; i<PATH_LENGTH; i++)
 	{
 		auto &samp = tSamps.at(i);
-		samp.gpSamp.t_offset = 0.010 * i;
+		samp.t_offset = 0.010 * i;
 		samp.gpSamp.gps.coord.lat = i;
 		samp.gpSamp.gps.coord.lon = 0;
 	}

@@ -152,7 +152,7 @@ namespace utils
 				bool crossed = ii != 0 && gate.detect(prevCoord,samp.onTrackLL);
 				if (crossed && gateType == gpo::GateType_E::eGT_Start)
 				{
-					lapStartTimeOffset = samp.gpSamp.t_offset;
+					lapStartTimeOffset = samp.t_offset;
 					if (currLap == -1)
 					{
 						currLap = 1;
@@ -171,7 +171,7 @@ namespace utils
 					if (isEntry)
 					{
 						currSector = sectorSeq;
-						sectorStartTimeOffset = samp.gpSamp.t_offset;
+						sectorStartTimeOffset = samp.t_offset;
 					}
 					else
 					{
@@ -239,9 +239,9 @@ namespace utils
 
 			// update telemetry sample
 			samp.lap = currLap;
-			samp.lapTimeOffset = (currLap == -1 ? 0.0 : samp.gpSamp.t_offset - lapStartTimeOffset);
+			samp.lapTimeOffset = (currLap == -1 ? 0.0 : samp.t_offset - lapStartTimeOffset);
 			samp.sector = currSector;
-			samp.sectorTimeOffset = (currSector == -1 ? 0.0 : samp.gpSamp.t_offset - sectorStartTimeOffset);
+			samp.sectorTimeOffset = (currSector == -1 ? 0.0 : samp.t_offset - sectorStartTimeOffset);
 
 			prevCoord = samp.onTrackLL;
 		}

@@ -48,6 +48,8 @@ namespace gpo
 
 	struct TelemetrySample
 	{
+		double t_offset;
+		
 		gpt::CombinedSample gpSamp;
 
 		ECU_Sample ecuSamp;

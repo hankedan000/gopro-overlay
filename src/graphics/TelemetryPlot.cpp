@@ -453,7 +453,7 @@ TelemetryPlot::setX_Data(
 			xAxis->setLabel("samples");
 			break;
 		case X_Component::eXC_Time:
-			dataItr->key = telemSrc->at(i).gpSamp.t_offset - alignmentSamp.gpSamp.t_offset;
+			dataItr->key = telemSrc->at(i).t_offset - alignmentSamp.t_offset;
 			xAxis->setLabel("time (s)");
 			break;
 		}
@@ -476,7 +476,7 @@ TelemetryPlot::setY_Data(
 			dataItr->value = 0;
 			break;
 		case Y_Component::eYC_Time:
-			dataItr->value = tSamp.gpSamp.t_offset;
+			dataItr->value = tSamp.t_offset;
 			break;
 		case Y_Component::eYC_AcclX:
 			dataItr->value = tSamp.gpSamp.accl.x;

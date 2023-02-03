@@ -1,6 +1,7 @@
 #include "GoProOverlay/data/DataSource.h"
 
 #include <filesystem>
+#include <spdlog/spdlog.h>
 
 #include <GoProTelem/GoProTelem.h>
 #include <GoProOverlay/utils/DataProcessingUtils.h>
@@ -123,6 +124,72 @@ namespace gpo
 		return ecuDataAvail_;
 	}
 
+	double
+	DataSource::getTelemetryRate_hz() const
+	{
+		if ( ! hasTelemetry() || samples_->size() < 2)
+		{
+			return 0.0;
+		}
+		return samples_->back().t_offset / (samples_->size() - 1);
+	}
+
+	void
+	DataSource::resampleTelemetry(
+		double newRate_hz)
+	{
+		if ( ! hasTelemetry())
+		{
+			spdlog::warn("DataSource doesn't have any telemetry data. ignoring request.");
+			return;
+		}
+		else if (hasVideo())
+		{
+			spdlog::error("can't resample DataSource that has a video associated with it.");
+			return;
+		}
+		else if (samples_->empty())
+		{
+			// no samples means nothing resample!
+			return;
+		}
+
+#if 0
+		// copy old samples
+		TelemetrySamples oldSamps = *samples_;
+
+		double duration_sec = oldSamps.back().t_offset;
+		size_t nSampsOut = round(newRate_hz * duration_sec);
+		samples_->resize(nSampsOut);
+		double outDt_sec = 1.0 / newRate_hz;
+
+		size_t takeIdx = 0;
+		double outTime_sec = 0.0;
+		for (size_t outIdx=0; outIdx<nSampsOut; outIdx++)
+		{
+			bool found = gpt::findLerpIndex(takeIdx,in,outTime_sec);
+
+			if (found)
+			{
+				const auto &sampA = in.at(takeIdx);
+				const auto &sampB = in.at(takeIdx+1);
+				const double dt = sampB.t_offset - sampA.t_offset;
+				const double ratio = (outTime_sec - sampA.t_offset) / dt;
+				lerp(out.at(outIdx),sampA,sampB,ratio);
+			}
+			else if (takeIdx == 0)
+			{
+				out.at(outIdx) = in.at(takeIdx);
+			}
+			else
+			{
+				out.at(outIdx) = in.back();
+			}
+			outTime_sec += outDt_sec;
+		}
+#endif
+	}
+
 	Track *
 	DataSource::makeTrack() const
 	{
@@ -187,7 +254,7 @@ namespace gpo
 		{
 			auto &sampOut = newSrc->samples_->at(i);
 			const auto &ecuSamp = ecuTelem.at(i);
-			sampOut.gpSamp.t_offset = ecuSamp.t_offset;
+			sampOut.t_offset = ecuSamp.t_offset;
 			sampOut.ecuSamp = ecuSamp.sample;
 		}
 

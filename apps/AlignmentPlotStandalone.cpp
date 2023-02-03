@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     tSamps.resize(ecuTelemResamp.size());
     for (size_t i=0; i<tSamps.size(); i++)
     {
-        tSamps[i].gpSamp.t_offset = ecuTelemResamp[i].t_offset;
+        tSamps[i].t_offset = ecuTelemResamp[i].t_offset;
         tSamps[i].ecuSamp = ecuTelemResamp[i].sample;
     }
     auto src2 = gpo::DataSource::makeDataFromTelemetry(tSamps);

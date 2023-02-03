@@ -195,7 +195,7 @@ namespace gpo
 	TelemetrySeeker::getTimeAt(
 		size_t idx) const
 	{
-		return dataSrc_.lock()->telemSrc->at(idx).gpSamp.t_offset;
+		return dataSrc_.lock()->telemSrc->at(idx).t_offset;
 	}
 
 	std::pair<size_t, size_t>
