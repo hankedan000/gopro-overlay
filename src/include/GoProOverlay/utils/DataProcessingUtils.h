@@ -6,10 +6,6 @@
 
 namespace utils
 {
-	std::pair<bool, gpo::ECU_DataAvailBitSet>
-	readMegaSquirtLog(
-		const std::string mslPath,
-		std::vector<gpo::ECU_TimedSample> &ecuTelem);
 
 	bool
 	computeTrackTimes(

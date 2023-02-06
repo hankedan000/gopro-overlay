@@ -21,9 +21,6 @@ namespace gpo
 	// Engine Control Unit telemetry sample
 	struct ECU_Sample
 	{
-		// time offset relative to beginning of data recording in seconds.
-		double t_offset;
-
 		float engineSpeed_rpm;
 
 		// throttle position sensor (0 to 100)
@@ -36,7 +33,7 @@ namespace gpo
 	{
 		ECU_Sample sample;
 
-		// time offset relative to data's start time (in seconds)
+		// time offset relative to beginning of data recording in seconds.
 		double t_offset;
 	};
 

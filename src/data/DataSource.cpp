@@ -6,6 +6,7 @@
 #include <GoProTelem/GoProTelem.h>
 #include <GoProTelem/SampleMath.h>
 #include <GoProOverlay/utils/DataProcessingUtils.h>
+#include <GoProOverlay/utils/io/CSV_Utils.h>
 
 namespace gpo
 {
@@ -242,7 +243,7 @@ namespace gpo
 		const std::filesystem::path &logFile)
 	{
 		std::vector<gpo::ECU_TimedSample> ecuTelem;
-		auto res = utils::readMegaSquirtLog(logFile,ecuTelem);
+		auto res = utils::io::readMegaSquirtLog(logFile,ecuTelem);
 		if ( ! res.first)
 		{
 			return nullptr;
@@ -280,6 +281,17 @@ namespace gpo
 		newSrc->videoSrc = nullptr;
 
 		return newSrc;
+	}
+
+	bool
+	DataSource::writeTelemetryToCSV(
+		const std::filesystem::path &csvFilepath) const
+	{
+		if ( ! hasTelemetry())
+		{
+			return false;
+		}
+		return utils::io::writeTelemetryToCSV(samples_,csvFilepath);
 	}
 
 	DataSourceManager::DataSourceManager()

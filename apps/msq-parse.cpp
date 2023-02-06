@@ -5,7 +5,7 @@
 #include <spdlog/spdlog.h>
 #include <time.h>
 
-#include "GoProOverlay/utils/DataProcessingUtils.h"
+#include "GoProOverlay/utils/io/CSV_Utils.h"
 
 const char *PROG_NAME = "msq-parse";
 bool stop_app = false;
@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
 
 	spdlog::info("opening {}", opts.inputFile);
     std::vector<gpo::ECU_TimedSample> ecuTelem;
-	auto msqRes = utils::readMegaSquirtLog(opts.inputFile, ecuTelem);
+	auto msqRes = utils::io::readMegaSquirtLog(opts.inputFile, ecuTelem);
     if ( ! msqRes.first)
     {
 		spdlog::error("failed to parse megasquirt log file '{}'.", opts.inputFile);

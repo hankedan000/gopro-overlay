@@ -86,6 +86,10 @@ namespace gpo
 		makeDataFromTelemetry(
 			const gpo::TelemetrySamples &tSamps);
 
+		bool
+		writeTelemetryToCSV(
+			const std::filesystem::path &csvFilepath) const;
+
 	public:
 		TelemetrySeekerPtr seeker;
 		TelemetrySourcePtr telemSrc;
