@@ -82,6 +82,60 @@ namespace io
 		return writeTelemetryToCSV(tSamps,fs);
 	}
 
+	#define CSV_ROW_ITR_GET(OUT_VAR,ROW_ITR,COL_IDX) OUT_VAR = (*ROW_ITR)[COL_IDX].get<std::remove_reference<decltype(OUT_VAR)>::type>()
+
+	bool
+    readTelemetryFromCSV(
+        const std::filesystem::path &csvFilepath,
+        gpo::TelemetrySamplesPtr tSamps)
+	{
+		std::ifstream ifs(csvFilepath);
+		csv::CSVReader reader(ifs, csv::CSVFormat());
+
+		auto colNames = reader.get_col_names();
+
+		size_t rowIdx = 0;
+		tSamps->clear();
+		tSamps->reserve(4096);// prealloc memory
+		gpo::TelemetrySample samp;
+		for (auto rowItr=reader.begin(); rowItr!=reader.end(); rowItr++,rowIdx++)
+		{
+			size_t colIdx = 0;
+			CSV_ROW_ITR_GET(samp.t_offset, rowItr, colIdx++);
+
+			auto &gpSamp = samp.gpSamp;
+			CSV_ROW_ITR_GET(gpSamp.accl.x, rowItr, colIdx++);
+			CSV_ROW_ITR_GET(gpSamp.accl.y, rowItr, colIdx++);
+			CSV_ROW_ITR_GET(gpSamp.accl.z, rowItr, colIdx++);
+			CSV_ROW_ITR_GET(gpSamp.gyro.x, rowItr, colIdx++);
+			CSV_ROW_ITR_GET(gpSamp.gyro.y, rowItr, colIdx++);
+			CSV_ROW_ITR_GET(gpSamp.gyro.z, rowItr, colIdx++);
+			CSV_ROW_ITR_GET(gpSamp.grav.x, rowItr, colIdx++);
+			CSV_ROW_ITR_GET(gpSamp.grav.y, rowItr, colIdx++);
+			CSV_ROW_ITR_GET(gpSamp.grav.z, rowItr, colIdx++);
+			CSV_ROW_ITR_GET(gpSamp.cori.w, rowItr, colIdx++);
+			CSV_ROW_ITR_GET(gpSamp.cori.x, rowItr, colIdx++);
+			CSV_ROW_ITR_GET(gpSamp.cori.y, rowItr, colIdx++);
+			CSV_ROW_ITR_GET(gpSamp.cori.z, rowItr, colIdx++);
+
+			auto &ecuSamp = samp.ecuSamp;
+			CSV_ROW_ITR_GET(ecuSamp.engineSpeed_rpm, rowItr, colIdx++);
+			CSV_ROW_ITR_GET(ecuSamp.tps, rowItr, colIdx++);
+			CSV_ROW_ITR_GET(ecuSamp.boost_psi, rowItr, colIdx++);
+
+			CSV_ROW_ITR_GET(samp.onTrackLL[0], rowItr, colIdx++);
+			CSV_ROW_ITR_GET(samp.onTrackLL[1], rowItr, colIdx++);
+			CSV_ROW_ITR_GET(samp.lap, rowItr, colIdx++);
+			CSV_ROW_ITR_GET(samp.lapTimeOffset, rowItr, colIdx++);
+			CSV_ROW_ITR_GET(samp.sector, rowItr, colIdx++);
+			CSV_ROW_ITR_GET(samp.sectorTimeOffset, rowItr, colIdx++);
+
+			tSamps->push_back(samp);
+		}
+
+		return true;
+	}
+
 	std::pair<bool, gpo::ECU_DataAvailBitSet>
 	readMegaSquirtLog(
 		const std::string mslPath,
@@ -159,19 +213,19 @@ namespace io
 			gpo::ECU_TimedSample ecuSamp;
 			if (timeColIdx >= 0)
 			{
-				ecuSamp.t_offset = (*rowItr)[timeColIdx].get<float>();
+				CSV_ROW_ITR_GET(ecuSamp.t_offset, rowItr, timeColIdx);
 			}
 			if (engineRPM_ColIdx >= 0)
 			{
-				ecuSamp.sample.engineSpeed_rpm = (*rowItr)[engineRPM_ColIdx].get<float>();
+				CSV_ROW_ITR_GET(ecuSamp.sample.engineSpeed_rpm, rowItr, engineRPM_ColIdx);
 			}
 			if (tpsColIdx >= 0)
 			{
-				ecuSamp.sample.tps = (*rowItr)[tpsColIdx].get<float>();
+				CSV_ROW_ITR_GET(ecuSamp.sample.tps, rowItr, tpsColIdx);
 			}
 			if (boostColIdx >= 0)
 			{
-				ecuSamp.sample.boost_psi = (*rowItr)[boostColIdx].get<float>();
+				CSV_ROW_ITR_GET(ecuSamp.sample.boost_psi, rowItr, boostColIdx);
 			}
 			ecuTelem.push_back(ecuSamp);
 		}

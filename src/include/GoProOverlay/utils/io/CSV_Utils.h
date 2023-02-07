@@ -19,6 +19,11 @@ namespace io
     writeTelemetryToCSV(
         const gpo::TelemetrySamplesPtr &tSamps,
         const std::filesystem::path &csvFilepath);
+    
+	bool
+    readTelemetryFromCSV(
+        const std::filesystem::path &csvFilepath,
+        gpo::TelemetrySamplesPtr tSamps);
 
 	std::pair<bool, gpo::ECU_DataAvailBitSet>
 	readMegaSquirtLog(
