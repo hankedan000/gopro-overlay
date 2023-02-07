@@ -3,6 +3,7 @@
 #include <GoProTelem/SampleTypes.h>
 #include <memory>
 #include <opencv2/opencv.hpp>
+#include <type_traits>
 #include <vector>
 
 #include "GoProOverlay/data/pod_bitset.hpp"
@@ -54,7 +55,7 @@ namespace gpo
 		// corrected location of vehicle on the track.
 		// currently uses a simple nearest distance algorithm based on where the
 		// GPS said the vehicle was.
-		cv::Vec2d onTrackLL;
+		gpt::CoordLL onTrackLL;
 
 		// -1 if not within a track
 		// starts at 1 and counts up from there
@@ -73,6 +74,8 @@ namespace gpo
 		double sectorTimeOffset;
 
 	};
+
+	static_assert(std::is_standard_layout<TelemetrySample>::value && std::is_trivial<TelemetrySample>::value, "TelemetrySample must be a POD type");
 
 	using TelemetrySamples = std::vector<TelemetrySample>;
 	using TelemetrySamplesPtr = std::shared_ptr<TelemetrySamples>;

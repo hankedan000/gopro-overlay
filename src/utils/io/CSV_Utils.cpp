@@ -61,7 +61,7 @@ namespace io
 				ecuSamp.boost_psi,
 
 				// top-level
-				samp.onTrackLL[0], samp.onTrackLL[1],
+				samp.onTrackLL.lat, samp.onTrackLL.lon,
 				samp.lap,
 				samp.lapTimeOffset,
 				samp.sector,
@@ -123,8 +123,8 @@ namespace io
 			CSV_ROW_ITR_GET(ecuSamp.tps, rowItr, colIdx++);
 			CSV_ROW_ITR_GET(ecuSamp.boost_psi, rowItr, colIdx++);
 
-			CSV_ROW_ITR_GET(samp.onTrackLL[0], rowItr, colIdx++);
-			CSV_ROW_ITR_GET(samp.onTrackLL[1], rowItr, colIdx++);
+			CSV_ROW_ITR_GET(samp.onTrackLL.lat, rowItr, colIdx++);
+			CSV_ROW_ITR_GET(samp.onTrackLL.lon, rowItr, colIdx++);
 			CSV_ROW_ITR_GET(samp.lap, rowItr, colIdx++);
 			CSV_ROW_ITR_GET(samp.lapTimeOffset, rowItr, colIdx++);
 			CSV_ROW_ITR_GET(samp.sector, rowItr, colIdx++);

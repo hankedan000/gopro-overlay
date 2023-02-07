@@ -44,7 +44,9 @@ namespace utils
 						currCoord,
 						onTrackFindInitialIdx,
 						onTrackFindWindow);
-			samp.onTrackLL = std::get<1>(findRes);
+			const auto &foundCoord = std::get<1>(findRes);
+			samp.onTrackLL.lat = foundCoord[0];
+			samp.onTrackLL.lat = foundCoord[1];
 			onTrackFindInitialIdx = std::get<2>(findRes);
 			onTrackFindWindow = {5,100};// reduce search space once we've found initial location
 
@@ -52,7 +54,7 @@ namespace utils
 			do
 			{
 				movedToNextObject = false;
-				bool crossed = ii != 0 && gate.detect(prevCoord,samp.onTrackLL);
+				bool crossed = ii != 0 && gate.detect(prevCoord,foundCoord);
 				if (crossed && gateType == gpo::GateType_E::eGT_Start)
 				{
 					lapStartTimeOffset = samp.t_offset;
@@ -146,7 +148,7 @@ namespace utils
 			samp.sector = currSector;
 			samp.sectorTimeOffset = (currSector == -1 ? 0.0 : samp.t_offset - sectorStartTimeOffset);
 
-			prevCoord = samp.onTrackLL;
+			prevCoord = foundCoord;
 		}
 
 		return true;
