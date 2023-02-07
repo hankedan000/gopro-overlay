@@ -24,6 +24,7 @@ namespace gpo
 	{
 		bitset_clear(gpDataAvail_);
 		bitset_clear(ecuDataAvail_);
+		bitset_clear(trackAvail_);
 	}
 
 	std::string
@@ -66,7 +67,7 @@ namespace gpo
 			return true;
 		}
 
-		bool okay = utils::computeTrackTimes(datumTrack_,samples_);
+		bool okay = utils::computeTrackTimes(datumTrack_,samples_,trackAvail_);
 
 		// smooth accelerometer data
 		if (false)
@@ -124,6 +125,12 @@ namespace gpo
 	DataSource::ecuDataAvail() const
 	{
 		return ecuDataAvail_;
+	}
+
+	const TrackDataAvailBitSet &
+	DataSource::trackDataAvail() const
+	{
+		return trackAvail_;
 	}
 
 	double
@@ -268,6 +275,26 @@ namespace gpo
 	}
 
 	DataSourcePtr
+	DataSource::loadTelemetryFromCSV(
+		const std::filesystem::path &csvFile)
+	{
+		auto newSrc = std::make_shared<DataSource>();
+		newSrc->originFile_ = csvFile;
+		newSrc->samples_ = std::make_shared<TelemetrySamples>();
+		utils::io::readTelemetryFromCSV(
+			csvFile,
+			newSrc->samples_,
+			newSrc->gpDataAvail_,
+			newSrc->ecuDataAvail_,
+			newSrc->trackAvail_);
+
+		newSrc->seeker = std::make_shared<TelemetrySeeker>(newSrc);
+		newSrc->telemSrc = std::make_shared<TelemetrySource>(newSrc);
+
+		return newSrc;
+	}
+
+	DataSourcePtr
 	DataSource::makeDataFromTelemetry(
 		const gpo::TelemetrySamples &tSamps)
 	{
@@ -291,7 +318,12 @@ namespace gpo
 		{
 			return false;
 		}
-		return utils::io::writeTelemetryToCSV(samples_,csvFilepath);
+		return utils::io::writeTelemetryToCSV(
+			samples_,
+			csvFilepath,
+			gpDataAvail_,
+			ecuDataAvail_,
+			trackAvail_);
 	}
 
 	DataSourceManager::DataSourceManager()

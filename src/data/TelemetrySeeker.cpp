@@ -225,24 +225,24 @@ namespace gpo
 		auto dataSrcPtr = dataSrc_.lock();
 		for (size_t i=0; i<size(); i++)
 		{
-			const auto &samp = dataSrcPtr->samples_->at(i);
-			if (prevSampLap == -1 && samp.lap > 0)
+			const auto &trackData = dataSrcPtr->samples_->at(i).trackData;
+			if (prevSampLap == -1 && trackData.lap > 0)
 			{
 				// entered a lap
-				lapWereIn = samp.lap;
+				lapWereIn = trackData.lap;
 				li.entryIdx = i;
 				li.exitIdx = -1;
 			}
-			else if (lapWereIn != -1 && prevSampLap != samp.lap)
+			else if (lapWereIn != -1 && prevSampLap != trackData.lap)
 			{
 				// exited a lap
 				li.exitIdx = i - 1;
 				lapIndicesMap_.insert({lapWereIn,li});
 
-				lapWereIn = samp.lap;
+				lapWereIn = trackData.lap;
 				li.entryIdx = i;// circuit case where finishGate == startGate
 			}
-			prevSampLap = samp.lap;
+			prevSampLap = trackData.lap;
 		}
 
 		// corner case where we never left a lap (could have pitted in early or something)

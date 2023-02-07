@@ -10,7 +10,8 @@ namespace utils
 	bool
 	computeTrackTimes(
 		const gpo::Track *track,
-		gpo::TelemetrySamplesPtr tSamps);
+		gpo::TelemetrySamplesPtr tSamps,
+		gpo::TrackDataAvailBitSet &trackAvail);
 
 	template <typename T>
 	void

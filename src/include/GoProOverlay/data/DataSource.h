@@ -54,6 +54,9 @@ namespace gpo
 		const ECU_DataAvailBitSet &
 		ecuDataAvail() const;
 
+		const TrackDataAvailBitSet &
+		trackDataAvail() const;
+
 		double
 		getTelemetryRate_hz() const;
 
@@ -80,6 +83,11 @@ namespace gpo
 		DataSourcePtr
 		loadDataFromMegaSquirtLog(
 			const std::filesystem::path &logFile);
+
+		static
+		DataSourcePtr
+		loadTelemetryFromCSV(
+			const std::filesystem::path &csvFile);
 
 		static
 		DataSourcePtr
@@ -113,6 +121,10 @@ namespace gpo
 		// bitset defining which fields are valid in 'TelemetrySample::ecuSamp'
 		// query bits using gpo::ECU_AVAIL_* constants
 		ECU_DataAvailBitSet ecuDataAvail_;
+
+		// bitset defining which fields are valid in 'TelemetrySample::trackData'
+		// query bits using gpo::TRACK_AVAIL_* constants
+		TrackDataAvailBitSet trackAvail_;
 
 		std::string sourceName_;
 		std::string originFile_;

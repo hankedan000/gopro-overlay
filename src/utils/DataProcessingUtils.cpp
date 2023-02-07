@@ -10,7 +10,8 @@ namespace utils
 	bool
 	computeTrackTimes(
 		const gpo::Track *track,
-		gpo::TelemetrySamplesPtr tSamps)
+		gpo::TelemetrySamplesPtr tSamps,
+		gpo::TrackDataAvailBitSet &trackAvail)
 	{
 		std::vector<const gpo::TrackPathObject *> trackObjs;
 		if ( ! track->getSortedPathObjects(trackObjs))
@@ -22,7 +23,8 @@ namespace utils
 			// no track objects to process
 			return true;
 		}
-
+;
+		bitset_clear(trackAvail);
 		int currLap = -1;
 		int sectorSeq = 1;// increments everytime we exit a sector
 		int currSector = -1;
@@ -39,14 +41,16 @@ namespace utils
 		for (size_t ii=0; ii<tSamps->size(); ii++)
 		{
 			auto &samp = tSamps->at(ii);
+			auto &trackData = samp.trackData;
 			cv::Vec2d currCoord(samp.gpSamp.gps.coord.lat,samp.gpSamp.gps.coord.lon);
 			auto findRes = track->findClosestPointWithIdx(
 						currCoord,
 						onTrackFindInitialIdx,
 						onTrackFindWindow);
 			const auto &foundCoord = std::get<1>(findRes);
-			samp.onTrackLL.lat = foundCoord[0];
-			samp.onTrackLL.lat = foundCoord[1];
+			trackData.onTrackLL.lat = foundCoord[0];
+			trackData.onTrackLL.lat = foundCoord[1];
+			bitset_set_bit(trackAvail, gpo::TRACK_AVAIL_ON_TRACK_LATLON);
 			onTrackFindInitialIdx = std::get<2>(findRes);
 			onTrackFindWindow = {5,100};// reduce search space once we've found initial location
 
@@ -143,10 +147,20 @@ namespace utils
 			while (movedToNextObject);
 
 			// update telemetry sample
-			samp.lap = currLap;
-			samp.lapTimeOffset = (currLap == -1 ? 0.0 : samp.t_offset - lapStartTimeOffset);
-			samp.sector = currSector;
-			samp.sectorTimeOffset = (currSector == -1 ? 0.0 : samp.t_offset - sectorStartTimeOffset);
+			trackData.lap = currLap;
+			trackData.lapTimeOffset = (currLap == -1 ? 0.0 : samp.t_offset - lapStartTimeOffset);
+			if (currLap != -1)
+			{
+				bitset_set_bit(trackAvail, gpo::TRACK_AVAIL_LAP);
+				bitset_set_bit(trackAvail, gpo::TRACK_AVAIL_LAP_TIME_OFFSET);
+			}
+			trackData.sector = currSector;
+			trackData.sectorTimeOffset = (currSector == -1 ? 0.0 : samp.t_offset - sectorStartTimeOffset);
+			if (currSector != -1)
+			{
+				bitset_set_bit(trackAvail, gpo::TRACK_AVAIL_SECTOR);
+				bitset_set_bit(trackAvail, gpo::TRACK_AVAIL_SECTOR_TIME_OFFSET);
+			}
 
 			prevCoord = foundCoord;
 		}
@@ -198,10 +212,10 @@ namespace utils
 		// lerp(out.gpSamp, a.gpSamp, b.gpSamp, ratio);
 		lerp(out.ecuSamp, a.ecuSamp, b.ecuSamp, ratio);
 		// FIELD_LERP(out,a,b,ratio,onTrackLL);
-		FIELD_LERP_ROUNDED(out,a,b,ratio,lap);
-		FIELD_LERP(out,a,b,ratio,lapTimeOffset);
-		FIELD_LERP_ROUNDED(out,a,b,ratio,sector);
-		FIELD_LERP(out,a,b,ratio,sectorTimeOffset);
+		FIELD_LERP_ROUNDED(out,a,b,ratio,trackData.lap);
+		FIELD_LERP(out,a,b,ratio,trackData.lapTimeOffset);
+		FIELD_LERP_ROUNDED(out,a,b,ratio,trackData.sector);
+		FIELD_LERP(out,a,b,ratio,trackData.sectorTimeOffset);
 	}
 
 	void
