@@ -238,6 +238,32 @@ namespace gpo
 			outSamp.gpSamp = gpSamp.sample;
 		}
 
+		// populate GoPro data availability
+		gpt::MP4_SensorInfo sensorInfo;
+		if (mp4.getSensorInfo(gpt::GPMF_KEY_ACCL, sensorInfo))
+		{
+			bitset_set_bit(newSrc->gpDataAvail_, gpo::GOPRO_AVAIL_ACCL);
+		}
+		if (mp4.getSensorInfo(gpt::GPMF_KEY_GYRO, sensorInfo))
+		{
+			bitset_set_bit(newSrc->gpDataAvail_, gpo::GOPRO_AVAIL_GYRO);
+		}
+		if (mp4.getSensorInfo(gpt::GPMF_KEY_GRAV, sensorInfo))
+		{
+			bitset_set_bit(newSrc->gpDataAvail_, gpo::GOPRO_AVAIL_GRAV);
+		}
+		if (mp4.getSensorInfo(gpt::GPMF_KEY_CORI, sensorInfo))
+		{
+			bitset_set_bit(newSrc->gpDataAvail_, gpo::GOPRO_AVAIL_CORI);
+		}
+		if (mp4.getSensorInfo(gpt::GPMF_KEY_GPS5, sensorInfo))
+		{
+			bitset_set_bit(newSrc->gpDataAvail_, gpo::GOPRO_AVAIL_GPS_LATLON);
+			bitset_set_bit(newSrc->gpDataAvail_, gpo::GOPRO_AVAIL_GPS_ALTITUDE);
+			bitset_set_bit(newSrc->gpDataAvail_, gpo::GOPRO_AVAIL_GPS_SPEED2D);
+			bitset_set_bit(newSrc->gpDataAvail_, gpo::GOPRO_AVAIL_GPS_SPEED3D);
+		}
+
 		newSrc->seeker = std::make_shared<TelemetrySeeker>(newSrc);
 		newSrc->telemSrc = std::make_shared<TelemetrySource>(newSrc);
 		newSrc->videoSrc = std::make_shared<VideoSource>(newSrc);
@@ -260,6 +286,7 @@ namespace gpo
 		newSrc->originFile_ = logFile;
 		newSrc->samples_ = std::make_shared<TelemetrySamples>();
 		newSrc->samples_->resize(ecuTelem.size());
+		newSrc->ecuDataAvail_ = res.second;
 		for (size_t i=0; i<ecuTelem.size(); i++)
 		{
 			auto &sampOut = newSrc->samples_->at(i);
