@@ -49,7 +49,7 @@ namespace utils
 						onTrackFindWindow);
 			const auto &foundCoord = std::get<1>(findRes);
 			trackData.onTrackLL.lat = foundCoord[0];
-			trackData.onTrackLL.lat = foundCoord[1];
+			trackData.onTrackLL.lon = foundCoord[1];
 			bitset_set_bit(trackAvail, gpo::TRACK_AVAIL_ON_TRACK_LATLON);
 			onTrackFindInitialIdx = std::get<2>(findRes);
 			onTrackFindWindow = {5,100};// reduce search space once we've found initial location
