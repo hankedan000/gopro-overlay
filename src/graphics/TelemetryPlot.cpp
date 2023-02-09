@@ -295,7 +295,7 @@ TelemetryPlot::setY_Component(
 	yComponent_ = comp;
 	for (auto &sourceObjs : sources_)
 	{
-		if (sourceObjs.yAxisSide == AxisSide::eAS_Side2)
+		if (sourceObjs.yAxisSide == AxisSide::eAS_Side1)
 		{
 			setY_Data(sourceObjs,comp);
 		}
@@ -502,8 +502,14 @@ TelemetryPlot::setY_Data(
 		case Y_Component::eYC_GPS_Speed3D:
 			dataItr->value = tSamp.gpSamp.gps.speed3D;
 			break;
-		case Y_Component::eYC_Veh_EngineSpeed:
+		case Y_Component::eYC_ECU_EngineSpeed:
 			dataItr->value = tSamp.ecuSamp.engineSpeed_rpm;
+			break;
+		case Y_Component::eYC_ECU_TPS:
+			dataItr->value = tSamp.ecuSamp.tps;
+			break;
+		case Y_Component::eYC_ECU_Boost:
+			dataItr->value = tSamp.ecuSamp.boost_psi;
 			break;
 		}
 	}

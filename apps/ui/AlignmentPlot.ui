@@ -38,7 +38,7 @@
          <number>10</number>
         </property>
         <item>
-         <widget class="QComboBox" name="comboBox"/>
+         <widget class="QComboBox" name="aData_ComboBox"/>
         </item>
         <item>
          <widget class="QSpinBox" name="aAlignment_SpinBox"/>
@@ -51,7 +51,7 @@
          <number>10</number>
         </property>
         <item>
-         <widget class="QComboBox" name="comboBox_2"/>
+         <widget class="QComboBox" name="bData_ComboBox"/>
         </item>
         <item>
          <widget class="QSpinBox" name="bAlignment_SpinBox"/>

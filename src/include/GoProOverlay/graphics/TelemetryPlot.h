@@ -33,7 +33,9 @@ public:
 		eYC_GPS_Speed2D = 8,
 		eYC_GPS_Speed3D = 9,
 
-		eYC_Veh_EngineSpeed = 20
+		eYC_ECU_EngineSpeed = 20,
+		eYC_ECU_TPS = 21,
+		eYC_ECU_Boost = 22
 	};
 
 	enum AxisSide
@@ -62,7 +64,9 @@ public:
 		{eYC_GyroZ,            "eYC_GyroZ",            "Z Gyroscope",         "angular velocity",      "rad/s"},
 		{eYC_GPS_Speed2D,      "eYC_GPS_Speed2D",      "GPS Speed (2D)",      "gps speed (2D)",        "m/s"},
 		{eYC_GPS_Speed3D,      "eYC_GPS_Speed3D",      "GPS Speed (3D)",      "gps speed (3D)",        "m/s"},
-		{eYC_Veh_EngineSpeed,  "eYC_Veh_EngineSpeed",  "Engine Speed",        "engine speed",          "rpm"}
+		{eYC_ECU_EngineSpeed,  "eYC_ECU_EngineSpeed",  "Engine Speed",        "engine speed",          "rpm"},
+		{eYC_ECU_TPS,          "eYC_ECU_TPS",          "Throttle Position",   "throttle position",     "%"},
+		{eYC_ECU_Boost,        "eYC_ECU_Boost",        "Boost",               "boost",                 "psi"}
 	};
 
 private:

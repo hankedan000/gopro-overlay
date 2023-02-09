@@ -116,8 +116,6 @@ namespace gpo
 	const GoProDataAvailBitSet &
 	DataSource::gpDataAvail() const
 	{
-		// TODO need to populate this structure. update GoProTelem library???
-		throw std::runtime_error("gpDataAvail_ hasn't been populated yet");
 		return gpDataAvail_;
 	}
 
