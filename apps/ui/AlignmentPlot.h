@@ -34,11 +34,6 @@ private:
         QComboBox *combobox,
         gpo::TelemetrySourcePtr tSrc) const;
     
-    void
-    addY_CompToComboBox(
-        QComboBox *combobox,
-        TelemetryPlot::Y_Component yComp) const;
-
 private:
     Ui::AlignmentPlot *ui;
 

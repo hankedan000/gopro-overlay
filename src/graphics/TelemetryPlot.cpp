@@ -301,9 +301,9 @@ TelemetryPlot::setY_Component(
 		}
 	}
 	auto yCompInfo = getY_ComponentInfo(comp);
-	setPlotTitle(yCompInfo.plotTitle);
+	setPlotTitle(yCompInfo->plotTitle);
 	char axisTitle[1024];
-	sprintf(axisTitle,"%s (%s)",yCompInfo.axisTitle,yCompInfo.unit);
+	sprintf(axisTitle,"%s (%s)",yCompInfo->axisTitle,yCompInfo->unit);
 	yAxis->setLabel(axisTitle);
 	rescaleAxes();
 
@@ -340,9 +340,9 @@ TelemetryPlot::setY_Component2(
 		}
 	}
 	auto yCompInfo = getY_ComponentInfo(comp);
-	setPlotTitle(yCompInfo.plotTitle);
+	setPlotTitle(yCompInfo->plotTitle);
 	char axisTitle[1024];
-	sprintf(axisTitle,"%s (%s)",yCompInfo.axisTitle,yCompInfo.unit);
+	sprintf(axisTitle,"%s (%s)",yCompInfo->axisTitle,yCompInfo->unit);
 	yAxis2->setLabel(axisTitle);
 	rescaleAxes();
 
@@ -371,13 +371,76 @@ TelemetryPlot::getPlotTitle() const
 	return plotTitle_->text().toStdString();
 }
 
-const TelemetryPlot::Y_ComponentEnumInfo &
+std::vector<const TelemetryPlot::Y_ComponentEnumInfo *>
+TelemetryPlot::getAvailY_ComponentInfo(
+	gpo::TelemetrySourcePtr tSrc)
+{
+	std::vector<const TelemetryPlot::Y_ComponentEnumInfo *> infos;
+	infos.reserve(NUM_Y_COMP_ENUM_INFOS);
+
+    const auto &gpAvail = tSrc->gpDataAvail();
+    const auto &ecuAvail = tSrc->ecuDataAvail();
+    if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_ACCL))
+    {
+		infos.push_back(&YCEI_GP_ACCL_X);
+		infos.push_back(&YCEI_GP_ACCL_Y);
+		infos.push_back(&YCEI_GP_ACCL_Z);
+    }
+    if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_GYRO))
+    {
+		infos.push_back(&YCEI_GP_GYRO_X);
+		infos.push_back(&YCEI_GP_GYRO_Y);
+		infos.push_back(&YCEI_GP_GYRO_Z);
+    }
+    if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_GRAV))
+    {
+		// infos.push_back(&YCEI_GP_GRAV_X);
+		// infos.push_back(&YCEI_GP_GRAV_Y);
+		// infos.push_back(&YCEI_GP_GRAV_Z);
+    }
+    if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_CORI))
+    {
+		// infos.push_back(&YCEI_GP_CORI_W);
+		// infos.push_back(&YCEI_GP_CORI_X);
+		// infos.push_back(&YCEI_GP_CORI_Y);
+		// infos.push_back(&YCEI_GP_CORI_Z);
+    }
+    if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_GPS_LATLON))
+    {
+		// infos.push_back(&YCEI_GP_GPS_LAT);
+		// infos.push_back(&YCEI_GP_GPS_LON);
+    }
+    if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_GPS_SPEED2D))
+    {
+		infos.push_back(&YCEI_GP_GPS_SPEED2D);
+    }
+    if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_GPS_SPEED3D))
+    {
+		infos.push_back(&YCEI_GP_GPS_SPEED3D);
+    }
+    if (bitset_is_set(ecuAvail, gpo::ECU_AVAIL_ENGINE_SPEED))
+    {
+		infos.push_back(&YCEI_ECU_ENGINE_SPEED);
+    }
+    if (bitset_is_set(ecuAvail, gpo::ECU_AVAIL_TPS))
+    {
+		infos.push_back(&YCEI_ECU_TPS);
+    }
+    if (bitset_is_set(ecuAvail, gpo::ECU_AVAIL_BOOST))
+    {
+		infos.push_back(&YCEI_ECU_BOOST);
+    }
+
+	return infos;
+}
+
+const TelemetryPlot::Y_ComponentEnumInfo *
 TelemetryPlot::getY_ComponentInfo(
 	const TelemetryPlot::Y_Component &comp)
 {
-	for (const auto &info : Y_COMP_ENUM_INFO)
+	for (const auto &info : Y_COMP_ENUM_INFOS)
 	{
-		if (info.yComp == comp)
+		if (info->yComp == comp)
 		{
 			return info;
 		}

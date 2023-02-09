@@ -52,22 +52,38 @@ public:
 		const char *axisTitle;
 		const char *unit;
 	};
-	static constexpr Y_ComponentEnumInfo Y_COMP_ENUM_INFO[] = {
-	//  yComp                  name                    plotTitle              axisTitle                unit
-		{eYC_Unknown,          "eYC_Unknown",          "",                    "unknown",               ""},
-		{eYC_Time,             "eYC_Time",             "Time",                "time",                  "s"},
-		{eYC_AcclX,            "eYC_AcclX",            "X Acceleration",      "acceleration",          "m/s^s"},
-		{eYC_AcclY,            "eYC_AcclY",            "Y Acceleration",      "acceleration",          "m/s^s"},
-		{eYC_AcclZ,            "eYC_AcclZ",            "Z Acceleration",      "acceleration",          "m/s^s"},
-		{eYC_GyroX,            "eYC_GyroX",            "X Gyroscope",         "angular velocity",      "rad/s"},
-		{eYC_GyroY,            "eYC_GyroY",            "Y Gyroscope",         "angular velocity",      "rad/s"},
-		{eYC_GyroZ,            "eYC_GyroZ",            "Z Gyroscope",         "angular velocity",      "rad/s"},
-		{eYC_GPS_Speed2D,      "eYC_GPS_Speed2D",      "GPS Speed (2D)",      "gps speed (2D)",        "m/s"},
-		{eYC_GPS_Speed3D,      "eYC_GPS_Speed3D",      "GPS Speed (3D)",      "gps speed (3D)",        "m/s"},
-		{eYC_ECU_EngineSpeed,  "eYC_ECU_EngineSpeed",  "Engine Speed",        "engine speed",          "rpm"},
-		{eYC_ECU_TPS,          "eYC_ECU_TPS",          "Throttle Position",   "throttle position",     "%"},
-		{eYC_ECU_Boost,        "eYC_ECU_Boost",        "Boost",               "boost",                 "psi"}
+	
+	//                                                           yComp                  name                    plotTitle              axisTitle                unit
+	static constexpr Y_ComponentEnumInfo YCEI_UNKNOWN          = {eYC_Unknown,          "eYC_Unknown",          "",                    "unknown",               ""       };
+	static constexpr Y_ComponentEnumInfo YCEI_TIME             = {eYC_Time,             "eYC_Time",             "Time",                "time",                  "s"      };
+	static constexpr Y_ComponentEnumInfo YCEI_GP_ACCL_X        = {eYC_AcclX,            "eYC_AcclX",            "X Acceleration",      "acceleration",          "m/s^s"  };
+	static constexpr Y_ComponentEnumInfo YCEI_GP_ACCL_Y        = {eYC_AcclY,            "eYC_AcclY",            "Y Acceleration",      "acceleration",          "m/s^s"  };
+	static constexpr Y_ComponentEnumInfo YCEI_GP_ACCL_Z        = {eYC_AcclZ,            "eYC_AcclZ",            "Z Acceleration",      "acceleration",          "m/s^s"  };
+	static constexpr Y_ComponentEnumInfo YCEI_GP_GYRO_X        = {eYC_GyroX,            "eYC_GyroX",            "X Gyroscope",         "angular velocity",      "rad/s"  };
+	static constexpr Y_ComponentEnumInfo YCEI_GP_GYRO_Y        = {eYC_GyroY,            "eYC_GyroY",            "Y Gyroscope",         "angular velocity",      "rad/s"  };
+	static constexpr Y_ComponentEnumInfo YCEI_GP_GYRO_Z        = {eYC_GyroZ,            "eYC_GyroZ",            "Z Gyroscope",         "angular velocity",      "rad/s"  };
+	static constexpr Y_ComponentEnumInfo YCEI_GP_GPS_SPEED2D   = {eYC_GPS_Speed2D,      "eYC_GPS_Speed2D",      "GPS Speed (2D)",      "gps speed (2D)",        "m/s"    };
+	static constexpr Y_ComponentEnumInfo YCEI_GP_GPS_SPEED3D   = {eYC_GPS_Speed3D,      "eYC_GPS_Speed3D",      "GPS Speed (3D)",      "gps speed (3D)",        "m/s"    };
+	static constexpr Y_ComponentEnumInfo YCEI_ECU_ENGINE_SPEED = {eYC_ECU_EngineSpeed,  "eYC_ECU_EngineSpeed",  "Engine Speed",        "engine speed",          "rpm"    };
+	static constexpr Y_ComponentEnumInfo YCEI_ECU_TPS          = {eYC_ECU_TPS,          "eYC_ECU_TPS",          "Throttle Position",   "throttle position",     "%"      };
+	static constexpr Y_ComponentEnumInfo YCEI_ECU_BOOST        = {eYC_ECU_Boost,        "eYC_ECU_Boost",        "Boost",               "boost",                 "psi"    };
+
+	static constexpr const Y_ComponentEnumInfo *Y_COMP_ENUM_INFOS[] = {
+		&YCEI_UNKNOWN,
+		&YCEI_TIME,
+		&YCEI_GP_ACCL_X,
+		&YCEI_GP_ACCL_Y,
+		&YCEI_GP_ACCL_Z,
+		&YCEI_GP_GYRO_X,
+		&YCEI_GP_GYRO_Y,
+		&YCEI_GP_GYRO_Z,
+		&YCEI_GP_GPS_SPEED2D,
+		&YCEI_GP_GPS_SPEED3D,
+		&YCEI_ECU_ENGINE_SPEED,
+		&YCEI_ECU_TPS,
+		&YCEI_ECU_BOOST
 	};
+	static constexpr size_t NUM_Y_COMP_ENUM_INFOS = sizeof(Y_COMP_ENUM_INFOS) / sizeof(Y_COMP_ENUM_INFOS[0]);
 
 private:
 	static constexpr Qt::GlobalColor DEFAULT_COLORS[] = {
@@ -202,8 +218,21 @@ public:
 	std::string
 	getPlotTitle() const;
 
+	/**
+	 * @param[in] tSrc
+	 * a telemetry source
+	 * 
+	 * @return
+	 * a list of Y_ComponentEnumInfo for each data field that's available
+	 * within the telemetry source
+	 */
 	static
-	const Y_ComponentEnumInfo &
+	std::vector<const TelemetryPlot::Y_ComponentEnumInfo *>
+	getAvailY_ComponentInfo(
+		gpo::TelemetrySourcePtr tSrc);
+
+	static
+	const Y_ComponentEnumInfo *
 	getY_ComponentInfo(
 		const Y_Component &comp);
 

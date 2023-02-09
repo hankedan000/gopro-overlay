@@ -117,65 +117,9 @@ AlignmentPlot::populateComboBox(
         return;
     }
 
-    auto gpAvail = tSrc->gpDataAvail();
-    auto ecuAvail = tSrc->ecuDataAvail();
-    if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_ACCL))
+    auto availY_Comps = TelemetryPlot::getAvailY_ComponentInfo(tSrc);
+    for (const auto &yInfo : availY_Comps)
     {
-        addY_CompToComboBox(combobox,TelemetryPlot::Y_Component::eYC_AcclX);
-        addY_CompToComboBox(combobox,TelemetryPlot::Y_Component::eYC_AcclY);
-        addY_CompToComboBox(combobox,TelemetryPlot::Y_Component::eYC_AcclZ);
+        combobox->addItem(yInfo->name,(qulonglong)(yInfo->yComp));
     }
-    if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_GYRO))
-    {
-        addY_CompToComboBox(combobox,TelemetryPlot::Y_Component::eYC_GyroX);
-        addY_CompToComboBox(combobox,TelemetryPlot::Y_Component::eYC_GyroY);
-        addY_CompToComboBox(combobox,TelemetryPlot::Y_Component::eYC_GyroZ);
-    }
-    if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_GRAV))
-    {
-        // addY_CompToComboBox(combobox,TelemetryPlot::Y_Component::eYC_GravX);
-        // addY_CompToComboBox(combobox,TelemetryPlot::Y_Component::eYC_GravY);
-        // addY_CompToComboBox(combobox,TelemetryPlot::Y_Component::eYC_GravZ);
-    }
-    if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_CORI))
-    {
-        // addY_CompToComboBox(combobox,TelemetryPlot::Y_Component::eYC_CoriW);
-        // addY_CompToComboBox(combobox,TelemetryPlot::Y_Component::eYC_CoriX);
-        // addY_CompToComboBox(combobox,TelemetryPlot::Y_Component::eYC_CoriY);
-        // addY_CompToComboBox(combobox,TelemetryPlot::Y_Component::eYC_CoriZ);
-    }
-    if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_GPS_LATLON))
-    {
-        // addY_CompToComboBox(combobox,TelemetryPlot::Y_Component::eYC_GPS_Lat);
-        // addY_CompToComboBox(combobox,TelemetryPlot::Y_Component::eYC_GPS_Lon);
-    }
-    if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_GPS_SPEED2D))
-    {
-        addY_CompToComboBox(combobox,TelemetryPlot::Y_Component::eYC_GPS_Speed2D);
-    }
-    if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_GPS_SPEED3D))
-    {
-        addY_CompToComboBox(combobox,TelemetryPlot::Y_Component::eYC_GPS_Speed3D);
-    }
-    if (bitset_is_set(ecuAvail, gpo::ECU_AVAIL_ENGINE_SPEED))
-    {
-        addY_CompToComboBox(combobox,TelemetryPlot::Y_Component::eYC_ECU_EngineSpeed);
-    }
-    if (bitset_is_set(ecuAvail, gpo::ECU_AVAIL_TPS))
-    {
-        addY_CompToComboBox(combobox,TelemetryPlot::Y_Component::eYC_ECU_TPS);
-    }
-    if (bitset_is_set(ecuAvail, gpo::ECU_AVAIL_BOOST))
-    {
-        addY_CompToComboBox(combobox,TelemetryPlot::Y_Component::eYC_ECU_Boost);
-    }
-}
-
-void
-AlignmentPlot::addY_CompToComboBox(
-    QComboBox *combobox,
-    TelemetryPlot::Y_Component yComp) const
-{
-    auto yCompInfo = TelemetryPlot::getY_ComponentInfo(yComp);
-    combobox->addItem(yCompInfo.name,(qulonglong)(yComp));
 }
