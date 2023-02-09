@@ -8,8 +8,8 @@ AlignmentPlot::AlignmentPlot(QWidget *parent) :
     ui(new Ui::AlignmentPlot)
 {
     ui->setupUi(this);
-    ui->plot->setY_Component(TelemetryPlot::Y_Component::eYC_GPS_Speed2D);
-    ui->plot->setY_Component2(TelemetryPlot::Y_Component::eYC_ECU_EngineSpeed);
+    ui->plot->setY_Component(TelemetryPlot::Y_Component::eYC_GPS_SPEED2D);
+    ui->plot->setY_Component2(TelemetryPlot::Y_Component::eYC_ECU_ENGINE_SPEED);
 
     connect(ui->aAlignment_SpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int value){
         auto seeker = srcA_->seeker();

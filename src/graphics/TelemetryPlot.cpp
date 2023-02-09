@@ -6,7 +6,7 @@ TelemetryPlot::TelemetryPlot(
 		QWidget *parent)
 : QCustomPlot(parent)
 , xComponent_(X_Component::eXC_Samples)
-, yComponent_(Y_Component::eYC_Unknown)
+, yComponent_(Y_Component::eYC_UNKNOWN)
 , plotTitle_(new QCPTextElement(this,"",15))
 {
 	setInteraction(QCP::Interaction::iRangeDrag,true);
@@ -382,41 +382,41 @@ TelemetryPlot::getAvailY_ComponentInfo(
     const auto &ecuAvail = tSrc->ecuDataAvail();
     if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_ACCL))
     {
-		infos.push_back(&YCEI_GP_ACCL_X);
-		infos.push_back(&YCEI_GP_ACCL_Y);
-		infos.push_back(&YCEI_GP_ACCL_Z);
+		infos.push_back(&YCEI_ACCL_X);
+		infos.push_back(&YCEI_ACCL_Y);
+		infos.push_back(&YCEI_ACCL_Z);
     }
     if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_GYRO))
     {
-		infos.push_back(&YCEI_GP_GYRO_X);
-		infos.push_back(&YCEI_GP_GYRO_Y);
-		infos.push_back(&YCEI_GP_GYRO_Z);
+		infos.push_back(&YCEI_GYRO_X);
+		infos.push_back(&YCEI_GYRO_Y);
+		infos.push_back(&YCEI_GYRO_Z);
     }
     if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_GRAV))
     {
-		// infos.push_back(&YCEI_GP_GRAV_X);
-		// infos.push_back(&YCEI_GP_GRAV_Y);
-		// infos.push_back(&YCEI_GP_GRAV_Z);
+		infos.push_back(&YCEI_GRAV_X);
+		infos.push_back(&YCEI_GRAV_Y);
+		infos.push_back(&YCEI_GRAV_Z);
     }
     if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_CORI))
     {
-		// infos.push_back(&YCEI_GP_CORI_W);
-		// infos.push_back(&YCEI_GP_CORI_X);
-		// infos.push_back(&YCEI_GP_CORI_Y);
-		// infos.push_back(&YCEI_GP_CORI_Z);
+		infos.push_back(&YCEI_CORI_W);
+		infos.push_back(&YCEI_CORI_X);
+		infos.push_back(&YCEI_CORI_Y);
+		infos.push_back(&YCEI_CORI_Z);
     }
     if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_GPS_LATLON))
     {
-		// infos.push_back(&YCEI_GP_GPS_LAT);
-		// infos.push_back(&YCEI_GP_GPS_LON);
+		infos.push_back(&YCEI_GPS_LAT);
+		infos.push_back(&YCEI_GPS_LON);
     }
     if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_GPS_SPEED2D))
     {
-		infos.push_back(&YCEI_GP_GPS_SPEED2D);
+		infos.push_back(&YCEI_GPS_SPEED2D);
     }
     if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_GPS_SPEED3D))
     {
-		infos.push_back(&YCEI_GP_GPS_SPEED3D);
+		infos.push_back(&YCEI_GPS_SPEED3D);
     }
     if (bitset_is_set(ecuAvail, gpo::ECU_AVAIL_ENGINE_SPEED))
     {
@@ -535,43 +535,70 @@ TelemetryPlot::setY_Data(
 		auto &tSamp = sourceObjs.telemSrc->at(i);
 		switch (comp)
 		{
-		case Y_Component::eYC_Unknown:
+		case Y_Component::eYC_UNKNOWN:
 			dataItr->value = 0;
 			break;
-		case Y_Component::eYC_Time:
+		case Y_Component::eYC_TIME:
 			dataItr->value = tSamp.t_offset;
 			break;
-		case Y_Component::eYC_AcclX:
+		case Y_Component::eYC_ACCL_X:
 			dataItr->value = tSamp.gpSamp.accl.x;
 			break;
-		case Y_Component::eYC_AcclY:
+		case Y_Component::eYC_ACCL_Y:
 			dataItr->value = tSamp.gpSamp.accl.y;
 			break;
-		case Y_Component::eYC_AcclZ:
+		case Y_Component::eYC_ACCL_Z:
 			dataItr->value = tSamp.gpSamp.accl.z;
 			break;
-		case Y_Component::eYC_GyroX:
+		case Y_Component::eYC_GYRO_X:
 			dataItr->value = tSamp.gpSamp.gyro.x;
 			break;
-		case Y_Component::eYC_GyroY:
+		case Y_Component::eYC_GYRO_Y:
 			dataItr->value = tSamp.gpSamp.gyro.y;
 			break;
-		case Y_Component::eYC_GyroZ:
+		case Y_Component::eYC_GYRO_Z:
 			dataItr->value = tSamp.gpSamp.gyro.z;
 			break;
-		case Y_Component::eYC_GPS_Speed2D:
+		case Y_Component::eYC_GRAV_X:
+			dataItr->value = tSamp.gpSamp.grav.x;
+			break;
+		case Y_Component::eYC_GRAV_Y:
+			dataItr->value = tSamp.gpSamp.grav.y;
+			break;
+		case Y_Component::eYC_GRAV_Z:
+			dataItr->value = tSamp.gpSamp.grav.z;
+			break;
+		case Y_Component::eYC_CORI_W:
+			dataItr->value = tSamp.gpSamp.cori.w;
+			break;
+		case Y_Component::eYC_CORI_X:
+			dataItr->value = tSamp.gpSamp.cori.x;
+			break;
+		case Y_Component::eYC_CORI_Y:
+			dataItr->value = tSamp.gpSamp.cori.y;
+			break;
+		case Y_Component::eYC_CORI_Z:
+			dataItr->value = tSamp.gpSamp.cori.z;
+			break;
+		case Y_Component::eYC_GPS_LAT:
+			dataItr->value = tSamp.gpSamp.gps.coord.lat;
+			break;
+		case Y_Component::eYC_GPS_LON:
+			dataItr->value = tSamp.gpSamp.gps.coord.lon;
+			break;
+		case Y_Component::eYC_GPS_SPEED2D:
 			dataItr->value = tSamp.gpSamp.gps.speed2D;
 			break;
-		case Y_Component::eYC_GPS_Speed3D:
+		case Y_Component::eYC_GPS_SPEED3D:
 			dataItr->value = tSamp.gpSamp.gps.speed3D;
 			break;
-		case Y_Component::eYC_ECU_EngineSpeed:
+		case Y_Component::eYC_ECU_ENGINE_SPEED:
 			dataItr->value = tSamp.ecuSamp.engineSpeed_rpm;
 			break;
 		case Y_Component::eYC_ECU_TPS:
 			dataItr->value = tSamp.ecuSamp.tps;
 			break;
-		case Y_Component::eYC_ECU_Boost:
+		case Y_Component::eYC_ECU_BOOST:
 			dataItr->value = tSamp.ecuSamp.boost_psi;
 			break;
 		}

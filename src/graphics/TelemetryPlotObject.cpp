@@ -27,7 +27,7 @@ namespace gpo
 		plot_->setMaximumSize(PLOT_RENDER_WIDTH, PLOT_RENDER_HEIGHT);
 		plot_->setMinimumSize(PLOT_RENDER_WIDTH, PLOT_RENDER_HEIGHT);
 		// default to plotting GPS speed
-        plot_->setY_Component(TelemetryPlot::Y_Component::eYC_GPS_Speed2D,false);
+        plot_->setY_Component(TelemetryPlot::Y_Component::eYC_GPS_SPEED2D,false);
 		plot_->applyDarkTheme();
 	}
 
@@ -134,10 +134,10 @@ namespace gpo
 		// when rendering videos "X,Y,Z Acceleration" doesn't mean must to people
 		switch (comp)
 		{
-			case TelemetryPlot::Y_Component::eYC_AcclX:
+			case TelemetryPlot::Y_Component::eYC_ACCL_X:
 				plot_->setPlotTitle("Left/Right Acceleration");
 				break;
-			case TelemetryPlot::Y_Component::eYC_AcclY:
+			case TelemetryPlot::Y_Component::eYC_ACCL_Y:
 				plot_->setPlotTitle("Front/Back Acceleration");
 				break;
 			default:

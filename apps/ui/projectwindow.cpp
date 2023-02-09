@@ -59,7 +59,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
 
     telemPlotAcclX_->setWindowTitle("Acceleration X");
     telemPlotAcclX_->plot()->setX_Component(TelemetryPlot::X_Component::eXC_Samples);
-    telemPlotAcclX_->plot()->setY_Component(TelemetryPlot::Y_Component::eYC_AcclX);
+    telemPlotAcclX_->plot()->setY_Component(TelemetryPlot::Y_Component::eYC_ACCL_X);
     telemPlotAcclX_->show();
 
     // menu actions
