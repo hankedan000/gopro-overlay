@@ -43,7 +43,8 @@ DataProcessingUtilsTest::trackTimes()
 	track.addSector("Sector2",30,50);
 	track.addSector("Sector3",60,70);
 
-	CPPUNIT_ASSERT_EQUAL(true, utils::computeTrackTimes(&track,tSamps));
+	gpo::TrackDataAvailBitSet trackAvail;
+	CPPUNIT_ASSERT_EQUAL(true, utils::computeTrackTimes(&track,tSamps,trackAvail));
 
 	CPPUNIT_ASSERT_EQUAL(PATH_LENGTH, tSamps->size());
 	for (size_t i=0; i<tSamps->size(); i++)
@@ -52,50 +53,50 @@ DataProcessingUtilsTest::trackTimes()
 
 		// printf("i: %3ld; lap: %+d (time: %3.3fs); sector: %+d (time: %3.3fs);\n",
 		// 	i,
-		// 	samp.lap, samp.lapTimeOffset,
-		// 	samp.sector, samp.sectorTimeOffset);
+		// 	samp.trackData.lap, samp.trackData.lapTimeOffset,
+		// 	samp.trackData.sector, samp.trackData.sectorTimeOffset);
 
 		if (i < 5)// cross start
 		{
-			CPPUNIT_ASSERT_EQUAL(-1, samp.lap);
-			CPPUNIT_ASSERT_EQUAL(-1, samp.sector);
-			CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, samp.lapTimeOffset, 0.001);
-			CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, samp.sectorTimeOffset, 0.001);
+			CPPUNIT_ASSERT_EQUAL(-1, samp.trackData.lap);
+			CPPUNIT_ASSERT_EQUAL(-1, samp.trackData.sector);
+			CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, samp.trackData.lapTimeOffset, 0.001);
+			CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, samp.trackData.sectorTimeOffset, 0.001);
 		}
 		else if (i < 10)// entered sector1
 		{
-			CPPUNIT_ASSERT_EQUAL(1, samp.lap);
-			CPPUNIT_ASSERT_EQUAL(-1, samp.sector);
+			CPPUNIT_ASSERT_EQUAL(1, samp.trackData.lap);
+			CPPUNIT_ASSERT_EQUAL(-1, samp.trackData.sector);
 		}
 		else if (i < 30)// exited sector1 AND entered sector2
 		{
-			CPPUNIT_ASSERT_EQUAL(1, samp.lap);
-			CPPUNIT_ASSERT_EQUAL(1, samp.sector);
+			CPPUNIT_ASSERT_EQUAL(1, samp.trackData.lap);
+			CPPUNIT_ASSERT_EQUAL(1, samp.trackData.sector);
 		}
 		else if (i < 50)// exited sector2
 		{
-			CPPUNIT_ASSERT_EQUAL(1, samp.lap);
-			CPPUNIT_ASSERT_EQUAL(2, samp.sector);
+			CPPUNIT_ASSERT_EQUAL(1, samp.trackData.lap);
+			CPPUNIT_ASSERT_EQUAL(2, samp.trackData.sector);
 		}
 		else if (i < 60)// entered sector3
 		{
-			CPPUNIT_ASSERT_EQUAL(1, samp.lap);
-			CPPUNIT_ASSERT_EQUAL(-1, samp.sector);
+			CPPUNIT_ASSERT_EQUAL(1, samp.trackData.lap);
+			CPPUNIT_ASSERT_EQUAL(-1, samp.trackData.sector);
 		}
 		else if (i < 70)// exited sector3
 		{
-			CPPUNIT_ASSERT_EQUAL(1, samp.lap);
-			CPPUNIT_ASSERT_EQUAL(3, samp.sector);
+			CPPUNIT_ASSERT_EQUAL(1, samp.trackData.lap);
+			CPPUNIT_ASSERT_EQUAL(3, samp.trackData.sector);
 		}
 		else if (i < 95)// cross finish
 		{
-			CPPUNIT_ASSERT_EQUAL(1, samp.lap);
-			CPPUNIT_ASSERT_EQUAL(-1, samp.sector);
+			CPPUNIT_ASSERT_EQUAL(1, samp.trackData.lap);
+			CPPUNIT_ASSERT_EQUAL(-1, samp.trackData.sector);
 		}
 		else// after finish
 		{
-			CPPUNIT_ASSERT_EQUAL(-1, samp.lap);
-			CPPUNIT_ASSERT_EQUAL(-1, samp.sector);
+			CPPUNIT_ASSERT_EQUAL(-1, samp.trackData.lap);
+			CPPUNIT_ASSERT_EQUAL(-1, samp.trackData.sector);
 		}
 	}
 }
