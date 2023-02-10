@@ -110,13 +110,12 @@ RenderEntityPropertiesTab::RenderEntityPropertiesTab(
     // TelemetryPlotObject
     // =============================================
     // init y-component combobox
-    for (const auto &info : TelemetryPlot::Y_COMP_ENUM_INFO)
+    for (const auto &info : TelemetryPlot::Y_COMP_ENUM_INFOS)
     {
-        ui->yComponent_ComboBox->addItem(info.name,(qint32)info.yComp);
+        ui->yComponent_ComboBox->addItem(info->name,(qulonglong)info->yComp);
     }
     connect(ui->yComponent_ComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index){
-        int yCompInt = ui->yComponent_ComboBox->itemData(index).toInt();
-        auto yComp = (TelemetryPlot::Y_Component)yCompInt;
+        auto yComp = (TelemetryPlot::Y_Component)ui->yComponent_ComboBox->itemData(index).toULongLong();
         if (entity_)
         {
             auto telemPlot = reinterpret_cast<gpo::TelemetryPlotObject*>(entity_->rObj);

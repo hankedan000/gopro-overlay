@@ -58,10 +58,7 @@ namespace gpo
 			auto telemSrc = tSources_.at(ss);
 
 			const auto &currSample = telemSrc->at(telemSrc->seekedIdx());
-			gpt::CoordLL coord;
-			coord.lat = currSample.onTrackLL[0];
-			coord.lon = currSample.onTrackLL[1];
-			auto dotPoint = coordToPoint(coord);
+			auto dotPoint = coordToPoint(currSample.trackData.onTrackLL);
 			cv::circle(outImg_,dotPoint,dotRadius_px_,dotColors_.at(ss),cv::FILLED);
 		}
 	}

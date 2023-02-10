@@ -1,9 +1,12 @@
 #include "GoProOverlay/data/DataSource.h"
 
 #include <filesystem>
+#include <spdlog/spdlog.h>
 
 #include <GoProTelem/GoProTelem.h>
+#include <GoProTelem/SampleMath.h>
 #include <GoProOverlay/utils/DataProcessingUtils.h>
+#include <GoProOverlay/utils/io/CSV_Utils.h>
 
 namespace gpo
 {
@@ -13,10 +16,16 @@ namespace gpo
 	 , videoSrc(nullptr)
 	 , vCapture_()
 	 , samples_(nullptr)
+	 , gpDataAvail_()
+	 , ecuDataAvail_()
+	 , trackAvail_()
 	 , sourceName_("")
 	 , originFile_("")
 	 , datumTrack_(nullptr)
 	{
+		bitset_clear(gpDataAvail_);
+		bitset_clear(ecuDataAvail_);
+		bitset_clear(trackAvail_);
 	}
 
 	std::string
@@ -59,7 +68,7 @@ namespace gpo
 			return true;
 		}
 
-		bool okay = utils::computeTrackTimes(datumTrack_,samples_);
+		bool okay = utils::computeTrackTimes(datumTrack_,samples_,trackAvail_);
 
 		// smooth accelerometer data
 		if (false)
@@ -105,6 +114,88 @@ namespace gpo
 		return videoSrc != nullptr;
 	}
 
+	const GoProDataAvailBitSet &
+	DataSource::gpDataAvail() const
+	{
+		return gpDataAvail_;
+	}
+
+	const ECU_DataAvailBitSet &
+	DataSource::ecuDataAvail() const
+	{
+		return ecuDataAvail_;
+	}
+
+	const TrackDataAvailBitSet &
+	DataSource::trackDataAvail() const
+	{
+		return trackAvail_;
+	}
+
+	double
+	DataSource::getTelemetryRate_hz() const
+	{
+		if ( ! hasTelemetry() || samples_->size() < 2)
+		{
+			return 0.0;
+		}
+		return (samples_->size() - 1) / samples_->back().t_offset;
+	}
+
+	void
+	DataSource::resampleTelemetry(
+		double newRate_hz)
+	{
+		if ( ! hasTelemetry())
+		{
+			spdlog::warn("DataSource doesn't have any telemetry data. ignoring request.");
+			return;
+		}
+		else if (hasVideo())
+		{
+			spdlog::error("can't resample DataSource that has a video associated with it.");
+			return;
+		}
+		else if (samples_->empty())
+		{
+			// no samples means nothing resample!
+			return;
+		}
+
+		// copy old samples
+		TelemetrySamples oldSamps = *samples_;
+
+		double duration_sec = oldSamps.back().t_offset;
+		size_t nSampsOut = round(newRate_hz * duration_sec);
+		samples_->resize(nSampsOut);
+		double outDt_sec = 1.0 / newRate_hz;
+
+		size_t takeIdx = 0;
+		double outTime_sec = 0.0;
+		for (size_t outIdx=0; outIdx<nSampsOut; outIdx++)
+		{
+			bool found = gpt::findLerpIndex(takeIdx,oldSamps,outTime_sec);
+
+			if (found)
+			{
+				const auto &sampA = oldSamps.at(takeIdx);
+				const auto &sampB = oldSamps.at(takeIdx+1);
+				const double dt = sampB.t_offset - sampA.t_offset;
+				const double ratio = (outTime_sec - sampA.t_offset) / dt;
+				utils::lerp(samples_->at(outIdx),sampA,sampB,ratio);
+			}
+			else if (takeIdx == 0)
+			{
+				samples_->at(outIdx) = oldSamps.at(takeIdx);
+			}
+			else
+			{
+				samples_->at(outIdx) = oldSamps.back();
+			}
+			outTime_sec += outDt_sec;
+		}
+	}
+
 	Track *
 	DataSource::makeTrack() const
 	{
@@ -122,7 +213,7 @@ namespace gpo
 	{
 		gpt::MP4_Source mp4;
 		mp4.open(videoFile);
-		auto videoTelem = gpt::getCombinedSamples(mp4);
+		auto videoTelem = gpt::getCombinedTimedSamples(mp4);
 		if (videoTelem.empty())
 		{
 			return nullptr;
@@ -134,17 +225,97 @@ namespace gpo
 		}
 
 		auto newSrc = std::make_shared<DataSource>();
+		newSrc->originFile_ = videoFile;
 		newSrc->vCapture_ = vCap;
 		newSrc->samples_ = std::make_shared<TelemetrySamples>();
 		newSrc->samples_->resize(videoTelem.size());
 		for (size_t i=0; i<videoTelem.size(); i++)
 		{
-			newSrc->samples_->at(i).gpSamp = videoTelem.at(i);
+			auto &outSamp = newSrc->samples_->at(i);
+			const auto &gpSamp = videoTelem.at(i);
+			outSamp.t_offset = gpSamp.t_offset;
+			outSamp.gpSamp = gpSamp.sample;
+		}
+
+		// populate GoPro data availability
+		gpt::MP4_SensorInfo sensorInfo;
+		if (mp4.getSensorInfo(gpt::GPMF_KEY_ACCL, sensorInfo))
+		{
+			bitset_set_bit(newSrc->gpDataAvail_, gpo::GOPRO_AVAIL_ACCL);
+		}
+		if (mp4.getSensorInfo(gpt::GPMF_KEY_GYRO, sensorInfo))
+		{
+			bitset_set_bit(newSrc->gpDataAvail_, gpo::GOPRO_AVAIL_GYRO);
+		}
+		if (mp4.getSensorInfo(gpt::GPMF_KEY_GRAV, sensorInfo))
+		{
+			bitset_set_bit(newSrc->gpDataAvail_, gpo::GOPRO_AVAIL_GRAV);
+		}
+		if (mp4.getSensorInfo(gpt::GPMF_KEY_CORI, sensorInfo))
+		{
+			bitset_set_bit(newSrc->gpDataAvail_, gpo::GOPRO_AVAIL_CORI);
+		}
+		if (mp4.getSensorInfo(gpt::GPMF_KEY_GPS5, sensorInfo))
+		{
+			bitset_set_bit(newSrc->gpDataAvail_, gpo::GOPRO_AVAIL_GPS_LATLON);
+			bitset_set_bit(newSrc->gpDataAvail_, gpo::GOPRO_AVAIL_GPS_ALTITUDE);
+			bitset_set_bit(newSrc->gpDataAvail_, gpo::GOPRO_AVAIL_GPS_SPEED2D);
+			bitset_set_bit(newSrc->gpDataAvail_, gpo::GOPRO_AVAIL_GPS_SPEED3D);
 		}
 
 		newSrc->seeker = std::make_shared<TelemetrySeeker>(newSrc);
 		newSrc->telemSrc = std::make_shared<TelemetrySource>(newSrc);
 		newSrc->videoSrc = std::make_shared<VideoSource>(newSrc);
+
+		return newSrc;
+	}
+
+	DataSourcePtr
+	DataSource::loadDataFromMegaSquirtLog(
+		const std::filesystem::path &logFile)
+	{
+		std::vector<gpo::ECU_TimedSample> ecuTelem;
+		auto res = utils::io::readMegaSquirtLog(logFile,ecuTelem);
+		if ( ! res.first)
+		{
+			return nullptr;
+		}
+
+		auto newSrc = std::make_shared<DataSource>();
+		newSrc->originFile_ = logFile;
+		newSrc->samples_ = std::make_shared<TelemetrySamples>();
+		newSrc->samples_->resize(ecuTelem.size());
+		newSrc->ecuDataAvail_ = res.second;
+		for (size_t i=0; i<ecuTelem.size(); i++)
+		{
+			auto &sampOut = newSrc->samples_->at(i);
+			const auto &ecuSamp = ecuTelem.at(i);
+			sampOut.t_offset = ecuSamp.t_offset;
+			sampOut.ecuSamp = ecuSamp.sample;
+		}
+
+		newSrc->seeker = std::make_shared<TelemetrySeeker>(newSrc);
+		newSrc->telemSrc = std::make_shared<TelemetrySource>(newSrc);
+
+		return newSrc;
+	}
+
+	DataSourcePtr
+	DataSource::loadTelemetryFromCSV(
+		const std::filesystem::path &csvFile)
+	{
+		auto newSrc = std::make_shared<DataSource>();
+		newSrc->originFile_ = csvFile;
+		newSrc->samples_ = std::make_shared<TelemetrySamples>();
+		utils::io::readTelemetryFromCSV(
+			csvFile,
+			newSrc->samples_,
+			newSrc->gpDataAvail_,
+			newSrc->ecuDataAvail_,
+			newSrc->trackAvail_);
+
+		newSrc->seeker = std::make_shared<TelemetrySeeker>(newSrc);
+		newSrc->telemSrc = std::make_shared<TelemetrySource>(newSrc);
 
 		return newSrc;
 	}
@@ -163,6 +334,22 @@ namespace gpo
 		newSrc->videoSrc = nullptr;
 
 		return newSrc;
+	}
+
+	bool
+	DataSource::writeTelemetryToCSV(
+		const std::filesystem::path &csvFilepath) const
+	{
+		if ( ! hasTelemetry())
+		{
+			return false;
+		}
+		return utils::io::writeTelemetryToCSV(
+			samples_,
+			csvFilepath,
+			gpDataAvail_,
+			ecuDataAvail_,
+			trackAvail_);
 	}
 
 	DataSourceManager::DataSourceManager()
@@ -321,7 +508,6 @@ namespace gpo
 		if (dataSrc)
 		{
 			dataSrc->sourceName_ = name;
-			dataSrc->originFile_ = filepath;
 			sources_.push_back(dataSrc);
 		}
 		return dataSrc != nullptr;

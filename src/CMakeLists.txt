@@ -23,6 +23,7 @@ add_library("${LIBNAME}" STATIC
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/VideoObject.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/utils/DataProcessingUtils.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/utils/LineSegmentUtils.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/utils/io/CSV_Utils.cpp"
 	
 	# MOC needs to know where this... grumble grumble
 	# see https://stackoverflow.com/questions/14010922/qt-undefined-reference-to-vtable
@@ -42,6 +43,7 @@ target_include_directories("${LIBNAME}"
 
 target_link_libraries("${LIBNAME}"
 	PUBLIC
+		csv
 		GoProTelem::GoProTelem
 		${OpenCV_LIBS}
 		QCustomPlot

@@ -36,10 +36,10 @@ namespace gpo
 		}
 
 		auto telemSrc = tSources_.front();
-		const auto &currSamp = telemSrc->at(telemSrc->seekedIdx());
-		if (currSamp.lap != -1)
+		const auto &trackData = telemSrc->at(telemSrc->seekedIdx()).trackData;
+		if (trackData.lap != -1)
 		{
-			lapTime_ = currSamp.lapTimeOffset;
+			lapTime_ = trackData.lapTimeOffset;
 		}
 
 		char lapTimeStr[1024];

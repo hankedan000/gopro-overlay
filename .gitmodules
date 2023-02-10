@@ -10,3 +10,6 @@
 [submodule "extern/spdlog"]
 	path = extern/spdlog
 	url = https://github.com/gabime/spdlog.git
+[submodule "extern/csv-parser"]
+	path = extern/csv-parser
+	url = https://github.com/vincentlaucsb/csv-parser.git

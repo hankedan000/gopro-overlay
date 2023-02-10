@@ -63,7 +63,7 @@ namespace gpo
 			fontColor_, //font color
 			1);// thickness
 
-		sprintf(tmpStr,"time_offset: %0.3fs",telemSamp.gpSamp.t_offset);
+		sprintf(tmpStr,"time_offset: %0.3fs",telemSamp.t_offset);
 		cv::putText(
 			outImg_, //target image
 			tmpStr, //text

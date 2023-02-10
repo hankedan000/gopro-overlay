@@ -1,13 +1,17 @@
 #include "GoProOverlay/utils/DataProcessingUtils.h"
 
 #include "GoProOverlay/utils/LineSegmentUtils.h"
+#include "GoProTelem/SampleMath.h"// for lerp()
+#include <spdlog/spdlog.h>
 
 namespace utils
 {
+	
 	bool
 	computeTrackTimes(
 		const gpo::Track *track,
-		gpo::TelemetrySamplesPtr tSamps)
+		gpo::TelemetrySamplesPtr tSamps,
+		gpo::TrackDataAvailBitSet &trackAvail)
 	{
 		std::vector<const gpo::TrackPathObject *> trackObjs;
 		if ( ! track->getSortedPathObjects(trackObjs))
@@ -19,7 +23,8 @@ namespace utils
 			// no track objects to process
 			return true;
 		}
-
+;
+		bitset_clear(trackAvail);
 		int currLap = -1;
 		int sectorSeq = 1;// increments everytime we exit a sector
 		int currSector = -1;
@@ -36,12 +41,16 @@ namespace utils
 		for (size_t ii=0; ii<tSamps->size(); ii++)
 		{
 			auto &samp = tSamps->at(ii);
+			auto &trackData = samp.trackData;
 			cv::Vec2d currCoord(samp.gpSamp.gps.coord.lat,samp.gpSamp.gps.coord.lon);
 			auto findRes = track->findClosestPointWithIdx(
 						currCoord,
 						onTrackFindInitialIdx,
 						onTrackFindWindow);
-			samp.onTrackLL = std::get<1>(findRes);
+			const auto &foundCoord = std::get<1>(findRes);
+			trackData.onTrackLL.lat = foundCoord[0];
+			trackData.onTrackLL.lon = foundCoord[1];
+			bitset_set_bit(trackAvail, gpo::TRACK_AVAIL_ON_TRACK_LATLON);
 			onTrackFindInitialIdx = std::get<2>(findRes);
 			onTrackFindWindow = {5,100};// reduce search space once we've found initial location
 
@@ -49,10 +58,10 @@ namespace utils
 			do
 			{
 				movedToNextObject = false;
-				bool crossed = ii != 0 && gate.detect(prevCoord,samp.onTrackLL);
+				bool crossed = ii != 0 && gate.detect(prevCoord,foundCoord);
 				if (crossed && gateType == gpo::GateType_E::eGT_Start)
 				{
-					lapStartTimeOffset = samp.gpSamp.t_offset;
+					lapStartTimeOffset = samp.t_offset;
 					if (currLap == -1)
 					{
 						currLap = 1;
@@ -71,7 +80,7 @@ namespace utils
 					if (isEntry)
 					{
 						currSector = sectorSeq;
-						sectorStartTimeOffset = samp.gpSamp.t_offset;
+						sectorStartTimeOffset = samp.t_offset;
 					}
 					else
 					{
@@ -138,14 +147,116 @@ namespace utils
 			while (movedToNextObject);
 
 			// update telemetry sample
-			samp.lap = currLap;
-			samp.lapTimeOffset = (currLap == -1 ? 0.0 : samp.gpSamp.t_offset - lapStartTimeOffset);
-			samp.sector = currSector;
-			samp.sectorTimeOffset = (currSector == -1 ? 0.0 : samp.gpSamp.t_offset - sectorStartTimeOffset);
+			trackData.lap = currLap;
+			trackData.lapTimeOffset = (currLap == -1 ? 0.0 : samp.t_offset - lapStartTimeOffset);
+			if (currLap != -1)
+			{
+				bitset_set_bit(trackAvail, gpo::TRACK_AVAIL_LAP);
+				bitset_set_bit(trackAvail, gpo::TRACK_AVAIL_LAP_TIME_OFFSET);
+			}
+			trackData.sector = currSector;
+			trackData.sectorTimeOffset = (currSector == -1 ? 0.0 : samp.t_offset - sectorStartTimeOffset);
+			if (currSector != -1)
+			{
+				bitset_set_bit(trackAvail, gpo::TRACK_AVAIL_SECTOR);
+				bitset_set_bit(trackAvail, gpo::TRACK_AVAIL_SECTOR_TIME_OFFSET);
+			}
 
-			prevCoord = samp.onTrackLL;
+			prevCoord = foundCoord;
 		}
 
 		return true;
+	}
+
+	void
+	lerp(
+		gpo::ECU_Sample &out,
+		const gpo::ECU_Sample &a,
+		const gpo::ECU_Sample &b,
+		double ratio)
+	{
+		out.engineSpeed_rpm = gpt::lerp(a.engineSpeed_rpm, b.engineSpeed_rpm, ratio);
+		out.tps = gpt::lerp(a.tps, b.tps, ratio);
+		out.boost_psi = gpt::lerp(a.boost_psi, b.boost_psi, ratio);
+	}
+
+	void
+	lerp(
+		gpo::ECU_TimedSample &out,
+		const gpo::ECU_TimedSample &a,
+		const gpo::ECU_TimedSample &b,
+		double ratio)
+	{
+		out.t_offset = gpt::lerp(a.t_offset, b.t_offset, ratio);
+		lerp(out.sample, a.sample, b.sample, ratio);
+	}
+
+	#define FIELD_LERP(OUT,A,B,RATIO,FIELD) OUT.FIELD = gpt::lerp(A.FIELD, B.FIELD, RATIO)
+	#define FIELD_LERP_ROUNDED(OUT,A,B,RATIO,FIELD) OUT.FIELD = std::round(gpt::lerp(A.FIELD, B.FIELD, RATIO))
+
+	void
+	lerp(
+		gpo::TelemetrySample &out,
+		const gpo::TelemetrySample &a,
+		const gpo::TelemetrySample &b,
+		double ratio)
+	{
+		static bool warnedOnce = false;
+		if ( ! warnedOnce)
+		{
+			spdlog::warn("lerp() on TelemetrySample is not a complete implementation yet");
+			warnedOnce = true;
+		}
+		
+		FIELD_LERP(out,a,b,ratio,t_offset);
+		// lerp(out.gpSamp, a.gpSamp, b.gpSamp, ratio);
+		lerp(out.ecuSamp, a.ecuSamp, b.ecuSamp, ratio);
+		// FIELD_LERP(out,a,b,ratio,onTrackLL);
+		FIELD_LERP_ROUNDED(out,a,b,ratio,trackData.lap);
+		FIELD_LERP(out,a,b,ratio,trackData.lapTimeOffset);
+		FIELD_LERP_ROUNDED(out,a,b,ratio,trackData.sector);
+		FIELD_LERP(out,a,b,ratio,trackData.sectorTimeOffset);
+	}
+
+	void
+	resample(
+		std::vector<gpo::ECU_TimedSample> &out,
+		const std::vector<gpo::ECU_TimedSample> &in,
+		double outRate_hz)
+	{
+		if (in.empty())
+		{
+			return;
+		}
+
+		double duration_sec = in.back().t_offset;
+		size_t nSampsOut = round(outRate_hz * duration_sec);
+		out.resize(nSampsOut);
+		double outDt_sec = 1.0 / outRate_hz;
+
+		size_t takeIdx = 0;
+		double outTime_sec = 0.0;
+		for (size_t outIdx=0; outIdx<nSampsOut; outIdx++)
+		{
+			bool found = gpt::findLerpIndex(takeIdx,in,outTime_sec);
+
+			if (found)
+			{
+				const auto &sampA = in.at(takeIdx);
+				const auto &sampB = in.at(takeIdx+1);
+				const double dt = sampB.t_offset - sampA.t_offset;
+				const double ratio = (outTime_sec - sampA.t_offset) / dt;
+				lerp(out.at(outIdx),sampA,sampB,ratio);
+			}
+			else if (takeIdx == 0)
+			{
+				out.at(outIdx) = in.at(takeIdx);
+			}
+			else
+			{
+				out.at(outIdx) = in.back();
+			}
+			outTime_sec += outDt_sec;
+		}
 	}
 }

@@ -1,4 +1,7 @@
 set(QT_WIDGETS_SOURCES
+        AlignmentPlot.h
+        AlignmentPlot.cpp
+        AlignmentPlot.ui
 	ColorPicker.h
 	ColorPicker.cpp
 	ColorPicker.ui
