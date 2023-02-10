@@ -35,7 +35,7 @@ namespace gpo
 
 		bool
 		getFrame(
-			cv::Mat &outImg,
+			cv::UMat &outImg,
 			size_t idx);
 
 		size_t

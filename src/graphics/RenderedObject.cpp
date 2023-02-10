@@ -16,7 +16,7 @@ namespace gpo
 	{
 	}
 
-	const cv::Mat &
+	const cv::UMat &
 	RenderedObject::getImage() const
 	{
 		return outImg_;
@@ -24,7 +24,7 @@ namespace gpo
 
 	void
     RenderedObject::drawInto(
-		cv::Mat &intoImg,
+		cv::UMat &intoImg,
 		int originX, int originY)
 	{
         drawInto(intoImg,originX,originY,outImg_.size());
@@ -32,11 +32,11 @@ namespace gpo
 
 	void
     RenderedObject::drawInto(
-		cv::Mat &intoImg,
+		cv::UMat &intoImg,
 		int originX, int originY,
 		cv::Size renderSize)
 	{
-		cv::Mat *imgToRender = &outImg_;
+		cv::UMat *imgToRender = &outImg_;
 		if (renderSize.width != getNativeWidth() || renderSize.height != getNativeHeight())
 		{
 			ALPHA_SAFE_RESIZE(outImg_,scaledImg_,renderSize);
@@ -44,14 +44,16 @@ namespace gpo
 		}
 
 		// draw final output to user image
+		cv::Mat intoImgMat = intoImg.getMat(cv::AccessFlag::ACCESS_RW);
+		cv::Mat imgToRenderMat = imgToRender->getMat(cv::AccessFlag::ACCESS_READ);
 		cv::Rect roi(cv::Point(originX,originY), imgToRender->size());
-		cv::Mat3b destROI = intoImg(roi);
+		cv::Mat3b destROI = intoImgMat(roi);
 		double alpha = 1.0; // alpha in [0,1]
 		for (int r = 0; r < destROI.rows; ++r)
 		{
 			for (int c = 0; c < destROI.cols; ++c)
 			{
-				auto vf = imgToRender->at<cv::Vec4b>(r,c);
+				auto vf = imgToRenderMat.at<cv::Vec4b>(r,c);
 				// Blending
 				if (vf[3] > 0)
 				{

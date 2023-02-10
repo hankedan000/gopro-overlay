@@ -28,7 +28,7 @@ public:
 
     void
     showImage(
-            const cv::Mat &img);
+            const cv::UMat &img);
 
     void
     setEngine(
@@ -46,7 +46,7 @@ signals:
 
 private:
     Ui::ScrubbableVideo *ui;
-    cv::Mat frameBuffer_;
+    cv::UMat frameBuffer_;
     CvImageView *imgView_;
     gpo::RenderEnginePtr engine_;
 

@@ -62,7 +62,7 @@ namespace gpo
 		void
 		render();
 
-		const cv::Mat &
+		const cv::UMat &
 		getFrame() const;
 
 		YAML::Node
@@ -74,7 +74,7 @@ namespace gpo
 			const DataSourceManager &dsm);
 
 	private:
-		cv::Mat rFrame_;
+		cv::UMat rFrame_;
 		std::vector<RenderedEntity> entities_;
 		GroupedSeekerPtr gSeeker_;
 

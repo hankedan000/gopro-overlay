@@ -43,13 +43,13 @@ namespace gpo
 		virtual
 		void
 		drawInto(
-			cv::Mat &intoImg,
+			cv::UMat &intoImg,
 			int originX, int originY);
 
 		virtual
 		void
 		drawInto(
-			cv::Mat &intoImg,
+			cv::UMat &intoImg,
 			int originX, int originY,
 			cv::Size renderSize);
 

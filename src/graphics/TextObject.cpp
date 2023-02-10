@@ -61,7 +61,7 @@ namespace gpo
 
 	void
 	TextObject::drawInto(
-		cv::Mat &intoImg,
+		cv::UMat &intoImg,
 		int originX, int originY)
 	{
 		cv::putText(
@@ -76,7 +76,7 @@ namespace gpo
 
 	void
 	TextObject::drawInto(
-		cv::Mat &intoImg,
+		cv::UMat &intoImg,
 		int originX, int originY,
 		cv::Size renderSize)
 	{

@@ -51,7 +51,7 @@ namespace gpo
 
 	bool
 	VideoSource::getFrame(
-		cv::Mat &outImg,
+		cv::UMat &outImg,
 		size_t idx)
 	{
 		auto dataSrcPtr = dataSrc_.lock();

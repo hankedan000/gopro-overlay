@@ -65,7 +65,7 @@ namespace gpo
 
 	private:
 		// map outline
-		cv::Mat outlineImg_;
+		cv::UMat outlineImg_;
 
 		size_t tailLength_;
 

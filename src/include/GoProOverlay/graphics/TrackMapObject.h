@@ -52,7 +52,7 @@ namespace gpo
 		const int PX_MARGIN = 20;
 
 		// map outline
-		cv::Mat outlineImg_;
+		cv::UMat outlineImg_;
 
 		// coordinates of upper-left and lower-right corners
 		gpt::CoordLL ulCoord_;
