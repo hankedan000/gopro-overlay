@@ -12,14 +12,6 @@ target_link_libraries(topbottom_overlay
 	GoProOverlay
 	tqdm)
 
-add_executable(msq-parse
-	msq-parse.cpp)
-
-target_link_libraries(msq-parse
-	csv
-	GoProOverlay
-	spdlog::spdlog)
-
 # Qt Apps
 add_subdirectory(ui)
 

@@ -18,6 +18,7 @@ namespace gpo
 	 , samples_(nullptr)
 	 , gpDataAvail_()
 	 , ecuDataAvail_()
+	 , trackAvail_()
 	 , sourceName_("")
 	 , originFile_("")
 	 , datumTrack_(nullptr)
