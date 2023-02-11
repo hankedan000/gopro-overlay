@@ -286,6 +286,7 @@ namespace gpo
 		newSrc->samples_ = std::make_shared<TelemetrySamples>();
 		newSrc->samples_->resize(ecuTelem.size());
 		newSrc->ecuDataAvail_ = res.second;
+		bitset_clr_bit(newSrc->ecuDataAvail_, ECU_AVAIL_TIME);// don't want to track this here
 		for (size_t i=0; i<ecuTelem.size(); i++)
 		{
 			auto &sampOut = newSrc->samples_->at(i);
@@ -350,6 +351,248 @@ namespace gpo
 			gpDataAvail_,
 			ecuDataAvail_,
 			trackAvail_);
+	}
+
+	size_t
+	DataSource::mergeTelemetryIn(
+		const DataSourcePtr srcData,
+		size_t srcStartIdx,
+		size_t dstStartIdx,
+		bool growVector)
+	{
+		return mergeTelemetryIn(
+			srcData,
+			srcStartIdx,
+			dstStartIdx,
+			srcData->gpDataAvail(),
+			srcData->ecuDataAvail(),
+			srcData->trackDataAvail(),
+			growVector);
+	}
+
+	size_t
+	DataSource::mergeTelemetryIn(
+		const DataSourcePtr srcData,
+		size_t srcStartIdx,
+		size_t dstStartIdx,
+		GoProDataAvailBitSet gpDataToTake,
+		ECU_DataAvailBitSet ecuDataToTake,
+		TrackDataAvailBitSet trackDataToTake,
+		bool growVector)
+	{
+		const auto &srcSamps = srcData->samples_;
+		if (srcStartIdx >= srcSamps->size())
+		{
+			spdlog::error(
+				"srcStartIdx ({}) is >= source sample count ({})",
+				srcStartIdx,
+				srcSamps->size());
+			return 0;
+		}
+
+		auto &dstSamps = samples_;
+		if (dstStartIdx >= dstSamps->size())
+		{
+			spdlog::error(
+				"dstStartIdx ({}) is >= destination sample count ({})",
+				dstStartIdx,
+				dstSamps->size());
+			return 0;
+		}
+
+		const auto srcRate_hz = srcData->getTelemetryRate_hz();
+		const auto dstRate_hz = this->getTelemetryRate_hz();
+		const auto deltaRate_hz = srcRate_hz - dstRate_hz;
+		const double RATE_THRESHOLD_HZ = 0.1;
+		if (std::abs(deltaRate_hz) > RATE_THRESHOLD_HZ)
+		{
+			spdlog::error(
+				"source and destination data rates differ by more than {}Hz.\n"
+				" srcRate = {}Hz;\n"
+				" dstRate = {}Hz;",
+				RATE_THRESHOLD_HZ,
+				srcRate_hz,
+				dstRate_hz);
+			return 0;
+		}
+
+		// compute number of samples we could merge into without growing vector
+		const size_t nSampsIngress = srcSamps->size() - srcStartIdx;
+		const size_t nSampsWeCouldTakeWithoutGrowth = dstSamps->size() - dstStartIdx;
+		// compute the number of samples we plan to merge based on growthability
+		size_t nSampsToMerge = nSampsIngress;
+		if (nSampsToMerge > nSampsWeCouldTakeWithoutGrowth)
+		{
+			if (growVector)
+			{
+				size_t growthNeeded = nSampsToMerge - nSampsWeCouldTakeWithoutGrowth;
+				samples_->resize(samples_->size() + growthNeeded);
+			}
+			else
+			{
+				nSampsToMerge = nSampsWeCouldTakeWithoutGrowth;
+			}
+		}
+		spdlog::debug(
+			"srcSamps->size(): {}; srcStartIdx: {}\n"
+			"dstSamps->size(): {}; dstStartIdx: {}\n"
+			"nSampsIngress: {}\n"
+			"nSampsWeCouldTakeWithoutGrowth: {}\n"
+			"growVector: {}\n"
+			"nSampsToMerge: {}",
+			srcSamps->size(), srcStartIdx,
+			dstSamps->size(), dstStartIdx,
+			nSampsIngress,
+			nSampsWeCouldTakeWithoutGrowth,
+			growVector,
+			nSampsToMerge);
+
+		size_t mergedSamples = 0;
+		for (size_t i=0; i<nSampsToMerge; i++, mergedSamples++)
+		{
+			auto &dstSamp = dstSamps->at(dstStartIdx + i);
+			const auto &srcSamp = srcSamps->at(srcStartIdx + i);
+
+			// merge in GoPro samples
+			auto bitToTake = GOPRO_AVAIL_ACCL;
+			if (bitset_is_set(gpDataToTake, bitToTake))
+			{
+				dstSamp.gpSamp.accl = srcSamp.gpSamp.accl;
+				bitset_set_bit(gpDataAvail_, bitToTake);
+				bitset_clr_bit(gpDataToTake, bitToTake);
+			}
+			bitToTake = GOPRO_AVAIL_GYRO;
+			if (bitset_is_set(gpDataToTake, bitToTake))
+			{
+				dstSamp.gpSamp.gyro = srcSamp.gpSamp.gyro;
+				bitset_set_bit(gpDataAvail_, bitToTake);
+				bitset_clr_bit(gpDataToTake, bitToTake);
+			}
+			bitToTake = GOPRO_AVAIL_GRAV;
+			if (bitset_is_set(gpDataToTake, bitToTake))
+			{
+				dstSamp.gpSamp.grav = srcSamp.gpSamp.grav;
+				bitset_set_bit(gpDataAvail_, bitToTake);
+				bitset_clr_bit(gpDataToTake, bitToTake);
+			}
+			bitToTake = GOPRO_AVAIL_CORI;
+			if (bitset_is_set(gpDataToTake, bitToTake))
+			{
+				dstSamp.gpSamp.cori = srcSamp.gpSamp.cori;
+				bitset_set_bit(gpDataAvail_, bitToTake);
+				bitset_clr_bit(gpDataToTake, bitToTake);
+			}
+			bitToTake = GOPRO_AVAIL_GPS_LATLON;
+			if (bitset_is_set(gpDataToTake, bitToTake))
+			{
+				dstSamp.gpSamp.gps.coord = srcSamp.gpSamp.gps.coord;
+				bitset_set_bit(gpDataAvail_, bitToTake);
+				bitset_clr_bit(gpDataToTake, bitToTake);
+			}
+			bitToTake = GOPRO_AVAIL_GPS_ALTITUDE;
+			if (bitset_is_set(gpDataToTake, bitToTake))
+			{
+				dstSamp.gpSamp.gps.altitude = srcSamp.gpSamp.gps.altitude;
+				bitset_set_bit(gpDataAvail_, bitToTake);
+				bitset_clr_bit(gpDataToTake, bitToTake);
+			}
+			bitToTake = GOPRO_AVAIL_GPS_SPEED2D;
+			if (bitset_is_set(gpDataToTake, bitToTake))
+			{
+				dstSamp.gpSamp.gps.speed2D = srcSamp.gpSamp.gps.speed3D;
+				bitset_set_bit(gpDataAvail_, bitToTake);
+				bitset_clr_bit(gpDataToTake, bitToTake);
+			}
+			bitToTake = GOPRO_AVAIL_GPS_SPEED3D;
+			if (bitset_is_set(gpDataToTake, bitToTake))
+			{
+				dstSamp.gpSamp.gps.speed3D = srcSamp.gpSamp.gps.speed3D;
+				bitset_set_bit(gpDataAvail_, bitToTake);
+				bitset_clr_bit(gpDataToTake, bitToTake);
+			}
+
+			// merge in ECU samples
+			bitToTake = ECU_AVAIL_ENGINE_SPEED;
+			if (bitset_is_set(ecuDataToTake, bitToTake))
+			{
+				dstSamp.ecuSamp.engineSpeed_rpm = srcSamp.ecuSamp.engineSpeed_rpm;
+				bitset_set_bit(ecuDataAvail_, bitToTake);
+				bitset_clr_bit(ecuDataToTake, bitToTake);
+			}
+			bitToTake = ECU_AVAIL_TPS;
+			if (bitset_is_set(ecuDataToTake, bitToTake))
+			{
+				dstSamp.ecuSamp.tps = srcSamp.ecuSamp.tps;
+				bitset_set_bit(ecuDataAvail_, bitToTake);
+				bitset_clr_bit(ecuDataToTake, bitToTake);
+			}
+			bitToTake = ECU_AVAIL_BOOST;
+			if (bitset_is_set(ecuDataToTake, bitToTake))
+			{
+				dstSamp.ecuSamp.boost_psi = srcSamp.ecuSamp.boost_psi;
+				bitset_set_bit(ecuDataAvail_, bitToTake);
+				bitset_clr_bit(ecuDataToTake, bitToTake);
+			}
+
+			// merge in Track samples
+			bitToTake = TRACK_AVAIL_ON_TRACK_LATLON;
+			if (bitset_is_set(trackDataToTake, bitToTake))
+			{
+				dstSamp.trackData.onTrackLL = srcSamp.trackData.onTrackLL;
+				bitset_set_bit(trackAvail_, bitToTake);
+				bitset_clr_bit(trackDataToTake, bitToTake);
+			}
+			bitToTake = TRACK_AVAIL_LAP;
+			if (bitset_is_set(trackDataToTake, bitToTake))
+			{
+				dstSamp.trackData.lap = srcSamp.trackData.lap;
+				bitset_set_bit(trackAvail_, bitToTake);
+				bitset_clr_bit(trackDataToTake, bitToTake);
+			}
+			bitToTake = TRACK_AVAIL_LAP_TIME_OFFSET;
+			if (bitset_is_set(trackDataToTake, bitToTake))
+			{
+				dstSamp.trackData.lapTimeOffset = srcSamp.trackData.lapTimeOffset;
+				bitset_set_bit(trackAvail_, bitToTake);
+				bitset_clr_bit(trackDataToTake, bitToTake);
+			}
+			bitToTake = TRACK_AVAIL_SECTOR;
+			if (bitset_is_set(trackDataToTake, bitToTake))
+			{
+				dstSamp.trackData.sector = srcSamp.trackData.sector;
+				bitset_set_bit(trackAvail_, bitToTake);
+				bitset_clr_bit(trackDataToTake, bitToTake);
+			}
+			bitToTake = TRACK_AVAIL_SECTOR_TIME_OFFSET;
+			if (bitset_is_set(trackDataToTake, bitToTake))
+			{
+				dstSamp.trackData.sectorTimeOffset = srcSamp.trackData.sectorTimeOffset;
+				bitset_set_bit(trackAvail_, bitToTake);
+				bitset_clr_bit(trackDataToTake, bitToTake);
+			}
+		}
+
+		// make sure everything was merged (future proofing logic in case fields are added)
+		if (bitset_is_any_set(gpDataToTake))
+		{
+			spdlog::warn(
+				"unmerged GoPro samples remain. seems like {}() implementation is incomplete.",
+				__func__);
+		}
+		if (bitset_is_any_set(ecuDataToTake))
+		{
+			spdlog::warn(
+				"unmerged ECU samples remain. seems like {}() implementation is incomplete.",
+				__func__);
+		}
+		if (bitset_is_any_set(trackDataToTake))
+		{
+			spdlog::warn(
+				"unmerged Track samples remain. seems like {}() implementation is incomplete.",
+				__func__);
+		}
+
+		return mergedSamples;
 	}
 
 	DataSourceManager::DataSourceManager()

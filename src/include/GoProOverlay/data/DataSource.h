@@ -98,6 +98,62 @@ namespace gpo
 		writeTelemetryToCSV(
 			const std::filesystem::path &csvFilepath) const;
 
+		/**
+		 * Merges all available telemetry data from another source into this
+		 * one. For this to be successful, the two sources need to have similar
+		 * data rates.
+		 * 
+		 * This method simply redirects to the other mergeTelemetryIn() method,
+		 * but takes all the sample data available from 'srcData'.
+		 */
+		size_t
+		mergeTelemetryIn(
+			const DataSourcePtr srcData,
+			size_t srcStartIdx,
+			size_t dstStartIdx,
+			bool growVector);
+
+		/**
+		 * Merges telemetry data from another source into this one. For this
+		 * to be successful, the two sources need to have similar data rates.
+		 * 
+		 * @param[in] srcData
+		 * the DataSource to take telemetry samples from
+		 * 
+		 * @param[in] srcStartIdx
+		 * the index within 'srcData' to begin taking samples from
+		 * 
+		 * @param[in] dstStartIdx
+		 * the index within this DataSource to begin merging sample data
+		 * 
+		 * @param[in] gpDataToTake
+		 * set of which GoProTelemetry samples to merge in
+		 * 
+		 * @param[in] ecuDataToTake
+		 * set of which ECU samples to merge in
+		 * 
+		 * @param[in] trackDataToTake
+		 * set of which track samples to merge in
+		 * 
+		 * @param[in] growVector
+		 * if set true, and the merged number of samples extends past the end
+		 * of the current telemetry vector's length, then the telemetry vector
+		 * will be resized to fit the new samples. otherwise those samples will
+		 * be left unmerged.
+		 * 
+		 * @return
+		 * the number of samples merged
+		 */
+		size_t
+		mergeTelemetryIn(
+			const DataSourcePtr srcData,
+			size_t srcStartIdx,
+			size_t dstStartIdx,
+			GoProDataAvailBitSet gpDataToTake,
+			ECU_DataAvailBitSet ecuDataToTake,
+			TrackDataAvailBitSet trackDataToTake,
+			bool growVector);
+
 	public:
 		TelemetrySeekerPtr seeker;
 		TelemetrySourcePtr telemSrc;
