@@ -41,7 +41,7 @@ set(QT_WIDGETS_SOURCES
 
 	# MOC needs to know where this... grumble grumble
 	# see https://stackoverflow.com/questions/14010922/qt-undefined-reference-to-vtable
-	${CMAKE_CURRENT_SOURCE_DIR}/../../src/include/GoProOverlay/graphics/TelemetryPlot.h
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../src/include/GoProOverlay/graphics/TelemetryPlot.h
 )
 
 add_library(AppWidgets STATIC
