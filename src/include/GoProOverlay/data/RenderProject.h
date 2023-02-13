@@ -118,6 +118,12 @@ class RenderProject
 public:
 	RenderProject();
 
+	// copying this class isn't support, so delete the copy constrcutor.
+	// if we wanted to support it, i think we'd only need to make a deep
+	// copy of the 'track_' member.
+	RenderProject(
+		const RenderProject &other) = delete;
+
 	~RenderProject();
 
 	DataSourceManager &

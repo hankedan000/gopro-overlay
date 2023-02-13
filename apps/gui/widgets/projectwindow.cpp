@@ -217,7 +217,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
 
         auto engine = proj_.getEngine();
         rThread_ = new RenderThread(
-                    proj_,
+                    &proj_,
                     exportDir,
                     exportFilename,
                     engine->getHighestFPS());

@@ -16,10 +16,10 @@ public:
 
 public:
     RenderThread(
-            gpo::RenderProject project,
-            QString exportDir,
-            QString exportFilename,
-            double fps);
+        gpo::RenderProject *project,
+        QString exportDir,
+        QString exportFilename,
+        double fps);
 
     virtual
     void
@@ -31,11 +31,11 @@ public:
 signals:
     void
     progressChanged(
-            qulonglong progress,
-            qulonglong total);
+        qulonglong progress,
+        qulonglong total);
 
 private:
-    gpo::RenderProject project_;
+    gpo::RenderProject *project_;
     std::filesystem::path exportDir_;
     QString exportFilename_;
     cv::VideoWriter vWriter_;

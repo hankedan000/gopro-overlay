@@ -12,9 +12,9 @@ const std::string RenderThread::DEFAULT_EXPORT_DIR = "/tmp/gopro_overlay_render/
 const std::string RenderThread::DEFAULT_EXPORT_FILENAME = "render.mp4";
 
 RenderThread::RenderThread(
-        gpo::RenderProject project,
-            QString exportDir,
-            QString exportFilename,
+        gpo::RenderProject *project,
+        QString exportDir,
+        QString exportFilename,
         double fps)
  : project_(project)
  , exportDir_(exportDir.toStdString())
@@ -28,15 +28,20 @@ RenderThread::RenderThread(
 void
 RenderThread::run()
 {
+    if (project_ == nullptr)
+    {
+        return;
+    }
+
     const std::filesystem::path finalExportFile = exportDir_ / exportFilename_.toStdString();
 
-    auto engine = project_.getEngine();
+    auto engine = project_->getEngine();
     auto gSeeker = engine->getSeeker();
 
     // seek to render alignment point first
-    gSeeker->seekToAlignmentInfo(project_.getAlignmentInfo());
+    gSeeker->seekToAlignmentInfo(project_->getAlignmentInfo());
     // start render a little bit before the alignment point (lead-in)
-    gSeeker->seekAllRelativeTime(project_.getLeadInSeconds() * -1.0);// -1 to go backwards in time
+    gSeeker->seekAllRelativeTime(project_->getLeadInSeconds() * -1.0);// -1 to go backwards in time
     // disable bounding boxes prior to render
     for (size_t ee=0; ee<engine->entityCount(); ee++)
     {
@@ -93,7 +98,7 @@ RenderThread::run()
             auto sourceForAudio = gSeeker->getSeeker(seekerCount - 1)->getDataSourceName();
             auto sourceStartTime_sec = startTimesBySource[sourceForAudio];
             spdlog::debug("dumping audio from source '{}'", sourceForAudio.c_str());
-            auto dataSource = project_.dataSourceManager().getSourceByName(sourceForAudio);
+            auto dataSource = project_->dataSourceManager().getSourceByName(sourceForAudio);
             auto audioSourceFile = dataSource->getOrigin();
             spdlog::debug("audioSourceFile = '{}'", audioSourceFile.c_str());
 
@@ -127,7 +132,7 @@ RenderThread::run()
             auto sourceForLeftAudio = gSeeker->getSeeker(0)->getDataSourceName();
             auto leftStartTime_sec = startTimesBySource[sourceForLeftAudio];
             spdlog::debug("dumping audio from source '{}'", sourceForLeftAudio.c_str());
-            auto leftSource = project_.dataSourceManager().getSourceByName(sourceForLeftAudio);
+            auto leftSource = project_->dataSourceManager().getSourceByName(sourceForLeftAudio);
             auto leftSourceFile = leftSource->getOrigin();
             spdlog::debug("audioSourceFile = '{}'", leftSourceFile.c_str());
 
@@ -147,7 +152,7 @@ RenderThread::run()
             auto sourceForRightAudio = gSeeker->getSeeker(1)->getDataSourceName();
             auto rightStartTime_sec = startTimesBySource[sourceForRightAudio];
             spdlog::debug("dumping audio from source '{}'", sourceForRightAudio.c_str());
-            auto rightSource = project_.dataSourceManager().getSourceByName(sourceForRightAudio);
+            auto rightSource = project_->dataSourceManager().getSourceByName(sourceForRightAudio);
             auto rightSourceFile = rightSource->getOrigin();
             spdlog::debug("audioSourceFile = '{}'", rightSourceFile.c_str());
 
