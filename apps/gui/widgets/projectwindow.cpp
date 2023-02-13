@@ -981,10 +981,25 @@ ProjectWindow::onActionSaveProject()
 void
 ProjectWindow::onActionSaveProjectAs()
 {
+    // default dialog's directory to user's home dir
+    QString suggestedDir = QDir::homePath();
+    if ( ! currProjectDir_.empty())
+    {
+        // open dialog to dir where existing project is located
+        const std::filesystem::path tmpFsPath = currProjectDir_;
+        suggestedDir = tmpFsPath.parent_path().c_str();
+    }
+
+    // open "Save As" dialog
     std::string filepath = QFileDialog::getExistingDirectory(
                 this,
                 "Save Project As",
-                QDir::homePath()).toStdString();
+                suggestedDir).toStdString();
+    if (filepath.empty())
+    {
+        // dialog was close without selecting a path
+        return;
+    }
 
     if (saveProject(filepath))
     {
