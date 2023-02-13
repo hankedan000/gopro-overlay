@@ -11,9 +11,14 @@ class RenderThread : public QThread
     Q_OBJECT
 
 public:
+    static const std::string DEFAULT_EXPORT_DIR;
+    static const std::string DEFAULT_EXPORT_FILENAME;
+
+public:
     RenderThread(
             gpo::RenderProject project,
-            QString exportFile,
+            QString exportDir,
+            QString exportFilename,
             double fps);
 
     virtual
@@ -31,7 +36,8 @@ signals:
 
 private:
     gpo::RenderProject project_;
-    QString exportFile_;
+    std::filesystem::path exportDir_;
+    QString exportFilename_;
     cv::VideoWriter vWriter_;
     double renderFPS_;
 

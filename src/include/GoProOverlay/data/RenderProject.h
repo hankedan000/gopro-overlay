@@ -161,6 +161,13 @@ public:
 	getLeadOutSeconds() const;
 
 	void
+	setExportFilePath(
+		const std::filesystem::path &path);
+
+	const std::filesystem::path &
+	getExportFilePath() const;
+
+	void
 	reprocessDatumTrack();
 
 	void
@@ -208,6 +215,9 @@ private:
 	RenderAlignmentInfo lastNonCustomAlignmentInfo_;
 
 	RenderAlignmentInfo currRenderAlignmentInfo_;
+
+	// user-defined path to the final rendered video file
+	std::filesystem::path exportFilePath_;
 
 };
 

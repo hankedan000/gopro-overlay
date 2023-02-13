@@ -15,6 +15,11 @@ namespace gpo
 	 : dsm_()
 	 , engine_(new RenderEngine())
 	 , track_(nullptr)
+	 , renderLeadIn_sec_(0.0)
+	 , renderLeadOut_sec_(0.0)
+	 , lastNonCustomAlignmentInfo_()
+	 , currRenderAlignmentInfo_()
+	 , exportFilePath_("")
 	{
 	}
 
@@ -110,6 +115,19 @@ namespace gpo
 	RenderProject::getLeadOutSeconds() const
 	{
 		return renderLeadOut_sec_;
+	}
+
+	void
+	RenderProject::setExportFilePath(
+		const std::filesystem::path &path)
+	{
+		exportFilePath_ = path;
+	}
+
+	const std::filesystem::path &
+	RenderProject::getExportFilePath() const
+	{
+		return exportFilePath_;
 	}
 
 	const RenderAlignmentInfo &
@@ -286,6 +304,8 @@ namespace gpo
 		node["lastNonCustomAlignmentInfo"] = lastNonCustomAlignmentInfo_;
 		node["currRenderAlignmentInfo"] = currRenderAlignmentInfo_;
 
+		node["exportFilePath"] = exportFilePath_.c_str();
+
 		return node;
 	}
 
@@ -304,6 +324,10 @@ namespace gpo
 		auto defaultAlignInfo = RenderAlignmentInfo();
 		YAML_TO_FIELD_W_DEFAULT(node,"lastNonCustomAlignmentInfo",lastNonCustomAlignmentInfo_,defaultAlignInfo);
 		YAML_TO_FIELD_W_DEFAULT(node,"currRenderAlignmentInfo",currRenderAlignmentInfo_,defaultAlignInfo);
+
+		std::string strExportFilePath;
+		YAML_TO_FIELD_W_DEFAULT(node,"exportFilePath",strExportFilePath,"");
+		exportFilePath_ = strExportFilePath;
 
 		return okay;
 	}

@@ -130,6 +130,9 @@ private:
     bool
     maybeSave();
 
+    bool
+    askToOverwriteExport();
+
     void
     addProjectToRecentHistory(
             const std::string &projectDir);
