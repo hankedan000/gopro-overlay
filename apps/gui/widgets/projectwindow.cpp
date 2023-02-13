@@ -57,6 +57,11 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     previewResolutionActionGroup_->addAction(ui->action1280_x_720);
     previewResolutionActionGroup_->addAction(ui->action1920_x_1080);
 
+    // setup default export file (until project is saved that is...)
+    std::filesystem::path exportFilePath = RenderThread::DEFAULT_EXPORT_DIR;
+    exportFilePath /= RenderThread::DEFAULT_EXPORT_FILENAME;
+    ui->exportFileLineEdit->setText(exportFilePath.c_str());
+
     telemPlotAcclX_->setWindowTitle("Acceleration X");
     telemPlotAcclX_->plot()->setX_Component(TelemetryPlot::X_Component::eXC_Samples);
     telemPlotAcclX_->plot()->setY_Component(TelemetryPlot::Y_Component::eYC_ACCL_X);
@@ -173,11 +178,48 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         ui->resetAlignment_PushButton->setEnabled(false);
         ui->applyAlignment_PushButton->setEnabled(false);
     });
+    connect(ui->exportFileLineEdit, &QLineEdit::editingFinished, this, [this]{
+        if (currProjectDir_.empty())
+        {
+            // no project loaded yet
+            return;
+        }
+
+        const std::filesystem::path newExportFilePath = ui->exportFileLineEdit->text().toStdString();
+        if (newExportFilePath != proj_.getExportFilePath())
+        {
+            proj_.setExportFilePath(newExportFilePath);
+            setProjectDirty(true);
+        }
+    });
     connect(ui->exportButton, &QPushButton::clicked, this, [this]{
+        QString exportDir = RenderThread::DEFAULT_EXPORT_DIR.c_str();
+        QString exportFilename = RenderThread::DEFAULT_EXPORT_FILENAME.c_str();
+        std::filesystem::path userExportPath = ui->exportFileLineEdit->text().toStdString();
+        if ( ! userExportPath.empty())
+        {
+            // decompose into export dir + filename
+            exportDir = userExportPath.parent_path().c_str();
+            exportFilename = userExportPath.filename().c_str();
+        }
+
+        // check to see if export would overwrite an existing file
+        std::filesystem::path finalExportFile = exportDir.toStdString();
+        finalExportFile /= exportFilename.toStdString();
+        if (std::filesystem::exists(finalExportFile))
+        {
+            if ( ! askToOverwriteExport())
+            {
+                // user requested us to not overwrite. break out!
+                return;
+            }
+        }
+
         auto engine = proj_.getEngine();
         rThread_ = new RenderThread(
                     proj_,
-                    "render.mp4",
+                    exportDir,
+                    exportFilename,
                     engine->getHighestFPS());
         connect(rThread_, &RenderThread::progressChanged, progressDialog_, &ProgressDialog::progressChanged);
         connect(rThread_, &RenderThread::finished, this, [this]{
@@ -392,6 +434,14 @@ ProjectWindow::loadProject(
         }
         ui->leadIn_SpinBox->setValue(proj_.getLeadInSeconds());
         ui->leadOut_SpinBox->setValue(proj_.getLeadOutSeconds());
+        std::filesystem::path exportFilePath = proj_.getExportFilePath();
+        if (exportFilePath.empty())
+        {
+            // default to export within project directory
+            exportFilePath = projectDir;
+            exportFilePath /= RenderThread::DEFAULT_EXPORT_FILENAME;
+        }
+        ui->exportFileLineEdit->setText(exportFilePath.c_str());
         if (proj_.getEngine()->entityCount() > 0)
         {
             previewWindow_->show();
@@ -850,6 +900,17 @@ ProjectWindow::maybeSave()
         return msgBox->exec() == QMessageBox::Yes;
     }
     return false;
+}
+
+bool
+ProjectWindow::askToOverwriteExport()
+{
+    auto msgBox = new QMessageBox(
+                QMessageBox::Icon::Warning,
+                "Overwrite Export?",
+                "File exists at the specific export path.\nDo you want to overwrite it?",
+                QMessageBox::Yes | QMessageBox::No);
+    return msgBox->exec() == QMessageBox::Yes;
 }
 
 void
