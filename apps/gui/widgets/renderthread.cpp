@@ -62,6 +62,7 @@ RenderThread::run()
 
     // create temporary directory and open export video file
     const std::filesystem::path tmpDir = exportDir_ / RENDER_TMP_DIR;
+    const std::filesystem::path ffmpegLogFile = tmpDir / "ffmpeg_log.txt";
     std::filesystem::create_directories(tmpDir);
     const std::filesystem::path rawRenderFilePath = tmpDir / RAW_RENDER_FILENAME;
     vWriter_.open(
@@ -104,10 +105,11 @@ RenderThread::run()
 
             // extract audio from seeked source file using ffmpeg
             const std::filesystem::path tmpAudioPath = tmpDir / "tmp_audio.wav";
-            sprintf(ffmpegCmd,"ffmpeg -ss %0.6fs -i %s -y %s",
+            sprintf(ffmpegCmd,"ffmpeg -ss %0.6fs -i %s -y %s > %s 2>&1",
                 sourceStartTime_sec,
                 audioSourceFile.c_str(),
-                tmpAudioPath.c_str());
+                tmpAudioPath.c_str(),
+                ffmpegLogFile.c_str());
             spdlog::debug("extracting audio...\ncmd = {}",ffmpegCmd);
             if (audioOkay && system(ffmpegCmd) != 0)
             {
@@ -116,10 +118,11 @@ RenderThread::run()
             }
 
             // remux audio into raw render
-            sprintf(ffmpegCmd,"ffmpeg -i %s -i %s -map 0:v:0 -map 1:a:0 -c:v copy -y %s",
+            sprintf(ffmpegCmd,"ffmpeg -i %s -i %s -map 0:v:0 -map 1:a:0 -c:v copy -y %s > %s 2>&1",
                 rawRenderFilePath.c_str(),
                 tmpAudioPath.c_str(),
-                finalExportFile.c_str());
+                finalExportFile.c_str(),
+                ffmpegLogFile.c_str());
             spdlog::debug("remuxing audio...\ncmd = {}",ffmpegCmd);
             if (audioOkay && system(ffmpegCmd) != 0)
             {
@@ -138,10 +141,11 @@ RenderThread::run()
 
             // extract left audio from seeked source file using ffmpeg
             const std::filesystem::path tmpLeftAudioPath = tmpDir / "tmp_left_audio.wav";
-            sprintf(ffmpegCmd,"ffmpeg -ss %0.6fs -i %s -y %s",
+            sprintf(ffmpegCmd,"ffmpeg -ss %0.6fs -i %s -y %s > %s 2>&1",
                 leftStartTime_sec,
                 leftSourceFile.c_str(),
-                tmpLeftAudioPath.c_str());
+                tmpLeftAudioPath.c_str(),
+                ffmpegLogFile.c_str());
             spdlog::debug("extracting audio...\ncmd = {}",ffmpegCmd);
             if (audioOkay && system(ffmpegCmd) != 0)
             {
@@ -158,10 +162,11 @@ RenderThread::run()
 
             // extract right audio from seeked source file using ffmpeg
             const std::filesystem::path tmpRightAudioPath = tmpDir / "tmp_right_audio.wav";
-            sprintf(ffmpegCmd,"ffmpeg -ss %0.6fs -i %s -y %s",
+            sprintf(ffmpegCmd,"ffmpeg -ss %0.6fs -i %s -y %s > %s 2>&1",
                 rightStartTime_sec,
                 rightSourceFile.c_str(),
-                tmpRightAudioPath.c_str());
+                tmpRightAudioPath.c_str(),
+                ffmpegLogFile.c_str());
             spdlog::debug("extracting audio...\ncmd = {}",ffmpegCmd);
             if (audioOkay && system(ffmpegCmd) != 0)
             {
@@ -171,10 +176,11 @@ RenderThread::run()
 
             // merge audio sources into one
             const std::filesystem::path tmpMergedAudioPath = tmpDir / "tmp_audio_lr_merge.wav";
-            sprintf(ffmpegCmd,"ffmpeg -i %s -i %s -filter_complex \"amerge=inputs=2,pan=stereo|c0<c0+c1|c1<c2+c3\" -y %s",
+            sprintf(ffmpegCmd,"ffmpeg -i %s -i %s -filter_complex \"amerge=inputs=2,pan=stereo|c0<c0+c1|c1<c2+c3\" -y %s > %s 2>&1",
                 tmpLeftAudioPath.c_str(),
                 tmpRightAudioPath.c_str(),
-                tmpMergedAudioPath.c_str());
+                tmpMergedAudioPath.c_str(),
+                ffmpegLogFile.c_str());
             spdlog::debug("merge left/right into one audio file...\ncmd = {}",ffmpegCmd);
             if (audioOkay && system(ffmpegCmd) != 0)
             {
@@ -183,10 +189,11 @@ RenderThread::run()
             }
 
             // remux audio into raw render
-            sprintf(ffmpegCmd,"ffmpeg -i %s -i %s -map 0:v:0 -map 1:a:0 -c:v copy -y %s",
+            sprintf(ffmpegCmd,"ffmpeg -i %s -i %s -map 0:v:0 -map 1:a:0 -c:v copy -y %s > %s 2>&1",
                 rawRenderFilePath.c_str(),
                 tmpMergedAudioPath.c_str(),
-                finalExportFile.c_str());
+                finalExportFile.c_str(),
+                ffmpegLogFile.c_str());
             spdlog::debug("remuxing audio...\ncmd = {}",ffmpegCmd);
             if (audioOkay && system(ffmpegCmd) != 0)
             {
