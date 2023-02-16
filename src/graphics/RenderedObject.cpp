@@ -48,20 +48,18 @@ namespace gpo
 		cv::Mat imgToRenderMat = imgToRender->getMat(cv::AccessFlag::ACCESS_READ);
 		cv::Rect roi(cv::Point(originX,originY), imgToRender->size());
 		cv::Mat3b destROI = intoImgMat(roi);
-		double alpha = 1.0; // alpha in [0,1]
+		const uint8_t alphaB = 255; // alpha in [0,255]
 		for (int r = 0; r < destROI.rows; ++r)
 		{
 			for (int c = 0; c < destROI.cols; ++c)
 			{
-				auto vf = imgToRenderMat.at<cv::Vec4b>(r,c);
+				auto vA = imgToRenderMat.at<cv::Vec4b>(r,c);
 				// Blending
-				if (vf[3] > 0)
-				{
-					cv::Vec3b &vb = destROI(r,c);
-					vb[0] = alpha * vf[0] + (1 - alpha) * vb[0];
-					vb[1] = alpha * vf[1] + (1 - alpha) * vb[1];
-					vb[2] = alpha * vf[2] + (1 - alpha) * vb[2];
-				}
+				const uint8_t alphaA = vA[3];
+				cv::Vec3b &vB = destROI(r,c);
+				vB[0] = (vA[0] * alphaA / 255) + (vB[0] * alphaB * (255 - alphaA) / (255*255));
+				vB[1] = (vA[1] * alphaA / 255) + (vB[1] * alphaB * (255 - alphaA) / (255*255));
+				vB[2] = (vA[2] * alphaA / 255) + (vB[2] * alphaB * (255 - alphaA) / (255*255));
 			}
 		}
 
