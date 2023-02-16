@@ -3,7 +3,7 @@
 namespace gpo
 {
 	VideoObject::VideoObject()
-	 : RenderedObject(0,0)
+	 : RenderedObject(1,1)// gets resized in sourcesValid()
 	 , prevRenderedFrameIdx_(-1)
 	{
 	}
