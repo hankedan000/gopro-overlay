@@ -33,7 +33,7 @@ namespace gpo
 
 	private:
 		// background image
-		cv::Mat bgImg_;
+		cv::UMat bgImg_;
 
 		cv::Scalar textColor_;
 

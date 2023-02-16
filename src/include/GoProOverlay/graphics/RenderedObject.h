@@ -80,7 +80,7 @@ namespace gpo
 		std::string
 		typeName() const = 0;
 
-		const cv::Mat &
+		const cv::UMat &
 		getImage() const;
 
 		virtual
@@ -90,13 +90,13 @@ namespace gpo
 		virtual
 		void
 		drawInto(
-			cv::Mat &intoImg,
+			cv::UMat &intoImg,
 			int originX, int originY);
 
 		virtual
 		void
 		drawInto(
-			cv::Mat &intoImg,
+			cv::UMat &intoImg,
 			int originX, int originY,
 			cv::Size renderSize);
 
@@ -227,7 +227,7 @@ namespace gpo
 
 	protected:
 		// final rendered image
-		cv::Mat outImg_;
+		cv::UMat outImg_;
 
 		bool visible_;
 		bool boundingBoxVisible_;
@@ -238,7 +238,7 @@ namespace gpo
 		const Track *track_;
 
 	private:
-		cv::Mat scaledImg_;
+		cv::UMat scaledImg_;
 
 	};
 }

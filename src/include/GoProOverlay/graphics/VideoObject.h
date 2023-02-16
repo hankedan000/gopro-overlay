@@ -24,7 +24,7 @@ namespace gpo
 
 		void
 		drawInto(
-			cv::Mat &intoImg,
+			cv::UMat &intoImg,
 			int originX, int originY,
 			cv::Size renderSize) override;
 
@@ -44,7 +44,7 @@ namespace gpo
 			const YAML::Node& node) override;
 
 	private:
-		cv::Mat resizedFrame_;
+		cv::UMat resizedFrame_;
 		size_t prevRenderedFrameIdx_;
 
 	};

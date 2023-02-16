@@ -168,7 +168,7 @@ ScrubbableVideo::getSize() const
 
 void
 ScrubbableVideo::showImage(
-        const cv::Mat &img)
+        const cv::UMat &img)
 {
     cv::resize(img,frameBuffer_,getSize());
     imgView_->setImage(frameBuffer_);

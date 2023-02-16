@@ -179,7 +179,7 @@ namespace gpo
 		}
 	}
 
-	const cv::Mat &
+	const cv::UMat &
 	RenderEngine::getFrame() const
 	{
 		return rFrame_;

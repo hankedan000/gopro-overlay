@@ -19,7 +19,7 @@ public:
 
     void
     setImage(
-            cv::Mat img);
+            cv::UMat img);
 
     virtual
     void
