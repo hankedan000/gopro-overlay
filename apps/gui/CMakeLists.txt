@@ -16,6 +16,13 @@ target_link_libraries(AlignmentPlotStandalone PUBLIC
 	AppWidgets
 )
 
+add_executable(TelemetryMergerStandalone
+	TelemetryMergerStandalone.cpp
+)
+target_link_libraries(TelemetryMergerStandalone PUBLIC
+	AppWidgets
+)
+
 add_executable(ProjectApp
 	ProjectApp.cpp
 )

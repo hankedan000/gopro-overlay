@@ -74,10 +74,22 @@ namespace gpo
 		Track *
 		makeTrack() const;
 
+		/**
+		 * Attempt to load the data from a file. It will attempt to auto
+		 * detect the data source type based on the file extension.
+		 * 
+		 * @return
+		 * nullptr if the load failed. valid pointer otherwise.
+		 */
+		static
+		DataSourcePtr
+		loadDataFromFile(
+			const std::filesystem::path &sourceFile);
+
 		static
 		DataSourcePtr
 		loadDataFromVideo(
-			const std::string &videoFile);
+			const std::filesystem::path &videoFile);
 
 		static
 		DataSourcePtr

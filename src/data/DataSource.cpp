@@ -208,8 +208,48 @@ namespace gpo
 	}
 
 	DataSourcePtr
+	DataSource::loadDataFromFile(
+		const std::filesystem::path &sourceFile)
+	{
+		// get the file extension in all lower case
+		std::string fileExt = sourceFile.extension();
+		std::transform(
+					fileExt.begin(),
+					fileExt.end(),
+					fileExt.begin(),
+					[](unsigned char c){ return std::tolower(c); });
+		spdlog::debug("{} - adding '{}' with extension '{}'",
+			__func__,
+			sourceFile.c_str(),
+			fileExt);
+
+		// open the data source based on the file extension
+		gpo::DataSourcePtr dSrc = nullptr;
+		if (fileExt == ".mp4")
+		{
+			dSrc = gpo::DataSource::loadDataFromVideo(sourceFile);
+		}
+		else if (fileExt == ".msl")
+		{
+			dSrc = gpo::DataSource::loadDataFromMegaSquirtLog(sourceFile);
+		}
+		else if (fileExt == ".csv")
+		{
+			dSrc = gpo::DataSource::loadTelemetryFromCSV(sourceFile);
+		}
+		else
+		{
+			spdlog::warn("{} - unsupported source file extension '{}'",
+						__func__,
+						fileExt);
+		}
+		
+		return dSrc;
+	}
+
+	DataSourcePtr
 	DataSource::loadDataFromVideo(
-		const std::string &videoFile)
+		const std::filesystem::path &videoFile)
 	{
 		gpt::MP4_Source mp4;
 		mp4.open(videoFile);
@@ -226,6 +266,7 @@ namespace gpo
 
 		auto newSrc = std::make_shared<DataSource>();
 		newSrc->originFile_ = videoFile;
+		newSrc->sourceName_ = videoFile.filename();
 		newSrc->vCapture_ = vCap;
 		newSrc->samples_ = std::make_shared<TelemetrySamples>();
 		newSrc->samples_->resize(videoTelem.size());
@@ -283,6 +324,7 @@ namespace gpo
 
 		auto newSrc = std::make_shared<DataSource>();
 		newSrc->originFile_ = logFile;
+		newSrc->sourceName_ = logFile.filename();
 		newSrc->samples_ = std::make_shared<TelemetrySamples>();
 		newSrc->samples_->resize(ecuTelem.size());
 		newSrc->ecuDataAvail_ = res.second;
@@ -307,6 +349,7 @@ namespace gpo
 	{
 		auto newSrc = std::make_shared<DataSource>();
 		newSrc->originFile_ = csvFile;
+		newSrc->sourceName_ = csvFile.filename();
 		newSrc->samples_ = std::make_shared<TelemetrySamples>();
 		utils::io::readTelemetryFromCSV(
 			csvFile,

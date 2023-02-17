@@ -29,6 +29,9 @@ set(QT_WIDGETS_SOURCES
 	scrubbablevideo.h
 	scrubbablevideo.cpp
 	scrubbablevideo.ui
+        TelemetryMerger.h
+        TelemetryMerger.cpp
+        TelemetryMerger.ui
 	TelemetryPlotDialog.h
 	TelemetryPlotDialog.cpp
 	TelemetryPlotDialog.ui
