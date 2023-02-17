@@ -126,6 +126,19 @@ namespace gpo
 			pxPerDeg_ = (getNativeWidth() - PX_MARGIN * 2) / deltaLon;
 		}
 
+		const bool drawBackground = false;
+		if (drawBackground)
+		{
+			int bgWidth = deltaLon * pxPerDeg_ + PX_MARGIN * 2;
+			int bgHeight = deltaLat * pxPerDeg_ + PX_MARGIN * 2;
+			cv::rectangle(
+				outlineImg_,
+				cv::Point(0,0),
+				cv::Point(bgWidth,bgHeight),
+				RGBA_COLOR(0,0,0,100),
+				cv::FILLED);
+		}
+
 		cv::Point prevPoint;
 		for (size_t i=trackStartIdx; i<trackEndIdx; i++)
 		{

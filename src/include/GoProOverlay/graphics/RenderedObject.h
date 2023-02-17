@@ -1,6 +1,7 @@
 #pragma once
 
 #include <opencv2/opencv.hpp>
+#include <spdlog/spdlog.h>
 #include <vector>
 
 #include "GoProOverlay/data/DataSource.h"
