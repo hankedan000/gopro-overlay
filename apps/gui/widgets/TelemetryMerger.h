@@ -4,9 +4,11 @@
 #include <QMainWindow>
 
 #include <filesystem>
+#include <QMainWindow>
 #include <QStandardItemModel>
 #include <vector>
 
+#include "AlignmentPlot.h"
 #include "GoProOverlay/data/DataSource.h"
 
 namespace Ui {
@@ -100,6 +102,9 @@ private:
 
 private:
     Ui::TelemetryMerger *ui;
+
+    QMainWindow alignPlotWindow_;
+    AlignmentPlot alignPlot_;
 
     QStandardItemModel tableModel_;
     std::vector<gpo::DataSourcePtr> sources_;

@@ -8,15 +8,17 @@
 TelemetryMerger::TelemetryMerger(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::TelemetryMerger),
+    alignPlotWindow_(this),
+    alignPlot_(&alignPlotWindow_),
     tableModel_(this),
     sources_(),
     state_()
 {
     ui->setupUi(this);
     ui->sources_TableView->setModel(&tableModel_);
+    alignPlotWindow_.setCentralWidget(&alignPlot_);
     updateMergeButtons();
 
-    // tableModel_.setColumnCount(4);
     tableModel_.setHorizontalHeaderLabels({
         "Source Name","Data Rate (Hz)"
     });
@@ -284,6 +286,8 @@ TelemetryMerger::startMerge()
 void
 TelemetryMerger::continueMerge()
 {
+    alignPlotWindow_.hide();
+
     auto currSrc = sources_.at(state_.currSrcIdx);
 
     state_.mergedSrc->mergeTelemetryIn(
@@ -310,12 +314,17 @@ TelemetryMerger::setupMerge()
     auto currSrc = sources_.at(state_.currSrcIdx);
     currSrc->backupTelemetry();
     currSrc->resampleTelemetry(state_.mergedSrc->getTelemetryRate_hz());
+
+    alignPlot_.setSourceA(state_.mergedSrc->telemSrc);
+    alignPlot_.setSourceB(currSrc->telemSrc);
+    alignPlotWindow_.show();
 }
 
 void
 TelemetryMerger::abortMerge()
 {
     state_.reset();
+    alignPlotWindow_.hide();
     for (auto &dSrc : sources_)
     {
         if (dSrc->hasBackup())

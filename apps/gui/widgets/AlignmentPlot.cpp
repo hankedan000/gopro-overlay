@@ -60,9 +60,15 @@ AlignmentPlot::setSourceA(
     populateComboBox(combobox,tSrc);
     if (tSrc != nullptr)
     {
+        std::string name = tSrc->getDataSourceName();
+        if (name.empty())
+        {
+            name = "Source A";
+        }
+        ui->aData_Label->setText(name.c_str());
         ui->plot->addSource(
             tSrc,
-            "Data A",
+            name,
             Qt::red,
             TelemetryPlot::AxisSide::eAS_Side1,
             true);// replot
@@ -93,9 +99,15 @@ AlignmentPlot::setSourceB(
     populateComboBox(combobox,tSrc);
     if (tSrc != nullptr)
     {
+        std::string name = tSrc->getDataSourceName();
+        if (name.empty())
+        {
+            name = "Source B";
+        }
+        ui->bData_Label->setText(name.c_str());
         ui->plot->addSource(
             tSrc,
-            "Data B",
+            name,
             Qt::blue,
             TelemetryPlot::AxisSide::eAS_Side2,
             true);// replot
