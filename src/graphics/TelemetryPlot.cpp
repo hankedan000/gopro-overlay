@@ -11,6 +11,10 @@ TelemetryPlot::TelemetryPlot(
 {
 	setInteraction(QCP::Interaction::iRangeDrag,true);
 	setInteraction(QCP::Interaction::iRangeZoom,true);
+	QList<QCPAxis *> draggableAxes = {xAxis,yAxis,yAxis2};
+	axisRect()->setRangeDragAxes(draggableAxes);
+	QList<QCPAxis *> zoomableAxes = {xAxis,yAxis,yAxis2};
+	axisRect()->setRangeZoomAxes(zoomableAxes);
 	legend->setVisible(true);
 
 	// add the title element to the plot

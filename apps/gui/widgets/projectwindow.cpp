@@ -34,8 +34,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     reWizTopBot_(new RenderEngineWizard_TopBottom(this,&proj_)),
     projectDirty_(false),
     progressDialog_(new ProgressDialog(this)),
-    renderEntityPropertiesTab_(new RenderEntityPropertiesTab(this)),
-    telemPlotAcclX_(new TelemetryPlotDialog(this))
+    renderEntityPropertiesTab_(new RenderEntityPropertiesTab(this))
 {
     ui->setupUi(this);
     renderEntityPropertiesTab_->setProject(&proj_);
@@ -61,11 +60,6 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     std::filesystem::path exportFilePath = RenderThread::DEFAULT_EXPORT_DIR;
     exportFilePath /= RenderThread::DEFAULT_EXPORT_FILENAME;
     ui->exportFileLineEdit->setText(exportFilePath.c_str());
-
-    telemPlotAcclX_->setWindowTitle("Acceleration X");
-    telemPlotAcclX_->plot()->setX_Component(TelemetryPlot::X_Component::eXC_Samples);
-    telemPlotAcclX_->plot()->setY_Component(TelemetryPlot::Y_Component::eYC_ACCL_X);
-    telemPlotAcclX_->show();
 
     // menu actions
     connect(ui->actionNew_Project, &QAction::triggered, this, [this]{
@@ -499,18 +493,6 @@ ProjectWindow::reloadDataSourceTable()
                     dsm.getSourceOrigin(i),
                     dsm.getSource(i));
     }
-
-    // TODO should probably do this else where
-    telemPlotAcclX_->plot()->clear();
-    for (size_t i=0; i<dsm.sourceCount(); i++)
-    {
-        auto dataSrc = dsm.getSource(i);
-        if (dataSrc->hasTelemetry())
-        {
-            telemPlotAcclX_->plot()->addSource(dataSrc->telemSrc,false);// hold off replotting until the end
-        }
-    }
-    telemPlotAcclX_->plot()->replot();
 }
 
 void
@@ -825,7 +807,6 @@ ProjectWindow::seekEngineToAlignment(
     {
         gSeeker->setAlignmentHere();
     }
-    telemPlotAcclX_->plot()->realignData();
 }
 
 void

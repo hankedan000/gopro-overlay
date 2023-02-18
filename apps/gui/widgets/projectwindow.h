@@ -184,8 +184,7 @@ private:
     ProgressDialog *progressDialog_;
 
     RenderEntityPropertiesTab *renderEntityPropertiesTab_;
-
-    TelemetryPlotDialog *telemPlotAcclX_;
+    
 };
 
 #endif // PROJECTWINDOW_H
