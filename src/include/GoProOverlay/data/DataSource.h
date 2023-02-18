@@ -64,6 +64,34 @@ namespace gpo
 		resampleTelemetry(
 			double newRate_hz);
 
+		DataSourcePtr
+		duplicate() const;
+
+		/**
+		 * Save the current state of the telemetry samples, allowing
+		 * you to restore them via restoreTelemetry().
+		 * 
+		 * @return
+		 * true if telemetry samples were backed up
+		 */
+		bool
+		backupTelemetry();
+
+		/**
+		 * Removes the telemetry backup
+		 */
+		void
+		deleteTelemetryBackup();
+
+		bool
+		hasBackup();
+
+		/**
+		 * Restores the previously saved backup samples.
+		 */
+		bool
+		restoreTelemetry();
+
 		/**
 		 * Produced a Track object from telemetry data.
 		 * 
@@ -181,6 +209,9 @@ namespace gpo
 
 		cv::VideoCapture vCapture_;
 		TelemetrySamplesPtr samples_;
+
+		// user can backup telemetry samples, and this is where they are stored
+		TelemetrySamples backupSamples_;
 
 		// bitset defining which fields are valid in 'TelemetrySample::gpSamp'
 		// query bits using gpo::GOPRO_AVAIL_* constants

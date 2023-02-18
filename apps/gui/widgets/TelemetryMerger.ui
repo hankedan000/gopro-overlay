@@ -66,6 +66,36 @@
           </property>
          </spacer>
         </item>
+        <item>
+         <widget class="QPushButton" name="abort_Button">
+          <property name="text">
+           <string>Abort</string>
+          </property>
+          <property name="icon">
+           <iconset theme="media-playback-stop"/>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="continue_Button">
+          <property name="text">
+           <string>Merge</string>
+          </property>
+          <property name="icon">
+           <iconset theme="media-seek-forward"/>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="start_Button">
+          <property name="text">
+           <string>Start Merge</string>
+          </property>
+          <property name="icon">
+           <iconset theme="media-playback-start"/>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
       <item>

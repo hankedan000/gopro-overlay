@@ -9,20 +9,20 @@ TelemetryMerger::TelemetryMerger(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::TelemetryMerger),
     tableModel_(this),
-    sources_()
+    sources_(),
+    state_()
 {
     ui->setupUi(this);
-    ui->itemDown_ToolButton->setEnabled(false);
-    ui->itemUp_ToolButton->setEnabled(false);
+    ui->sources_TableView->setModel(&tableModel_);
+    updateMergeButtons();
 
-    tableModel_.setColumnCount(4);
+    // tableModel_.setColumnCount(4);
     tableModel_.setHorizontalHeaderLabels({
         "Source Name","Data Rate (Hz)"
     });
-    ui->sources_TableView->setModel(&tableModel_);
 
     connect(ui->sources_TableView, &QTableView::activated, this, [this](const QModelIndex &index){
-        updateMoveButtonEnables();
+        updateMergeButtons();
     });
     connect(ui->itemDown_ToolButton, &QToolButton::pressed, this, [this]{
         auto selectionModel = ui->sources_TableView->selectionModel();
@@ -46,6 +46,15 @@ TelemetryMerger::TelemetryMerger(QWidget *parent) :
         int row = selectedIndexs.at(0).row();
         moveSourceUp(row,true);
     });
+    connect(ui->start_Button, &QPushButton::pressed, this, [this]{
+        startMerge();
+    });
+    connect(ui->continue_Button, &QPushButton::pressed, this, [this]{
+        continueMerge();
+    });
+    connect(ui->abort_Button, &QPushButton::pressed, this, [this]{
+        abortMerge();
+    });
 }
 
 TelemetryMerger::~TelemetryMerger()
@@ -57,11 +66,38 @@ bool
 TelemetryMerger::addSourceFromFile(
         const std::filesystem::path &sourcePath)
 {
-    return addDataSource(gpo::DataSource::loadDataFromFile(sourcePath));
+    return addDataSourceInternal(gpo::DataSource::loadDataFromFile(sourcePath));
 }
 
 bool
 TelemetryMerger::addDataSource(
+        gpo::DataSourcePtr dSrc)
+{
+    if (dSrc == nullptr)
+    {
+        spdlog::warn(
+            "{} - dSrc is null. ignoring it.",
+            __func__);
+        return false;
+    }
+
+    return addDataSourceInternal(dSrc->duplicate());
+}
+
+bool
+TelemetryMerger::isMergePending() const
+{
+    return state_.mergedSrc != nullptr && state_.currSrcIdx < sources_.size();
+}
+
+bool
+TelemetryMerger::isMergeComplete() const
+{
+    return state_.mergedSrc != nullptr && state_.currSrcIdx >= sources_.size();
+}
+
+bool
+TelemetryMerger::addDataSourceInternal(
         gpo::DataSourcePtr dSrc)
 {
     if (dSrc == nullptr)
@@ -85,10 +121,14 @@ TelemetryMerger::addDataSource(
         }
     }
 
+    // just in case it had a back saved already
+    dSrc->deleteTelemetryBackup();
+
     // append the new source to the bottom of the list
     sources_.push_back(dSrc);
     tableModel_.appendRow(makeTableRow(dSrc));
 
+    updateMergeButtons();
     return true;
 }
 
@@ -149,7 +189,7 @@ TelemetryMerger::moveSourceUp(
     if (moveIsFromSelection)
     {
         ui->sources_TableView->selectRow(destRow);
-        updateMoveButtonEnables();
+        updateMergeButtons();
     }
 }
 
@@ -190,16 +230,19 @@ TelemetryMerger::moveSourceDown(
     if (moveIsFromSelection)
     {
         ui->sources_TableView->selectRow(destRow);
-        updateMoveButtonEnables();
+        updateMergeButtons();
     }
 }
 
 void
-TelemetryMerger::updateMoveButtonEnables()
+TelemetryMerger::updateMergeButtons()
 {
+    const bool mergePending = isMergePending();
+
+    // update the enable state of the up/down buttons
     auto selectionModel = ui->sources_TableView->selectionModel();
     auto selectedIndexs = selectionModel->selectedIndexes();
-    if (selectedIndexs.empty())
+    if (mergePending || selectedIndexs.empty())
     {
         ui->itemUp_ToolButton->setEnabled(false);
         ui->itemDown_ToolButton->setEnabled(false);
@@ -210,4 +253,76 @@ TelemetryMerger::updateMoveButtonEnables()
         ui->itemUp_ToolButton->setEnabled(row > 0);
         ui->itemDown_ToolButton->setEnabled(row < (tableModel_.rowCount() - 1));
     }
+
+    // update start/stop/continue merge buttons
+    ui->start_Button->setVisible( ! mergePending);
+    ui->start_Button->setEnabled(sources_.size() > 0);
+    ui->continue_Button->setVisible(mergePending);
+    ui->abort_Button->setVisible(mergePending);
+}
+
+void
+TelemetryMerger::startMerge()
+{
+    state_.reset();
+    if (sources_.empty())
+    {
+        spdlog::warn("no sources to merge");
+        return;
+    }
+
+    state_.mergedSrc = sources_.at(0)->duplicate();
+    state_.currSrcIdx++;
+
+    if (state_.currSrcIdx < sources_.size())
+    {
+        setupMerge();
+    }
+    updateMergeButtons();
+}
+
+void
+TelemetryMerger::continueMerge()
+{
+    auto currSrc = sources_.at(state_.currSrcIdx);
+
+    state_.mergedSrc->mergeTelemetryIn(
+        currSrc,
+        0,// srcStartIdx
+        0,// dstStartIdx
+        false);// don't grow
+    state_.currSrcIdx++;
+
+    if (state_.currSrcIdx < sources_.size())
+    {
+        setupMerge();
+    }
+    updateMergeButtons();
+}
+
+void
+TelemetryMerger::setupMerge()
+{
+    // highlight the row we're merging next
+    ui->sources_TableView->selectRow(state_.currSrcIdx);
+
+    // sample rates need to match, so resample current source to match
+    auto currSrc = sources_.at(state_.currSrcIdx);
+    currSrc->backupTelemetry();
+    currSrc->resampleTelemetry(state_.mergedSrc->getTelemetryRate_hz());
+}
+
+void
+TelemetryMerger::abortMerge()
+{
+    state_.reset();
+    for (auto &dSrc : sources_)
+    {
+        if (dSrc->hasBackup())
+        {
+            dSrc->restoreTelemetry();
+            dSrc->deleteTelemetryBackup();
+        }
+    }
+    updateMergeButtons();
 }

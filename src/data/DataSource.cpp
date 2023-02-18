@@ -16,6 +16,7 @@ namespace gpo
 	 , videoSrc(nullptr)
 	 , vCapture_()
 	 , samples_(nullptr)
+	 , backupSamples_()
 	 , gpDataAvail_()
 	 , ecuDataAvail_()
 	 , trackAvail_()
@@ -194,6 +195,67 @@ namespace gpo
 			}
 			outTime_sec += outDt_sec;
 		}
+	}
+
+	DataSourcePtr
+	DataSource::duplicate() const
+	{
+		auto dup = std::make_shared<DataSource>();
+		dup->vCapture_ = vCapture_;
+		dup->samples_ = std::make_shared<TelemetrySamples>();
+		*(dup->samples_) = *samples_;
+		dup->backupSamples_ = backupSamples_;
+		dup->gpDataAvail_ = gpDataAvail_;
+		dup->ecuDataAvail_ = ecuDataAvail_;
+		dup->trackAvail_ = trackAvail_;
+		dup->sourceName_ = sourceName_;
+		dup->originFile_ = originFile_;
+		dup->datumTrack_ = datumTrack_;
+
+		dup->seeker = std::make_shared<TelemetrySeeker>(dup);
+		if (telemSrc)
+		{
+			dup->telemSrc = std::make_shared<TelemetrySource>(dup);
+		}
+		if (videoSrc)
+		{
+			dup->videoSrc = std::make_shared<VideoSource>(dup);
+		}
+		return dup;
+	}		
+	
+	bool
+	DataSource::backupTelemetry()
+	{
+		if (samples_ == nullptr)
+		{
+			return false;
+		}
+		backupSamples_ = *(samples_);
+		return true;
+	}
+
+	void
+	DataSource::deleteTelemetryBackup()
+	{
+		backupSamples_.clear();
+	}
+
+	bool
+	DataSource::hasBackup()
+	{
+		return backupSamples_.size() > 0;
+	}
+
+	bool
+	DataSource::restoreTelemetry()
+	{
+		if (samples_ == nullptr)
+		{
+			return false;
+		}
+		*(samples_) = backupSamples_;
+		return true;
 	}
 
 	Track *
@@ -423,6 +485,13 @@ namespace gpo
 		TrackDataAvailBitSet trackDataToTake,
 		bool growVector)
 	{
+		if ( ! hasTelemetry())
+		{
+			spdlog::warn(
+				"DataSource doesn't have telemetry. Unable to perform merge.");
+			return 0;
+		}
+
 		const auto &srcSamps = srcData->samples_;
 		if (srcStartIdx >= srcSamps->size())
 		{
