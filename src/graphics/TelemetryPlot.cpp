@@ -157,6 +157,20 @@ TelemetryPlot::getSource(
 	return sources_.at(idx).telemSrc;
 }
 
+gpo::TelemetrySourcePtr
+TelemetryPlot::getSource(
+	QCPGraph *graph)
+{
+	for (const auto &srcObjs : sources_)
+	{
+		if (srcObjs.graph == graph)
+		{
+			return srcObjs.telemSrc;
+		}
+	}
+	return nullptr;
+}
+
 size_t
 TelemetryPlot::numSources() const
 {
