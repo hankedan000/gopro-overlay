@@ -17,16 +17,12 @@ namespace gpo
 	 , vCapture_()
 	 , samples_(nullptr)
 	 , backupSamples_()
-	 , gpDataAvail_()
-	 , ecuDataAvail_()
-	 , trackAvail_()
+	 , dataAvail_()
 	 , sourceName_("")
 	 , originFile_("")
 	 , datumTrack_(nullptr)
 	{
-		bitset_clear(gpDataAvail_);
-		bitset_clear(ecuDataAvail_);
-		bitset_clear(trackAvail_);
+		bitset_clear(dataAvail_);
 	}
 
 	std::string
@@ -69,7 +65,7 @@ namespace gpo
 			return true;
 		}
 
-		bool okay = utils::computeTrackTimes(datumTrack_,samples_,trackAvail_);
+		bool okay = utils::computeTrackTimes(datumTrack_,samples_,dataAvail_);
 
 		// smooth accelerometer data
 		if (false)
@@ -115,22 +111,10 @@ namespace gpo
 		return videoSrc != nullptr;
 	}
 
-	const GoProDataAvailBitSet &
-	DataSource::gpDataAvail() const
+	const DataAvailableBitSet &
+	DataSource::dataAvailable() const
 	{
-		return gpDataAvail_;
-	}
-
-	const ECU_DataAvailBitSet &
-	DataSource::ecuDataAvail() const
-	{
-		return ecuDataAvail_;
-	}
-
-	const TrackDataAvailBitSet &
-	DataSource::trackDataAvail() const
-	{
-		return trackAvail_;
+		return dataAvail_;
 	}
 
 	double
@@ -205,9 +189,7 @@ namespace gpo
 		dup->samples_ = std::make_shared<TelemetrySamples>();
 		*(dup->samples_) = *samples_;
 		dup->backupSamples_ = backupSamples_;
-		dup->gpDataAvail_ = gpDataAvail_;
-		dup->ecuDataAvail_ = ecuDataAvail_;
-		dup->trackAvail_ = trackAvail_;
+		dup->dataAvail_ = dataAvail_;
 		dup->sourceName_ = sourceName_;
 		dup->originFile_ = originFile_;
 		dup->datumTrack_ = datumTrack_;
@@ -344,26 +326,26 @@ namespace gpo
 		gpt::MP4_SensorInfo sensorInfo;
 		if (mp4.getSensorInfo(gpt::GPMF_KEY_ACCL, sensorInfo))
 		{
-			bitset_set_bit(newSrc->gpDataAvail_, gpo::GOPRO_AVAIL_ACCL);
+			bitset_set_bit(newSrc->dataAvail_, gpo::eDA_GOPRO_ACCL);
 		}
 		if (mp4.getSensorInfo(gpt::GPMF_KEY_GYRO, sensorInfo))
 		{
-			bitset_set_bit(newSrc->gpDataAvail_, gpo::GOPRO_AVAIL_GYRO);
+			bitset_set_bit(newSrc->dataAvail_, gpo::eDA_GOPRO_GYRO);
 		}
 		if (mp4.getSensorInfo(gpt::GPMF_KEY_GRAV, sensorInfo))
 		{
-			bitset_set_bit(newSrc->gpDataAvail_, gpo::GOPRO_AVAIL_GRAV);
+			bitset_set_bit(newSrc->dataAvail_, gpo::eDA_GOPRO_GRAV);
 		}
 		if (mp4.getSensorInfo(gpt::GPMF_KEY_CORI, sensorInfo))
 		{
-			bitset_set_bit(newSrc->gpDataAvail_, gpo::GOPRO_AVAIL_CORI);
+			bitset_set_bit(newSrc->dataAvail_, gpo::eDA_GOPRO_CORI);
 		}
 		if (mp4.getSensorInfo(gpt::GPMF_KEY_GPS5, sensorInfo))
 		{
-			bitset_set_bit(newSrc->gpDataAvail_, gpo::GOPRO_AVAIL_GPS_LATLON);
-			bitset_set_bit(newSrc->gpDataAvail_, gpo::GOPRO_AVAIL_GPS_ALTITUDE);
-			bitset_set_bit(newSrc->gpDataAvail_, gpo::GOPRO_AVAIL_GPS_SPEED2D);
-			bitset_set_bit(newSrc->gpDataAvail_, gpo::GOPRO_AVAIL_GPS_SPEED3D);
+			bitset_set_bit(newSrc->dataAvail_, gpo::eDA_GOPRO_GPS_LATLON);
+			bitset_set_bit(newSrc->dataAvail_, gpo::eDA_GOPRO_GPS_ALTITUDE);
+			bitset_set_bit(newSrc->dataAvail_, gpo::eDA_GOPRO_GPS_SPEED2D);
+			bitset_set_bit(newSrc->dataAvail_, gpo::eDA_GOPRO_GPS_SPEED3D);
 		}
 
 		newSrc->seeker = std::make_shared<TelemetrySeeker>(newSrc);
@@ -389,8 +371,8 @@ namespace gpo
 		newSrc->sourceName_ = logFile.filename();
 		newSrc->samples_ = std::make_shared<TelemetrySamples>();
 		newSrc->samples_->resize(ecuTelem.size());
-		newSrc->ecuDataAvail_ = res.second;
-		bitset_clr_bit(newSrc->ecuDataAvail_, ECU_AVAIL_TIME);// don't want to track this here
+		newSrc->dataAvail_ = res.second;
+		bitset_clr_bit(newSrc->dataAvail_, eDA_ECU_TIME);// don't want to track this here
 		for (size_t i=0; i<ecuTelem.size(); i++)
 		{
 			auto &sampOut = newSrc->samples_->at(i);
@@ -416,9 +398,7 @@ namespace gpo
 		utils::io::readTelemetryFromCSV(
 			csvFile,
 			newSrc->samples_,
-			newSrc->gpDataAvail_,
-			newSrc->ecuDataAvail_,
-			newSrc->trackAvail_);
+			newSrc->dataAvail_);
 
 		newSrc->seeker = std::make_shared<TelemetrySeeker>(newSrc);
 		newSrc->telemSrc = std::make_shared<TelemetrySource>(newSrc);
@@ -453,9 +433,7 @@ namespace gpo
 		return utils::io::writeTelemetryToCSV(
 			samples_,
 			csvFilepath,
-			gpDataAvail_,
-			ecuDataAvail_,
-			trackAvail_);
+			dataAvail_);
 	}
 
 	size_t
@@ -469,9 +447,7 @@ namespace gpo
 			srcData,
 			srcStartIdx,
 			dstStartIdx,
-			srcData->gpDataAvail(),
-			srcData->ecuDataAvail(),
-			srcData->trackDataAvail(),
+			srcData->dataAvailable(),
 			growVector);
 	}
 
@@ -480,9 +456,7 @@ namespace gpo
 		const DataSourcePtr srcData,
 		size_t srcStartIdx,
 		size_t dstStartIdx,
-		GoProDataAvailBitSet gpDataToTake,
-		ECU_DataAvailBitSet ecuDataToTake,
-		TrackDataAvailBitSet trackDataToTake,
+		DataAvailableBitSet dataToTake,
 		bool growVector)
 	{
 		if ( ! hasTelemetry())
@@ -566,138 +540,138 @@ namespace gpo
 			const auto &srcSamp = srcSamps->at(srcStartIdx + i);
 
 			// merge in GoPro samples
-			auto bitToTake = GOPRO_AVAIL_ACCL;
-			if (bitset_is_set(gpDataToTake, bitToTake))
+			auto bitToTake = eDA_GOPRO_ACCL;
+			if (bitset_is_set(dataToTake, bitToTake))
 			{
 				dstSamp.gpSamp.accl = srcSamp.gpSamp.accl;
-				bitset_set_bit(gpDataAvail_, bitToTake);
-				bitset_clr_bit(gpDataToTake, bitToTake);
+				bitset_set_bit(dataAvail_, bitToTake);
+				bitset_clr_bit(dataToTake, bitToTake);
 			}
-			bitToTake = GOPRO_AVAIL_GYRO;
-			if (bitset_is_set(gpDataToTake, bitToTake))
+			bitToTake = eDA_GOPRO_GYRO;
+			if (bitset_is_set(dataToTake, bitToTake))
 			{
 				dstSamp.gpSamp.gyro = srcSamp.gpSamp.gyro;
-				bitset_set_bit(gpDataAvail_, bitToTake);
-				bitset_clr_bit(gpDataToTake, bitToTake);
+				bitset_set_bit(dataAvail_, bitToTake);
+				bitset_clr_bit(dataToTake, bitToTake);
 			}
-			bitToTake = GOPRO_AVAIL_GRAV;
-			if (bitset_is_set(gpDataToTake, bitToTake))
+			bitToTake = eDA_GOPRO_GRAV;
+			if (bitset_is_set(dataToTake, bitToTake))
 			{
 				dstSamp.gpSamp.grav = srcSamp.gpSamp.grav;
-				bitset_set_bit(gpDataAvail_, bitToTake);
-				bitset_clr_bit(gpDataToTake, bitToTake);
+				bitset_set_bit(dataAvail_, bitToTake);
+				bitset_clr_bit(dataToTake, bitToTake);
 			}
-			bitToTake = GOPRO_AVAIL_CORI;
-			if (bitset_is_set(gpDataToTake, bitToTake))
+			bitToTake = eDA_GOPRO_CORI;
+			if (bitset_is_set(dataToTake, bitToTake))
 			{
 				dstSamp.gpSamp.cori = srcSamp.gpSamp.cori;
-				bitset_set_bit(gpDataAvail_, bitToTake);
-				bitset_clr_bit(gpDataToTake, bitToTake);
+				bitset_set_bit(dataAvail_, bitToTake);
+				bitset_clr_bit(dataToTake, bitToTake);
 			}
-			bitToTake = GOPRO_AVAIL_GPS_LATLON;
-			if (bitset_is_set(gpDataToTake, bitToTake))
+			bitToTake = eDA_GOPRO_GPS_LATLON;
+			if (bitset_is_set(dataToTake, bitToTake))
 			{
 				dstSamp.gpSamp.gps.coord = srcSamp.gpSamp.gps.coord;
-				bitset_set_bit(gpDataAvail_, bitToTake);
-				bitset_clr_bit(gpDataToTake, bitToTake);
+				bitset_set_bit(dataAvail_, bitToTake);
+				bitset_clr_bit(dataToTake, bitToTake);
 			}
-			bitToTake = GOPRO_AVAIL_GPS_ALTITUDE;
-			if (bitset_is_set(gpDataToTake, bitToTake))
+			bitToTake = eDA_GOPRO_GPS_ALTITUDE;
+			if (bitset_is_set(dataToTake, bitToTake))
 			{
 				dstSamp.gpSamp.gps.altitude = srcSamp.gpSamp.gps.altitude;
-				bitset_set_bit(gpDataAvail_, bitToTake);
-				bitset_clr_bit(gpDataToTake, bitToTake);
+				bitset_set_bit(dataAvail_, bitToTake);
+				bitset_clr_bit(dataToTake, bitToTake);
 			}
-			bitToTake = GOPRO_AVAIL_GPS_SPEED2D;
-			if (bitset_is_set(gpDataToTake, bitToTake))
+			bitToTake = eDA_GOPRO_GPS_SPEED2D;
+			if (bitset_is_set(dataToTake, bitToTake))
 			{
 				dstSamp.gpSamp.gps.speed2D = srcSamp.gpSamp.gps.speed3D;
-				bitset_set_bit(gpDataAvail_, bitToTake);
-				bitset_clr_bit(gpDataToTake, bitToTake);
+				bitset_set_bit(dataAvail_, bitToTake);
+				bitset_clr_bit(dataToTake, bitToTake);
 			}
-			bitToTake = GOPRO_AVAIL_GPS_SPEED3D;
-			if (bitset_is_set(gpDataToTake, bitToTake))
+			bitToTake = eDA_GOPRO_GPS_SPEED3D;
+			if (bitset_is_set(dataToTake, bitToTake))
 			{
 				dstSamp.gpSamp.gps.speed3D = srcSamp.gpSamp.gps.speed3D;
-				bitset_set_bit(gpDataAvail_, bitToTake);
-				bitset_clr_bit(gpDataToTake, bitToTake);
+				bitset_set_bit(dataAvail_, bitToTake);
+				bitset_clr_bit(dataToTake, bitToTake);
 			}
 
 			// merge in ECU samples
-			bitToTake = ECU_AVAIL_ENGINE_SPEED;
-			if (bitset_is_set(ecuDataToTake, bitToTake))
+			bitToTake = eDA_ECU_ENGINE_SPEED;
+			if (bitset_is_set(dataToTake, bitToTake))
 			{
 				dstSamp.ecuSamp.engineSpeed_rpm = srcSamp.ecuSamp.engineSpeed_rpm;
-				bitset_set_bit(ecuDataAvail_, bitToTake);
-				bitset_clr_bit(ecuDataToTake, bitToTake);
+				bitset_set_bit(dataAvail_, bitToTake);
+				bitset_clr_bit(dataToTake, bitToTake);
 			}
-			bitToTake = ECU_AVAIL_TPS;
-			if (bitset_is_set(ecuDataToTake, bitToTake))
+			bitToTake = eDA_ECU_TPS;
+			if (bitset_is_set(dataToTake, bitToTake))
 			{
 				dstSamp.ecuSamp.tps = srcSamp.ecuSamp.tps;
-				bitset_set_bit(ecuDataAvail_, bitToTake);
-				bitset_clr_bit(ecuDataToTake, bitToTake);
+				bitset_set_bit(dataAvail_, bitToTake);
+				bitset_clr_bit(dataToTake, bitToTake);
 			}
-			bitToTake = ECU_AVAIL_BOOST;
-			if (bitset_is_set(ecuDataToTake, bitToTake))
+			bitToTake = eDA_ECU_BOOST;
+			if (bitset_is_set(dataToTake, bitToTake))
 			{
 				dstSamp.ecuSamp.boost_psi = srcSamp.ecuSamp.boost_psi;
-				bitset_set_bit(ecuDataAvail_, bitToTake);
-				bitset_clr_bit(ecuDataToTake, bitToTake);
+				bitset_set_bit(dataAvail_, bitToTake);
+				bitset_clr_bit(dataToTake, bitToTake);
 			}
 
 			// merge in Track samples
-			bitToTake = TRACK_AVAIL_ON_TRACK_LATLON;
-			if (bitset_is_set(trackDataToTake, bitToTake))
+			bitToTake = eDA_TRACK_ON_TRACK_LATLON;
+			if (bitset_is_set(dataToTake, bitToTake))
 			{
 				dstSamp.trackData.onTrackLL = srcSamp.trackData.onTrackLL;
-				bitset_set_bit(trackAvail_, bitToTake);
-				bitset_clr_bit(trackDataToTake, bitToTake);
+				bitset_set_bit(dataAvail_, bitToTake);
+				bitset_clr_bit(dataToTake, bitToTake);
 			}
-			bitToTake = TRACK_AVAIL_LAP;
-			if (bitset_is_set(trackDataToTake, bitToTake))
+			bitToTake = eDA_TRACK_LAP;
+			if (bitset_is_set(dataToTake, bitToTake))
 			{
 				dstSamp.trackData.lap = srcSamp.trackData.lap;
-				bitset_set_bit(trackAvail_, bitToTake);
-				bitset_clr_bit(trackDataToTake, bitToTake);
+				bitset_set_bit(dataAvail_, bitToTake);
+				bitset_clr_bit(dataToTake, bitToTake);
 			}
-			bitToTake = TRACK_AVAIL_LAP_TIME_OFFSET;
-			if (bitset_is_set(trackDataToTake, bitToTake))
+			bitToTake = eDA_TRACK_LAP_TIME_OFFSET;
+			if (bitset_is_set(dataToTake, bitToTake))
 			{
 				dstSamp.trackData.lapTimeOffset = srcSamp.trackData.lapTimeOffset;
-				bitset_set_bit(trackAvail_, bitToTake);
-				bitset_clr_bit(trackDataToTake, bitToTake);
+				bitset_set_bit(dataAvail_, bitToTake);
+				bitset_clr_bit(dataToTake, bitToTake);
 			}
-			bitToTake = TRACK_AVAIL_SECTOR;
-			if (bitset_is_set(trackDataToTake, bitToTake))
+			bitToTake = eDA_TRACK_SECTOR;
+			if (bitset_is_set(dataToTake, bitToTake))
 			{
 				dstSamp.trackData.sector = srcSamp.trackData.sector;
-				bitset_set_bit(trackAvail_, bitToTake);
-				bitset_clr_bit(trackDataToTake, bitToTake);
+				bitset_set_bit(dataAvail_, bitToTake);
+				bitset_clr_bit(dataToTake, bitToTake);
 			}
-			bitToTake = TRACK_AVAIL_SECTOR_TIME_OFFSET;
-			if (bitset_is_set(trackDataToTake, bitToTake))
+			bitToTake = eDA_TRACK_SECTOR_TIME_OFFSET;
+			if (bitset_is_set(dataToTake, bitToTake))
 			{
 				dstSamp.trackData.sectorTimeOffset = srcSamp.trackData.sectorTimeOffset;
-				bitset_set_bit(trackAvail_, bitToTake);
-				bitset_clr_bit(trackDataToTake, bitToTake);
+				bitset_set_bit(dataAvail_, bitToTake);
+				bitset_clr_bit(dataToTake, bitToTake);
 			}
 		}
 
 		// make sure everything was merged (future proofing logic in case fields are added)
-		if (bitset_is_any_set(gpDataToTake))
+		if (bitset_is_any_set(dataToTake))
 		{
 			spdlog::warn(
 				"unmerged GoPro samples remain. seems like {}() implementation is incomplete.",
 				__func__);
 		}
-		if (bitset_is_any_set(ecuDataToTake))
+		if (bitset_is_any_set(dataToTake))
 		{
 			spdlog::warn(
 				"unmerged ECU samples remain. seems like {}() implementation is incomplete.",
 				__func__);
 		}
-		if (bitset_is_any_set(trackDataToTake))
+		if (bitset_is_any_set(dataToTake))
 		{
 			spdlog::warn(
 				"unmerged Track samples remain. seems like {}() implementation is incomplete.",

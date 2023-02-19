@@ -11,7 +11,7 @@ namespace utils
 	computeTrackTimes(
 		const gpo::Track *track,
 		gpo::TelemetrySamplesPtr tSamps,
-		gpo::TrackDataAvailBitSet &trackAvail)
+		gpo::DataAvailableBitSet &avail)
 	{
 		std::vector<const gpo::TrackPathObject *> trackObjs;
 		if ( ! track->getSortedPathObjects(trackObjs))
@@ -24,7 +24,7 @@ namespace utils
 			return true;
 		}
 ;
-		bitset_clear(trackAvail);
+		bitset_clear(avail);
 		int currLap = -1;
 		int sectorSeq = 1;// increments everytime we exit a sector
 		int currSector = -1;
@@ -50,7 +50,7 @@ namespace utils
 			const auto &foundCoord = std::get<1>(findRes);
 			trackData.onTrackLL.lat = foundCoord[0];
 			trackData.onTrackLL.lon = foundCoord[1];
-			bitset_set_bit(trackAvail, gpo::TRACK_AVAIL_ON_TRACK_LATLON);
+			bitset_set_bit(avail, gpo::eDA_TRACK_ON_TRACK_LATLON);
 			onTrackFindInitialIdx = std::get<2>(findRes);
 			onTrackFindWindow = {5,100};// reduce search space once we've found initial location
 
@@ -151,15 +151,15 @@ namespace utils
 			trackData.lapTimeOffset = (currLap == -1 ? 0.0 : samp.t_offset - lapStartTimeOffset);
 			if (currLap != -1)
 			{
-				bitset_set_bit(trackAvail, gpo::TRACK_AVAIL_LAP);
-				bitset_set_bit(trackAvail, gpo::TRACK_AVAIL_LAP_TIME_OFFSET);
+				bitset_set_bit(avail, gpo::eDA_TRACK_LAP);
+				bitset_set_bit(avail, gpo::eDA_TRACK_LAP_TIME_OFFSET);
 			}
 			trackData.sector = currSector;
 			trackData.sectorTimeOffset = (currSector == -1 ? 0.0 : samp.t_offset - sectorStartTimeOffset);
 			if (currSector != -1)
 			{
-				bitset_set_bit(trackAvail, gpo::TRACK_AVAIL_SECTOR);
-				bitset_set_bit(trackAvail, gpo::TRACK_AVAIL_SECTOR_TIME_OFFSET);
+				bitset_set_bit(avail, gpo::eDA_TRACK_SECTOR);
+				bitset_set_bit(avail, gpo::eDA_TRACK_SECTOR_TIME_OFFSET);
 			}
 
 			prevCoord = foundCoord;

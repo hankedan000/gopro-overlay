@@ -43,8 +43,8 @@ DataProcessingUtilsTest::trackTimes()
 	track.addSector("Sector2",30,50);
 	track.addSector("Sector3",60,70);
 
-	gpo::TrackDataAvailBitSet trackAvail;
-	CPPUNIT_ASSERT_EQUAL(true, utils::computeTrackTimes(&track,tSamps,trackAvail));
+	gpo::DataAvailableBitSet avail;
+	CPPUNIT_ASSERT_EQUAL(true, utils::computeTrackTimes(&track,tSamps,avail));
 
 	CPPUNIT_ASSERT_EQUAL(PATH_LENGTH, tSamps->size());
 	for (size_t i=0; i<tSamps->size(); i++)

@@ -48,14 +48,8 @@ namespace gpo
 		bool
 		hasVideo() const;
 
-		const GoProDataAvailBitSet &
-		gpDataAvail() const;
-
-		const ECU_DataAvailBitSet &
-		ecuDataAvail() const;
-
-		const TrackDataAvailBitSet &
-		trackDataAvail() const;
+		const DataAvailableBitSet &
+		dataAvailable() const;
 
 		double
 		getTelemetryRate_hz() const;
@@ -189,9 +183,7 @@ namespace gpo
 			const DataSourcePtr srcData,
 			size_t srcStartIdx,
 			size_t dstStartIdx,
-			GoProDataAvailBitSet gpDataToTake,
-			ECU_DataAvailBitSet ecuDataToTake,
-			TrackDataAvailBitSet trackDataToTake,
+			DataAvailableBitSet dataToTake,
 			bool growVector);
 
 	public:
@@ -213,17 +205,9 @@ namespace gpo
 		// user can backup telemetry samples, and this is where they are stored
 		TelemetrySamples backupSamples_;
 
-		// bitset defining which fields are valid in 'TelemetrySample::gpSamp'
-		// query bits using gpo::GOPRO_AVAIL_* constants
-		GoProDataAvailBitSet gpDataAvail_;
-
-		// bitset defining which fields are valid in 'TelemetrySample::ecuSamp'
-		// query bits using gpo::ECU_AVAIL_* constants
-		ECU_DataAvailBitSet ecuDataAvail_;
-
-		// bitset defining which fields are valid in 'TelemetrySample::trackData'
-		// query bits using gpo::TRACK_AVAIL_* constants
-		TrackDataAvailBitSet trackAvail_;
+		// bitset defining which fields are valid in 'TelemetrySample'
+		// query bits using gpo::DataAvailable enum literals
+		DataAvailableBitSet dataAvail_;
 
 		std::string sourceName_;
 		std::string originFile_;

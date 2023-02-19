@@ -46,9 +46,7 @@ DataSourceTest::testLoadFromTelemetry()
 	CPPUNIT_ASSERT_DOUBLES_EQUAL(SAMP_RATE_HZ, srcFromTelem->getTelemetryRate_hz(), 0.1);
 
 	// when importing from raw telemetry, we have no idea what's available.... (for now)
-	CPPUNIT_ASSERT_EQUAL(false, bitset_is_any_set(srcFromTelem->gpDataAvail()));
-	CPPUNIT_ASSERT_EQUAL(false, bitset_is_any_set(srcFromTelem->ecuDataAvail()));
-	CPPUNIT_ASSERT_EQUAL(false, bitset_is_any_set(srcFromTelem->trackDataAvail()));
+	CPPUNIT_ASSERT_EQUAL(false, bitset_is_any_set(srcFromTelem->dataAvailable()));
 
 	// check samples were parsed correctly (trivial range check)
 	auto tSrc = srcFromTelem->telemSrc;
@@ -75,12 +73,12 @@ DataSourceTest::testLoadFromMegaSquirtLog()
 	CPPUNIT_ASSERT_DOUBLES_EQUAL(14.8, srcFromMsq->getTelemetryRate_hz(), 0.1);
 
 	// should have ECU data available
-	CPPUNIT_ASSERT_EQUAL(false, bitset_is_any_set(srcFromMsq->gpDataAvail()));
-	CPPUNIT_ASSERT_EQUAL(false, bitset_is_any_set(srcFromMsq->trackDataAvail()));
-	const auto &ecuAvail = srcFromMsq->ecuDataAvail();
-	CPPUNIT_ASSERT(bitset_is_set(ecuAvail, gpo::ECU_AVAIL_ENGINE_SPEED));
-	CPPUNIT_ASSERT(bitset_is_set(ecuAvail, gpo::ECU_AVAIL_TPS));
-	CPPUNIT_ASSERT(bitset_is_set(ecuAvail, gpo::ECU_AVAIL_BOOST));
+	gpo::DataAvailableBitSet expectedAvail;
+	bitset_clear(expectedAvail);
+	bitset_set_bit(expectedAvail, gpo::eDA_ECU_ENGINE_SPEED);
+	bitset_set_bit(expectedAvail, gpo::eDA_ECU_TPS);
+	bitset_set_bit(expectedAvail, gpo::eDA_ECU_BOOST);
+	CPPUNIT_ASSERT(bitset_equal(srcFromMsq->dataAvailable(), expectedAvail));
 
 	// check samples were parsed correctly (trivial range check)
 	auto tSrc = srcFromMsq->telemSrc;
@@ -143,9 +141,7 @@ DataSourceTest::testTelemetryMerge()
 	// get expected data available
 	// Note: needs to snapshot this before the merge or else srcFromTelem->*DataAvail() will
 	// already have the merged bits set.
-	const auto expectedGP_DataAvail = bitset_or(srcFromTelem->gpDataAvail(), srcFromMsq->gpDataAvail());
-	const auto expectedECU_DataAvail = bitset_or(srcFromTelem->ecuDataAvail(), srcFromMsq->ecuDataAvail());
-	const auto expectedTrackDataAvail = bitset_or(srcFromTelem->trackDataAvail(), srcFromMsq->trackDataAvail());
+	const auto expectedAvail = bitset_or(srcFromTelem->dataAvailable(), srcFromMsq->dataAvailable());
 	
 	// merge without growth
 	auto mergedSamps = srcFromTelem->mergeTelemetryIn(
@@ -155,9 +151,7 @@ DataSourceTest::testTelemetryMerge()
 		false);// no growth
 	CPPUNIT_ASSERT_EQUAL((size_t)(N_SAMPS),mergedSamps);
 
-	CPPUNIT_ASSERT(bitset_equal(expectedGP_DataAvail, srcFromTelem->gpDataAvail()));
-	CPPUNIT_ASSERT(bitset_equal(expectedECU_DataAvail, srcFromTelem->ecuDataAvail()));
-	CPPUNIT_ASSERT(bitset_equal(expectedTrackDataAvail, srcFromTelem->trackDataAvail()));
+	CPPUNIT_ASSERT(bitset_equal(expectedAvail, srcFromTelem->dataAvailable()));
 }
 
 int main()

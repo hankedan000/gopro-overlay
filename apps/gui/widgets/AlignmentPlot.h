@@ -37,6 +37,22 @@ private:
     void
     setDragAndZoomEnabled(
         bool enabled);
+
+    void
+    setBestY_Components();
+
+    /**
+     * Checks to see if source A/B are capable of providing the
+     * specific Y_Components. If so, then it sets the components on
+     * the plots.
+     * 
+     * @return
+     * true if the sensor data was available and the Y_Components were set.
+     */
+    bool
+    testAndSetY_Components(
+        gpo::DataAvailableBitSet aAvail,
+        gpo::DataAvailableBitSet bAvail);
     
 private:
     Ui::AlignmentPlot *ui;

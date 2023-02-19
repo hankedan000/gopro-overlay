@@ -248,3 +248,9 @@ AlignmentPlot::setDragAndZoomEnabled(
     ui->plot->setInteraction(QCP::Interaction::iRangeDrag, enabled);
     ui->plot->setInteraction(QCP::Interaction::iRangeZoom, enabled);
 }
+
+void
+AlignmentPlot::setBestY_Components()
+{
+    
+}
