@@ -422,16 +422,7 @@ ProjectWindow::loadProject(
                     false);// holdoff render untill we seek below
 
         updateAlignmentPane();
-        // FIXME see issue #7
-        // https://github.com/hankedan000/gopro-overlay/issues/7
-        // try-catch is just a hack to prevent app from crashing in the interim
-        try
-        {
-            seekEngineToAlignment(getAlignmentInfoFromUI(),true);
-        } catch (...)
-        {
-            spdlog::error("caught exception!");
-        }
+        seekEngineToAlignment(getAlignmentInfoFromUI(),true);
         ui->leadIn_SpinBox->setValue(proj_.getLeadInSeconds());
         ui->leadOut_SpinBox->setValue(proj_.getLeadOutSeconds());
         std::filesystem::path exportFilePath = proj_.getExportFilePath();
@@ -1046,6 +1037,7 @@ ProjectWindow::onEngineCreated(
     proj_.setEngine(newEngine);
     setProjectDirty(true);
     reloadRenderEntitiesTable();
+    updateAlignmentPane();
     updatePreviewWindowWithNewEngine(
                 newEngine,
                 true,// updateVisibilty

@@ -239,24 +239,62 @@ namespace gpo
 		return max;
 	}
 
-	void
+	bool
 	GroupedSeeker::seekAllToLapEntry(
 		unsigned int lap)
 	{
+		if (lap == 0)
+		{
+			spdlog::warn("can't seek to lap index 0");
+			return false;
+		}
+		for (const auto &seeker : seekers_)
+		{
+			if (lap >= (seeker->lapCount() + 1))
+			{
+				spdlog::warn(
+					"'{}' doesn't have lap {}. aborting {}()",
+					seeker->getAlignmentIdx(),
+					lap,
+					__func__);
+				return false;
+			}
+		}
+
 		for (auto &seeker : seekers_)
 		{
 			seeker->seekToLapEntry(lap);
 		}
+		return true;
 	}
 
-	void
+	bool
 	GroupedSeeker::seekAllToLapExit(
 		unsigned int lap)
 	{
+		if (lap == 0)
+		{
+			spdlog::warn("can't seek to lap index 0");
+			return false;
+		}
+		for (const auto &seeker : seekers_)
+		{
+			if (lap >= (seeker->lapCount() + 1))
+			{
+				spdlog::warn(
+					"'{}' doesn't have lap {}. aborting {}()",
+					seeker->getAlignmentIdx(),
+					lap,
+					__func__);
+				return false;
+			}
+		}
+
 		for (auto &seeker : seekers_)
 		{
 			seeker->seekToLapExit(lap);
 		}
+		return true;
 	}
 
 	std::pair<size_t, size_t>

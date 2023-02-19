@@ -77,11 +77,11 @@ namespace gpo
 		unsigned int
 		maxLapCount() const;
 
-		void
+		bool
 		seekAllToLapEntry(
 			unsigned int lap);
 
-		void
+		bool
 		seekAllToLapExit(
 			unsigned int lap);
 
