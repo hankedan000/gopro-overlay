@@ -3,7 +3,7 @@
 namespace gpo
 {
 	TextObject::TextObject()
-	 : RenderedObject(0,0)
+	 : RenderedObject(1,1)// cv::UMat seg faults if matrix is sized [0,0] :(
 	 , text_()
 	 , fontFace_(cv::FONT_HERSHEY_DUPLEX)
 	 , scale_(1.0)
