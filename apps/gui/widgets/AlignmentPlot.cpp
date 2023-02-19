@@ -4,6 +4,8 @@
 #include <QSpinBox>
 #include <spdlog/spdlog.h>
 
+#define GET_COMBOBOX_Y_COMP(COMBOBOX_PTR,INDEX) (TelemetryPlot::Y_Component)COMBOBOX_PTR->itemData(INDEX).toULongLong()
+
 AlignmentPlot::AlignmentPlot(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::AlignmentPlot),
@@ -16,8 +18,6 @@ AlignmentPlot::AlignmentPlot(QWidget *parent) :
     mouseMoved_(false)
 {
     ui->setupUi(this);
-    ui->plot->setY_Component(TelemetryPlot::Y_Component::eYC_GPS_SPEED2D);
-    ui->plot->setY_Component2(TelemetryPlot::Y_Component::eYC_ECU_ENGINE_SPEED);
     ui->plot->setInteraction(QCP::Interaction::iSelectPlottables, true);
 
     connect(ui->aAlignment_SpinBox, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int value){
@@ -35,11 +35,11 @@ AlignmentPlot::AlignmentPlot(QWidget *parent) :
         ui->plot->replot(QCustomPlot::RefreshPriority::rpQueuedReplot);
     });
     connect(ui->aData_ComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index){
-        auto yComp = (TelemetryPlot::Y_Component)ui->aData_ComboBox->itemData(index).toULongLong();
+        auto yComp = GET_COMBOBOX_Y_COMP(ui->aData_ComboBox,index);
         ui->plot->setY_Component(yComp,true);
     });
     connect(ui->bData_ComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index){
-        auto yComp = (TelemetryPlot::Y_Component)ui->bData_ComboBox->itemData(index).toULongLong();
+        auto yComp = GET_COMBOBOX_Y_COMP(ui->bData_ComboBox,index);
         ui->plot->setY_Component2(yComp,true);
     });
 
@@ -99,7 +99,10 @@ AlignmentPlot::AlignmentPlot(QWidget *parent) :
                 deltaX_px,
                 deltaX_coord);
 
-            selectedSrc_->seeker()->setAlignmentIdx(std::abs(mousePressAlignIdx_ - deltaX_coord));
+            int64_t newIdx = mousePressAlignIdx_ - deltaX_coord;
+            newIdx = std::min((int64_t)(selectedSrc_->size()) - 1,newIdx);
+            newIdx = std::max((int64_t)0,newIdx);
+            selectedSrc_->seeker()->setAlignmentIdx(newIdx);
             // queue the replot to avoid redundant replots.
             // will get replotted on the next event loop iteration.
             ui->plot->replot(QCustomPlot::RefreshPriority::rpQueuedReplot);
@@ -137,9 +140,6 @@ void
 AlignmentPlot::setSourceA(
     gpo::TelemetrySourcePtr tSrc)
 {
-    auto combobox = ui->aData_ComboBox;
-    auto spinbox = ui->aAlignment_SpinBox;
-
     if (srcA_)
     {
         // remove existing source from Telemetry plot.
@@ -149,18 +149,22 @@ AlignmentPlot::setSourceA(
         bool replotNow = tSrc == nullptr;
         ui->plot->removeSource(srcA_,replotNow);
     }
+    srcA_ = tSrc;
 
+    auto combobox = ui->aData_ComboBox;
+    auto spinbox = ui->aAlignment_SpinBox;
     populateComboBox(combobox,tSrc);
-    if (tSrc != nullptr)
+
+    if (srcA_ != nullptr)
     {
-        std::string name = tSrc->getDataSourceName();
+        std::string name = srcA_->getDataSourceName();
         if (name.empty())
         {
             name = "Source A";
         }
         ui->aData_Label->setText(name.c_str());
         ui->plot->addSource(
-            tSrc,
+            srcA_,
             name,
             Qt::red,
             TelemetryPlot::AxisSide::eAS_Side1,
@@ -172,18 +176,16 @@ AlignmentPlot::setSourceA(
             graph->setSelectable(QCP::SelectionType::stWhole);
         }
 
-        spinbox->setMaximum(tSrc->size());
+        spinbox->setMaximum(srcA_->size());
         spinbox->setMinimum(0);
+        setBestY_Components();
     }
-    srcA_ = tSrc;
 }
 
 void
 AlignmentPlot::setSourceB(
     gpo::TelemetrySourcePtr tSrc)
 {
-    auto combobox = ui->bData_ComboBox;
-    auto spinbox = ui->bAlignment_SpinBox;
 
     if (srcB_)
     {
@@ -194,18 +196,22 @@ AlignmentPlot::setSourceB(
         bool replotNow = tSrc == nullptr;
         ui->plot->removeSource(srcB_,replotNow);
     }
+    srcB_ = tSrc;
 
+    auto combobox = ui->bData_ComboBox;
+    auto spinbox = ui->bAlignment_SpinBox;
     populateComboBox(combobox,tSrc);
-    if (tSrc != nullptr)
+
+    if (srcB_ != nullptr)
     {
-        std::string name = tSrc->getDataSourceName();
+        std::string name = srcB_->getDataSourceName();
         if (name.empty())
         {
             name = "Source B";
         }
         ui->bData_Label->setText(name.c_str());
         ui->plot->addSource(
-            tSrc,
+            srcB_,
             name,
             Qt::blue,
             TelemetryPlot::AxisSide::eAS_Side2,
@@ -217,10 +223,10 @@ AlignmentPlot::setSourceB(
             graph->setSelectable(QCP::SelectionType::stWhole);
         }
 
-        spinbox->setMaximum(tSrc->size());
+        spinbox->setMaximum(srcB_->size());
         spinbox->setMinimum(0);
+        setBestY_Components();
     }
-    srcB_ = tSrc;
 }
 
 void
@@ -252,5 +258,41 @@ AlignmentPlot::setDragAndZoomEnabled(
 void
 AlignmentPlot::setBestY_Components()
 {
-    
+    if (srcA_ == nullptr || srcB_ == nullptr)
+    {
+        return;
+    }
+
+    const auto &availA = srcA_->dataAvailable();
+    const auto &availB = srcB_->dataAvailable();
+
+    // check for GPS_SPEED2D/ENGINE_SPEED
+    if (bitset_is_set(availA, gpo::DataAvailable::eDA_GOPRO_GPS_SPEED2D) &&
+        bitset_is_set(availB, gpo::DataAvailable::eDA_ECU_ENGINE_SPEED))
+    {
+        selectComboBoxY_Comp(ui->aData_ComboBox, TelemetryPlot::Y_Component::eYC_GPS_SPEED2D);
+        selectComboBoxY_Comp(ui->bData_ComboBox, TelemetryPlot::Y_Component::eYC_ECU_ENGINE_SPEED);
+    }
+    else if (bitset_is_set(availA, gpo::DataAvailable::eDA_ECU_ENGINE_SPEED) &&
+             bitset_is_set(availB, gpo::DataAvailable::eDA_GOPRO_GPS_SPEED2D))
+    {
+        selectComboBoxY_Comp(ui->aData_ComboBox, TelemetryPlot::Y_Component::eYC_ECU_ENGINE_SPEED);
+        selectComboBoxY_Comp(ui->bData_ComboBox, TelemetryPlot::Y_Component::eYC_GPS_SPEED2D);
+    }
+}
+
+bool
+AlignmentPlot::selectComboBoxY_Comp(
+    QComboBox *combobox,
+    TelemetryPlot::Y_Component yComp)
+{
+    for (int i=0; i<combobox->count(); i++)
+    {
+        if (GET_COMBOBOX_Y_COMP(combobox,i) == yComp)
+        {
+            combobox->setCurrentIndex(i);
+            return true;
+        }
+    }
+    return false;
 }

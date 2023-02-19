@@ -42,17 +42,14 @@ private:
     setBestY_Components();
 
     /**
-     * Checks to see if source A/B are capable of providing the
-     * specific Y_Components. If so, then it sets the components on
-     * the plots.
-     * 
+     * Selects item in the ComboBox corresponding to the Y_Component
      * @return
-     * true if the sensor data was available and the Y_Components were set.
+     * true if an item was selected. false otherwise.
      */
     bool
-    testAndSetY_Components(
-        gpo::DataAvailableBitSet aAvail,
-        gpo::DataAvailableBitSet bAvail);
+    selectComboBoxY_Comp(
+        QComboBox *combobox,
+        TelemetryPlot::Y_Component yComp);
     
 private:
     Ui::AlignmentPlot *ui;
