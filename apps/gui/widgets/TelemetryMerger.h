@@ -49,6 +49,10 @@ public:
     bool
     isMergeComplete() const;
 
+    void
+    setPreferredSaveDir(
+        std::filesystem::path dir);
+
 private:
     /**
      * @brief addDataSourceInternal
@@ -97,6 +101,9 @@ private:
     void
     setupMerge();
 
+    bool
+    saveMergedResult();
+
     void
     abortMerge();
 
@@ -108,6 +115,8 @@ private:
 
     QStandardItemModel tableModel_;
     std::vector<gpo::DataSourcePtr> sources_;
+
+    std::filesystem::path preferredSaveDir_;
 
     struct MergeState
     {

@@ -12,6 +12,7 @@ TelemetryMerger::TelemetryMerger(QWidget *parent) :
     alignPlot_(&alignPlotWindow_),
     tableModel_(this),
     sources_(),
+    preferredSaveDir_(),
     state_()
 {
     ui->setupUi(this);
@@ -96,6 +97,19 @@ bool
 TelemetryMerger::isMergeComplete() const
 {
     return state_.mergedSrc != nullptr && state_.currSrcIdx >= sources_.size();
+}
+
+void
+TelemetryMerger::setPreferredSaveDir(
+    std::filesystem::path dir)
+{
+    if ( ! std::filesystem::is_directory(dir))
+    {
+        spdlog::error("'{}' isn't a directory", dir.c_str());
+        return;
+    }
+
+    preferredSaveDir_ = dir;
 }
 
 bool
@@ -280,6 +294,10 @@ TelemetryMerger::startMerge()
     {
         setupMerge();
     }
+    else
+    {
+        saveMergedResult();
+    }
     updateMergeButtons();
 }
 
@@ -288,18 +306,37 @@ TelemetryMerger::continueMerge()
 {
     alignPlotWindow_.hide();
 
+    auto mergedSrc = state_.mergedSrc;
     auto currSrc = sources_.at(state_.currSrcIdx);
 
-    state_.mergedSrc->mergeTelemetryIn(
+    // compute source/destination merge starting indices
+    size_t srcStartIdx = 0;
+    size_t dstStartIdx = 0;
+    const size_t mergedAlignIdx = mergedSrc->seeker->getAlignmentIdx();
+    const size_t currSrcAlignIdx = currSrc->seeker->getAlignmentIdx();
+    if (mergedAlignIdx < currSrcAlignIdx)
+    {
+        srcStartIdx = currSrcAlignIdx - mergedAlignIdx;
+    }
+    else
+    {
+        dstStartIdx = mergedAlignIdx - currSrcAlignIdx;
+    }
+
+    mergedSrc->mergeTelemetryIn(
         currSrc,
-        0,// srcStartIdx
-        0,// dstStartIdx
+        srcStartIdx,
+        dstStartIdx,
         false);// don't grow
     state_.currSrcIdx++;
 
     if (state_.currSrcIdx < sources_.size())
     {
         setupMerge();
+    }
+    else
+    {
+        saveMergedResult();
     }
     updateMergeButtons();
 }
@@ -318,6 +355,37 @@ TelemetryMerger::setupMerge()
     alignPlot_.setSourceA(state_.mergedSrc->telemSrc);
     alignPlot_.setSourceB(currSrc->telemSrc);
     alignPlotWindow_.show();
+}
+
+bool
+TelemetryMerger::saveMergedResult()
+{
+    if ( ! state_.mergedSrc)
+    {
+        spdlog::error("mergedSrc is null");
+        return false;
+    }
+    
+    // default dialog's directory to user's home dir
+    QString suggestedDir = QDir::homePath();
+    if ( ! preferredSaveDir_.empty())
+    {
+        suggestedDir = preferredSaveDir_.c_str();
+    }
+
+    // open "Save" dialog
+    std::string filepath = QFileDialog::getSaveFileName(
+        this,
+        "Save Merged Telemetry CSV",
+        suggestedDir,
+        "CSV (*.csv)").toStdString();
+    if (filepath.empty())
+    {
+        // dialog was closed without selecting a path
+        return false;
+    }
+
+    return state_.mergedSrc->writeTelemetryToCSV(filepath);
 }
 
 void
