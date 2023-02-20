@@ -3,6 +3,7 @@
 
 #include <QFrame>
 
+#include <functional>
 #include <GoProOverlay/data/TrackDataObjects.h>
 #include <opencv2/opencv.hpp>
 
@@ -22,6 +23,10 @@ public:
         ePM_SectorExit,
         ePM_None
     };
+
+    // allows user to filter paths based on the placement mode.
+    // user should return true in filter callback to accept the path.
+    using PlacementFilter = std::function<bool (size_t /*pathIdx*/)>;
 
 public:
     explicit TrackView(QWidget *parent = nullptr);
@@ -62,6 +67,26 @@ public:
     PlacementMode
     getPlacementMode() const;
 
+    void
+    setSectorEntryIdx(
+            size_t pathIdx);
+
+    void
+    setStartGateFilter(
+        PlacementFilter filter);
+
+    void
+    setFinishGateFilter(
+        PlacementFilter filter);
+
+    void
+    setSectorEntryFilter(
+        PlacementFilter filter);
+
+    void
+    setSectorExitFilter(
+        PlacementFilter filter);
+
 private:
     void
     drawTrackPath(
@@ -78,7 +103,8 @@ private:
     drawSector(
             QPainter &painter,
             const gpo::TrackSector *sector,
-            QColor color);
+            QColor pathColor,
+            QColor gateColor);
 
     QPoint
     coordToPoint(
@@ -116,6 +142,32 @@ private:
 
     QColor startGateColor_;
     QColor finishGateColor_;
+    QColor sectorPathColor_;
+    QColor sectorGateColor_;
+
+    struct SectorPlacementInfo
+    {
+        SectorPlacementInfo()
+         : entryIdx(0)
+         , entryGate()
+         , entryValid(false)
+        {}
+
+        // path index of sector's entry point
+        size_t entryIdx;
+        // a detection gate based from 'entryIdx'
+        gpo::DetectionGate entryGate;
+        // set true once user has specified entryIdx
+        bool entryValid;
+    };
+    SectorPlacementInfo spi_;
+
+    PlacementFilter startGateFilter_;
+    PlacementFilter finishGateFilter_;
+    PlacementFilter sectorEntryFilter_;
+    PlacementFilter sectorExitFilter_;
+
+    bool placementValid_;
 
 };
 

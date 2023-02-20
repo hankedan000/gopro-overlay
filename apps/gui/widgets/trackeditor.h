@@ -64,6 +64,22 @@ private slots:
     onActionLoadTrack();
 
 private:
+    bool
+    filterStartGate(
+        size_t pathIdx);
+    
+    bool
+    filterFinishGate(
+        size_t pathIdx);
+    
+    bool
+    filterSectorEntryGate(
+        size_t pathIdx);
+    
+    bool
+    filterSectorExitGate(
+        size_t pathIdx);
+    
     void
     releaseTrack();
 

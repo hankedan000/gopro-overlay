@@ -3,6 +3,9 @@
 
 #include <QMouseEvent>
 #include <QPainter>
+#include <spdlog/spdlog.h>
+
+static constexpr double DEFAULT_GATE_WIDTH_M = 10.0;// 10m gate width
 
 TrackView::TrackView(QWidget *parent) :
     QFrame(parent),
@@ -11,7 +14,15 @@ TrackView::TrackView(QWidget *parent) :
     mliValid_(false),
     pMode_(PlacementMode::ePM_None),
     startGateColor_(Qt::green),
-    finishGateColor_(Qt::red)
+    finishGateColor_(Qt::red),
+    sectorPathColor_(Qt::cyan),
+    sectorGateColor_(Qt::cyan),
+    spi_(),
+    startGateFilter_(nullptr),
+    finishGateFilter_(nullptr),
+    sectorEntryFilter_(nullptr),
+    sectorExitFilter_(nullptr),
+    placementValid_(true)
 {
     ui->setupUi(this);
     setMouseTracking(true);
@@ -45,12 +56,22 @@ TrackView::paintEvent(
     {
         drawDetectionGate(painter,track_->getFinish()->getEntryGate(),finishGateColor_);
     }
+    if (pMode_ == PlacementMode::ePM_SectorExit &&
+        spi_.entryValid && mliValid_ && track_ != nullptr)
+    {
+        gpo::TrackSector tmpSector(
+            track_,
+            "tmpSector",
+            spi_.entryIdx,
+            mli_.path_idx);
+        drawSector(painter,&tmpSector,sectorPathColor_,sectorGateColor_);
+    }
 
     // draw all track sectors
     for (size_t ss=0; ss<track_->sectorCount(); ss++)
     {
         auto sector = track_->getSector(ss);
-        drawSector(painter,sector,Qt::cyan);
+        drawSector(painter,sector,sectorPathColor_,sectorGateColor_);
     }
 
     if (mliValid_ && pMode_ != PlacementMode::ePM_None)
@@ -93,14 +114,51 @@ TrackView::eventFilter(
         {
             mli_.path_loc_px = coordToPoint(std::get<1>(findRes));
             mli_.path_idx = std::get<2>(findRes);
-            mli_.gate = track_->getDetectionGate(mli_.path_idx,10.0);// 10m gate width
+            mli_.gate = track_->getDetectionGate(mli_.path_idx,DEFAULT_GATE_WIDTH_M);
             mliValid_ = true;
         }
+
+        // apply user filters to determine if gate is valid
+        placementValid_ = true;
+        switch (pMode_)
+        {
+            case PlacementMode::ePM_None:
+                placementValid_ = false;
+                break;
+            case PlacementMode::ePM_StartGate:
+                if (startGateFilter_)
+                {
+                    placementValid_ = startGateFilter_(mli_.path_idx);
+                }
+                break;
+            case PlacementMode::ePM_FinishGate:
+                if (finishGateFilter_)
+                {
+                    placementValid_ = finishGateFilter_(mli_.path_idx);
+                }
+                break;
+            case PlacementMode::ePM_SectorEntry:
+                if (sectorEntryFilter_)
+                {
+                    placementValid_ = sectorEntryFilter_(mli_.path_idx);
+                }
+                break;
+            case PlacementMode::ePM_SectorExit:
+                if (sectorExitFilter_)
+                {
+                    placementValid_ = sectorExitFilter_(mli_.path_idx);
+                }
+                break;
+        }
+
         update();// request repaint
     }
     else if (event->type() == QEvent::MouseButtonPress)
     {
-        emit gatePlaced(pMode_,mli_.path_idx);
+        if (placementValid_)
+        {
+            emit gatePlaced(pMode_,mli_.path_idx);
+        }
     }
     return false;
 }
@@ -176,12 +234,68 @@ TrackView::setPlacementMode(
         PlacementMode mode)
 {
     pMode_ = mode;
+    switch (pMode_)
+    {
+        case PlacementMode::ePM_None:
+            break;
+        case PlacementMode::ePM_StartGate:
+            break;
+        case PlacementMode::ePM_FinishGate:
+            break;
+        case PlacementMode::ePM_SectorEntry:
+            spi_.entryValid = false;
+            break;
+        case PlacementMode::ePM_SectorExit:
+            break;
+    }
 }
 
 TrackView::PlacementMode
 TrackView::getPlacementMode() const
 {
     return pMode_;
+}
+
+void
+TrackView::setSectorEntryIdx(
+        size_t pathIdx)
+{
+    if (track_ == nullptr)
+    {
+        spdlog::warn("track is null. ignoring {}()",__func__);
+        return;
+    }
+    spi_.entryIdx = pathIdx;
+    spi_.entryGate = track_->getDetectionGate(pathIdx,DEFAULT_GATE_WIDTH_M);
+    spi_.entryValid = true;
+}
+
+void
+TrackView::setStartGateFilter(
+    PlacementFilter filter)
+{
+    startGateFilter_ = filter;
+}
+
+void
+TrackView::setFinishGateFilter(
+    PlacementFilter filter)
+{
+    finishGateFilter_ = filter;
+}
+
+void
+TrackView::setSectorEntryFilter(
+    PlacementFilter filter)
+{
+    sectorEntryFilter_ = filter;
+}
+
+void
+TrackView::setSectorExitFilter(
+    PlacementFilter filter)
+{
+    sectorExitFilter_ = filter;
 }
 
 void
@@ -222,16 +336,17 @@ void
 TrackView::drawSector(
         QPainter &painter,
         const gpo::TrackSector *sector,
-        QColor color)
+        QColor pathColor,
+        QColor gateColor)
 {
     // draw entry/exit gates
-    drawDetectionGate(painter,sector->getEntryGate(),color);
-    drawDetectionGate(painter,sector->getExitGate(),color);
+    drawDetectionGate(painter,sector->getEntryGate(),gateColor);
+    drawDetectionGate(painter,sector->getExitGate(),gateColor);
 
     // highlight path between gates
     QPen pen;
     pen.setWidth(4);
-    pen.setColor(color);
+    pen.setColor(pathColor);
     pen.setCapStyle(Qt::PenCapStyle::FlatCap);
     painter.setPen(pen);
 

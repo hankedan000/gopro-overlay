@@ -4,6 +4,7 @@
 #include <GoProOverlay/data/DataSource.h>
 #include <GoProOverlay/data/TrackDataObjects.h>
 #include <fstream>
+#include <functional>
 #include <QFileDialog>
 #include <yaml-cpp/yaml.h>
 
@@ -19,6 +20,12 @@ TrackEditor::TrackEditor(QWidget *parent)
     ui->trackViewLayout->addWidget(trackView_);
     ui->menubar->setVisible(iOwnTrack_);// only show menubar if running in standalone
     setWindowTitle("Track Editor");
+
+    using namespace std::placeholders;
+    trackView_->setStartGateFilter(std::bind(&TrackEditor::filterStartGate, this, _1));
+    trackView_->setFinishGateFilter(std::bind(&TrackEditor::filterFinishGate, this, _1));
+    trackView_->setSectorEntryFilter(std::bind(&TrackEditor::filterSectorEntryGate, this, _1));
+    trackView_->setSectorExitFilter(std::bind(&TrackEditor::filterSectorExitGate, this, _1));
 
     // button actions
     connect(ui->setStartButton, &QPushButton::toggled, this, &TrackEditor::setStartToggled);
@@ -181,6 +188,7 @@ TrackEditor::trackViewGatePlaced(
             break;
         case TrackView::PlacementMode::ePM_SectorEntry:
             sectorEntryIdx_ = pathIdx;
+            trackView_->setSectorEntryIdx(pathIdx);
             trackView_->setPlacementMode(TrackView::PlacementMode::ePM_SectorExit);
             ui->statusbar->showMessage("Click to set sector's exit gate.");
             break;
@@ -237,6 +245,34 @@ TrackEditor::onActionLoadTrack()
                 "Track files (*.yaml) ;; All files (*.*)").toStdString();
 
     loadTrackFromYAML(filepath);// method handles update to 'filepathToSaveTo_'
+}
+
+bool
+TrackEditor::filterStartGate(
+    size_t pathIdx)
+{
+    return true;
+}
+
+bool
+TrackEditor::filterFinishGate(
+    size_t pathIdx)
+{
+    return true;
+}
+
+bool
+TrackEditor::filterSectorEntryGate(
+    size_t pathIdx)
+{
+    return true;
+}
+
+bool
+TrackEditor::filterSectorExitGate(
+    size_t pathIdx)
+{
+    return true;
 }
 
 void
