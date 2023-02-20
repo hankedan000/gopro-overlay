@@ -43,11 +43,8 @@ namespace gpo
 		double
 		getTelemetryRate_hz() const;
 
-		const GoProDataAvailBitSet &
-		gpDataAvail() const;
-
-		const ECU_DataAvailBitSet &
-		ecuDataAvail() const;
+		const DataAvailableBitSet &
+		dataAvailable() const;
 
 	private:
 		std::weak_ptr<DataSource> dataSrc_;

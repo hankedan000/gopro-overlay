@@ -48,14 +48,8 @@ namespace gpo
 		bool
 		hasVideo() const;
 
-		const GoProDataAvailBitSet &
-		gpDataAvail() const;
-
-		const ECU_DataAvailBitSet &
-		ecuDataAvail() const;
-
-		const TrackDataAvailBitSet &
-		trackDataAvail() const;
+		const DataAvailableBitSet &
+		dataAvailable() const;
 
 		double
 		getTelemetryRate_hz() const;
@@ -63,6 +57,34 @@ namespace gpo
 		void
 		resampleTelemetry(
 			double newRate_hz);
+
+		DataSourcePtr
+		duplicate() const;
+
+		/**
+		 * Save the current state of the telemetry samples, allowing
+		 * you to restore them via restoreTelemetry().
+		 * 
+		 * @return
+		 * true if telemetry samples were backed up
+		 */
+		bool
+		backupTelemetry();
+
+		/**
+		 * Removes the telemetry backup
+		 */
+		void
+		deleteTelemetryBackup();
+
+		bool
+		hasBackup();
+
+		/**
+		 * Restores the previously saved backup samples.
+		 */
+		bool
+		restoreTelemetry();
 
 		/**
 		 * Produced a Track object from telemetry data.
@@ -74,10 +96,22 @@ namespace gpo
 		Track *
 		makeTrack() const;
 
+		/**
+		 * Attempt to load the data from a file. It will attempt to auto
+		 * detect the data source type based on the file extension.
+		 * 
+		 * @return
+		 * nullptr if the load failed. valid pointer otherwise.
+		 */
+		static
+		DataSourcePtr
+		loadDataFromFile(
+			const std::filesystem::path &sourceFile);
+
 		static
 		DataSourcePtr
 		loadDataFromVideo(
-			const std::string &videoFile);
+			const std::filesystem::path &videoFile);
 
 		static
 		DataSourcePtr
@@ -98,6 +132,60 @@ namespace gpo
 		writeTelemetryToCSV(
 			const std::filesystem::path &csvFilepath) const;
 
+		/**
+		 * Merges all available telemetry data from another source into this
+		 * one. For this to be successful, the two sources need to have similar
+		 * data rates.
+		 * 
+		 * This method simply redirects to the other mergeTelemetryIn() method,
+		 * but takes all the sample data available from 'srcData'.
+		 */
+		size_t
+		mergeTelemetryIn(
+			const DataSourcePtr srcData,
+			size_t srcStartIdx,
+			size_t dstStartIdx,
+			bool growVector);
+
+		/**
+		 * Merges telemetry data from another source into this one. For this
+		 * to be successful, the two sources need to have similar data rates.
+		 * 
+		 * @param[in] srcData
+		 * the DataSource to take telemetry samples from
+		 * 
+		 * @param[in] srcStartIdx
+		 * the index within 'srcData' to begin taking samples from
+		 * 
+		 * @param[in] dstStartIdx
+		 * the index within this DataSource to begin merging sample data
+		 * 
+		 * @param[in] gpDataToTake
+		 * set of which GoProTelemetry samples to merge in
+		 * 
+		 * @param[in] ecuDataToTake
+		 * set of which ECU samples to merge in
+		 * 
+		 * @param[in] trackDataToTake
+		 * set of which track samples to merge in
+		 * 
+		 * @param[in] growVector
+		 * if set true, and the merged number of samples extends past the end
+		 * of the current telemetry vector's length, then the telemetry vector
+		 * will be resized to fit the new samples. otherwise those samples will
+		 * be left unmerged.
+		 * 
+		 * @return
+		 * the number of samples merged
+		 */
+		size_t
+		mergeTelemetryIn(
+			const DataSourcePtr srcData,
+			size_t srcStartIdx,
+			size_t dstStartIdx,
+			DataAvailableBitSet dataToTake,
+			bool growVector);
+
 	public:
 		TelemetrySeekerPtr seeker;
 		TelemetrySourcePtr telemSrc;
@@ -114,17 +202,12 @@ namespace gpo
 		cv::VideoCapture vCapture_;
 		TelemetrySamplesPtr samples_;
 
-		// bitset defining which fields are valid in 'TelemetrySample::gpSamp'
-		// query bits using gpo::GOPRO_AVAIL_* constants
-		GoProDataAvailBitSet gpDataAvail_;
+		// user can backup telemetry samples, and this is where they are stored
+		TelemetrySamples backupSamples_;
 
-		// bitset defining which fields are valid in 'TelemetrySample::ecuSamp'
-		// query bits using gpo::ECU_AVAIL_* constants
-		ECU_DataAvailBitSet ecuDataAvail_;
-
-		// bitset defining which fields are valid in 'TelemetrySample::trackData'
-		// query bits using gpo::TRACK_AVAIL_* constants
-		TrackDataAvailBitSet trackAvail_;
+		// bitset defining which fields are valid in 'TelemetrySample'
+		// query bits using gpo::DataAvailable enum literals
+		DataAvailableBitSet dataAvail_;
 
 		std::string sourceName_;
 		std::string originFile_;

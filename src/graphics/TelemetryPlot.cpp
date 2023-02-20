@@ -11,6 +11,10 @@ TelemetryPlot::TelemetryPlot(
 {
 	setInteraction(QCP::Interaction::iRangeDrag,true);
 	setInteraction(QCP::Interaction::iRangeZoom,true);
+	QList<QCPAxis *> draggableAxes = {xAxis,yAxis,yAxis2};
+	axisRect()->setRangeDragAxes(draggableAxes);
+	QList<QCPAxis *> zoomableAxes = {xAxis,yAxis,yAxis2};
+	axisRect()->setRangeZoomAxes(zoomableAxes);
 	legend->setVisible(true);
 
 	// add the title element to the plot
@@ -151,6 +155,20 @@ TelemetryPlot::getSource(
 		size_t idx)
 {
 	return sources_.at(idx).telemSrc;
+}
+
+gpo::TelemetrySourcePtr
+TelemetryPlot::getSource(
+	QCPGraph *graph)
+{
+	for (const auto &srcObjs : sources_)
+	{
+		if (srcObjs.graph == graph)
+		{
+			return srcObjs.telemSrc;
+		}
+	}
+	return nullptr;
 }
 
 size_t
@@ -378,55 +396,54 @@ TelemetryPlot::getAvailY_ComponentInfo(
 	std::vector<const TelemetryPlot::Y_ComponentEnumInfo *> infos;
 	infos.reserve(NUM_Y_COMP_ENUM_INFOS);
 
-    const auto &gpAvail = tSrc->gpDataAvail();
-    const auto &ecuAvail = tSrc->ecuDataAvail();
-    if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_ACCL))
+    const auto &avail = tSrc->dataAvailable();
+    if (bitset_is_set(avail, gpo::eDA_GOPRO_ACCL))
     {
 		infos.push_back(&YCEI_ACCL_X);
 		infos.push_back(&YCEI_ACCL_Y);
 		infos.push_back(&YCEI_ACCL_Z);
     }
-    if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_GYRO))
+    if (bitset_is_set(avail, gpo::eDA_GOPRO_GYRO))
     {
 		infos.push_back(&YCEI_GYRO_X);
 		infos.push_back(&YCEI_GYRO_Y);
 		infos.push_back(&YCEI_GYRO_Z);
     }
-    if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_GRAV))
+    if (bitset_is_set(avail, gpo::eDA_GOPRO_GRAV))
     {
 		infos.push_back(&YCEI_GRAV_X);
 		infos.push_back(&YCEI_GRAV_Y);
 		infos.push_back(&YCEI_GRAV_Z);
     }
-    if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_CORI))
+    if (bitset_is_set(avail, gpo::eDA_GOPRO_CORI))
     {
 		infos.push_back(&YCEI_CORI_W);
 		infos.push_back(&YCEI_CORI_X);
 		infos.push_back(&YCEI_CORI_Y);
 		infos.push_back(&YCEI_CORI_Z);
     }
-    if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_GPS_LATLON))
+    if (bitset_is_set(avail, gpo::eDA_GOPRO_GPS_LATLON))
     {
 		infos.push_back(&YCEI_GPS_LAT);
 		infos.push_back(&YCEI_GPS_LON);
     }
-    if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_GPS_SPEED2D))
+    if (bitset_is_set(avail, gpo::eDA_GOPRO_GPS_SPEED2D))
     {
 		infos.push_back(&YCEI_GPS_SPEED2D);
     }
-    if (bitset_is_set(gpAvail, gpo::GOPRO_AVAIL_GPS_SPEED3D))
+    if (bitset_is_set(avail, gpo::eDA_GOPRO_GPS_SPEED3D))
     {
 		infos.push_back(&YCEI_GPS_SPEED3D);
     }
-    if (bitset_is_set(ecuAvail, gpo::ECU_AVAIL_ENGINE_SPEED))
+    if (bitset_is_set(avail, gpo::eDA_ECU_ENGINE_SPEED))
     {
 		infos.push_back(&YCEI_ECU_ENGINE_SPEED);
     }
-    if (bitset_is_set(ecuAvail, gpo::ECU_AVAIL_TPS))
+    if (bitset_is_set(avail, gpo::eDA_ECU_TPS))
     {
 		infos.push_back(&YCEI_ECU_TPS);
     }
-    if (bitset_is_set(ecuAvail, gpo::ECU_AVAIL_BOOST))
+    if (bitset_is_set(avail, gpo::eDA_ECU_BOOST))
     {
 		infos.push_back(&YCEI_ECU_BOOST);
     }

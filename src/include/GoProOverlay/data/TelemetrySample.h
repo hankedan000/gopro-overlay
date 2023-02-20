@@ -10,15 +10,33 @@
 
 namespace gpo
 {
-	using GoProDataAvailBitSet = pod_bitset<uint64_t,1>;
-	static constexpr size_t GOPRO_AVAIL_ACCL = 0;
-	static constexpr size_t GOPRO_AVAIL_GYRO = 1;
-	static constexpr size_t GOPRO_AVAIL_GRAV = 2;
-	static constexpr size_t GOPRO_AVAIL_CORI = 3;
-	static constexpr size_t GOPRO_AVAIL_GPS_LATLON = 4;
-	static constexpr size_t GOPRO_AVAIL_GPS_ALTITUDE = 5;
-	static constexpr size_t GOPRO_AVAIL_GPS_SPEED2D = 6;
-	static constexpr size_t GOPRO_AVAIL_GPS_SPEED3D = 7;
+	enum DataAvailable
+	{
+		// GoPro
+		eDA_GOPRO_ACCL = 0,
+		eDA_GOPRO_GYRO = 1,
+		eDA_GOPRO_GRAV = 2,
+		eDA_GOPRO_CORI = 3,
+		eDA_GOPRO_GPS_LATLON = 4,
+		eDA_GOPRO_GPS_ALTITUDE = 5,
+		eDA_GOPRO_GPS_SPEED2D = 6,
+		eDA_GOPRO_GPS_SPEED3D = 7,
+
+		// ECU
+		eDA_ECU_TIME = 64,
+		eDA_ECU_ENGINE_SPEED = 65,
+		eDA_ECU_TPS = 66,
+		eDA_ECU_BOOST = 67,
+
+		// Track
+		eDA_TRACK_ON_TRACK_LATLON = 192,
+		eDA_TRACK_LAP = 193,
+		eDA_TRACK_LAP_TIME_OFFSET = 194,
+		eDA_TRACK_SECTOR = 195,
+		eDA_TRACK_SECTOR_TIME_OFFSET = 196
+	};
+
+	using DataAvailableBitSet = pod_bitset<uint64_t,4>;
 
 	// Engine Control Unit telemetry sample
 	struct ECU_Sample
@@ -38,12 +56,6 @@ namespace gpo
 		// time offset relative to beginning of data recording in seconds.
 		double t_offset;
 	};
-
-	using ECU_DataAvailBitSet = pod_bitset<uint64_t,1>;
-	static constexpr size_t ECU_AVAIL_TIME = 0;
-	static constexpr size_t ECU_AVAIL_ENGINE_SPEED = 1;
-	static constexpr size_t ECU_AVAIL_TPS = 2;
-	static constexpr size_t ECU_AVAIL_BOOST = 3;
 
 	struct TrackData
 	{
@@ -68,13 +80,6 @@ namespace gpo
 		// from when we croseed the sector's entry gate
 		double sectorTimeOffset;
 	};
-
-	using TrackDataAvailBitSet = pod_bitset<uint64_t,1>;
-	static constexpr size_t TRACK_AVAIL_ON_TRACK_LATLON = 0;
-	static constexpr size_t TRACK_AVAIL_LAP = 1;
-	static constexpr size_t TRACK_AVAIL_LAP_TIME_OFFSET = 2;
-	static constexpr size_t TRACK_AVAIL_SECTOR = 3;
-	static constexpr size_t TRACK_AVAIL_SECTOR_TIME_OFFSET = 4;
 
 	struct TelemetrySample
 	{

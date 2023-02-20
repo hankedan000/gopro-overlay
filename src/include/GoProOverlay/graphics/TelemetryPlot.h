@@ -185,6 +185,15 @@ public:
 	getSource(
 		size_t idx);
 
+	/**
+	 * @return
+	 * the TelemetrySource that pertains to the graph.
+	 * nullptr is the graph doesn't reference a source.
+	 */
+	gpo::TelemetrySourcePtr
+	getSource(
+		QCPGraph *graph);
+
 	size_t
 	numSources() const;
 

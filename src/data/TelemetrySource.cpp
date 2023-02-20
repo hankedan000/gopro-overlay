@@ -66,15 +66,9 @@ namespace gpo
 		return dataSrc_.lock()->getTelemetryRate_hz();
 	}
 
-	const GoProDataAvailBitSet &
-	TelemetrySource::gpDataAvail() const
+	const DataAvailableBitSet &
+	TelemetrySource::dataAvailable() const
 	{
-		return dataSrc_.lock()->gpDataAvail();
-	}
-
-	const ECU_DataAvailBitSet &
-	TelemetrySource::ecuDataAvail() const
-	{
-		return dataSrc_.lock()->ecuDataAvail();
+		return dataSrc_.lock()->dataAvailable();
 	}
 }
