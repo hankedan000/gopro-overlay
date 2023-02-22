@@ -20,7 +20,8 @@ int main(int argc, char *argv[])
         printf("failed to load track from '%s'\n",trackFile.c_str());
         return -1;
     }
+    te.setMenuBarVisible(true);
     te.show();
-    
+
 	return a.exec();
 }

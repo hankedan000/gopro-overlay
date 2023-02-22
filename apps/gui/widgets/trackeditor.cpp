@@ -13,13 +13,14 @@ TrackEditor::TrackEditor(QWidget *parent)
  : QMainWindow(parent)
  , ui(new Ui::TrackEditor)
  , trackView_(new TrackView)
- , iOwnTrack_(parent == nullptr)
+ , iOwnTrack_(false)
  , track_(nullptr)
+ , sectorTableModel_(0,2,this)
  , filepathToSaveTo_()
 {
     ui->setupUi(this);
     ui->trackViewLayout->addWidget(trackView_);
-    ui->menubar->setVisible(iOwnTrack_);// only show menubar if running in standalone
+    ui->menubar->setVisible(false);
     setWindowTitle("Track Editor");
 
     using namespace std::placeholders;
@@ -39,24 +40,15 @@ TrackEditor::TrackEditor(QWidget *parent)
     connect(ui->actionSave_Track_as, &QAction::triggered, this, &TrackEditor::onActionSaveTrackAs);
     connect(ui->actionLoad_Track, &QAction::triggered, this, &TrackEditor::onActionLoadTrack);
 
-    // Create a new model
-    // QStandardItemModel(int rows, int columns, QObject * parent = 0)
-    sectorTableModel_ = new QStandardItemModel(0,2,this);
-    clearSectorTable();// calling this to set table headers
-
     // Attach the model to the view
-    ui->sectorTable->setModel(sectorTableModel_);
+    ui->sectorTable->setModel(&sectorTableModel_);
+    clearSectorTable();// calling this to set table headers
 }
 
 TrackEditor::~TrackEditor()
 {
+    releaseTrack();
     delete ui;
-    delete sectorTableModel_;
-    if (iOwnTrack_ && track_)
-    {
-        delete track_;
-        track_ = nullptr;
-    }
 }
 
 bool
@@ -70,8 +62,8 @@ TrackEditor::loadTrackFromVideo(
         ui->statusbar->showMessage(
                     QStringLiteral("Loaded track data from '%1'").arg(filepath.c_str()),
                     3000);// 3s
-        releaseTrack();
         setTrack(gpo::makeTrackFromTelemetry(data->telemSrc));
+        iOwnTrack_ = true;
 
         filepathToSaveTo_ = "";
         configureFileMenuButtons();
@@ -95,8 +87,8 @@ TrackEditor::loadTrackFromYAML(
             ui->statusbar->showMessage(
                         QStringLiteral("Loaded track data from '%1'").arg(filepath.c_str()),
                         3000);// 3s
-            releaseTrack();
             setTrack(newTrack);
+            iOwnTrack_ = true;
 
             filepathToSaveTo_ = filepath;
             configureFileMenuButtons();
@@ -158,9 +150,18 @@ void
 TrackEditor::setTrack(
         gpo::Track *track)
 {
+    releaseTrack();// sets iOwnTrack_ to false
     track_ = track;
     trackView_->setTrack(track_);
     loadSectorsToTable();
+    configureFileMenuButtons();
+}
+
+void
+TrackEditor::setMenuBarVisible(
+    bool visible)
+{
+    ui->menubar->setVisible(visible);
 }
 
 void
@@ -333,13 +334,15 @@ TrackEditor::filterSectorExitGate(
 void
 TrackEditor::releaseTrack()
 {
-    if (track_)
+    if (iOwnTrack_ && track_)
     {
         delete track_;
-        track_ = nullptr;
     }
-    trackView_->setTrack(track_);
+    track_ = nullptr;
+    iOwnTrack_ = false;
+    trackView_->setTrack(nullptr);
     clearSectorTable();
+    configureFileMenuButtons();
 }
 
 void
@@ -364,6 +367,11 @@ void
 TrackEditor::loadSectorsToTable()
 {
     clearSectorTable();
+    if ( ! track_)
+    {
+        return;
+    }
+
     for (size_t ss=0; track_ && ss<track_->sectorCount(); ss++)
     {
         auto tSector = track_->getSector(ss);
@@ -394,13 +402,13 @@ TrackEditor::addSectorToTable(
     exitItem->setText(QStringLiteral("%1").arg(exitIdx));
     row.append(exitItem);
 
-    sectorTableModel_->appendRow(row);
+    sectorTableModel_.appendRow(row);
 }
 
 void
 TrackEditor::clearSectorTable()
 {
-    sectorTableModel_->clear();
-    sectorTableModel_->setHorizontalHeaderLabels({"Sector Name","Entry Index","Exit Index"});
+    sectorTableModel_.clear();
+    sectorTableModel_.setHorizontalHeaderLabels({"Sector Name","Entry Index","Exit Index"});
 }
 

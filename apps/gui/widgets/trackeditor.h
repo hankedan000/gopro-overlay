@@ -37,6 +37,10 @@ public:
     setTrack(
             gpo::Track *track);
 
+    void
+    setMenuBarVisible(
+        bool visible);
+
 signals:
     void
     trackModified();
@@ -114,7 +118,7 @@ private:
     bool iOwnTrack_;
     gpo::Track *track_;
 
-    QStandardItemModel *sectorTableModel_;
+    QStandardItemModel sectorTableModel_;
 
     std::string filepathToSaveTo_;
 
