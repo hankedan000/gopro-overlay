@@ -17,6 +17,7 @@ TrackView::TrackView(QWidget *parent) :
     finishGateColor_(Qt::red),
     sectorPathColor_(Qt::cyan),
     sectorGateColor_(Qt::cyan),
+    placementWarnColor_(QRgb(0xfc655a)),
     spi_(),
     startGateFilter_(nullptr),
     finishGateFilter_(nullptr),
@@ -59,12 +60,18 @@ TrackView::paintEvent(
     if (pMode_ == PlacementMode::ePM_SectorExit &&
         spi_.entryValid && mliValid_ && track_ != nullptr)
     {
+        auto pathColor = sectorPathColor_;
+        auto gateColor = sectorGateColor_;
+        if ( ! placementValid_)
+        {
+            pathColor = placementWarnColor_;
+        }
         gpo::TrackSector tmpSector(
             track_,
             "tmpSector",
             spi_.entryIdx,
             mli_.path_idx);
-        drawSector(painter,&tmpSector,sectorPathColor_,sectorGateColor_);
+        drawSector(painter,&tmpSector,pathColor,gateColor);
     }
 
     // draw all track sectors

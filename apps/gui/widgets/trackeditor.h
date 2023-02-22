@@ -26,6 +26,10 @@ public:
         const std::string &filepath);
 
     bool
+    loadTrackFromFile(
+        const std::string &filepath);
+
+    bool
     saveTrackToYAML(
         const std::string &filepath);
 

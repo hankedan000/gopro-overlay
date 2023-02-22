@@ -1,10 +1,11 @@
 #include "trackeditor.h"
 #include "ui_trackeditor.h"
 
-#include <GoProOverlay/data/DataSource.h>
-#include <GoProOverlay/data/TrackDataObjects.h>
+#include <filesystem>
 #include <fstream>
 #include <functional>
+#include <GoProOverlay/data/DataSource.h>
+#include <GoProOverlay/data/TrackDataObjects.h>
 #include <QFileDialog>
 #include <yaml-cpp/yaml.h>
 
@@ -83,6 +84,7 @@ bool
 TrackEditor::loadTrackFromYAML(
     const std::string &filepath)
 {
+    bool okay = false;
     YAML::Node trackNode = YAML::LoadFile(filepath);
     if ( ! trackNode.IsNull())
     {
@@ -98,11 +100,41 @@ TrackEditor::loadTrackFromYAML(
 
             filepathToSaveTo_ = filepath;
             configureFileMenuButtons();
+            okay = true;
         }
         else
         {
             delete newTrack;
         }
+    }
+    return okay;
+}
+
+bool
+TrackEditor::loadTrackFromFile(
+    const std::string &filepath)
+{
+    // get the file extension in all lower case
+    std::filesystem::path stdFsFilePath(filepath);
+    std::string fileExt = stdFsFilePath.extension();
+    std::transform(
+                fileExt.begin(),
+                fileExt.end(),
+                fileExt.begin(),
+                [](unsigned char c){ return std::tolower(c); });
+    if (fileExt == ".mp4")
+    {
+        return loadTrackFromVideo(filepath);
+    }
+    else if (fileExt == ".yaml" || fileExt == ".yml")
+    {
+        return loadTrackFromYAML(filepath);
+    }
+    else
+    {
+        ui->statusbar->showMessage(
+                    QStringLiteral("Failed to load. Unknown file extension '%1'").arg(fileExt.c_str()),
+                    3000);// 3s
     }
     return false;
 }
@@ -242,9 +274,9 @@ TrackEditor::onActionLoadTrack()
                 this,
                 "Open Track",
                 QDir::currentPath(),
-                "Track files (*.yaml) ;; All files (*.*)").toStdString();
+                "Video files (*.mp4) ;; Track files (*.yaml) ;; All files (*.*)").toStdString();
 
-    loadTrackFromYAML(filepath);// method handles update to 'filepathToSaveTo_'
+    loadTrackFromFile(filepath);// method handles update to 'filepathToSaveTo_'
 }
 
 bool
@@ -265,6 +297,15 @@ bool
 TrackEditor::filterSectorEntryGate(
     size_t pathIdx)
 {
+    for (size_t ss=0; ss<track_->sectorCount(); ss++)
+    {
+        const auto &sector = track_->getSector(ss);
+        if (sector->getEntryIdx() < pathIdx && pathIdx < sector->getExitIdx())
+        {
+            // gate can't fall within an existing sector
+            return false;
+        }
+    }
     return true;
 }
 
@@ -272,6 +313,20 @@ bool
 TrackEditor::filterSectorExitGate(
     size_t pathIdx)
 {
+    for (size_t ss=0; ss<track_->sectorCount(); ss++)
+    {
+        const auto &sector = track_->getSector(ss);
+        if (sector->getEntryIdx() < pathIdx && pathIdx < sector->getExitIdx())
+        {
+            // gate can't fall within an existing sector
+            return false;
+        }
+        else if (sectorEntryIdx_ <= sector->getEntryIdx() && sector->getExitIdx() <= pathIdx)
+        {
+            // sector can't span over an existing sector
+            return false;
+        }
+    }
     return true;
 }
 

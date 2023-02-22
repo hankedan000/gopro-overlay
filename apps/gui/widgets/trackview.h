@@ -144,6 +144,7 @@ private:
     QColor finishGateColor_;
     QColor sectorPathColor_;
     QColor sectorGateColor_;
+    QColor placementWarnColor_;
 
     struct SectorPlacementInfo
     {
