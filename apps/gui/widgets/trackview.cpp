@@ -115,9 +115,10 @@ TrackView::eventFilter(
         QObject *obj,
         QEvent *event)
 {
+    bool takeEvent = false;
     if (track_ == nullptr)
     {
-        return false;
+        return takeEvent;
     }
 
     if (event->type() == QEvent::MouseMove)
@@ -188,6 +189,7 @@ TrackView::eventFilter(
         }
 
         update();// request repaint
+        takeEvent = true;
     }
     else if (event->type() == QEvent::MouseButtonPress)
     {
@@ -204,6 +206,7 @@ TrackView::eventFilter(
         {
             emit gatePlaced(pMode_,mli_.path_idx);
         }
+        takeEvent = true;
     }
     else if (event->type() == QEvent::MouseButtonRelease)
     {
@@ -212,8 +215,9 @@ TrackView::eventFilter(
             spdlog::debug("panning stopped");
             pan_.active = false;
         }
+        takeEvent = true;
     }
-    return false;
+    return takeEvent;
 }
 
 void
