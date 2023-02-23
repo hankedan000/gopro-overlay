@@ -12,6 +12,7 @@ TrackView::TrackView(QWidget *parent) :
     ui(new Ui::TrackView),
     track_(nullptr),
     mliValid_(false),
+    pan_(),
     pMode_(PlacementMode::ePM_None),
     startGateColor_(Qt::green),
     finishGateColor_(Qt::red),
@@ -26,11 +27,15 @@ TrackView::TrackView(QWidget *parent) :
     placementValid_(true)
 {
     ui->setupUi(this);
+    ui->mousePosition_Label->setVisible(ui->showCoord_ToolButton->isChecked());
     setMouseTracking(true);
     installEventFilter(this);
 
     connect(ui->fitView_ToolButton, &QToolButton::pressed, this, [this]{
         fitTrackToView();
+    });
+    connect(ui->showCoord_ToolButton, &QToolButton::clicked, this, [this]{
+        ui->mousePosition_Label->setVisible(ui->showCoord_ToolButton->isChecked());
     });
 }
 
@@ -119,15 +124,35 @@ TrackView::eventFilter(
     {
         QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
         mli_.loc_px = mouseEvent->pos();
-        mli_.loc_coord = pointToCoord(mli_.loc_px);
+        mli_.loc_coord = pxToCoord(mli_.loc_px);
+
+        // handle panning logic
+        if (pan_.active)
+        {
+            QPoint delta_px = mouseEvent->pos() - pan_.mouseDownLoc_px;
+            cv::Vec2d delta_coord = pxToCoordRel(delta_px);
+            spdlog::debug("delta_px: [{},{}] ({},{})",
+                delta_px.x(),delta_px.y(),
+                delta_coord[0],delta_coord[1]);
+            viewUL_coord_ = pan_.viewUL_Began_coord - delta_coord;
+        }
+
+        // find mouse location on the track
         auto findRes = track_->findClosestPointWithIdx(mli_.loc_coord);
         if (std::get<0>(findRes))
         {
-            mli_.path_loc_px = coordToPoint(std::get<1>(findRes));
+            mli_.path_loc_px = coordToPx(std::get<1>(findRes));
             mli_.path_idx = std::get<2>(findRes);
             mli_.gate = track_->getDetectionGate(mli_.path_idx,DEFAULT_GATE_WIDTH_M);
             mliValid_ = true;
         }
+
+        // update textual display of mouse position/coordinate
+        char mousePosStr[1024];
+        sprintf(mousePosStr,"[%d,%d] (%0.6f,%0.6f)",
+            mli_.loc_px.x(),mli_.loc_px.y(),
+            mli_.loc_coord[0],mli_.loc_coord[1]);
+        ui->mousePosition_Label->setText(mousePosStr);
 
         // apply user filters to determine if gate is valid
         placementValid_ = true;
@@ -166,9 +191,26 @@ TrackView::eventFilter(
     }
     else if (event->type() == QEvent::MouseButtonPress)
     {
-        if (placementValid_)
+        if (pannable())
+        {
+            spdlog::debug("panning began");
+            QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
+            pan_.mouseDownLoc_px = mouseEvent->pos();
+            pan_.mouseDownLoc_coord = pxToCoord(pan_.mouseDownLoc_px);
+            pan_.viewUL_Began_coord = viewUL_coord_;
+            pan_.active = true;
+        }
+        else if (placementValid_)
         {
             emit gatePlaced(pMode_,mli_.path_idx);
+        }
+    }
+    else if (event->type() == QEvent::MouseButtonRelease)
+    {
+        if (pan_.active)
+        {
+            spdlog::debug("panning stopped");
+            pan_.active = false;
         }
     }
     return false;
@@ -179,6 +221,25 @@ TrackView::setToolbarVisible(
     bool visible)
 {
     ui->toolbar->setVisible(visible);
+}
+
+bool
+TrackView::getToolbarVisible() const
+{
+    return ui->toolbar->isVisible();
+}
+
+void
+TrackView::setPanningEnabled(
+    bool enabled)
+{
+    pan_.enabled = enabled;
+}
+
+bool
+TrackView::getPanningEnabled() const
+{
+    return pan_.enabled;
 }
 
 void
@@ -224,6 +285,11 @@ void
 TrackView::fitTrackToView(
     bool redraw)
 {
+    // snap upper left to where the track is located
+    viewUL_coord_[0] = trackUL_coord_[0];
+    viewUL_coord_[1] = trackUL_coord_[1];
+
+    // zoom to fit track within view
     double deltaLat = trackUL_coord_[0] - trackLR_coord_[0];
     double deltaLon = trackLR_coord_[1] - trackUL_coord_[1];
     pxPerDeg_ = 1.0;
@@ -338,7 +404,7 @@ TrackView::drawTrackPath(
     for (size_t i=0; i<track->pathCount(); i++)
     {
         auto pathPoint = track->getPathPoint(i);
-        auto currPoint = coordToPoint(pathPoint);
+        auto currPoint = coordToPx(pathPoint);
 
         if (i != 0)
         {
@@ -355,8 +421,8 @@ TrackView::drawDetectionGate(
         const gpo::DetectionGate &gate,
         QColor color)
 {
-    auto pA = coordToPoint(gate.a());
-    auto pB = coordToPoint(gate.b());
+    auto pA = coordToPx(gate.a());
+    auto pB = coordToPx(gate.b());
     painter.setPen(color);
     painter.drawLine(pA,pB);
 }
@@ -387,7 +453,7 @@ TrackView::drawSector(
     for (size_t i=startIdx; i<=endIdx; i++)
     {
         auto pathPoint = track_->getPathPoint(i);
-        auto currPoint = coordToPoint(pathPoint);
+        auto currPoint = coordToPx(pathPoint);
 
         if (i != startIdx)
         {
@@ -399,19 +465,43 @@ TrackView::drawSector(
 }
 
 QPoint
-TrackView::coordToPoint(
+TrackView::coordToPx(
         const cv::Vec2d &coord)
 {
     return QPoint(
-                PX_MARGIN + (coord[1] - trackUL_coord_[1]) * pxPerDeg_,
-                PX_MARGIN + (coord[0] - trackUL_coord_[0]) * -pxPerDeg_);
+                PX_MARGIN + (coord[1] - viewUL_coord_[1]) * pxPerDeg_,
+                PX_MARGIN + (coord[0] - viewUL_coord_[0]) * -pxPerDeg_);
+}
+
+QPoint
+TrackView::coordToPxRel(
+        const cv::Vec2d &coord)
+{
+    return QPoint(
+                coord[1] * pxPerDeg_,
+                coord[0] * -pxPerDeg_);
 }
 
 cv::Vec2d
-TrackView::pointToCoord(
+TrackView::pxToCoord(
         const QPoint &qpoint)
 {
     return cv::Vec2d(
-                (qpoint.y() - PX_MARGIN) / -pxPerDeg_ + trackUL_coord_[0],
-                (qpoint.x() - PX_MARGIN) / pxPerDeg_ + trackUL_coord_[1]);
+                (qpoint.y() - PX_MARGIN) / -pxPerDeg_ + viewUL_coord_[0],
+                (qpoint.x() - PX_MARGIN) / pxPerDeg_ + viewUL_coord_[1]);
+}
+
+cv::Vec2d
+TrackView::pxToCoordRel(
+        const QPoint &qpoint)
+{
+    return cv::Vec2d(
+                qpoint.y() / -pxPerDeg_,
+                qpoint.x() / pxPerDeg_);
+}
+
+bool
+TrackView::pannable() const
+{
+    return pan_.enabled && pMode_ == PlacementMode::ePM_None;
 }

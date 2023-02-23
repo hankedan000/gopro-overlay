@@ -46,6 +46,16 @@ public:
     setToolbarVisible(
         bool visible);
 
+    bool
+    getToolbarVisible() const;
+
+    void
+    setPanningEnabled(
+        bool enabled);
+
+    bool
+    getPanningEnabled() const;
+
     void
     setTrack(
             gpo::Track *track);
@@ -118,16 +128,28 @@ private:
             QColor gateColor);
 
     QPoint
-    coordToPoint(
+    coordToPx(
+            const cv::Vec2d &coord);
+
+    QPoint
+    coordToPxRel(
             const cv::Vec2d &coord);
 
     cv::Vec2d
-    pointToCoord(
+    pxToCoord(
             const QPoint &qpoint);
+
+    cv::Vec2d
+    pxToCoordRel(
+            const QPoint &qpoint);
+
+    bool
+    pannable() const;
 
 private:
     int PX_MARGIN = 10;
     Ui::TrackView *ui;
+    cv::Vec2d viewUL_coord_;
     cv::Vec2d trackUL_coord_;
     cv::Vec2d trackLR_coord_;
     double pxPerDeg_;
@@ -148,6 +170,30 @@ private:
     };
     MouseLocationInfo mli_;
     bool mliValid_;// true if 'mli_' fields are valid
+
+    class PanInfo
+    {
+    public:
+        PanInfo()
+         : enabled(true)
+         , active(false)
+        {}
+
+        // true if panning is allowed
+        bool enabled;
+
+        // true if the mouse is down and we're currently panning
+        bool active;
+
+        // (x,y) location of mouse when panning began
+        QPoint mouseDownLoc_px;
+
+        // (lat,lon) location of mouse when panning began
+        cv::Vec2d mouseDownLoc_coord;
+
+        // (lat,lon) position of the view's upper left corner when panning began
+        cv::Vec2d viewUL_Began_coord;
+    } pan_;
 
     PlacementMode pMode_;
 
