@@ -298,6 +298,16 @@ TrackEditor::onActionLoadTrack()
     loadTrackFromFile(filepath);// method handles update to 'filepathToSaveTo_'
 }
 
+void
+TrackEditor::keyPressEvent(
+    QKeyEvent *event)
+{
+    if (inPlacementMode() && event->key() == Qt::Key_Escape)
+    {
+        cancelPlacement();
+    }
+}
+
 bool
 TrackEditor::filterStartGate(
     size_t pathIdx)
@@ -332,6 +342,12 @@ bool
 TrackEditor::filterSectorExitGate(
     size_t pathIdx)
 {
+    if (pathIdx < sectorEntryIdx_)
+    {
+        // sector exit needs to be after sector entry
+        return false;
+    }
+
     for (size_t ss=0; ss<track_->sectorCount(); ss++)
     {
         const auto &sector = track_->getSector(ss);
@@ -379,6 +395,48 @@ TrackEditor::addNewSector(
     std::string name = "Sector" + std::to_string(track_->sectorCount());
     addSectorToTable(name,entryIdx,exitIdx);
     track_->addSector(name,entryIdx,exitIdx);
+}
+
+bool
+TrackEditor::inPlacementMode() const
+{
+    return ui->trackView->getPlacementMode() != TrackView::PlacementMode::ePM_None;
+}
+
+void
+TrackEditor::cancelPlacement()
+{
+    bool doRedraw = false;
+    switch (ui->trackView->getPlacementMode())
+    {
+        case TrackView::PlacementMode::ePM_StartGate:
+            ui->setStartButton->setChecked(false);
+            ui->statusbar->clearMessage();
+            doRedraw = true;
+            break;
+        case TrackView::PlacementMode::ePM_FinishGate:
+            ui->setFinishButton->setChecked(false);
+            ui->statusbar->clearMessage();
+            doRedraw = true;
+            break;
+        case TrackView::PlacementMode::ePM_SectorEntry:
+            ui->statusbar->clearMessage();
+            doRedraw = true;
+            break;
+        case TrackView::PlacementMode::ePM_SectorExit:
+            ui->statusbar->clearMessage();
+            doRedraw = true;
+            break;
+        case TrackView::PlacementMode::ePM_None:
+            // nothing to do
+            break;
+    }
+    ui->trackView->setPlacementMode(TrackView::PlacementMode::ePM_None);
+
+    if (doRedraw)
+    {
+        ui->trackView->update();// redraw
+    }
 }
 
 void

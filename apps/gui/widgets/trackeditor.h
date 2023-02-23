@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QKeyEvent>
 #include <QMainWindow>
 #include <QStandardItemModel>
 
@@ -74,6 +75,11 @@ private slots:
     void
     onActionLoadTrack();
 
+protected:
+    void
+    keyPressEvent(
+        QKeyEvent *event) override;
+
 private:
     bool
     filterStartGate(
@@ -101,6 +107,12 @@ private:
     addNewSector(
             size_t entryIdx,
             size_t exitIdx);
+
+    bool
+    inPlacementMode() const;
+
+    void
+    cancelPlacement();
 
     void
     loadSectorsToTable();
