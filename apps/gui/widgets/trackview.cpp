@@ -28,6 +28,10 @@ TrackView::TrackView(QWidget *parent) :
     ui->setupUi(this);
     setMouseTracking(true);
     installEventFilter(this);
+
+    connect(ui->fitView_ToolButton, &QToolButton::pressed, this, [this]{
+        fitTrackToView();
+    });
 }
 
 TrackView::~TrackView()
@@ -171,55 +175,73 @@ TrackView::eventFilter(
 }
 
 void
+TrackView::setToolbarVisible(
+    bool visible)
+{
+    ui->toolbar->setVisible(visible);
+}
+
+void
 TrackView::setTrack(
         gpo::Track *track)
 {
     track_ = track;
     mliValid_ = false;
+    ui->fitView_ToolButton->setEnabled(track_ != nullptr);
 
     if (track_)
     {
-        ulCoord_[0] = -10000;
-        lrCoord_[0] = +10000;
-        ulCoord_[1] = +10000;
-        lrCoord_[1] = -10000;
+        trackUL_coord_[0] = -10000;
+        trackLR_coord_[0] = +10000;
+        trackUL_coord_[1] = +10000;
+        trackLR_coord_[1] = -10000;
         for (size_t i=0; i<track->pathCount(); i++)
         {
             auto point = track->getPathPoint(i);
-            if (point[0] > ulCoord_[0])
+            if (point[0] > trackUL_coord_[0])
             {
-                ulCoord_[0] = point[0];
+                trackUL_coord_[0] = point[0];
             }
-            if (point[1] < ulCoord_[1])
+            if (point[1] < trackUL_coord_[1])
             {
-                ulCoord_[1] = point[1];
+                trackUL_coord_[1] = point[1];
             }
-            if (point[0] < lrCoord_[0])
+            if (point[0] < trackLR_coord_[0])
             {
-                lrCoord_[0] = point[0];
+                trackLR_coord_[0] = point[0];
             }
-            if (point[1] > lrCoord_[1])
+            if (point[1] > trackLR_coord_[1])
             {
-                lrCoord_[1] = point[1];
+                trackLR_coord_[1] = point[1];
             }
-        }
-
-        double deltaLat = ulCoord_[0] - lrCoord_[0];
-        double deltaLon = lrCoord_[1] - ulCoord_[1];
-        pxPerDeg_ = 1.0;
-        if (deltaLat > deltaLon)
-        {
-            // track is taller than it is wide
-            pxPerDeg_ = (height() - PX_MARGIN * 2) / deltaLat;
-        }
-        else
-        {
-            // track is wider than it is tall
-            pxPerDeg_ = (width() - PX_MARGIN * 2) / deltaLon;
         }
     }
 
-    update();// request redraw
+    fitTrackToView(true);// redraw
+}
+
+void
+TrackView::fitTrackToView(
+    bool redraw)
+{
+    double deltaLat = trackUL_coord_[0] - trackLR_coord_[0];
+    double deltaLon = trackLR_coord_[1] - trackUL_coord_[1];
+    pxPerDeg_ = 1.0;
+    if (deltaLat != 0.0 && deltaLat > deltaLon)
+    {
+        // track is taller than it is wide
+        pxPerDeg_ = (height() - PX_MARGIN * 2) / deltaLat;
+    }
+    else if (deltaLon != 0.0)
+    {
+        // track is wider than it is tall
+        pxPerDeg_ = (width() - PX_MARGIN * 2) / deltaLon;
+    }
+
+    if (redraw)
+    {
+        update();
+    }
 }
 
 void
@@ -381,8 +403,8 @@ TrackView::coordToPoint(
         const cv::Vec2d &coord)
 {
     return QPoint(
-                PX_MARGIN + (coord[1] - ulCoord_[1]) * pxPerDeg_,
-                PX_MARGIN + (coord[0] - ulCoord_[0]) * -pxPerDeg_);
+                PX_MARGIN + (coord[1] - trackUL_coord_[1]) * pxPerDeg_,
+                PX_MARGIN + (coord[0] - trackUL_coord_[0]) * -pxPerDeg_);
 }
 
 cv::Vec2d
@@ -390,6 +412,6 @@ TrackView::pointToCoord(
         const QPoint &qpoint)
 {
     return cv::Vec2d(
-                (qpoint.y() - PX_MARGIN) / -pxPerDeg_ + ulCoord_[0],
-                (qpoint.x() - PX_MARGIN) / pxPerDeg_ + ulCoord_[1]);
+                (qpoint.y() - PX_MARGIN) / -pxPerDeg_ + trackUL_coord_[0],
+                (qpoint.x() - PX_MARGIN) / pxPerDeg_ + trackUL_coord_[1]);
 }

@@ -113,7 +113,6 @@ private:
 
 private:
     Ui::TrackEditor *ui;
-    TrackView *trackView_;
 
     bool iOwnTrack_;
     gpo::Track *track_;

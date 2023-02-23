@@ -12,28 +12,26 @@
 TrackEditor::TrackEditor(QWidget *parent)
  : QMainWindow(parent)
  , ui(new Ui::TrackEditor)
- , trackView_(new TrackView)
  , iOwnTrack_(false)
  , track_(nullptr)
  , sectorTableModel_(0,2,this)
  , filepathToSaveTo_()
 {
     ui->setupUi(this);
-    ui->trackViewLayout->addWidget(trackView_);
     ui->menubar->setVisible(false);
     setWindowTitle("Track Editor");
 
     using namespace std::placeholders;
-    trackView_->setStartGateFilter(std::bind(&TrackEditor::filterStartGate, this, _1));
-    trackView_->setFinishGateFilter(std::bind(&TrackEditor::filterFinishGate, this, _1));
-    trackView_->setSectorEntryFilter(std::bind(&TrackEditor::filterSectorEntryGate, this, _1));
-    trackView_->setSectorExitFilter(std::bind(&TrackEditor::filterSectorExitGate, this, _1));
+    ui->trackView->setStartGateFilter(std::bind(&TrackEditor::filterStartGate, this, _1));
+    ui->trackView->setFinishGateFilter(std::bind(&TrackEditor::filterFinishGate, this, _1));
+    ui->trackView->setSectorEntryFilter(std::bind(&TrackEditor::filterSectorEntryGate, this, _1));
+    ui->trackView->setSectorExitFilter(std::bind(&TrackEditor::filterSectorExitGate, this, _1));
 
     // button actions
     connect(ui->setStartButton, &QPushButton::toggled, this, &TrackEditor::setStartToggled);
     connect(ui->setFinishButton, &QPushButton::toggled, this, &TrackEditor::setFinishToggled);
     connect(ui->addSectorButton, &QPushButton::pressed, this, &TrackEditor::addSectorPressed);
-    connect(trackView_, &TrackView::gatePlaced, this, &TrackEditor::trackViewGatePlaced);
+    connect(ui->trackView, &TrackView::gatePlaced, this, &TrackEditor::trackViewGatePlaced);
 
     // menu actions
     connect(ui->actionSave_Track, &QAction::triggered, this, &TrackEditor::onActionSaveTrack);
@@ -152,7 +150,7 @@ TrackEditor::setTrack(
 {
     releaseTrack();// sets iOwnTrack_ to false
     track_ = track;
-    trackView_->setTrack(track_);
+    ui->trackView->setTrack(track_);
     loadSectorsToTable();
     configureFileMenuButtons();
 }
@@ -172,11 +170,11 @@ TrackEditor::setStartToggled(
     {
         ui->setFinishButton->setChecked(false);
         ui->statusbar->showMessage("Click to set starting gate.");
-        trackView_->setPlacementMode(TrackView::PlacementMode::ePM_StartGate);
+        ui->trackView->setPlacementMode(TrackView::PlacementMode::ePM_StartGate);
     }
     else
     {
-        trackView_->setPlacementMode(TrackView::PlacementMode::ePM_None);
+        ui->trackView->setPlacementMode(TrackView::PlacementMode::ePM_None);
         ui->statusbar->clearMessage();
     }
 }
@@ -189,11 +187,11 @@ TrackEditor::setFinishToggled(
     {
         ui->setStartButton->setChecked(false);
         ui->statusbar->showMessage("Click to set finishing gate.");
-        trackView_->setPlacementMode(TrackView::PlacementMode::ePM_FinishGate);
+        ui->trackView->setPlacementMode(TrackView::PlacementMode::ePM_FinishGate);
     }
     else
     {
-        trackView_->setPlacementMode(TrackView::PlacementMode::ePM_None);
+        ui->trackView->setPlacementMode(TrackView::PlacementMode::ePM_None);
         ui->statusbar->clearMessage();
     }
 }
@@ -208,27 +206,27 @@ TrackEditor::trackViewGatePlaced(
         case TrackView::PlacementMode::ePM_StartGate:
             track_->setStart(pathIdx);
             emit trackModified();
-            trackView_->setPlacementMode(TrackView::PlacementMode::ePM_None);
+            ui->trackView->setPlacementMode(TrackView::PlacementMode::ePM_None);
             ui->setStartButton->setChecked(false);
             ui->statusbar->clearMessage();
             break;
         case TrackView::PlacementMode::ePM_FinishGate:
             track_->setFinish(pathIdx);
             emit trackModified();
-            trackView_->setPlacementMode(TrackView::PlacementMode::ePM_None);
+            ui->trackView->setPlacementMode(TrackView::PlacementMode::ePM_None);
             ui->setFinishButton->setChecked(false);
             ui->statusbar->clearMessage();
             break;
         case TrackView::PlacementMode::ePM_SectorEntry:
             sectorEntryIdx_ = pathIdx;
-            trackView_->setSectorEntryIdx(pathIdx);
-            trackView_->setPlacementMode(TrackView::PlacementMode::ePM_SectorExit);
+            ui->trackView->setSectorEntryIdx(pathIdx);
+            ui->trackView->setPlacementMode(TrackView::PlacementMode::ePM_SectorExit);
             ui->statusbar->showMessage("Click to set sector's exit gate.");
             break;
         case TrackView::PlacementMode::ePM_SectorExit:
             addNewSector(sectorEntryIdx_,pathIdx);
             emit trackModified();
-            trackView_->setPlacementMode(TrackView::PlacementMode::ePM_None);
+            ui->trackView->setPlacementMode(TrackView::PlacementMode::ePM_None);
             ui->statusbar->clearMessage();
             break;
         default:
@@ -239,7 +237,7 @@ TrackEditor::trackViewGatePlaced(
 void
 TrackEditor::addSectorPressed()
 {
-    trackView_->setPlacementMode(TrackView::PlacementMode::ePM_SectorEntry);
+    ui->trackView->setPlacementMode(TrackView::PlacementMode::ePM_SectorEntry);
     ui->statusbar->showMessage("Click to set sector's entry gate.");
 }
 
@@ -340,7 +338,7 @@ TrackEditor::releaseTrack()
     }
     track_ = nullptr;
     iOwnTrack_ = false;
-    trackView_->setTrack(nullptr);
+    ui->trackView->setTrack(nullptr);
     clearSectorTable();
     configureFileMenuButtons();
 }

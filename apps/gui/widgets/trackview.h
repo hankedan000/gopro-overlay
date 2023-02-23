@@ -32,12 +32,6 @@ public:
     explicit TrackView(QWidget *parent = nullptr);
     ~TrackView();
 
-signals:
-    void
-    gatePlaced(
-            PlacementMode pMode,
-            size_t pathIdx);
-
 public:
     void
     paintEvent(
@@ -49,8 +43,16 @@ public:
             QEvent *event);
 
     void
+    setToolbarVisible(
+        bool visible);
+
+    void
     setTrack(
             gpo::Track *track);
+
+    void
+    fitTrackToView(
+        bool redraw = true);
 
     void
     setStartGateColor(
@@ -87,6 +89,15 @@ public:
     setSectorExitFilter(
         PlacementFilter filter);
 
+//----------------------------------------------------------------
+// SIGNALS
+//----------------------------------------------------------------
+signals:
+    void
+    gatePlaced(
+            PlacementMode pMode,
+            size_t pathIdx);
+
 private:
     void
     drawTrackPath(
@@ -117,8 +128,8 @@ private:
 private:
     int PX_MARGIN = 10;
     Ui::TrackView *ui;
-    cv::Vec2d ulCoord_;
-    cv::Vec2d lrCoord_;
+    cv::Vec2d trackUL_coord_;
+    cv::Vec2d trackLR_coord_;
     double pxPerDeg_;
     gpo::Track *track_;
 
