@@ -31,6 +31,7 @@ TrackEditor::TrackEditor(QWidget *parent)
     connect(ui->setStartButton, &QPushButton::toggled, this, &TrackEditor::setStartToggled);
     connect(ui->setFinishButton, &QPushButton::toggled, this, &TrackEditor::setFinishToggled);
     connect(ui->addSectorButton, &QPushButton::pressed, this, &TrackEditor::addSectorPressed);
+    connect(ui->removeSectorButton, &QPushButton::pressed, this, &TrackEditor::removeSectorPressed);
     connect(ui->trackView, &TrackView::gatePlaced, this, &TrackEditor::trackViewGatePlaced);
 
     // menu actions
@@ -242,6 +243,25 @@ TrackEditor::addSectorPressed()
 }
 
 void
+TrackEditor::removeSectorPressed()
+{
+    auto selectionModel = ui->sectorTable->selectionModel();
+    auto selectedIndexs = selectionModel->selectedIndexes();
+    if (selectedIndexs.empty())
+    {
+        return;// nothing to remove
+    }
+
+    size_t indexToRemove = selectedIndexs.at(0).row();
+    if (track_ && indexToRemove < track_->sectorCount())
+    {
+        track_->removeSector(indexToRemove);
+        loadSectorsToTable();
+        update();// redraw
+    }
+}
+
+void
 TrackEditor::onActionSaveTrack()
 {
     if ( ! filepathToSaveTo_.empty())
@@ -401,6 +421,7 @@ TrackEditor::addSectorToTable(
     row.append(exitItem);
 
     sectorTableModel_.appendRow(row);
+    ui->removeSectorButton->setEnabled(true);
 }
 
 void
@@ -408,5 +429,6 @@ TrackEditor::clearSectorTable()
 {
     sectorTableModel_.clear();
     sectorTableModel_.setHorizontalHeaderLabels({"Sector Name","Entry Index","Exit Index"});
+    ui->removeSectorButton->setEnabled(false);
 }
 

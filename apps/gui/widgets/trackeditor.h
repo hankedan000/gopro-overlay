@@ -63,6 +63,9 @@ private slots:
     addSectorPressed();
 
     void
+    removeSectorPressed();
+
+    void
     onActionSaveTrack();
 
     void
