@@ -14,9 +14,11 @@ TrackEditor::TrackEditor(QWidget *parent)
  : QMainWindow(parent)
  , ui(new Ui::TrackEditor)
  , iOwnTrack_(false)
+ , trackDirty_(false)
  , track_(nullptr)
  , sectorTableModel_(0,2,this)
  , filepathToSaveTo_()
+ , ignoreInternalTableEdits_(false)
 {
     ui->setupUi(this);
     ui->menubar->setVisible(false);
@@ -39,6 +41,8 @@ TrackEditor::TrackEditor(QWidget *parent)
     connect(ui->actionSave_Track, &QAction::triggered, this, &TrackEditor::onActionSaveTrack);
     connect(ui->actionSave_Track_as, &QAction::triggered, this, &TrackEditor::onActionSaveTrackAs);
     connect(ui->actionLoad_Track, &QAction::triggered, this, &TrackEditor::onActionLoadTrack);
+
+    connect(&sectorTableModel_, &QStandardItemModel::dataChanged, this, &TrackEditor::onSectorTableDataChanged);
 
     // Attach the model to the view
     ui->sectorTable->setModel(&sectorTableModel_);
@@ -141,6 +145,7 @@ TrackEditor::saveTrackToYAML(
         std::ofstream ofs(filepath);
         ofs << trackNode;
         ofs.close();
+        clearTrackModified();
         return true;
     }
     return false;
@@ -207,14 +212,14 @@ TrackEditor::trackViewGatePlaced(
     {
         case TrackView::PlacementMode::ePM_StartGate:
             track_->setStart(pathIdx);
-            emit trackModified();
+            setTrackModified();
             ui->trackView->setPlacementMode(TrackView::PlacementMode::ePM_None);
             ui->setStartButton->setChecked(false);
             ui->statusbar->clearMessage();
             break;
         case TrackView::PlacementMode::ePM_FinishGate:
             track_->setFinish(pathIdx);
-            emit trackModified();
+            setTrackModified();
             ui->trackView->setPlacementMode(TrackView::PlacementMode::ePM_None);
             ui->setFinishButton->setChecked(false);
             ui->statusbar->clearMessage();
@@ -227,7 +232,7 @@ TrackEditor::trackViewGatePlaced(
             break;
         case TrackView::PlacementMode::ePM_SectorExit:
             addNewSector(sectorEntryIdx_,pathIdx);
-            emit trackModified();
+            setTrackModified();
             ui->trackView->setPlacementMode(TrackView::PlacementMode::ePM_None);
             ui->statusbar->clearMessage();
             break;
@@ -259,6 +264,41 @@ TrackEditor::removeSectorPressed()
         track_->removeSector(indexToRemove);
         loadSectorsToTable();
         update();// redraw
+    }
+}
+
+void
+TrackEditor::onSectorTableDataChanged(
+    const QModelIndex &topLeft,
+    const QModelIndex &bottomRight,
+    const QVector<int> &roles)
+{
+    if (ignoreInternalTableEdits_)
+    {
+        spdlog::debug("ignoring internal sector table edit");
+        return;
+    }
+
+    const int nRowsModified = bottomRight.row() - topLeft.row() + 1;
+    const int nColsModified = bottomRight.column() - topLeft.column() + 1;
+    if (nRowsModified != 1 && nColsModified != 1)
+    {
+        spdlog::warn(
+            "only support single-cell sector table edits. "
+            "nRowsModified = {}; "
+            "nColsModified = {}; ",
+            nRowsModified,
+            nColsModified);
+        return;
+    }
+
+    const int row = topLeft.row();
+    const int col = topLeft.column();
+    if (col == SECTOR_TABLE_COL_IDX_NAME)
+    {
+        const auto &newName = sectorTableModel_.item(row,col)->text();
+        track_->setSectorName(row, newName.toStdString());
+        setTrackModified();
     }
 }
 
@@ -362,6 +402,7 @@ TrackEditor::releaseTrack()
     }
     track_ = nullptr;
     iOwnTrack_ = false;
+    clearTrackModified();
     ui->trackView->setTrack(nullptr);
     clearSectorTable();
     configureFileMenuButtons();
@@ -497,6 +538,7 @@ TrackEditor::insertSectorToTable(
         size_t entryIdx,
         size_t exitIdx)
 {
+    ignoreInternalTableEdits_ = true;
     sectorTableModel_.insertRow(rowIdx);
     auto newRow = makeSectorTableRow(name,entryIdx,exitIdx);
     for (int colIdx=0; colIdx<newRow.size(); colIdx++)
@@ -504,13 +546,28 @@ TrackEditor::insertSectorToTable(
         sectorTableModel_.setItem(rowIdx,colIdx,newRow.at(colIdx));
     }
     ui->removeSectorButton->setEnabled(true);
+    ignoreInternalTableEdits_ = false;
 }
 
 void
 TrackEditor::clearSectorTable()
 {
+    ignoreInternalTableEdits_ = true;
     sectorTableModel_.clear();
     sectorTableModel_.setHorizontalHeaderLabels({"Sector Name","Entry Index","Exit Index"});
     ui->removeSectorButton->setEnabled(false);
+    ignoreInternalTableEdits_ = false;
 }
 
+void
+TrackEditor::setTrackModified()
+{
+    trackDirty_ = true;
+    emit trackModified();
+}
+
+void
+TrackEditor::clearTrackModified()
+{
+    trackDirty_ = false;
+}

@@ -67,6 +67,12 @@ private slots:
     removeSectorPressed();
 
     void
+    onSectorTableDataChanged(
+        const QModelIndex &topLeft,
+        const QModelIndex &bottomRight,
+        const QVector<int> &roles);
+
+    void
     onActionSaveTrack();
 
     void
@@ -139,10 +145,25 @@ private:
     void
     clearSectorTable();
 
+    void
+    setTrackModified();
+
+    void
+    clearTrackModified();
+
 private:
+    // sector table column indices
+    static constexpr int SECTOR_TABLE_COL_IDX_NAME = 0;
+    static constexpr int SECTOR_TABLE_COL_IDX_ENTRY = 1;
+    static constexpr int SECTOR_TABLE_COL_IDX_EXIT = 2;
+
     Ui::TrackEditor *ui;
 
     bool iOwnTrack_;
+    // true if the track has been modified without a save
+    // should be set by markTrackAsModified()
+    // should be cleared by clearTrackModified();
+    bool trackDirty_;
     gpo::Track *track_;
 
     QStandardItemModel sectorTableModel_;
@@ -153,5 +174,8 @@ private:
     // gate's index. we won't add the sector until the user places
     // the exit gate.
     size_t sectorEntryIdx_;
+
+    // used to ignore events when we internal edit the sector table
+    bool ignoreInternalTableEdits_;
 
 };
