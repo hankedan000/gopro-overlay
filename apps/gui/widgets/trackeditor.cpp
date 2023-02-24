@@ -7,6 +7,7 @@
 #include <GoProOverlay/data/DataSource.h>
 #include <GoProOverlay/data/TrackDataObjects.h>
 #include <QFileDialog>
+#include <spdlog/spdlog.h>
 #include <yaml-cpp/yaml.h>
 
 TrackEditor::TrackEditor(QWidget *parent)
@@ -342,27 +343,14 @@ bool
 TrackEditor::filterSectorExitGate(
     size_t pathIdx)
 {
-    if (pathIdx < sectorEntryIdx_)
+    if ( ! track_)
     {
-        // sector exit needs to be after sector entry
+        spdlog::warn("track isn't set");
         return false;
     }
 
-    for (size_t ss=0; ss<track_->sectorCount(); ss++)
-    {
-        const auto &sector = track_->getSector(ss);
-        if (sector->getEntryIdx() < pathIdx && pathIdx < sector->getExitIdx())
-        {
-            // gate can't fall within an existing sector
-            return false;
-        }
-        else if (sectorEntryIdx_ <= sector->getEntryIdx() && sector->getExitIdx() <= pathIdx)
-        {
-            // sector can't span over an existing sector
-            return false;
-        }
-    }
-    return true;
+    auto res = track_->findSectorInsertionIdx(sectorEntryIdx_,pathIdx);
+    return res.first == gpo::Track::RetCode::SUCCESS;
 }
 
 void
@@ -393,8 +381,16 @@ TrackEditor::addNewSector(
         size_t exitIdx)
 {
     std::string name = "Sector" + std::to_string(track_->sectorCount());
-    addSectorToTable(name,entryIdx,exitIdx);
-    track_->addSector(name,entryIdx,exitIdx);
+    auto ret = track_->addSector(name,entryIdx,exitIdx);
+    if (ret.first == gpo::Track::RetCode::SUCCESS)
+    {
+        spdlog::debug("sector '{}' inserted into track @ {}",name,ret.second);
+        insertSectorToTable(ret.second,name,entryIdx,exitIdx);
+    }
+    else
+    {
+        spdlog::error("failed to add sector to track. error = {}",(int)ret.first);
+    }
 }
 
 bool
@@ -451,18 +447,18 @@ TrackEditor::loadSectorsToTable()
     for (size_t ss=0; track_ && ss<track_->sectorCount(); ss++)
     {
         auto tSector = track_->getSector(ss);
-        addSectorToTable(
+        appendSectorToTable(
                     tSector->getName(),
                     tSector->getEntryIdx(),
                     tSector->getExitIdx());
     }
 }
 
-void
-TrackEditor::addSectorToTable(
+QList<QStandardItem *>
+TrackEditor::makeSectorTableRow(
         const std::string &name,
         size_t entryIdx,
-        size_t exitIdx)
+        size_t exitIdx) const
 {
     QList<QStandardItem *> row;
 
@@ -478,7 +474,35 @@ TrackEditor::addSectorToTable(
     exitItem->setText(QStringLiteral("%1").arg(exitIdx));
     row.append(exitItem);
 
-    sectorTableModel_.appendRow(row);
+    return row;
+}
+
+void
+TrackEditor::appendSectorToTable(
+        const std::string &name,
+        size_t entryIdx,
+        size_t exitIdx)
+{
+    insertSectorToTable(
+        sectorTableModel_.rowCount(),
+        name,
+        entryIdx,
+        exitIdx);
+}
+
+void
+TrackEditor::insertSectorToTable(
+        size_t rowIdx,
+        const std::string &name,
+        size_t entryIdx,
+        size_t exitIdx)
+{
+    sectorTableModel_.insertRow(rowIdx);
+    auto newRow = makeSectorTableRow(name,entryIdx,exitIdx);
+    for (int colIdx=0; colIdx<newRow.size(); colIdx++)
+    {
+        sectorTableModel_.setItem(rowIdx,colIdx,newRow.at(colIdx));
+    }
     ui->removeSectorButton->setEnabled(true);
 }
 

@@ -1,5 +1,6 @@
 #include "GoProOverlay/data/TrackDataObjects.h"
 
+#include <spdlog/spdlog.h>
 #include <stdexcept>
 
 #include "GoProOverlay/utils/LineSegmentUtils.h"
@@ -368,13 +369,122 @@ namespace gpo
 	}
 
 	// sector related methods
-	void
+	std::pair<Track::RetCode, size_t>
+	Track::findSectorInsertionIdx(
+		size_t entryIdx,
+		size_t exitIdx)
+	{
+		// check input arguments to make sure it's a valid gate
+		if (entryIdx == exitIdx)
+		{
+			return {RetCode::E_SECTOR_NO_WIDTH,-1};
+		}
+		else if (exitIdx < entryIdx)
+		{
+			return {RetCode::E_EXIT_BEFORE_ENTRY,-1};
+		}
+
+		// handle corner cases where we have 0 or 1 sector
+		int insertIdx = -1;
+		if (sectors_.size() == 0)
+		{
+			insertIdx = 0;
+		}
+		else if (sectors_.size() == 1)
+		{
+			const auto &s = sectors_.at(0);
+			if (entryIdx < s->getEntryIdx() && exitIdx <= s->getEntryIdx())
+			{
+				// insert sector before existing sector
+				insertIdx = 0;
+			}
+			else if (s->getEntryIdx() < entryIdx && entryIdx < s->getExitIdx())
+			{
+				// entry gate falls within existing sector
+				return {RetCode::E_OVERLAP,-1};
+			}
+			else if (s->getEntryIdx() < exitIdx && exitIdx < s->getExitIdx())
+			{
+				// exit gate falls within existing sector
+				return {RetCode::E_OVERLAP,-1};
+			}
+			else if (entryIdx <= s->getEntryIdx() && s->getExitIdx() <= exitIdx)
+			{
+				// sector straddles the current sector
+				return {RetCode::E_OVERLAP,-1};
+			}
+			else
+			{
+				// insert sector after existing sector.
+				// we know this is safe because there's no sectors after this one
+				insertIdx = 1;
+			}
+		}
+
+		if (insertIdx >= 0)
+		{
+			// found insertion point based on corner cases. we're done!
+			return {RetCode::SUCCESS,insertIdx};
+		}
+		
+		// by now, sectors_.size() >= 2
+		// find insertion point based on this criteria
+		for (size_t i=0; i<sectors_.size(); i++)
+		{
+			const auto &s = sectors_.at(i);
+			if (entryIdx < s->getEntryIdx() && exitIdx <= s->getEntryIdx())
+			{
+				// insert sector before current sector
+				insertIdx = i;
+				break;
+			}
+			else if (s->getEntryIdx() < entryIdx && entryIdx < s->getExitIdx())
+			{
+				// entry gate falls within existing sector
+				return {RetCode::E_OVERLAP,-1};
+			}
+			else if (s->getEntryIdx() < exitIdx && exitIdx < s->getExitIdx())
+			{
+				// exit gate falls within existing sector
+				return {RetCode::E_OVERLAP,-1};
+			}
+			else if (entryIdx <= s->getEntryIdx() && s->getExitIdx() <= exitIdx)
+			{
+				// sector straddles the current sector
+				return {RetCode::E_OVERLAP,-1};
+			}
+			else if ((i + 1) == sectors_.size())
+			{
+				// at the end of the list.
+				// sector is valid, then it must be inserted after the current.
+				insertIdx = (i + 1);
+				break;
+			}
+			else
+			{
+				// sector could land anywhere after the current one.
+				// keep searching...
+			}
+		}
+
+		// if we're here, then insertion point is valid
+		return {RetCode::SUCCESS,insertIdx};
+	}
+
+	std::pair<Track::RetCode, size_t>
 	Track::addSector(
 		std::string name,
 		size_t entryIdx,
 		size_t exitIdx)
 	{
-		sectors_.push_back(new TrackSector(this,name,entryIdx,exitIdx));
+		auto res = findSectorInsertionIdx(entryIdx,exitIdx);
+		if (res.first == RetCode::SUCCESS)
+		{
+			sectors_.insert(
+				std::next(sectors_.begin(),res.second),
+				new TrackSector(this,name,entryIdx,exitIdx));
+		}
+		return res;
 	}
 
 	void
@@ -390,22 +500,6 @@ namespace gpo
 		std::string name)
 	{
 		sectors_.at(idx)->setName(name);
-	}
-
-	void
-	Track::setSectorEntry(
-		size_t idx,
-		size_t entryIdx)
-	{
-		sectors_.at(idx)->setEntryIdx(entryIdx);
-	}
-
-	void
-	Track::setSectorExit(
-		size_t idx,
-		size_t exitIdx)
-	{
-		sectors_.at(idx)->setExitIdx(exitIdx);
 	}
 
 	const

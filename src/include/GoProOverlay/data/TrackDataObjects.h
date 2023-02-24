@@ -284,6 +284,15 @@ namespace gpo
 	class Track
 	{
 	public:
+		enum RetCode
+		{
+			SUCCESS = 0,
+			E_SECTOR_NO_WIDTH = -10,
+			E_EXIT_BEFORE_ENTRY = -11,
+			E_OVERLAP = -12
+		};
+
+	public:
 		Track();
 
 		Track(
@@ -307,7 +316,48 @@ namespace gpo
 		getFinish() const;
 
 		// sector related methods
-		void
+		/**
+		 * Finds the location of where a sector should be inserted.
+		 * This method can also be used to test if a sector is valid.
+		 * 
+		 * @param[in] entryIdx
+		 * the sector's entry point on the path
+		 * 
+		 * @param[in] exitIdx
+		 * the sector's exit point on the path
+		 * 
+		 * @return
+		 * 'first' is the return code
+		 *   SUCCESS is sector can be inserted at the location
+		 *   E_SECTOR_NO_WIDTH if entry and exit are equal
+		 *   E_EXIT_BEFORE_ENTRY if exitIdx falls before entryIdx
+		 *   E_OVERLAP if sector overlaps with existing sector
+		 * 'second' insertion index if location is valid
+		 */
+		std::pair<Track::RetCode, size_t>
+		findSectorInsertionIdx(
+			size_t entryIdx,
+			size_t exitIdx);
+		
+		/**
+		 * @param[in] name
+		 * the sector's name
+		 * 
+		 * @param[in] entryIdx
+		 * the sector's entry point on the path
+		 * 
+		 * @param[in] exitIdx
+		 * the sector's exit point on the path
+		 * 
+		 * @return
+		 * 'first' is the return code
+		 *   SUCCESS if add was successful
+		 *   E_SECTOR_NO_WIDTH if entry and exit are equal
+		 *   E_EXIT_BEFORE_ENTRY if exitIdx falls before entryIdx
+		 *   E_OVERLAP if sector overlaps with existing sector
+		 * 'second' is the insertion index if successful
+		 */
+		std::pair<Track::RetCode, size_t>
 		addSector(
 			std::string name,
 			size_t entryIdx,
@@ -321,16 +371,6 @@ namespace gpo
 		setSectorName(
 			size_t idx,
 			std::string name);
-
-		void
-		setSectorEntry(
-			size_t idx,
-			size_t entryIdx);
-
-		void
-		setSectorExit(
-			size_t idx,
-			size_t exitIdx);
 
 		const
 		TrackSector *

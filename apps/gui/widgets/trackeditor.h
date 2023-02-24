@@ -117,8 +117,21 @@ private:
     void
     loadSectorsToTable();
 
+    QList<QStandardItem *>
+    makeSectorTableRow(
+            const std::string &name,
+            size_t entryIdx,
+            size_t exitIdx) const;
+
     void
-    addSectorToTable(
+    appendSectorToTable(
+            const std::string &name,
+            size_t entryIdx,
+            size_t exitIdx);
+
+    void
+    insertSectorToTable(
+            size_t rowIdx,
             const std::string &name,
             size_t entryIdx,
             size_t exitIdx);
