@@ -2,6 +2,7 @@
 
 #include <spdlog/spdlog.h>
 #include <stdexcept>
+#include <fstream>
 
 #include "GoProOverlay/utils/LineSegmentUtils.h"
 
@@ -324,7 +325,8 @@ namespace gpo
 
 	Track::Track(
 		const std::vector<cv::Vec2d> &path)
-	 : start_(new TrackGate(this, "startGate", 0, GateType_E::eGT_Start))
+	 : ModifiableObject("Track")
+	 , start_(new TrackGate(this, "startGate", 0, GateType_E::eGT_Start))
 	 , finish_(new TrackGate(this, "finishGate", path.size() - 1, GateType_E::eGT_Finish))
 	 , sectors_()
 	 , path_(path)
@@ -347,6 +349,7 @@ namespace gpo
 		size_t pathIdx)
 	{
 		start_->setPathIdx(pathIdx);
+		markObjectModified();
 	}
 
 	const TrackGate *
@@ -360,6 +363,7 @@ namespace gpo
 		size_t pathIdx)
 	{
 		finish_->setPathIdx(pathIdx);
+		markObjectModified();
 	}
 
 	const TrackGate *
@@ -483,6 +487,7 @@ namespace gpo
 			sectors_.insert(
 				std::next(sectors_.begin(),res.second),
 				new TrackSector(this,name,entryIdx,exitIdx));
+			markObjectModified();
 		}
 		return res;
 	}
@@ -492,6 +497,7 @@ namespace gpo
 		size_t idx)
 	{
 		sectors_.erase(std::next(sectors_.begin(), idx));
+		markObjectModified();
 	}
 
 	void
@@ -500,10 +506,10 @@ namespace gpo
 		std::string name)
 	{
 		sectors_.at(idx)->setName(name);
+		markObjectModified();
 	}
 
-	const
-	TrackSector *
+	const TrackSector *
 	Track::getSector(
 		size_t idx)
 	{
@@ -724,6 +730,38 @@ namespace gpo
 		}
 
 		return okay;
+	}
+
+	//--------------------------------------------------------------
+	// Track protected methods
+	//--------------------------------------------------------------
+	bool
+	Track::subclassApplyModifications()
+	{
+		// apply means nothing to use right now
+		return true;
+	}
+
+	bool
+	Track::subclassSaveModifications()
+	{
+		auto path = getSavePath();
+		try
+		{
+			std::ofstream ofs(path);
+			YAML::Node node = encode();
+			ofs << node;
+			ofs.close();
+		}
+		catch (const std::exception &e)
+		{
+			spdlog::error(
+				"caught std::exception while trying to save track to path '{}'. what() = {}",
+				path.c_str(),
+				e.what());
+			return false;
+		}
+		return true;
 	}
 
 	Track *

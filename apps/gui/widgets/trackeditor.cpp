@@ -14,10 +14,8 @@ TrackEditor::TrackEditor(QWidget *parent)
  : QMainWindow(parent)
  , ui(new Ui::TrackEditor)
  , iOwnTrack_(false)
- , trackDirty_(false)
  , track_(nullptr)
  , sectorTableModel_(0,2,this)
- , filepathToSaveTo_()
  , ignoreInternalTableEdits_(false)
 {
     ui->setupUi(this);
@@ -67,9 +65,11 @@ TrackEditor::loadTrackFromVideo(
                     QStringLiteral("Loaded track data from '%1'").arg(filepath.c_str()),
                     3000);// 3s
         setTrack(gpo::makeTrackFromTelemetry(data->telemSrc));
-        iOwnTrack_ = true;
-
-        filepathToSaveTo_ = "";
+        if (track_)
+        {
+            iOwnTrack_ = true;
+            track_->setSavePath("");
+        }
         configureFileMenuButtons();
     }
 
@@ -92,9 +92,11 @@ TrackEditor::loadTrackFromYAML(
                         QStringLiteral("Loaded track data from '%1'").arg(filepath.c_str()),
                         3000);// 3s
             setTrack(newTrack);
-            iOwnTrack_ = true;
-
-            filepathToSaveTo_ = filepath;
+            if (track_)
+            {
+                iOwnTrack_ = true;
+                track_->setSavePath(filepath);
+            }
             configureFileMenuButtons();
             okay = true;
         }
@@ -135,22 +137,6 @@ TrackEditor::loadTrackFromFile(
     return false;
 }
 
-bool
-TrackEditor::saveTrackToYAML(
-    const std::string &filepath)
-{
-    if (track_)
-    {
-        YAML::Node trackNode = track_->encode();
-        std::ofstream ofs(filepath);
-        ofs << trackNode;
-        ofs.close();
-        clearTrackModified();
-        return true;
-    }
-    return false;
-}
-
 void
 TrackEditor::setTrack(
         gpo::Track *track)
@@ -160,6 +146,10 @@ TrackEditor::setTrack(
     ui->trackView->setTrack(track_);
     loadSectorsToTable();
     configureFileMenuButtons();
+    if (track_)
+    {
+        track_->addObserver(this);
+    }
 }
 
 void
@@ -212,14 +202,12 @@ TrackEditor::trackViewGatePlaced(
     {
         case TrackView::PlacementMode::ePM_StartGate:
             track_->setStart(pathIdx);
-            setTrackModified();
             ui->trackView->setPlacementMode(TrackView::PlacementMode::ePM_None);
             ui->setStartButton->setChecked(false);
             ui->statusbar->clearMessage();
             break;
         case TrackView::PlacementMode::ePM_FinishGate:
             track_->setFinish(pathIdx);
-            setTrackModified();
             ui->trackView->setPlacementMode(TrackView::PlacementMode::ePM_None);
             ui->setFinishButton->setChecked(false);
             ui->statusbar->clearMessage();
@@ -232,7 +220,6 @@ TrackEditor::trackViewGatePlaced(
             break;
         case TrackView::PlacementMode::ePM_SectorExit:
             addNewSector(sectorEntryIdx_,pathIdx);
-            setTrackModified();
             ui->trackView->setPlacementMode(TrackView::PlacementMode::ePM_None);
             ui->statusbar->clearMessage();
             break;
@@ -298,32 +285,40 @@ TrackEditor::onSectorTableDataChanged(
     {
         const auto &newName = sectorTableModel_.item(row,col)->text();
         track_->setSectorName(row, newName.toStdString());
-        setTrackModified();
     }
 }
 
 void
 TrackEditor::onActionSaveTrack()
 {
-    if ( ! filepathToSaveTo_.empty())
+    if (track_)
     {
-        saveTrackToYAML(filepathToSaveTo_);
+        track_->saveModifications();
+    }
+    else
+    {
+        spdlog::warn("track is null. can't perform save.");
     }
 }
 
 void
 TrackEditor::onActionSaveTrackAs()
 {
-    std::string filepath = QFileDialog::getSaveFileName(
-                this,
-                "Save Track",
-                QDir::currentPath(),
-                "Track files (*.yaml) ;; All files (*.*)").toStdString();
-
-    if (saveTrackToYAML(filepath))
+    if (track_)
     {
-        filepathToSaveTo_ = filepath;
-        configureFileMenuButtons();
+        std::string filepath = QFileDialog::getSaveFileName(
+                    this,
+                    "Save Track",
+                    QDir::currentPath(),
+                    "Track files (*.yaml) ;; All files (*.*)").toStdString();
+        if (track_->saveModificationsAs(filepath))
+        {
+            configureFileMenuButtons();
+        }
+    }
+    else
+    {
+        spdlog::warn("track is null. can't perform save.");
     }
 }
 
@@ -396,13 +391,16 @@ TrackEditor::filterSectorExitGate(
 void
 TrackEditor::releaseTrack()
 {
-    if (iOwnTrack_ && track_)
+    if (track_)
     {
-        delete track_;
+        track_->removeObserver(this);
+        if (iOwnTrack_)
+        {
+            delete track_;
+        }
     }
     track_ = nullptr;
     iOwnTrack_ = false;
-    clearTrackModified();
     ui->trackView->setTrack(nullptr);
     clearSectorTable();
     configureFileMenuButtons();
@@ -411,8 +409,8 @@ TrackEditor::releaseTrack()
 void
 TrackEditor::configureFileMenuButtons()
 {
-    ui->actionSave_Track->setEnabled(track_ != nullptr && ! filepathToSaveTo_.empty());
-    ui->actionSave_Track_as->setEnabled(track_ != nullptr);
+    ui->actionSave_Track->setEnabled(track_ != nullptr && track_->isSavable(false));
+    ui->actionSave_Track_as->setEnabled(track_ != nullptr && track_->isSavable(false) && iOwnTrack_);
     ui->actionLoad_Track->setEnabled(true);
 }
 
@@ -560,14 +558,37 @@ TrackEditor::clearSectorTable()
 }
 
 void
-TrackEditor::setTrackModified()
+TrackEditor::onModified(
+    gpo::ModifiableObject *modifiable)
 {
-    trackDirty_ = true;
-    emit trackModified();
+    if (modifiable == track_)
+    {
+        spdlog::info("track was modified!");
+        if (iOwnTrack_)
+        {
+            emit trackModified();
+        }
+    }
+    else
+    {
+        spdlog::warn(
+            "unexpected modification event from object {}",
+            modifiable->className());
+    }
 }
-
+    
 void
-TrackEditor::clearTrackModified()
+TrackEditor::onModificationsSaved(
+    gpo::ModifiableObject *modifiable)
 {
-    trackDirty_ = false;
+    if (modifiable == track_)
+    {
+        spdlog::info("track was saved!");
+    }
+    else
+    {
+        spdlog::warn(
+            "unexpected saved event from object {}",
+            modifiable->className());
+    }
 }

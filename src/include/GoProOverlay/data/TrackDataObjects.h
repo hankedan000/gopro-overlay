@@ -5,6 +5,7 @@
 #include <vector>
 #include <yaml-cpp/yaml.h>
 
+#include "GoProOverlay/data/ModifiableObject.h"
 #include "GoProOverlay/utils/YAML_Utils.h"
 #include "TelemetrySource.h"
 
@@ -281,7 +282,7 @@ namespace gpo
 
 	};
 
-	class Track
+	class Track : public ModifiableObject
 	{
 	public:
 		enum RetCode
@@ -372,8 +373,7 @@ namespace gpo
 			size_t idx,
 			std::string name);
 
-		const
-		TrackSector *
+		const TrackSector *
 		getSector(
 			size_t idx);
 
@@ -423,6 +423,13 @@ namespace gpo
 		bool
 		decode(
 			const YAML::Node& node);
+
+	protected:
+        bool
+        subclassApplyModifications();
+
+        bool
+        subclassSaveModifications();
 
 	private:
 		TrackGate *start_;

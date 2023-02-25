@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <string>
 #include <unordered_set>
 
 namespace gpo
@@ -33,7 +34,20 @@ namespace gpo
     class ModifiableObject
     {
     public:
-        ModifiableObject();
+        /**
+         * Constructor
+         * 
+         * @param[in] className
+         * the object's class name. useful for debugging
+         */
+        ModifiableObject(
+            const std::string &className);
+
+        virtual
+        ~ModifiableObject();
+
+        const std::string &
+        className() const;
 
         void
         setSavePath(
@@ -43,20 +57,32 @@ namespace gpo
         getSavePath() const;
 
         /**
+         * Default behavior just returns true.
+         * Subclass can override this method to provide additional checks
+         * or to prevent the object from apply changes all together.
+         * 
          * @return
-         * true if the object supports applying changes
+         * true if the object's applyModifications() method is callable.
+         * false otherwise.
          */
         virtual
         bool
-        isApplyable() const;
+        isApplyable(
+            bool noisy = true) const;
 
         /**
+         * Default behavior just checks if the save path has been set.
+         * Subclass can override this method to provide additional checks
+         * or to prevent the object from being saved all together.
+         * 
          * @return
-         * true if the object supports saving changes
+         * true if the object's saveModifications() method is callable.
+         * false otherwise.
          */
         virtual
         bool
-        isSaveable() const;
+        isSavable(
+            bool noisy = true) const;
 
         virtual
         void
@@ -144,6 +170,8 @@ namespace gpo
         subclassSaveModifications() = 0;
 
     private:
+        const std::string className_;
+
         // true if the object has been modified since last "apply"
         bool hasApplyableEdits_;
 

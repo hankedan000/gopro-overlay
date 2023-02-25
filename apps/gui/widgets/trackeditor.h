@@ -4,13 +4,14 @@
 #include <QMainWindow>
 #include <QStandardItemModel>
 
+#include "GoProOverlay/data/ModifiableObject.h"
 #include "trackview.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class TrackEditor; }
 QT_END_NAMESPACE
 
-class TrackEditor : public QMainWindow
+class TrackEditor : public QMainWindow, private gpo::ModifiableObjectObserver
 {
     Q_OBJECT
 
@@ -28,10 +29,6 @@ public:
 
     bool
     loadTrackFromFile(
-        const std::string &filepath);
-
-    bool
-    saveTrackToYAML(
         const std::string &filepath);
 
     void
@@ -145,11 +142,15 @@ private:
     void
     clearSectorTable();
 
+    virtual
     void
-    setTrackModified();
-
+    onModified(
+        gpo::ModifiableObject *modifiable);
+        
+    virtual
     void
-    clearTrackModified();
+    onModificationsSaved(
+        gpo::ModifiableObject *modifiable);
 
 private:
     // sector table column indices
@@ -160,15 +161,9 @@ private:
     Ui::TrackEditor *ui;
 
     bool iOwnTrack_;
-    // true if the track has been modified without a save
-    // should be set by markTrackAsModified()
-    // should be cleared by clearTrackModified();
-    bool trackDirty_;
     gpo::Track *track_;
 
     QStandardItemModel sectorTableModel_;
-
-    std::string filepathToSaveTo_;
 
     // when building a new sector this variable stores the entry
     // gate's index. we won't add the sector until the user places

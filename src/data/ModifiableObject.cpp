@@ -4,12 +4,38 @@
 
 namespace gpo
 {
-    ModifiableObject::ModifiableObject()
-     : hasApplyableEdits_(false)
+    ModifiableObject::ModifiableObject(
+            const std::string &className)
+     : className_(className)
+     , hasApplyableEdits_(false)
      , hasSavableEdits_(false)
      , savePath_()
      , observers_()
     {
+    }
+
+    ModifiableObject::~ModifiableObject()
+    {
+        if (isSavable() && hasSavableModifications())
+        {
+            spdlog::warn(
+                "{}<{}> was destructed before changes were saved",
+                className_,
+                (void*)this);
+        }
+        else if (isApplyable() && hasApplyableModifications())
+        {
+            spdlog::warn(
+                "{}<{}> was destructed before changes were applied",
+                className_,
+                (void*)this);
+        }
+    }
+
+    const std::string &
+    ModifiableObject::className() const
+    {
+        return className_;
     }
 
     void
@@ -26,14 +52,27 @@ namespace gpo
     }
 
     bool
-    ModifiableObject::isApplyable() const
+    ModifiableObject::isApplyable(
+            bool noisy) const
     {
         return true;
     }
 
     bool
-    ModifiableObject::isSaveable() const
+    ModifiableObject::isSavable(
+            bool noisy) const
     {
+        if (savePath_.empty())
+        {
+            if (noisy)
+            {
+                spdlog::error(
+                    "save path is not set. {}<{}> is not savable.",
+                    className_,
+                    (void*)this);
+            }
+            return false;
+        }
         return true;
     }
 
@@ -53,12 +92,17 @@ namespace gpo
     {
         if ( ! isApplyable())
         {
-            spdlog::error("object doesn't support applying modifications");
+            spdlog::error(
+                "{} does not support applying modifications",
+                className_);
             return false;
         }
         else if ( ! hasApplyableModifications())
         {
-            spdlog::warn("applyModifications() called, but object doesn't have any modifications");
+            spdlog::warn(
+                "applyModifications() called, but {}<{}> doesn't have any modifications",
+                className_,
+                (void*)this);
             return false;
         }
 
@@ -77,14 +121,24 @@ namespace gpo
     bool
     ModifiableObject::saveModifications()
     {
-        if ( ! isSaveable())
+        if (isApplyable())
         {
-            spdlog::error("object doesn't support saving modifications");
+            applyModifications();
+        }
+
+        if ( ! isSavable())
+        {
+            spdlog::warn(
+                "{} does not support saving modifications",
+                className_);
             return false;
         }
         else if ( ! hasSavableModifications())
         {
-            spdlog::warn("saveModifications() called, but object doesn't have any modifications");
+            spdlog::warn(
+                "saveModifications() called, but {}<{}> doesn't have any modifications",
+                className_,
+                (void*)this);
             return false;
         }
 
