@@ -23,6 +23,7 @@ TrackEditor::TrackEditor(QWidget *parent)
 {
     ui->setupUi(this);
     ui->menubar->setVisible(false);
+    ui->apply_Button->setEnabled(false);
     trackObserver_.bindWidget(this, WIDGET_TITLE);
 
     using namespace std::placeholders;
@@ -34,6 +35,7 @@ TrackEditor::TrackEditor(QWidget *parent)
     // button actions
     connect(ui->setStartButton, &QPushButton::toggled, this, &TrackEditor::setStartToggled);
     connect(ui->setFinishButton, &QPushButton::toggled, this, &TrackEditor::setFinishToggled);
+    connect(ui->apply_Button, &QPushButton::clicked, this, &TrackEditor::onApplyClicked);
     connect(ui->addSectorButton, &QPushButton::pressed, this, &TrackEditor::addSectorPressed);
     connect(ui->removeSectorButton, &QPushButton::pressed, this, &TrackEditor::removeSectorPressed);
     connect(ui->trackView, &TrackView::gatePlaced, this, &TrackEditor::trackViewGatePlaced);
@@ -193,6 +195,15 @@ TrackEditor::setFinishToggled(
     {
         ui->trackView->setPlacementMode(TrackView::PlacementMode::ePM_None);
         ui->statusbar->clearMessage();
+    }
+}
+
+void
+TrackEditor::onApplyClicked()
+{
+    if (track_)
+    {
+        track_->applyModifications();
     }
 }
 
@@ -569,7 +580,26 @@ TrackEditor::onModified(
         (void*)modifiable);
     if (modifiable == track_)
     {
-        emit trackModified();
+        ui->apply_Button->setEnabled(true);
+    }
+    else
+    {
+        spdlog::warn(
+            "unexpected modification event from object {}",
+            modifiable->className());
+    }
+}
+        
+void
+TrackEditor::onModificationsApplied(
+    gpo::ModifiableObject *modifiable)
+{
+    spdlog::trace("{}({})",
+        __func__,
+        (void*)modifiable);
+    if (modifiable == track_)
+    {
+        ui->apply_Button->setEnabled(false);
     }
     else
     {

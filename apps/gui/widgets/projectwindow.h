@@ -6,7 +6,8 @@
 #include <QSettings>
 #include <QStandardItemModel>
 
-#include <GoProOverlay/data/RenderProject.h>
+#include "GoProOverlay/data/ModifiableObject.h"
+#include "GoProOverlay/data/RenderProject.h"
 
 #include "TelemetryPlotDialog.h"
 #include "progressdialog.h"
@@ -22,7 +23,7 @@ namespace Ui {
 class ProjectWindow;
 }
 
-class ProjectWindow : public QMainWindow
+class ProjectWindow : public QMainWindow, private gpo::ModifiableObjectObserver
 {
     Q_OBJECT
 
@@ -140,6 +141,17 @@ private:
     void
     plotTelemetry(
             gpo::DataSourcePtr dataSrc);
+
+    //-------------------------------------------------------------------
+    // ModifiableObjectObserver callbacks
+    //-------------------------------------------------------------------
+    void
+    onModified(
+            gpo::ModifiableObject *modifiable) override;
+
+    void
+    onModificationsApplied(
+            gpo::ModifiableObject *modifiable) override;
 
 private slots:
     void

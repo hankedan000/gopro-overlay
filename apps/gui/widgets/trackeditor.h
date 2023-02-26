@@ -40,10 +40,6 @@ public:
     setMenuBarVisible(
         bool visible);
 
-signals:
-    void
-    trackModified();
-
 private slots:
     void
     setStartToggled(
@@ -52,6 +48,9 @@ private slots:
     void
     setFinishToggled(
         bool checked);
+
+    void
+    onApplyClicked();
 
     void
     trackViewGatePlaced(
@@ -145,6 +144,10 @@ private:
 
     void
     onModified(
+        gpo::ModifiableObject *modifiable) override;
+        
+    void
+    onModificationsApplied(
         gpo::ModifiableObject *modifiable) override;
         
 private:

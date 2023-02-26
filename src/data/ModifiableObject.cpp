@@ -134,7 +134,7 @@ namespace gpo
     bool
     ModifiableObject::saveModifications()
     {
-        if (isApplyable())
+        if (hasApplyableModifications() && isApplyable())
         {
             applyModifications();
         }
