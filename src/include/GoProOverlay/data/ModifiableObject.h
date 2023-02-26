@@ -29,6 +29,18 @@ namespace gpo
         onModificationsSaved(
             ModifiableObject *modifiable)
         {}
+
+        virtual
+        void
+        onSavePathChanged(
+            ModifiableObject *modifiable)
+        {}
+
+        virtual
+        void
+        onBeforeDestroy(
+            ModifiableObject *modifiable)
+        {}
     };
 
     class ModifiableObject

@@ -16,6 +16,15 @@ namespace gpo
 
     ModifiableObject::~ModifiableObject()
     {
+        // make a copy of the observers list in case the observer removes themself in
+        // their onBeforeDestroy() callback. we don't want to be iterating the list
+        // while it's being modified.
+        auto observersCopy = observers_;
+        for (auto &observer : observersCopy)
+        {
+            observer->onBeforeDestroy(this);
+        }
+
         if (isSavable() && hasSavableModifications())
         {
             spdlog::warn(
@@ -43,6 +52,10 @@ namespace gpo
         const std::filesystem::path &path)
     {
         savePath_ = path;
+        for (auto &observer : observers_)
+        {
+            observer->onSavePathChanged(this);
+        }
     }
     
     const std::filesystem::path &
@@ -178,6 +191,11 @@ namespace gpo
     ModifiableObject::addObserver(
         ModifiableObjectObserver *observer)
     {
+        if (observer == nullptr)
+        {
+            spdlog::warn("can't add a null ModifiableObjectObserver. ignoring add.'");
+            return;
+        }
         observers_.insert(observer);
     }
 

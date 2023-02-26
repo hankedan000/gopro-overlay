@@ -6,6 +6,7 @@
 
 #include "GoProOverlay/data/ModifiableObject.h"
 #include "trackview.h"
+#include "utils/QModifiableObjectObserver.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class TrackEditor; }
@@ -142,16 +143,10 @@ private:
     void
     clearSectorTable();
 
-    virtual
     void
     onModified(
-        gpo::ModifiableObject *modifiable);
+        gpo::ModifiableObject *modifiable) override;
         
-    virtual
-    void
-    onModificationsSaved(
-        gpo::ModifiableObject *modifiable);
-
 private:
     // sector table column indices
     static constexpr int SECTOR_TABLE_COL_IDX_NAME = 0;
@@ -159,6 +154,7 @@ private:
     static constexpr int SECTOR_TABLE_COL_IDX_EXIT = 2;
 
     Ui::TrackEditor *ui;
+    QModifiableObjectObserver trackObserver_;
 
     bool iOwnTrack_;
     gpo::Track *track_;

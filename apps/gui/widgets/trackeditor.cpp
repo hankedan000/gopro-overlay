@@ -10,9 +10,12 @@
 #include <spdlog/spdlog.h>
 #include <yaml-cpp/yaml.h>
 
+#define WIDGET_TITLE "Track Editor"
+
 TrackEditor::TrackEditor(QWidget *parent)
  : QMainWindow(parent)
  , ui(new Ui::TrackEditor)
+ , trackObserver_()
  , iOwnTrack_(false)
  , track_(nullptr)
  , sectorTableModel_(0,2,this)
@@ -20,7 +23,7 @@ TrackEditor::TrackEditor(QWidget *parent)
 {
     ui->setupUi(this);
     ui->menubar->setVisible(false);
-    setWindowTitle("Track Editor");
+    trackObserver_.bindWidget(this, WIDGET_TITLE);
 
     using namespace std::placeholders;
     ui->trackView->setStartGateFilter(std::bind(&TrackEditor::filterStartGate, this, _1));
@@ -49,6 +52,7 @@ TrackEditor::TrackEditor(QWidget *parent)
 
 TrackEditor::~TrackEditor()
 {
+    trackObserver_.releaseModifiable();
     releaseTrack();
     delete ui;
 }
@@ -60,7 +64,6 @@ TrackEditor::loadTrackFromVideo(
     auto data = gpo::DataSource::loadDataFromVideo(filepath);
     if (data)
     {
-        setWindowTitle(QStringLiteral("Track Editor - %1").arg(filepath.c_str()));
         ui->statusbar->showMessage(
                     QStringLiteral("Loaded track data from '%1'").arg(filepath.c_str()),
                     3000);// 3s
@@ -87,7 +90,6 @@ TrackEditor::loadTrackFromYAML(
         gpo::Track *newTrack = new gpo::Track();
         if (newTrack->decode(trackNode))
         {
-            setWindowTitle(QStringLiteral("Track Editor - %1").arg(filepath.c_str()));
             ui->statusbar->showMessage(
                         QStringLiteral("Loaded track data from '%1'").arg(filepath.c_str()),
                         3000);// 3s
@@ -143,13 +145,14 @@ TrackEditor::setTrack(
 {
     releaseTrack();// sets iOwnTrack_ to false
     track_ = track;
-    ui->trackView->setTrack(track_);
-    loadSectorsToTable();
-    configureFileMenuButtons();
     if (track_)
     {
         track_->addObserver(this);
     }
+    trackObserver_.bindModifiable(track_);
+    ui->trackView->setTrack(track_);
+    loadSectorsToTable();
+    configureFileMenuButtons();
 }
 
 void
@@ -561,34 +564,17 @@ void
 TrackEditor::onModified(
     gpo::ModifiableObject *modifiable)
 {
+    spdlog::trace("{}({})",
+        __func__,
+        (void*)modifiable);
     if (modifiable == track_)
     {
-        spdlog::info("track was modified!");
-        if (iOwnTrack_)
-        {
-            emit trackModified();
-        }
+        emit trackModified();
     }
     else
     {
         spdlog::warn(
             "unexpected modification event from object {}",
-            modifiable->className());
-    }
-}
-    
-void
-TrackEditor::onModificationsSaved(
-    gpo::ModifiableObject *modifiable)
-{
-    if (modifiable == track_)
-    {
-        spdlog::info("track was saved!");
-    }
-    else
-    {
-        spdlog::warn(
-            "unexpected saved event from object {}",
             modifiable->className());
     }
 }

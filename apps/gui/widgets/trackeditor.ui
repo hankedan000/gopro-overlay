@@ -120,15 +120,24 @@
    <property name="text">
     <string>Save Track</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
   </action>
   <action name="actionSave_Track_as">
    <property name="text">
     <string>Save Track as...</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+S</string>
+   </property>
   </action>
   <action name="actionLoad_Track">
    <property name="text">
     <string>Open Track</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
    </property>
   </action>
  </widget>
