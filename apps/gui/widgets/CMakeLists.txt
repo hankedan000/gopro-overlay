@@ -1,7 +1,7 @@
 set(QT_WIDGETS_SOURCES
-        AlignmentPlot.h
-        AlignmentPlot.cpp
-        AlignmentPlot.ui
+	AlignmentPlot.h
+	AlignmentPlot.cpp
+	AlignmentPlot.ui
 	ColorPicker.h
 	ColorPicker.cpp
 	ColorPicker.ui
@@ -29,9 +29,9 @@ set(QT_WIDGETS_SOURCES
 	scrubbablevideo.h
 	scrubbablevideo.cpp
 	scrubbablevideo.ui
-        TelemetryMerger.h
-        TelemetryMerger.cpp
-        TelemetryMerger.ui
+	TelemetryMerger.h
+	TelemetryMerger.cpp
+	TelemetryMerger.ui
 	TelemetryPlotDialog.h
 	TelemetryPlotDialog.cpp
 	TelemetryPlotDialog.ui
@@ -42,9 +42,13 @@ set(QT_WIDGETS_SOURCES
 	trackview.cpp
 	trackview.ui
 
-	# MOC needs to know where this... grumble grumble
+	utils/QModifiableObjectObserver.h
+	utils/QModifiableObjectObserver.cpp
+
+	# grumble grumble... MOC needs to know where these are
 	# see https://stackoverflow.com/questions/14010922/qt-undefined-reference-to-vtable
-	${CMAKE_CURRENT_SOURCE_DIR}/../../../src/include/GoProOverlay/graphics/TelemetryPlot.h
+	"${CMAKE_CURRENT_SOURCE_DIR}/../../../src/include/GoProOverlay/graphics/TelemetryPlot.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/utils/QModifiableObjectObserver.h"
 )
 
 add_library(AppWidgets STATIC

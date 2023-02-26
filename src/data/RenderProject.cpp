@@ -222,7 +222,6 @@ namespace gpo
 		}
 
 		const std::filesystem::path projectPath = projectRoot / PROJECT_FILENAME;
-		const std::filesystem::path trackPath = projectRoot / TRACK_FILENAME;
 
 		YAML::Node yProject = encode();
 		std::ofstream projOFS(projectPath);
@@ -232,9 +231,16 @@ namespace gpo
 		if (track_)
 		{
 			YAML::Node trackNode = track_->encode();
+			const std::filesystem::path DEFAULT_TRACK_PATH = projectRoot / TRACK_FILENAME;
+			std::filesystem::path trackPath = track_->getSavePath();
+			if (trackPath.empty())
+			{
+				trackPath = DEFAULT_TRACK_PATH;
+			}
 			std::ofstream trackOFS(trackPath);
 			trackOFS << trackNode;
 			trackOFS.close();
+			track_->saveModifications();
 		}
 
 		return true;
@@ -267,6 +273,7 @@ namespace gpo
 				gpo::Track *newTrack = new gpo::Track();
 				if (newTrack->decode(trackNode))
 				{
+					newTrack->setSavePath(trackPath);
 					setTrack(newTrack);
 				}
 				else

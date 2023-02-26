@@ -4,6 +4,7 @@ set(LIBNAME_ALL_UPPER "GOPRO_OVERLAY")
 add_library("${LIBNAME}" STATIC
 	"${CMAKE_CURRENT_SOURCE_DIR}/data/DataSource.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/data/GroupedSeeker.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/data/ModifiableObject.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/data/RenderProject.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/data/TelemetrySeeker.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/data/TelemetrySource.cpp"

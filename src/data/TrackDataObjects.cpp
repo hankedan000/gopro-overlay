@@ -1,6 +1,8 @@
 #include "GoProOverlay/data/TrackDataObjects.h"
 
+#include <spdlog/spdlog.h>
 #include <stdexcept>
+#include <fstream>
 
 #include "GoProOverlay/utils/LineSegmentUtils.h"
 
@@ -323,7 +325,8 @@ namespace gpo
 
 	Track::Track(
 		const std::vector<cv::Vec2d> &path)
-	 : start_(new TrackGate(this, "startGate", 0, GateType_E::eGT_Start))
+	 : ModifiableObject("Track")
+	 , start_(new TrackGate(this, "startGate", 0, GateType_E::eGT_Start))
 	 , finish_(new TrackGate(this, "finishGate", path.size() - 1, GateType_E::eGT_Finish))
 	 , sectors_()
 	 , path_(path)
@@ -346,6 +349,7 @@ namespace gpo
 		size_t pathIdx)
 	{
 		start_->setPathIdx(pathIdx);
+		markObjectModified();
 	}
 
 	const TrackGate *
@@ -359,6 +363,7 @@ namespace gpo
 		size_t pathIdx)
 	{
 		finish_->setPathIdx(pathIdx);
+		markObjectModified();
 	}
 
 	const TrackGate *
@@ -368,13 +373,123 @@ namespace gpo
 	}
 
 	// sector related methods
-	void
+	std::pair<Track::RetCode, size_t>
+	Track::findSectorInsertionIdx(
+		size_t entryIdx,
+		size_t exitIdx)
+	{
+		// check input arguments to make sure it's a valid gate
+		if (entryIdx == exitIdx)
+		{
+			return {RetCode::E_SECTOR_NO_WIDTH,-1};
+		}
+		else if (exitIdx < entryIdx)
+		{
+			return {RetCode::E_EXIT_BEFORE_ENTRY,-1};
+		}
+
+		// handle corner cases where we have 0 or 1 sector
+		int insertIdx = -1;
+		if (sectors_.size() == 0)
+		{
+			insertIdx = 0;
+		}
+		else if (sectors_.size() == 1)
+		{
+			const auto &s = sectors_.at(0);
+			if (entryIdx < s->getEntryIdx() && exitIdx <= s->getEntryIdx())
+			{
+				// insert sector before existing sector
+				insertIdx = 0;
+			}
+			else if (s->getEntryIdx() < entryIdx && entryIdx < s->getExitIdx())
+			{
+				// entry gate falls within existing sector
+				return {RetCode::E_OVERLAP,-1};
+			}
+			else if (s->getEntryIdx() < exitIdx && exitIdx < s->getExitIdx())
+			{
+				// exit gate falls within existing sector
+				return {RetCode::E_OVERLAP,-1};
+			}
+			else if (entryIdx <= s->getEntryIdx() && s->getExitIdx() <= exitIdx)
+			{
+				// sector straddles the current sector
+				return {RetCode::E_OVERLAP,-1};
+			}
+			else
+			{
+				// insert sector after existing sector.
+				// we know this is safe because there's no sectors after this one
+				insertIdx = 1;
+			}
+		}
+
+		if (insertIdx >= 0)
+		{
+			// found insertion point based on corner cases. we're done!
+			return {RetCode::SUCCESS,insertIdx};
+		}
+		
+		// by now, sectors_.size() >= 2
+		// find insertion point based on this criteria
+		for (size_t i=0; i<sectors_.size(); i++)
+		{
+			const auto &s = sectors_.at(i);
+			if (entryIdx < s->getEntryIdx() && exitIdx <= s->getEntryIdx())
+			{
+				// insert sector before current sector
+				insertIdx = i;
+				break;
+			}
+			else if (s->getEntryIdx() < entryIdx && entryIdx < s->getExitIdx())
+			{
+				// entry gate falls within existing sector
+				return {RetCode::E_OVERLAP,-1};
+			}
+			else if (s->getEntryIdx() < exitIdx && exitIdx < s->getExitIdx())
+			{
+				// exit gate falls within existing sector
+				return {RetCode::E_OVERLAP,-1};
+			}
+			else if (entryIdx <= s->getEntryIdx() && s->getExitIdx() <= exitIdx)
+			{
+				// sector straddles the current sector
+				return {RetCode::E_OVERLAP,-1};
+			}
+			else if ((i + 1) == sectors_.size())
+			{
+				// at the end of the list.
+				// sector is valid, then it must be inserted after the current.
+				insertIdx = (i + 1);
+				break;
+			}
+			else
+			{
+				// sector could land anywhere after the current one.
+				// keep searching...
+			}
+		}
+
+		// if we're here, then insertion point is valid
+		return {RetCode::SUCCESS,insertIdx};
+	}
+
+	std::pair<Track::RetCode, size_t>
 	Track::addSector(
 		std::string name,
 		size_t entryIdx,
 		size_t exitIdx)
 	{
-		sectors_.push_back(new TrackSector(this,name,entryIdx,exitIdx));
+		auto res = findSectorInsertionIdx(entryIdx,exitIdx);
+		if (res.first == RetCode::SUCCESS)
+		{
+			sectors_.insert(
+				std::next(sectors_.begin(),res.second),
+				new TrackSector(this,name,entryIdx,exitIdx));
+			markObjectModified();
+		}
+		return res;
 	}
 
 	void
@@ -382,6 +497,7 @@ namespace gpo
 		size_t idx)
 	{
 		sectors_.erase(std::next(sectors_.begin(), idx));
+		markObjectModified();
 	}
 
 	void
@@ -390,26 +506,10 @@ namespace gpo
 		std::string name)
 	{
 		sectors_.at(idx)->setName(name);
+		markObjectModified();
 	}
 
-	void
-	Track::setSectorEntry(
-		size_t idx,
-		size_t entryIdx)
-	{
-		sectors_.at(idx)->setEntryIdx(entryIdx);
-	}
-
-	void
-	Track::setSectorExit(
-		size_t idx,
-		size_t exitIdx)
-	{
-		sectors_.at(idx)->setExitIdx(exitIdx);
-	}
-
-	const
-	TrackSector *
+	const TrackSector *
 	Track::getSector(
 		size_t idx)
 	{
@@ -630,6 +730,38 @@ namespace gpo
 		}
 
 		return okay;
+	}
+
+	//--------------------------------------------------------------
+	// Track protected methods
+	//--------------------------------------------------------------
+	bool
+	Track::subclassApplyModifications()
+	{
+		// apply means nothing to use right now
+		return true;
+	}
+
+	bool
+	Track::subclassSaveModifications()
+	{
+		auto path = getSavePath();
+		try
+		{
+			std::ofstream ofs(path);
+			YAML::Node node = encode();
+			ofs << node;
+			ofs.close();
+		}
+		catch (const std::exception &e)
+		{
+			spdlog::error(
+				"caught std::exception while trying to save track to path '{}'. what() = {}",
+				path.c_str(),
+				e.what());
+			return false;
+		}
+		return true;
 	}
 
 	Track *

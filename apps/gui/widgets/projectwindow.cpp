@@ -142,6 +142,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         setProjectDirty(true);
 
         trackEditor_->setTrack(newTrack);
+        newTrack->addObserver(this);
         updateTrackPane();
     });
     connect(ui->entryRadio, &QRadioButton::toggled, this, [this]{
@@ -264,12 +265,6 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     // connect engine wizards
     connect(reWizSingle_, &RenderEngineWizardSingleVideo::created, this, &ProjectWindow::onEngineCreated);
     connect(reWizTopBot_, &RenderEngineWizard_TopBottom::created, this, &ProjectWindow::onEngineCreated);
-
-    connect(trackEditor_, &TrackEditor::trackModified, this, [this]{
-        setProjectDirty(true);
-        proj_.reprocessDatumTrack();
-        updateAlignmentPane();
-    });
 
     // attach table models
     ui->tableDataSources->setModel(sourcesTableModel_);
@@ -435,7 +430,9 @@ ProjectWindow::loadProject(
 
         if (proj_.hasTrack())
         {
-            trackEditor_->setTrack(proj_.getTrack());
+            auto track = proj_.getTrack();
+            trackEditor_->setTrack(track);
+            track->addObserver(this);
             ui->renderEngineBox->setEnabled(true);
             ui->alignAndExportBox->setEnabled(true);
         }
@@ -942,6 +939,45 @@ ProjectWindow::plotTelemetry(
     acclPlot->setInteraction(QCP::iRangeDrag,true);
     acclPlot->setInteraction(QCP::iRangeZoom,true);
     acclDialog->show();
+}
+//-------------------------------------------------------------------
+// ModifiableObjectObserver callbacks
+//-------------------------------------------------------------------
+void
+ProjectWindow::onModified(
+        gpo::ModifiableObject *modifiable)
+{
+    if (modifiable == proj_.getTrack())
+    {
+        setProjectDirty(true);
+    }
+    else
+    {
+        spdlog::warn(
+            "{}({}<{}>) - unexpected modification event",
+            __func__,
+            modifiable->className(),
+            (void*)modifiable);
+    }
+}
+
+void
+ProjectWindow::onModificationsApplied(
+        gpo::ModifiableObject *modifiable)
+{
+    if (modifiable == proj_.getTrack())
+    {
+        proj_.reprocessDatumTrack();
+        updateAlignmentPane();
+    }
+    else
+    {
+        spdlog::warn(
+            "{}({}<{}>) - unexpected modification event",
+            __func__,
+            modifiable->className(),
+            (void*)modifiable);
+    }
 }
 
 void
