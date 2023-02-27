@@ -393,6 +393,37 @@
                    </layout>
                   </item>
                   <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_9" stretch="0,1">
+                    <property name="spacing">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="QLabel" name="label_7">
+                      <property name="text">
+                       <string>Audio Export Approach:</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QComboBox" name="audioApproach_ComboBox">
+                      <item>
+                       <property name="text">
+                        <string>Single Source</string>
+                       </property>
+                      </item>
+                      <item>
+                       <property name="text">
+                        <string>Multi Source (split L/R)</string>
+                       </property>
+                      </item>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                  <item>
                    <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,0">
                     <item>
                      <widget class="QLineEdit" name="exportFileLineEdit"/>

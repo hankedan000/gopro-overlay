@@ -261,6 +261,10 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     connect(ui->jumpToLeadOut_ToolButton, &QToolButton::clicked, this, [this]{
         spdlog::warn("jump to lead-out not implemented");
     });
+    connect(ui->audioApproach_ComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index){
+        proj_.setAudioExportApproach((gpo::AudioExportApproach_E)index);
+        setProjectDirty(true);
+    });
 
     // connect engine wizards
     connect(reWizSingle_, &RenderEngineWizardSingleVideo::created, this, &ProjectWindow::onEngineCreated);
@@ -414,6 +418,15 @@ ProjectWindow::loadProject(
         seekEngineToAlignment(getAlignmentInfoFromUI(),true);
         ui->leadIn_SpinBox->setValue(proj_.getLeadInSeconds());
         ui->leadOut_SpinBox->setValue(proj_.getLeadOutSeconds());
+        switch (proj_.getAudioExportApproach())
+        {
+            case gpo::AudioExportApproach_E::eAEA_SingleSource:
+                ui->audioApproach_ComboBox->setCurrentIndex(0);
+                break;
+            case gpo::AudioExportApproach_E::eAEA_MultiSourceSplit:
+                ui->audioApproach_ComboBox->setCurrentIndex(1);
+                break;
+        }
         std::filesystem::path exportFilePath = proj_.getExportFilePath();
         if (exportFilePath.empty())
         {

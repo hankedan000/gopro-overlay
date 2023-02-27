@@ -4,6 +4,7 @@
 #include <opencv2/opencv.hpp>
 #include <QThread>
 
+#include "GoProOverlay/data/GroupedSeeker.h"
 #include "GoProOverlay/data/RenderProject.h"
 
 class RenderThread : public QThread
@@ -33,6 +34,25 @@ signals:
     progressChanged(
         qulonglong progress,
         qulonglong total);
+
+private:
+    bool
+    exportAudioSingleSource(
+        gpo::GroupedSeekerPtr gSeeker,
+        const std::unordered_map<std::string, double> &startTimesBySource,
+        const std::filesystem::path &tmpDir,
+        const std::filesystem::path &ffmpegLogFile,
+        const std::filesystem::path &rawRenderFilePath,
+        const std::filesystem::path &finalExportFile);
+    
+    bool
+    exportAudioMultiSourceLR(
+        gpo::GroupedSeekerPtr gSeeker,
+        const std::unordered_map<std::string, double> &startTimesBySource,
+        const std::filesystem::path &tmpDir,
+        const std::filesystem::path &ffmpegLogFile,
+        const std::filesystem::path &rawRenderFilePath,
+        const std::filesystem::path &finalExportFile);
 
 private:
     gpo::RenderProject *project_;

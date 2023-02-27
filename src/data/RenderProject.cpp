@@ -19,6 +19,7 @@ namespace gpo
 	 , renderLeadOut_sec_(0.0)
 	 , lastNonCustomAlignmentInfo_()
 	 , currRenderAlignmentInfo_()
+	 , audioExportApproach_(AudioExportApproach_E::eAEA_SingleSource)
 	 , exportFilePath_("")
 	{
 	}
@@ -118,6 +119,36 @@ namespace gpo
 	}
 
 	void
+	RenderProject::setAlignmentInfo(
+		const RenderAlignmentInfo &renderAlignmentInfo)
+	{
+		currRenderAlignmentInfo_ = renderAlignmentInfo;
+		if (renderAlignmentInfo.type != RenderAlignmentType_E::eRAT_Custom)
+		{
+			lastNonCustomAlignmentInfo_ = renderAlignmentInfo;
+		}
+	}
+
+	const RenderAlignmentInfo &
+	RenderProject::getAlignmentInfo() const
+	{
+		return currRenderAlignmentInfo_;
+	}
+
+	void
+	RenderProject::setAudioExportApproach(
+		const AudioExportApproach_E &approach)
+	{
+		audioExportApproach_ = approach;
+	}
+
+	const AudioExportApproach_E &
+	RenderProject::getAudioExportApproach() const
+	{
+		return audioExportApproach_;
+	}
+
+	void
 	RenderProject::setExportFilePath(
 		const std::filesystem::path &path)
 	{
@@ -128,23 +159,6 @@ namespace gpo
 	RenderProject::getExportFilePath() const
 	{
 		return exportFilePath_;
-	}
-
-	const RenderAlignmentInfo &
-	RenderProject::getAlignmentInfo() const
-	{
-		return currRenderAlignmentInfo_;
-	}
-
-	void
-	RenderProject::setAlignmentInfo(
-		const RenderAlignmentInfo &renderAlignmentInfo)
-	{
-		currRenderAlignmentInfo_ = renderAlignmentInfo;
-		if (renderAlignmentInfo.type != RenderAlignmentType_E::eRAT_Custom)
-		{
-			lastNonCustomAlignmentInfo_ = renderAlignmentInfo;
-		}
 	}
 
 	void
@@ -311,6 +325,8 @@ namespace gpo
 		node["lastNonCustomAlignmentInfo"] = lastNonCustomAlignmentInfo_;
 		node["currRenderAlignmentInfo"] = currRenderAlignmentInfo_;
 
+		node["audioExportApproach"] = (int)audioExportApproach_;
+
 		node["exportFilePath"] = exportFilePath_.c_str();
 
 		return node;
@@ -331,6 +347,14 @@ namespace gpo
 		auto defaultAlignInfo = RenderAlignmentInfo();
 		YAML_TO_FIELD_W_DEFAULT(node,"lastNonCustomAlignmentInfo",lastNonCustomAlignmentInfo_,defaultAlignInfo);
 		YAML_TO_FIELD_W_DEFAULT(node,"currRenderAlignmentInfo",currRenderAlignmentInfo_,defaultAlignInfo);
+
+		audioExportApproach_ = AudioExportApproach_E::eAEA_SingleSource;
+		if (node["audioExportApproach"])
+		{
+			int approachInt;
+			YAML_TO_FIELD(node,"audioExportApproach",approachInt);
+			audioExportApproach_ = (AudioExportApproach_E)approachInt;
+		}
 
 		std::string strExportFilePath;
 		YAML_TO_FIELD_W_DEFAULT(node,"exportFilePath",strExportFilePath,"");

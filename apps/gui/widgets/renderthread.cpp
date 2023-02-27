@@ -33,8 +33,6 @@ RenderThread::run()
         return;
     }
 
-    const std::filesystem::path finalExportFile = exportDir_ / exportFilename_.toStdString();
-
     auto engine = project_->getEngine();
     auto gSeeker = engine->getSeeker();
 
@@ -85,130 +83,185 @@ RenderThread::run()
     }
     vWriter_.release();
 
-    // get audio from last video source
-    if (seekerCount > 0)
+    // export final video with audio
+    const std::filesystem::path finalExportFile = exportDir_ / exportFilename_.toStdString();
+    switch (project_->getAudioExportApproach())
     {
-        // 1 -> last audio source is in left & right.
-        // 2 -> 1st audio source is in left. 2nd audio source is in right.
-        const int AUDIO_APPROACH = 1;
-
-        bool audioOkay = true;
-        char ffmpegCmd[10000];
-        if (AUDIO_APPROACH == 1)
-        {
-            auto sourceForAudio = gSeeker->getSeeker(seekerCount - 1)->getDataSourceName();
-            auto sourceStartTime_sec = startTimesBySource[sourceForAudio];
-            spdlog::debug("dumping audio from source '{}'", sourceForAudio.c_str());
-            auto dataSource = project_->dataSourceManager().getSourceByName(sourceForAudio);
-            auto audioSourceFile = dataSource->getOrigin();
-            spdlog::debug("audioSourceFile = '{}'", audioSourceFile.c_str());
-
-            // extract audio from seeked source file using ffmpeg
-            const std::filesystem::path tmpAudioPath = tmpDir / "tmp_audio.wav";
-            sprintf(ffmpegCmd,"ffmpeg -ss %0.6fs -i %s -y %s > %s 2>&1",
-                sourceStartTime_sec,
-                audioSourceFile.c_str(),
-                tmpAudioPath.c_str(),
-                ffmpegLogFile.c_str());
-            spdlog::debug("extracting audio...\ncmd = {}",ffmpegCmd);
-            if (audioOkay && system(ffmpegCmd) != 0)
-            {
-                spdlog::error("failed to extract audio. ffmpegCmd = '{}'",ffmpegCmd);
-                audioOkay = false;
-            }
-
-            // remux audio into raw render
-            sprintf(ffmpegCmd,"ffmpeg -i %s -i %s -map 0:v:0 -map 1:a:0 -c:v copy -y %s > %s 2>&1",
-                rawRenderFilePath.c_str(),
-                tmpAudioPath.c_str(),
-                finalExportFile.c_str(),
-                ffmpegLogFile.c_str());
-            spdlog::debug("remuxing audio...\ncmd = {}",ffmpegCmd);
-            if (audioOkay && system(ffmpegCmd) != 0)
-            {
-                spdlog::error("failed to produce final export with audio. ffmpegCmd = '{}'",ffmpegCmd);
-                audioOkay = false;
-            }
-        }
-        else if(AUDIO_APPROACH == 2)
-        {
-            auto sourceForLeftAudio = gSeeker->getSeeker(0)->getDataSourceName();
-            auto leftStartTime_sec = startTimesBySource[sourceForLeftAudio];
-            spdlog::debug("dumping audio from source '{}'", sourceForLeftAudio.c_str());
-            auto leftSource = project_->dataSourceManager().getSourceByName(sourceForLeftAudio);
-            auto leftSourceFile = leftSource->getOrigin();
-            spdlog::debug("audioSourceFile = '{}'", leftSourceFile.c_str());
-
-            // extract left audio from seeked source file using ffmpeg
-            const std::filesystem::path tmpLeftAudioPath = tmpDir / "tmp_left_audio.wav";
-            sprintf(ffmpegCmd,"ffmpeg -ss %0.6fs -i %s -y %s > %s 2>&1",
-                leftStartTime_sec,
-                leftSourceFile.c_str(),
-                tmpLeftAudioPath.c_str(),
-                ffmpegLogFile.c_str());
-            spdlog::debug("extracting audio...\ncmd = {}",ffmpegCmd);
-            if (audioOkay && system(ffmpegCmd) != 0)
-            {
-                spdlog::error("failed to extract left audio. ffmpegCmd = '{}'",ffmpegCmd);
-                audioOkay = false;
-            }
-
-            auto sourceForRightAudio = gSeeker->getSeeker(1)->getDataSourceName();
-            auto rightStartTime_sec = startTimesBySource[sourceForRightAudio];
-            spdlog::debug("dumping audio from source '{}'", sourceForRightAudio.c_str());
-            auto rightSource = project_->dataSourceManager().getSourceByName(sourceForRightAudio);
-            auto rightSourceFile = rightSource->getOrigin();
-            spdlog::debug("audioSourceFile = '{}'", rightSourceFile.c_str());
-
-            // extract right audio from seeked source file using ffmpeg
-            const std::filesystem::path tmpRightAudioPath = tmpDir / "tmp_right_audio.wav";
-            sprintf(ffmpegCmd,"ffmpeg -ss %0.6fs -i %s -y %s > %s 2>&1",
-                rightStartTime_sec,
-                rightSourceFile.c_str(),
-                tmpRightAudioPath.c_str(),
-                ffmpegLogFile.c_str());
-            spdlog::debug("extracting audio...\ncmd = {}",ffmpegCmd);
-            if (audioOkay && system(ffmpegCmd) != 0)
-            {
-                spdlog::error("failed to extract right audio. ffmpegCmd = '{}'",ffmpegCmd);
-                audioOkay = false;
-            }
-
-            // merge audio sources into one
-            const std::filesystem::path tmpMergedAudioPath = tmpDir / "tmp_audio_lr_merge.wav";
-            sprintf(ffmpegCmd,"ffmpeg -i %s -i %s -filter_complex \"amerge=inputs=2,pan=stereo|c0<c0+c1|c1<c2+c3\" -y %s > %s 2>&1",
-                tmpLeftAudioPath.c_str(),
-                tmpRightAudioPath.c_str(),
-                tmpMergedAudioPath.c_str(),
-                ffmpegLogFile.c_str());
-            spdlog::debug("merge left/right into one audio file...\ncmd = {}",ffmpegCmd);
-            if (audioOkay && system(ffmpegCmd) != 0)
-            {
-                spdlog::error("failed to merge left/right audio. ffmpegCmd = '{}'",ffmpegCmd);
-                audioOkay = false;
-            }
-
-            // remux audio into raw render
-            sprintf(ffmpegCmd,"ffmpeg -i %s -i %s -map 0:v:0 -map 1:a:0 -c:v copy -y %s > %s 2>&1",
-                rawRenderFilePath.c_str(),
-                tmpMergedAudioPath.c_str(),
-                finalExportFile.c_str(),
-                ffmpegLogFile.c_str());
-            spdlog::debug("remuxing audio...\ncmd = {}",ffmpegCmd);
-            if (audioOkay && system(ffmpegCmd) != 0)
-            {
-                spdlog::error("failed to produce final export with audio. ffmpegCmd = '{}'",ffmpegCmd);
-                audioOkay = false;
-            }
-        }
-
-        // cleanup temporary files
-        std::filesystem::remove_all(tmpDir);
+        case gpo::AudioExportApproach_E::eAEA_SingleSource:
+            exportAudioSingleSource(
+                gSeeker,
+                startTimesBySource,
+                tmpDir,
+                ffmpegLogFile,
+                rawRenderFilePath,
+                finalExportFile);
+            break;
+        case gpo::AudioExportApproach_E::eAEA_MultiSourceSplit:
+            exportAudioMultiSourceLR(
+                gSeeker,
+                startTimesBySource,
+                tmpDir,
+                ffmpegLogFile,
+                rawRenderFilePath,
+                finalExportFile);
+            break;
     }
+
+    // cleanup temporary files
+    std::filesystem::remove_all(tmpDir);
 }
 
 void
 RenderThread::stopRender()
 {
     stop_ = true;
+}
+
+bool
+RenderThread::exportAudioSingleSource(
+    gpo::GroupedSeekerPtr gSeeker,
+    const std::unordered_map<std::string, double> &startTimesBySource,
+    const std::filesystem::path &tmpDir,
+    const std::filesystem::path &ffmpegLogFile,
+    const std::filesystem::path &rawRenderFilePath,
+    const std::filesystem::path &finalExportFile)
+{
+    bool audioOkay = true;
+    char ffmpegCmd[10000];
+    spdlog::info("exporting single-source audio...");
+
+    const auto seekerCount = gSeeker->seekerCount();
+    if (seekerCount <= 0)
+    {
+        spdlog::error("not enough sources to get audio");
+        return false;
+    }
+
+    auto sourceForAudio = gSeeker->getSeeker(seekerCount - 1)->getDataSourceName();
+    auto sourceStartTime_sec = startTimesBySource.at(sourceForAudio);
+    spdlog::debug("dumping audio from source '{}'", sourceForAudio.c_str());
+    auto dataSource = project_->dataSourceManager().getSourceByName(sourceForAudio);
+    auto audioSourceFile = dataSource->getOrigin();
+    spdlog::debug("audioSourceFile = '{}'", audioSourceFile.c_str());
+
+    // extract audio from seeked source file using ffmpeg
+    const std::filesystem::path tmpAudioPath = tmpDir / "tmp_audio.wav";
+    sprintf(ffmpegCmd,"ffmpeg -ss %0.6fs -i %s -y %s > %s 2>&1",
+        sourceStartTime_sec,
+        audioSourceFile.c_str(),
+        tmpAudioPath.c_str(),
+        ffmpegLogFile.c_str());
+    spdlog::debug("extracting audio...\ncmd = {}",ffmpegCmd);
+    if (audioOkay && system(ffmpegCmd) != 0)
+    {
+        spdlog::error("failed to extract audio. ffmpegCmd = '{}'",ffmpegCmd);
+        audioOkay = false;
+    }
+
+    // remux audio into raw render
+    sprintf(ffmpegCmd,"ffmpeg -i %s -i %s -map 0:v:0 -map 1:a:0 -c:v copy -y %s > %s 2>&1",
+        rawRenderFilePath.c_str(),
+        tmpAudioPath.c_str(),
+        finalExportFile.c_str(),
+        ffmpegLogFile.c_str());
+    spdlog::debug("remuxing audio...\ncmd = {}",ffmpegCmd);
+    if (audioOkay && system(ffmpegCmd) != 0)
+    {
+        spdlog::error("failed to produce final export with audio. ffmpegCmd = '{}'",ffmpegCmd);
+        audioOkay = false;
+    }
+
+    return audioOkay;
+}
+
+bool
+RenderThread::exportAudioMultiSourceLR(
+    gpo::GroupedSeekerPtr gSeeker,
+    const std::unordered_map<std::string, double> &startTimesBySource,
+    const std::filesystem::path &tmpDir,
+    const std::filesystem::path &ffmpegLogFile,
+    const std::filesystem::path &rawRenderFilePath,
+    const std::filesystem::path &finalExportFile)
+{
+    bool audioOkay = true;
+    char ffmpegCmd[10000];
+    spdlog::info("exporting multi-source split audio...");
+
+    const auto seekerCount = gSeeker->seekerCount();
+    if (seekerCount < 2)
+    {
+        spdlog::error("not enough sources to get audio. need at least 2.");
+        return false;
+    }
+
+    auto sourceForLeftAudio = gSeeker->getSeeker(0)->getDataSourceName();
+    auto leftStartTime_sec = startTimesBySource.at(sourceForLeftAudio);
+    spdlog::debug("dumping audio from source '{}'", sourceForLeftAudio.c_str());
+    auto leftSource = project_->dataSourceManager().getSourceByName(sourceForLeftAudio);
+    auto leftSourceFile = leftSource->getOrigin();
+    spdlog::debug("audioSourceFile = '{}'", leftSourceFile.c_str());
+
+    // extract left audio from seeked source file using ffmpeg
+    const std::filesystem::path tmpLeftAudioPath = tmpDir / "tmp_left_audio.wav";
+    sprintf(ffmpegCmd,"ffmpeg -ss %0.6fs -i %s -y %s > %s 2>&1",
+        leftStartTime_sec,
+        leftSourceFile.c_str(),
+        tmpLeftAudioPath.c_str(),
+        ffmpegLogFile.c_str());
+    spdlog::debug("extracting audio...\ncmd = {}",ffmpegCmd);
+    if (audioOkay && system(ffmpegCmd) != 0)
+    {
+        spdlog::error("failed to extract left audio. ffmpegCmd = '{}'",ffmpegCmd);
+        audioOkay = false;
+    }
+
+    auto sourceForRightAudio = gSeeker->getSeeker(1)->getDataSourceName();
+    auto rightStartTime_sec = startTimesBySource.at(sourceForRightAudio);
+    spdlog::debug("dumping audio from source '{}'", sourceForRightAudio.c_str());
+    auto rightSource = project_->dataSourceManager().getSourceByName(sourceForRightAudio);
+    auto rightSourceFile = rightSource->getOrigin();
+    spdlog::debug("audioSourceFile = '{}'", rightSourceFile.c_str());
+
+    // extract right audio from seeked source file using ffmpeg
+    const std::filesystem::path tmpRightAudioPath = tmpDir / "tmp_right_audio.wav";
+    sprintf(ffmpegCmd,"ffmpeg -ss %0.6fs -i %s -y %s > %s 2>&1",
+        rightStartTime_sec,
+        rightSourceFile.c_str(),
+        tmpRightAudioPath.c_str(),
+        ffmpegLogFile.c_str());
+    spdlog::debug("extracting audio...\ncmd = {}",ffmpegCmd);
+    if (audioOkay && system(ffmpegCmd) != 0)
+    {
+        spdlog::error("failed to extract right audio. ffmpegCmd = '{}'",ffmpegCmd);
+        audioOkay = false;
+    }
+
+    // merge audio sources into one
+    const std::filesystem::path tmpMergedAudioPath = tmpDir / "tmp_audio_lr_merge.wav";
+    sprintf(ffmpegCmd,"ffmpeg -i %s -i %s -filter_complex \"amerge=inputs=2,pan=stereo|c0<c0+c1|c1<c2+c3\" -y %s > %s 2>&1",
+        tmpLeftAudioPath.c_str(),
+        tmpRightAudioPath.c_str(),
+        tmpMergedAudioPath.c_str(),
+        ffmpegLogFile.c_str());
+    spdlog::debug("merge left/right into one audio file...\ncmd = {}",ffmpegCmd);
+    if (audioOkay && system(ffmpegCmd) != 0)
+    {
+        spdlog::error("failed to merge left/right audio. ffmpegCmd = '{}'",ffmpegCmd);
+        audioOkay = false;
+    }
+
+    // remux audio into raw render
+    sprintf(ffmpegCmd,"ffmpeg -i %s -i %s -map 0:v:0 -map 1:a:0 -c:v copy -y %s > %s 2>&1",
+        rawRenderFilePath.c_str(),
+        tmpMergedAudioPath.c_str(),
+        finalExportFile.c_str(),
+        ffmpegLogFile.c_str());
+    spdlog::debug("remuxing audio...\ncmd = {}",ffmpegCmd);
+    if (audioOkay && system(ffmpegCmd) != 0)
+    {
+        spdlog::error("failed to produce final export with audio. ffmpegCmd = '{}'",ffmpegCmd);
+        audioOkay = false;
+    }
+
+    return audioOkay;
 }
