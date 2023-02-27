@@ -113,6 +113,12 @@ public:
 	} alignInfo;
 };
 
+enum AudioExportApproach_E
+{
+	eAEA_SingleSource = 0,
+	eAEA_MultiSourceSplit = 1
+};
+
 class RenderProject
 {
 public:
@@ -156,16 +162,23 @@ public:
 	setLeadOutSeconds(
 		double dur_secs);
 
-	const RenderAlignmentInfo &
-	getAlignmentInfo() const;
+	double
+	getLeadOutSeconds() const;
 
 	void
 	setAlignmentInfo(
 		const RenderAlignmentInfo &renderAlignmentInfo);
 
-	double
-	getLeadOutSeconds() const;
+	const RenderAlignmentInfo &
+	getAlignmentInfo() const;
 
+	void
+	setAudioExportApproach(
+		const AudioExportApproach_E &approach);
+
+	const AudioExportApproach_E &
+	getAudioExportApproach() const;
+	
 	void
 	setExportFilePath(
 		const std::filesystem::path &path);
@@ -221,6 +234,8 @@ private:
 	RenderAlignmentInfo lastNonCustomAlignmentInfo_;
 
 	RenderAlignmentInfo currRenderAlignmentInfo_;
+
+	AudioExportApproach_E audioExportApproach_;
 
 	// user-defined path to the final rendered video file
 	std::filesystem::path exportFilePath_;
