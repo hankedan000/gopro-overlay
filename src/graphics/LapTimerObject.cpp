@@ -27,7 +27,7 @@ namespace gpo
 	}
 
 	void
-	LapTimerObject::render()
+	LapTimerObject::subRender()
 	{
 		bgImg_.copyTo(outImg_);
 		if ( ! requirementsMet())

@@ -7,12 +7,14 @@ namespace gpo
 	RenderedObject::RenderedObject(
 		int width,
 		int height)
-	 : outImg_(height,width,CV_8UC4,cv::Scalar(0,0,0,0))
+	 : ModifiableObject("RenderedObject")
+	 , outImg_(height,width,CV_8UC4,cv::Scalar(0,0,0,0))
 	 , visible_(true)
 	 , boundingBoxVisible_(false)
 	 , vSources_()
 	 , tSources_()
 	 , track_(nullptr)
+	 , needsRerender_(false)
 	{
 	}
 
@@ -20,6 +22,14 @@ namespace gpo
 	RenderedObject::getImage() const
 	{
 		return outImg_;
+	}
+
+	void
+	RenderedObject::render()
+	{
+		// call subclass's render method
+		subRender();
+		needsRerender_ = false;
 	}
 
 	void
@@ -140,6 +150,7 @@ namespace gpo
 		bool visible)
 	{
 		visible_ = visible;
+		markObjectModified(true);
 	}
 
 	bool
@@ -153,6 +164,7 @@ namespace gpo
 		bool visible)
 	{
 		boundingBoxVisible_ = visible;
+		markObjectModified(true);
 	}
 
 	bool
@@ -166,6 +178,7 @@ namespace gpo
 		unsigned int thickness)
 	{
 		boundingBoxThickness_ = thickness;
+		markObjectModified(true);
 	}
 
 	unsigned int
@@ -204,6 +217,7 @@ namespace gpo
 
 		vSources_.push_back(vSrc);
 		checkAndNotifyRequirementsMet();
+		markObjectModified(true);
 		return true;
 	}
 
@@ -219,6 +233,7 @@ namespace gpo
 		VideoSourcePtr vSrc)
 	{
 		vSources_.at(idx) = vSrc;
+		markObjectModified(true);
 	}
 
 	VideoSourcePtr
@@ -233,6 +248,7 @@ namespace gpo
 		size_t idx)
 	{
 		vSources_.erase(std::next(vSources_.begin(), idx));
+		markObjectModified(true);
 	}
 
 	bool
@@ -249,6 +265,7 @@ namespace gpo
 
 		tSources_.push_back(tSrc);
 		checkAndNotifyRequirementsMet();
+		markObjectModified(true);
 		return true;
 	}
 
@@ -264,6 +281,7 @@ namespace gpo
 		TelemetrySourcePtr tSrc)
 	{
 		tSources_.at(idx) = tSrc;
+		markObjectModified(true);
 	}
 
 	TelemetrySourcePtr
@@ -278,6 +296,7 @@ namespace gpo
 		size_t idx)
 	{
 		tSources_.erase(std::next(tSources_.begin(), idx));
+		markObjectModified(true);
 	}
 
 	bool
@@ -291,6 +310,7 @@ namespace gpo
 
 		track_ = track;
 		checkAndNotifyRequirementsMet();
+		markObjectModified(true);
 		return true;
 	}
 
@@ -381,6 +401,41 @@ namespace gpo
 	}
 
 	void
+	RenderedObject::markObjectModified(
+		bool needsRerender)
+	{
+		needsRerender_ = needsRerender_ || needsRerender;
+		ModifiableObject::markObjectModified();
+	}
+
+	bool
+	RenderedObject::needsRerender() const
+	{
+		return needsRerender_;
+	}
+
+	// BEGIN ModifiableObject overrides
+	void
+	RenderedObject::markObjectModified()
+	{
+		spdlog::warn(
+			"ModifiedObject::markObjectModified() was called on a RenderedObject."
+			" Please call RenderedObject::markObjectModified(bool needsRerender)"
+			" instead. We delegated the call to it just to be safe.");
+
+		// call the RenderedObject methods just to be safe
+		RenderedObject::markObjectModified(true);
+	}
+
+	bool
+	RenderedObject::isSavable(
+		bool /*noisy*/) const
+	{
+		return false;// we don't support saving individual RenderedObjects
+	}
+	// END ModifiableObject overrides
+
+	void
 	RenderedObject::sourcesValid()
 	{
 		// do nothing impl - let subclass override if needed
@@ -450,6 +505,20 @@ namespace gpo
 		}
 
 		return met;
+	}
+
+	bool
+	RenderedObject::subclassApplyModifications()
+	{
+		// nothing to apply
+		return true;
+	}
+
+	bool
+	RenderedObject::subclassSaveModifications()
+	{
+		// we don't support saving indivual RenderedObjects (should never get in here)
+		return false;
 	}
 
 	void

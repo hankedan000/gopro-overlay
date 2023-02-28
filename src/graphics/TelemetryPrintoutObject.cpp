@@ -30,6 +30,7 @@ namespace gpo
 		int face)
 	{
 		fontFace_ = face;
+		markObjectModified(true);
 	}
 
 	void
@@ -37,10 +38,11 @@ namespace gpo
 		cv::Scalar color)
 	{
 		fontColor_ = color;
+		markObjectModified(true);
 	}
 
 	void
-	TelemetryPrintoutObject::render()
+	TelemetryPrintoutObject::subRender()
 	{
 		if ( ! requirementsMet())
 		{

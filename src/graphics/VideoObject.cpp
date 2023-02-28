@@ -21,24 +21,6 @@ namespace gpo
 	}
 
 	void
-	VideoObject::render()
-	{
-		if ( ! requirementsMet())
-		{
-			return;
-		}
-		auto vSource = vSources_.front();
-
-		auto frameIdx = vSource->seekedIdx();
-		bool needNewFrame = frameIdx != prevRenderedFrameIdx_;
-		if (needNewFrame && ! vSource->getFrame(outImg_,frameIdx))
-		{
-			throw std::runtime_error("getFrame() failed on frameIdx " + std::to_string(frameIdx));
-		}
-		prevRenderedFrameIdx_ = frameIdx;
-	}
-
-	void
     VideoObject::drawInto(
 		cv::UMat &intoImg,
 		int originX, int originY,
@@ -66,6 +48,24 @@ namespace gpo
 	VideoObject::sourcesValid()
 	{
 		outImg_.create(vSources_.front()->frameSize(),CV_8UC3);
+	}
+
+	void
+	VideoObject::subRender()
+	{
+		if ( ! requirementsMet())
+		{
+			return;
+		}
+		auto vSource = vSources_.front();
+
+		auto frameIdx = vSource->seekedIdx();
+		bool needNewFrame = frameIdx != prevRenderedFrameIdx_;
+		if (needNewFrame && ! vSource->getFrame(outImg_,frameIdx))
+		{
+			throw std::runtime_error("getFrame() failed on frameIdx " + std::to_string(frameIdx));
+		}
+		prevRenderedFrameIdx_ = frameIdx;
 	}
 
 	YAML::Node

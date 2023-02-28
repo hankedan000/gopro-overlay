@@ -5,9 +5,10 @@
 #include <vector>
 
 #include "GoProOverlay/data/DataSource.h"
-#include "GoProOverlay/data/VideoSource.h"
+#include "GoProOverlay/data/ModifiableObject.h"
 #include "GoProOverlay/data/TelemetrySource.h"
 #include "GoProOverlay/data/TrackDataObjects.h"
+#include "GoProOverlay/data/VideoSource.h"
 
 namespace gpo
 {
@@ -70,7 +71,7 @@ namespace gpo
 		int numTracks;
 	};
 
-	class RenderedObject
+	class RenderedObject : public ModifiableObject
 	{
 	public:
 		RenderedObject(
@@ -84,9 +85,8 @@ namespace gpo
 		const cv::UMat &
 		getImage() const;
 
-		virtual
 		void
-		render() = 0;
+		render();
 
 		virtual
 		void
@@ -196,6 +196,35 @@ namespace gpo
 		decode(
 			const YAML::Node& node,
 			const DataSourceManager &dsm);
+		
+		/**
+		 * Call this method, as opposed to ModifiedObject::markObjectModified() to flag
+		 * if the object has been modified in some way.
+		 * 
+		 * Note: to be safe, we override ModifiedObject::markObjectModified() so that
+		 * it calls this method with needsRerendered set true. We also log a warning to
+		 * the console to inform the developer to call this method directly instead.
+		 */
+        void
+        markObjectModified(
+			bool needsRerendered);
+
+		/**
+		 * @return
+		 * true if the object has been modified in some way (since the last render() call),
+		 * that would require the object to be rerendered. false otherwise.
+		 */
+		bool
+		needsRerender() const;
+
+		// BEGIN ModifiableObject overrides
+        void
+        markObjectModified() override;
+
+        bool
+        isSavable(
+            bool noisy = true) const override;
+		// END ModifiableObject overrides
 
 	protected:
 		// callback to notify subclass that all source are valid and set
@@ -213,6 +242,10 @@ namespace gpo
 		trackReqsMet() const;
 
 		virtual
+		void
+		subRender() = 0;
+
+		virtual
 		YAML::Node
 		subEncode() const = 0;
 
@@ -220,6 +253,14 @@ namespace gpo
 		bool
 		subDecode(
 			const YAML::Node& node) = 0;
+
+		// BEGIN ModifiableObject overrides
+        bool
+        subclassApplyModifications() override;
+
+        bool
+        subclassSaveModifications() override;
+		// END ModifiableObject overrides
 
 	private:
 
@@ -237,6 +278,10 @@ namespace gpo
 		std::vector<VideoSourcePtr> vSources_;
 		std::vector<TelemetrySourcePtr> tSources_;
 		const Track *track_;
+
+		// set true if the object has been modified since the last render call.
+		// cleared when the render() method is called.
+		bool needsRerender_;
 
 	private:
 		cv::UMat scaledImg_;

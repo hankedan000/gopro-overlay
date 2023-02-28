@@ -37,6 +37,7 @@ namespace gpo
 		size_t tailLength)
 	{
 		tailLength_ = tailLength;
+		markObjectModified(true);
 	}
 
 	size_t
@@ -51,6 +52,7 @@ namespace gpo
 	{
 		borderColor_ = rgbColor;
 		redrawOutline();
+		markObjectModified(true);
 	}
 
 	cv::Scalar
@@ -64,6 +66,7 @@ namespace gpo
 		cv::Scalar rgbColor)
 	{
 		tailColor_ = rgbColor;
+		markObjectModified(true);
 	}
 
 	cv::Scalar
@@ -77,6 +80,7 @@ namespace gpo
 		cv::Scalar rgbColor)
 	{
 		currentDotColor_ = rgbColor;
+		markObjectModified(true);
 	}
 
 	cv::Scalar
@@ -86,7 +90,7 @@ namespace gpo
 	}
 
 	void
-	FrictionCircleObject::render()
+	FrictionCircleObject::subRender()
 	{
 		outlineImg_.copyTo(outImg_);
 		if ( ! requirementsMet())

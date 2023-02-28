@@ -23,6 +23,7 @@ namespace gpo
 		const std::string &text)
 	{
 		text_ = text;
+		markObjectModified(true);
 	}
 
 	void
@@ -30,6 +31,7 @@ namespace gpo
 		int fontFace)
 	{
 		fontFace_ = fontFace;
+		markObjectModified(true);
 	}
 
 	void
@@ -37,6 +39,7 @@ namespace gpo
 		double scale)
 	{
 		scale_ = scale;
+		markObjectModified(true);
 	}
 
 	void
@@ -44,6 +47,7 @@ namespace gpo
 		cv::Scalar color)
 	{
 		color_ = color;
+		markObjectModified(true);
 	}
 
 	void
@@ -51,12 +55,7 @@ namespace gpo
 		int thickness)
 	{
 		thickness_ = thickness;
-	}
-
-	void
-	TextObject::render()
-	{
-		// do no rendering. we draw text directly into the image in drawInto()
+		markObjectModified(true);
 	}
 
 	void
@@ -81,6 +80,12 @@ namespace gpo
 		cv::Size renderSize)
 	{
 		drawInto(intoImg,originX,originY);
+	}
+
+	void
+	TextObject::subRender()
+	{
+		// do no rendering. we draw text directly into the image in drawInto()
 	}
 
 	YAML::Node

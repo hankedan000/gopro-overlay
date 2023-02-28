@@ -45,11 +45,11 @@ namespace gpo
 		cv::Scalar
 		getCurrentDotColor() const;
 
+	protected:
 		virtual
 		void
-		render() override;
+		subRender() override;
 
-	protected:
 		virtual
 		YAML::Node
 		subEncode() const override;

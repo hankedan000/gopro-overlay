@@ -24,7 +24,7 @@ namespace gpo
 	}
 
 	void
-	SpeedometerObject::render()
+	SpeedometerObject::subRender()
 	{
 		if ( ! requirementsMet())
 		{

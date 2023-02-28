@@ -17,11 +17,11 @@ namespace gpo
 		DataSourceRequirements
 		dataSourceRequirements() const override;
 
+	protected:
 		virtual
 		void
-		render() override;
+		subRender() override;
 
-	protected:
 		virtual
 		YAML::Node
 		subEncode() const override;
