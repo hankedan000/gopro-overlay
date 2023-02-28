@@ -43,20 +43,60 @@ namespace gpo
 			imgToRender = &scaledImg_;
 		}
 
+		// clip the RenderedObject if it falls outside the destination image
+		//
+		// TODO we don't really need to perform this computation each frame.
+		// we could just update the clipped region when the object is moved
+		// and/or resized.
+		cv::Rect srcROI(cv::Point(0,0), imgToRender->size());
+		cv::Rect destROI(cv::Point(originX,originY), renderSize);
+		if (originX < 0)
+		{
+			destROI.x = 0;
+			destROI.width = renderSize.width - std::abs(originX);
+			srcROI.x = std::abs(originX);
+			srcROI.width = destROI.width;
+		}
+		if (originY < 0)
+		{
+			destROI.y = 0;
+			destROI.height = renderSize.height - std::abs(originY);
+			srcROI.y = std::abs(originY);
+			srcROI.height = destROI.height;
+		}
+		const int overHangRight = (destROI.x + destROI.width) - intoImg.size().width;
+		if (overHangRight > 0)
+		{
+			destROI.width -= overHangRight;
+			srcROI.width = destROI.width;
+		}
+		const int overHangBottom = (destROI.y + destROI.height) - intoImg.size().height;
+		if (overHangBottom > 0)
+		{
+			destROI.height -= overHangBottom;
+			srcROI.height = destROI.height;
+		}
+
+		// check to see if object was clipped entirely (fully off screen)
+		if (srcROI.width < 0 || srcROI.height < 0)
+		{
+			return;// don't bother rendering it
+		}
+
 		// draw final output to user image
 		cv::Mat intoImgMat = intoImg.getMat(cv::AccessFlag::ACCESS_RW);
 		cv::Mat imgToRenderMat = imgToRender->getMat(cv::AccessFlag::ACCESS_READ);
-		cv::Rect roi(cv::Point(originX,originY), imgToRender->size());
-		cv::Mat3b destROI = intoImgMat(roi);
+		cv::Mat4b srcMat = imgToRenderMat(srcROI);
+		cv::Mat3b destMat = intoImgMat(destROI);
 		const uint8_t alphaB = 255; // alpha in [0,255]
-		for (int r = 0; r < destROI.rows; ++r)
+		for (int r = 0; r < destMat.rows; ++r)
 		{
-			for (int c = 0; c < destROI.cols; ++c)
+			for (int c = 0; c < destMat.cols; ++c)
 			{
-				auto vA = imgToRenderMat.at<cv::Vec4b>(r,c);
+				auto vA = srcMat.at<cv::Vec4b>(r,c);
 				// Blending
 				const uint8_t alphaA = vA[3];
-				cv::Vec3b &vB = destROI(r,c);
+				cv::Vec3b &vB = destMat(r,c);
 				vB[0] = (vA[0] * alphaA / 255) + (vB[0] * alphaB * (255 - alphaA) / (255*255));
 				vB[1] = (vA[1] * alphaA / 255) + (vB[1] * alphaB * (255 - alphaA) / (255*255));
 				vB[2] = (vA[2] * alphaA / 255) + (vB[2] * alphaB * (255 - alphaA) / (255*255));
@@ -65,7 +105,7 @@ namespace gpo
 
 		if (boundingBoxVisible_)
 		{
-			cv::rectangle(intoImg,roi,CV_RGB(255,255,255),boundingBoxThickness_);
+			cv::rectangle(intoImg,destROI,CV_RGB(255,255,255),boundingBoxThickness_);
 		}
 	}
 
