@@ -303,27 +303,21 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
             return;
         }
 
-        const auto row = topLeft.row();
-        const auto col = topLeft.column();
-        QStandardItem *entityNameItem = entitiesTableModel_->item(row,ENTITY_NAME_COLUMN);
-        // recover the encoded pointer to a RenderedEntity within the name's data()
-        QVariant v = entityNameItem->data();
-        auto re = reinterpret_cast<gpo::RenderedEntityPtr *>(v.toULongLong());
+        int row = topLeft.row();
+        int col = topLeft.column();
+        auto re = proj_.getEngine()->getEntity(row);
         if (col == ENTITY_VISIBILITY_COLUMN)
         {
             QStandardItem *visItem = entitiesTableModel_->item(row,col);
-            (*re)->rObj->setVisible(visItem->checkState() == Qt::CheckState::Checked);
+            re->rObj->setVisible(visItem->checkState() == Qt::CheckState::Checked);
             setProjectDirty(true);
             render();
         }
     });
     connect(ui->renderEntitiesTable, &QTableView::clicked, this, [this](const QModelIndex &index){
         const auto row = index.row();
-        QStandardItem *entityNameItem = entitiesTableModel_->item(row,ENTITY_NAME_COLUMN);
-        // recover the encoded pointer to a RenderedEntity within the name's data()
-        QVariant v = entityNameItem->data();
-        auto re = reinterpret_cast<gpo::RenderedEntityPtr *>(v.toULongLong());
-        renderEntityPropertiesTab_->setEntity(*re);
+        auto re = proj_.getEngine()->getEntity(row);
+        renderEntityPropertiesTab_->setEntity(re);
     });
     connect(renderEntityPropertiesTab_, &RenderEntityPropertiesTab::propertyChanged, this, [this]{
         setProjectDirty(true);
@@ -332,18 +326,16 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
 
     // scrubbable video signal handlers
     connect(previewWindow_, &ScrubbableVideo::onEntitySelected, this, [this](gpo::RenderedEntity *entity){
+        auto engine = proj_.getEngine();
         // when an entity is selected in the video preview, highlight it in the entity table
         // and also display it in the properties pane.
         for (int r=0; r<entitiesTableModel_->rowCount(); r++)
         {
-            QStandardItem *entityNameItem = entitiesTableModel_->item(r,ENTITY_NAME_COLUMN);
-            // recover the encoded pointer to a RenderedEntity within the name's data()
-            QVariant v = entityNameItem->data();
-            auto re = reinterpret_cast<gpo::RenderedEntityPtr *>(v.toULongLong());
-            if (re->get() == entity)
+            auto re = engine->getEntity(r);
+            if (re.get() == entity)
             {
                 ui->renderEntitiesTable->selectRow(r);
-                renderEntityPropertiesTab_->setEntity(*re);
+                renderEntityPropertiesTab_->setEntity(re);
                 break;
             }
         }
@@ -621,7 +613,6 @@ ProjectWindow::reloadRenderEntitiesTable()
 
         QStandardItem *nameItem = new QStandardItem;
         nameItem->setText(entity->name.c_str());
-        nameItem->setData(QVariant(reinterpret_cast<qulonglong>((void*)(&entity))));
         row.append(nameItem);
 
         QStandardItem *typeItem = new QStandardItem;
