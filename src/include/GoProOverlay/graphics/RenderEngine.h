@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <vector>
 #include <yaml-cpp/yaml.h>
 
@@ -9,18 +10,44 @@
 
 namespace gpo
 {
-	class RenderEngine
+	class RenderedEntity
 	{
 	public:
-		class RenderedEntity
-		{
-		public:
-			RenderedObject *rObj;
-			cv::Size rSize;
-			cv::Point rPos;
-			std::string name;
-		};
+		std::unique_ptr<RenderedObject> rObj;
+		cv::Size rSize;
+		cv::Point rPos;
+		std::string name;
+	};
 
+	using RenderedEntityPtr = std::shared_ptr<RenderedEntity>;
+
+	template <class DerivedRenderedObject>
+	RenderedEntityPtr
+	make_render_entity()
+	{
+		auto re = std::make_shared<RenderedEntity>();
+		re->rObj = std::make_unique<DerivedRenderedObject>();
+		re->name = re->rObj->typeName();
+		re->rSize = re->rObj->getNativeSize();
+		re->rPos = cv::Point(0,0);
+		return re;
+	}
+
+	template <class DerivedRenderedObject>
+	RenderedEntityPtr
+	make_render_entity(
+		const std::string &name)
+	{
+		auto re = std::make_shared<RenderedEntity>();
+		re->rObj = std::make_unique<DerivedRenderedObject>();
+		re->name = name;
+		re->rSize = re->rObj->getNativeSize();
+		re->rPos = cv::Point(0,0);
+		return re;
+	}
+
+	class RenderEngine
+	{
 	public:
 		RenderEngine();
 
@@ -36,13 +63,13 @@ namespace gpo
 
 		void
 		addEntity(
-			RenderedEntity re);
+			const RenderedEntityPtr &re);
 
-		RenderedEntity &
+		RenderedEntityPtr
 		getEntity(
 			size_t idx);
 
-		const RenderedEntity &
+		const RenderedEntityPtr &
 		getEntity(
 			size_t idx) const;
 
@@ -75,7 +102,7 @@ namespace gpo
 
 	private:
 		cv::UMat rFrame_;
-		std::vector<RenderedEntity> entities_;
+		std::vector<RenderedEntityPtr> entities_;
 		GroupedSeekerPtr gSeeker_;
 
 	};

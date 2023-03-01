@@ -189,6 +189,16 @@ namespace gpo
 		const Track *
 		getTrack() const;
 
+		template <class DerivedRenderedObject>
+		DerivedRenderedObject *
+		as()
+		{
+			static_assert(
+				std::is_convertible<DerivedRenderedObject*, RenderedObject*>::value,
+				"DerivedRenderedObject must inherit RenderedObject as public");
+			return (DerivedRenderedObject*)(this);
+		}
+
 		YAML::Node
 		encode() const;
 

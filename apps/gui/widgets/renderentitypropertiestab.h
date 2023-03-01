@@ -26,7 +26,7 @@ public:
 
     void
     setEntity(
-            gpo::RenderEngine::RenderedEntity *entity);
+            gpo::RenderedEntityPtr entity);
 
 signals:
     void
@@ -37,7 +37,7 @@ private:
 
     gpo::RenderProject *project_;
 
-    gpo::RenderEngine::RenderedEntity *entity_;
+    gpo::RenderedEntityPtr entity_;
 
 };
 

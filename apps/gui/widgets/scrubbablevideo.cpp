@@ -74,24 +74,24 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
             // should grab the mouse first
             for (int e=(engine_->entityCount()-1); e>=0; e--)
             {
-                auto &entity = engine_->getEntity(e);
-                if ( ! entity.rObj->isVisible())
+                const auto &entity = engine_->getEntity(e);
+                if ( ! entity->rObj->isVisible())
                 {
                     continue;
                 }
 
                 if ( ! focusAcquired &&
-                    evtPosMapped.x() >= entity.rPos.x && evtPosMapped.x() <= (entity.rPos.x + entity.rSize.width) &&
-                    evtPosMapped.y() >= entity.rPos.y && evtPosMapped.y() <= (entity.rPos.y + entity.rSize.height))
+                    evtPosMapped.x() >= entity->rPos.x && evtPosMapped.x() <= (entity->rPos.x + entity->rSize.width) &&
+                    evtPosMapped.y() >= entity->rPos.y && evtPosMapped.y() <= (entity->rPos.y + entity->rSize.height))
                 {
-                    focusedEntity_ = &entity;
-                    entity.rObj->setBoundingBoxVisible(true);
-                    entity.rObj->setBoundingBoxThickness(boundingBoxThickness);
+                    focusedEntity_ = entity;
+                    entity->rObj->setBoundingBoxVisible(true);
+                    entity->rObj->setBoundingBoxThickness(boundingBoxThickness);
                     focusAcquired = true;
                 }
                 else
                 {
-                    entity.rObj->setBoundingBoxVisible(false);
+                    entity->rObj->setBoundingBoxVisible(false);
                 }
             }
 
@@ -127,7 +127,7 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
             mousePosWhenGrabbed_ = event->pos();
             entityPosWhenGrabbed_.setX(focusedEntity_->rPos.x);
             entityPosWhenGrabbed_.setY(focusedEntity_->rPos.y);
-            emit onEntitySelected(grabbedEntity_);
+            emit onEntitySelected(grabbedEntity_.get());
         }
     });
     connect(imgView_, &CvImageView::onMouseRelease, this, [this](QMouseEvent *event){
@@ -138,7 +138,7 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
             moveVector -= entityPosWhenGrabbed_;
             if (moveVector.manhattanLength() > 0)
             {
-                emit onEntityMoved(grabbedEntity_,moveVector);
+                emit onEntityMoved(grabbedEntity_.get(),moveVector);
             }
 
             grabbedEntity_ = nullptr;

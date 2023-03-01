@@ -308,11 +308,11 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         QStandardItem *entityNameItem = entitiesTableModel_->item(row,ENTITY_NAME_COLUMN);
         // recover the encoded pointer to a RenderedEntity within the name's data()
         QVariant v = entityNameItem->data();
-        auto re = reinterpret_cast<gpo::RenderEngine::RenderedEntity *>(v.toULongLong());
+        auto re = reinterpret_cast<gpo::RenderedEntityPtr *>(v.toULongLong());
         if (col == ENTITY_VISIBILITY_COLUMN)
         {
             QStandardItem *visItem = entitiesTableModel_->item(row,col);
-            re->rObj->setVisible(visItem->checkState() == Qt::CheckState::Checked);
+            (*re)->rObj->setVisible(visItem->checkState() == Qt::CheckState::Checked);
             setProjectDirty(true);
             render();
         }
@@ -322,8 +322,8 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         QStandardItem *entityNameItem = entitiesTableModel_->item(row,ENTITY_NAME_COLUMN);
         // recover the encoded pointer to a RenderedEntity within the name's data()
         QVariant v = entityNameItem->data();
-        auto re = reinterpret_cast<gpo::RenderEngine::RenderedEntity *>(v.toULongLong());
-        renderEntityPropertiesTab_->setEntity(re);
+        auto re = reinterpret_cast<gpo::RenderedEntityPtr *>(v.toULongLong());
+        renderEntityPropertiesTab_->setEntity(*re);
     });
     connect(renderEntityPropertiesTab_, &RenderEntityPropertiesTab::propertyChanged, this, [this]{
         setProjectDirty(true);
@@ -331,7 +331,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     });
 
     // scrubbable video signal handlers
-    connect(previewWindow_, &ScrubbableVideo::onEntitySelected, this, [this](gpo::RenderEngine::RenderedEntity *entity){
+    connect(previewWindow_, &ScrubbableVideo::onEntitySelected, this, [this](gpo::RenderedEntity *entity){
         // when an entity is selected in the video preview, highlight it in the entity table
         // and also display it in the properties pane.
         for (int r=0; r<entitiesTableModel_->rowCount(); r++)
@@ -339,16 +339,16 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
             QStandardItem *entityNameItem = entitiesTableModel_->item(r,ENTITY_NAME_COLUMN);
             // recover the encoded pointer to a RenderedEntity within the name's data()
             QVariant v = entityNameItem->data();
-            auto re = reinterpret_cast<gpo::RenderEngine::RenderedEntity *>(v.toULongLong());
-            if (re == entity)
+            auto re = reinterpret_cast<gpo::RenderedEntityPtr *>(v.toULongLong());
+            if (re->get() == entity)
             {
                 ui->renderEntitiesTable->selectRow(r);
-                renderEntityPropertiesTab_->setEntity(re);
+                renderEntityPropertiesTab_->setEntity(*re);
                 break;
             }
         }
     });
-    connect(previewWindow_, &ScrubbableVideo::onEntityMoved, this, [this](gpo::RenderEngine::RenderedEntity *entity, QPoint moveVector){
+    connect(previewWindow_, &ScrubbableVideo::onEntityMoved, this, [this](gpo::RenderedEntity *entity, QPoint moveVector){
         setProjectDirty(true);
     });
 
@@ -615,24 +615,24 @@ ProjectWindow::reloadRenderEntitiesTable()
     auto engine = proj_.getEngine();
     for (size_t ee=0; ee<engine->entityCount(); ee++)
     {
-        auto &entity = engine->getEntity(ee);
+        const auto &entity = engine->getEntity(ee);
 
         QList<QStandardItem *> row;
 
         QStandardItem *nameItem = new QStandardItem;
-        nameItem->setText(entity.name.c_str());
+        nameItem->setText(entity->name.c_str());
         nameItem->setData(QVariant(reinterpret_cast<qulonglong>((void*)(&entity))));
         row.append(nameItem);
 
         QStandardItem *typeItem = new QStandardItem;
-        typeItem->setText(entity.rObj->typeName().c_str());
+        typeItem->setText(entity->rObj->typeName().c_str());
         typeItem->setEditable(false);
         row.append(typeItem);
 
         QStandardItem *visibleItem = new QStandardItem;
         visibleItem->setCheckable(true);
         visibleItem->setCheckState(
-                    entity.rObj->isVisible() ?
+                    entity->rObj->isVisible() ?
                     Qt::CheckState::Checked :
                     Qt::CheckState::Unchecked);
         row.append(visibleItem);

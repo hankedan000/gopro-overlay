@@ -76,32 +76,28 @@ RenderEntityPropertiesTab::RenderEntityPropertiesTab(
     connect(ui->frictionCircleBorder_ColorPicker, &ColorPicker::pickedCV, this, [this](cv::Scalar newColor){
         if (entity_)
         {
-            auto frictionCircle = reinterpret_cast<gpo::FrictionCircleObject*>(entity_->rObj);
-            frictionCircle->setBorderColor(newColor);
+            entity_->rObj->as<gpo::FrictionCircleObject>()->setBorderColor(newColor);
             emit propertyChanged();
         }
     });
     connect(ui->taillength_spin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int newValue){
         if (entity_)
         {
-            auto frictionCircle = reinterpret_cast<gpo::FrictionCircleObject*>(entity_->rObj);
-            frictionCircle->setTailLength(newValue);
+            entity_->rObj->as<gpo::FrictionCircleObject>()->setTailLength(newValue);
             emit propertyChanged();
         }
     });
     connect(ui->frictionCircleTail_ColorPicker, &ColorPicker::pickedCV, this, [this](cv::Scalar newColor){
         if (entity_)
         {
-            auto frictionCircle = reinterpret_cast<gpo::FrictionCircleObject*>(entity_->rObj);
-            frictionCircle->setTailColor(newColor);
+            entity_->rObj->as<gpo::FrictionCircleObject>()->setTailColor(newColor);
             emit propertyChanged();
         }
     });
     connect(ui->frictionCircleDot_ColorPicker, &ColorPicker::pickedCV, this, [this](cv::Scalar newColor){
         if (entity_)
         {
-            auto frictionCircle = reinterpret_cast<gpo::FrictionCircleObject*>(entity_->rObj);
-            frictionCircle->setCurrentDotColor(newColor);
+            entity_->rObj->as<gpo::FrictionCircleObject>()->setCurrentDotColor(newColor);
             emit propertyChanged();
         }
     });
@@ -118,8 +114,7 @@ RenderEntityPropertiesTab::RenderEntityPropertiesTab(
         auto yComp = (TelemetryPlot::Y_Component)ui->yComponent_ComboBox->itemData(index).toULongLong();
         if (entity_)
         {
-            auto telemPlot = reinterpret_cast<gpo::TelemetryPlotObject*>(entity_->rObj);
-            telemPlot->setY_Component(yComp);
+            entity_->rObj->as<gpo::TelemetryPlotObject>()->setY_Component(yComp);
             emit propertyChanged();
         }
     });
@@ -139,7 +134,7 @@ RenderEntityPropertiesTab::setProject(
 
 void
 RenderEntityPropertiesTab::setEntity(
-        gpo::RenderEngine::RenderedEntity *entity)
+        gpo::RenderedEntityPtr entity)
 {
     ui->entityProperties_ScrollArea->hide();
 
@@ -236,7 +231,7 @@ RenderEntityPropertiesTab::setEntity(
         std::string objectTypeName = entity->rObj->typeName();
         if (objectTypeName == "FrictionCircleObject")
         {
-            auto frictionCircle = reinterpret_cast<gpo::FrictionCircleObject*>(entity->rObj);
+            auto frictionCircle = entity->rObj->as<gpo::FrictionCircleObject>();
             ui->frictionCircleBorder_ColorPicker->setColorCV(frictionCircle->getBorderColor());
             ui->taillength_spin->setValue(frictionCircle->getTailLength());
             ui->frictionCircleTail_ColorPicker->setColorCV(frictionCircle->getTailColor());
@@ -254,8 +249,7 @@ RenderEntityPropertiesTab::setEntity(
         }
         else if (objectTypeName == "TelemetryPlotObject")
         {
-            auto telemPlot = reinterpret_cast<gpo::TelemetryPlotObject*>(entity->rObj);
-            auto plotsY_Comp = telemPlot->getY_Component();
+            auto plotsY_Comp = entity->rObj->as<gpo::TelemetryPlotObject>()->getY_Component();
             for (int i=0; i<ui->yComponent_ComboBox->count(); i++)
             {
                 int yCompInt = ui->yComponent_ComboBox->itemData(i).toInt();
