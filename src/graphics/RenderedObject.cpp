@@ -4,17 +4,106 @@
 
 namespace gpo
 {
+
+	ModifiableDrawObject::ModifiableDrawObject(
+		const std::string &className)
+	 : ModifiableObject(className)
+	 , needsRerender_(false)
+	{
+	}
+
+	ModifiableDrawObject::~ModifiableDrawObject()
+	{
+	}
+
+	void
+	ModifiableDrawObject::markObjectModified(
+		bool needsRerender)
+	{
+		needsRerender_ = needsRerender_ || needsRerender;
+		ModifiableObject::markObjectModified();
+        for (auto &observer : observers_)
+        {
+            observer->onModified(this, needsRerender_);
+        }
+	}
+
+	bool
+	ModifiableDrawObject::needsRerender() const
+	{
+		return needsRerender_;
+	}
+
+	void
+	ModifiableDrawObject::addObserver(
+		ModifiableDrawObjectObserver *observer)
+	{
+        if (observer == nullptr)
+        {
+            spdlog::warn("can't add a null ModifiableDrawObjectObserver. ignoring add.'");
+            return;
+        }
+        observers_.insert(observer);
+	}
+
+	void
+	ModifiableDrawObject::removeObserver(
+		ModifiableDrawObjectObserver *observer)
+	{
+		observers_.erase(observer);
+	}
+
+	// BEGIN ModifiableObject overrides
+	void
+	ModifiableDrawObject::markObjectModified()
+	{
+		spdlog::warn(
+			"ModifiedObject::markObjectModified() was called on a ModifiableDrawObject."
+			" Please call ModifiableDrawObject::markObjectModified(bool needsRerender)"
+			" instead. We delegated the call to it just to be safe.");
+
+		// call the ModifiableDrawObject methods just to be safe
+		ModifiableDrawObject::markObjectModified(true);
+	}
+
+	bool
+	ModifiableDrawObject::isSavable(
+		bool /*noisy*/) const
+	{
+		return false;// we don't support saving individual ModifiableDrawObject
+	}
+	// END ModifiableObject overrides
+
+	bool
+	ModifiableDrawObject::subclassApplyModifications()
+	{
+		// nothing to apply
+		return true;
+	}
+
+	bool
+	ModifiableDrawObject::subclassSaveModifications()
+	{
+		// we don't support saving indivual RenderedObjects (should never get in here)
+		return false;
+	}
+
+	void
+	ModifiableDrawObject::clearNeedsRerender()
+	{
+		needsRerender_ = false;
+	}
+
 	RenderedObject::RenderedObject(
 		int width,
 		int height)
-	 : ModifiableObject("RenderedObject")
+	 : ModifiableDrawObject("RenderedObject")
 	 , outImg_(height,width,CV_8UC4,cv::Scalar(0,0,0,0))
 	 , visible_(true)
 	 , boundingBoxVisible_(false)
 	 , vSources_()
 	 , tSources_()
 	 , track_(nullptr)
-	 , needsRerender_(false)
 	{
 	}
 
@@ -29,7 +118,7 @@ namespace gpo
 	{
 		// call subclass's render method
 		subRender();
-		needsRerender_ = false;
+		clearNeedsRerender();
 	}
 
 	void
@@ -401,41 +490,6 @@ namespace gpo
 	}
 
 	void
-	RenderedObject::markObjectModified(
-		bool needsRerender)
-	{
-		needsRerender_ = needsRerender_ || needsRerender;
-		ModifiableObject::markObjectModified();
-	}
-
-	bool
-	RenderedObject::needsRerender() const
-	{
-		return needsRerender_;
-	}
-
-	// BEGIN ModifiableObject overrides
-	void
-	RenderedObject::markObjectModified()
-	{
-		spdlog::warn(
-			"ModifiedObject::markObjectModified() was called on a RenderedObject."
-			" Please call RenderedObject::markObjectModified(bool needsRerender)"
-			" instead. We delegated the call to it just to be safe.");
-
-		// call the RenderedObject methods just to be safe
-		RenderedObject::markObjectModified(true);
-	}
-
-	bool
-	RenderedObject::isSavable(
-		bool /*noisy*/) const
-	{
-		return false;// we don't support saving individual RenderedObjects
-	}
-	// END ModifiableObject overrides
-
-	void
 	RenderedObject::sourcesValid()
 	{
 		// do nothing impl - let subclass override if needed
@@ -505,20 +559,6 @@ namespace gpo
 		}
 
 		return met;
-	}
-
-	bool
-	RenderedObject::subclassApplyModifications()
-	{
-		// nothing to apply
-		return true;
-	}
-
-	bool
-	RenderedObject::subclassSaveModifications()
-	{
-		// we don't support saving indivual RenderedObjects (should never get in here)
-		return false;
 	}
 
 	void

@@ -10,43 +10,69 @@
 
 namespace gpo
 {
-	class RenderedEntity
+
+	// forward declare
+	class RenderedEntity;
+
+	using RenderedEntityPtr = std::shared_ptr<RenderedEntity>;
+
+	class RenderedEntity : public ModifiableDrawObject, private ModifiableDrawObjectObserver
 	{
+	public:
+		RenderedEntity();
+
+		~RenderedEntity();
+
+		template<class DerivedRenderedObject>
+		static
+		RenderedEntityPtr
+		make()
+		{
+			static_assert(
+				std::is_convertible<DerivedRenderedObject*, RenderedObject*>::value,
+				"DerivedRenderedObject must inherit RenderedObject as public");
+			auto re = std::make_shared<RenderedEntity>();
+			re->rObj = std::make_unique<DerivedRenderedObject>();
+			re->rObj->addObserver(re.get());
+			re->name = re->rObj->typeName();
+			re->rSize = re->rObj->getNativeSize();
+			re->rPos = cv::Point(0,0);
+			return re;
+		}
+
+		template<class DerivedRenderedObject>
+		static
+		RenderedEntityPtr
+		make(
+			const std::string &name)
+		{
+			static_assert(
+				std::is_convertible<DerivedRenderedObject*, RenderedObject*>::value,
+				"DerivedRenderedObject must inherit RenderedObject as public");
+			auto re = std::make_shared<RenderedEntity>();
+			re->rObj = std::make_unique<DerivedRenderedObject>();
+			re->rObj->addObserver(re.get());
+			re->name = name;
+			re->rSize = re->rObj->getNativeSize();
+			re->rPos = cv::Point(0,0);
+			return re;
+		}
+
+	private:
+        void
+        onModified(
+            ModifiableDrawObject *drawable,
+			bool needsRerender) override;
+
 	public:
 		std::unique_ptr<RenderedObject> rObj;
 		cv::Size rSize;
 		cv::Point rPos;
 		std::string name;
+	
 	};
 
-	using RenderedEntityPtr = std::shared_ptr<RenderedEntity>;
-
-	template <class DerivedRenderedObject>
-	RenderedEntityPtr
-	make_render_entity()
-	{
-		auto re = std::make_shared<RenderedEntity>();
-		re->rObj = std::make_unique<DerivedRenderedObject>();
-		re->name = re->rObj->typeName();
-		re->rSize = re->rObj->getNativeSize();
-		re->rPos = cv::Point(0,0);
-		return re;
-	}
-
-	template <class DerivedRenderedObject>
-	RenderedEntityPtr
-	make_render_entity(
-		const std::string &name)
-	{
-		auto re = std::make_shared<RenderedEntity>();
-		re->rObj = std::make_unique<DerivedRenderedObject>();
-		re->name = name;
-		re->rSize = re->rObj->getNativeSize();
-		re->rPos = cv::Point(0,0);
-		return re;
-	}
-
-	class RenderEngine
+	class RenderEngine : public ModifiableDrawObject, private ModifiableDrawObjectObserver
 	{
 	public:
 		RenderEngine();
@@ -100,6 +126,12 @@ namespace gpo
 			const YAML::Node& node,
 			const DataSourceManager &dsm);
 
+	private:
+        void
+        onModified(
+            ModifiableDrawObject *drawable,
+			bool needsRerender) override;
+	
 	private:
 		cv::UMat rFrame_;
 		std::vector<RenderedEntityPtr> entities_;

@@ -15,8 +15,26 @@
 namespace gpo
 {
 
+	RenderedEntity::RenderedEntity()
+	 : ModifiableDrawObject("RenderedEntity")
+	{
+	}
+
+	RenderedEntity::~RenderedEntity()
+	{
+	}
+
+	void
+	RenderedEntity::onModified(
+		ModifiableDrawObject *drawable,
+		bool needsRerender)
+	{
+		markObjectModified(needsRerender);
+	}
+
 	RenderEngine::RenderEngine()
-	 : rFrame_()
+	 : ModifiableDrawObject("RenderEngine")
+	 , rFrame_()
 	 , entities_()
 	 , gSeeker_(new GroupedSeeker())
 	{
@@ -57,6 +75,7 @@ namespace gpo
 			re->name = re->rObj->typeName() + "<" + std::to_string((size_t)&re) + ">";
 		}
 
+		re->addObserver(this);
 		entities_.push_back(re);
 
 		for (size_t i=0; i<re->rObj->numVideoSources(); i++)
@@ -92,7 +111,9 @@ namespace gpo
 		size_t idx)
 	{
 		// FIXME need to rebuild grouped seeker
-		entities_.erase(std::next(entities_.begin(), idx));
+		auto entityItr = std::next(entities_.begin(), idx);
+		(*entityItr)->removeObserver(this);
+		entities_.erase(entityItr);
 	}
 
 	size_t
@@ -125,6 +146,7 @@ namespace gpo
 	void
 	RenderEngine::render()
 	{
+		spdlog::info(__func__);
 		rFrame_.setTo(cv::Scalar(0,0,0));// clear frame
 
 		// render all entities. this can be done in parallel
@@ -219,27 +241,27 @@ namespace gpo
 			const YAML::Node &yEntities = node["entities"];
 			for (size_t i=0; i<yEntities.size(); i++)
 			{
-				RenderedEntityPtr re = nullptr;
+				RenderedEntityPtr re;
 
 				const YAML::Node yEntity = yEntities[i];
 				const YAML::Node yR_Obj = yEntity["rObj"];
 				const std::string typeName = yR_Obj["typeName"].as<std::string>();
 				if (typeName == "FrictionCircleObject")
-					re = make_render_entity<FrictionCircleObject>();
+					re = RenderedEntity::make<FrictionCircleObject>();
 				else if (typeName == "LapTimerObject")
-					re = make_render_entity<LapTimerObject>();
+					re = RenderedEntity::make<LapTimerObject>();
 				else if (typeName == "SpeedometerObject")
-					re = make_render_entity<SpeedometerObject>();
+					re = RenderedEntity::make<SpeedometerObject>();
 				else if (typeName == "TelemetryPlotObject")
-					re = make_render_entity<TelemetryPlotObject>();
+					re = RenderedEntity::make<TelemetryPlotObject>();
 				else if (typeName == "TelemetryPrintoutObject")
-					re = make_render_entity<TelemetryPrintoutObject>();
+					re = RenderedEntity::make<TelemetryPrintoutObject>();
 				else if (typeName == "TextObject")
-					re = make_render_entity<TextObject>();
+					re = RenderedEntity::make<TextObject>();
 				else if (typeName == "TrackMapObject")
-					re = make_render_entity<TrackMapObject>();
+					re = RenderedEntity::make<TrackMapObject>();
 				else if (typeName == "VideoObject")
-					re = make_render_entity<VideoObject>();
+					re = RenderedEntity::make<VideoObject>();
 				else
 					throw std::runtime_error("unsupported decode for RenderedObject type " + typeName);
 
@@ -255,6 +277,18 @@ namespace gpo
 		// FIXME need to rebuild grouped seeker
 
 		return true;
+	}
+
+	void
+	RenderEngine::onModified(
+		ModifiableDrawObject *drawable,
+		bool needsRerender)
+	{
+		if (needsRerender)
+		{
+			render();
+		}
+		onModified(this, needsRerender);
 	}
 
 	RenderEnginePtr
@@ -307,20 +341,20 @@ namespace gpo
 
 		engine->setRenderSize(RENDERED_VIDEO_SIZE);
 
-		RenderedEntityPtr topVideo = make_render_entity<VideoObject>("topVideo");
+		RenderedEntityPtr topVideo = RenderedEntity::make<VideoObject>("topVideo");
 		topVideo->rObj->addVideoSource(topData->videoSrc);
 		topVideo->rSize = topVideo->rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 2.0);
 		topVideo->rPos = cv::Point(RENDERED_VIDEO_SIZE.width-topVideo->rSize.width, 0);
 		topVideo->rObj->addVideoSource(topData->videoSrc);
 		engine->addEntity(topVideo);
-		RenderedEntityPtr botVideo = make_render_entity<VideoObject>("botVideo");
+		RenderedEntityPtr botVideo = RenderedEntity::make<VideoObject>("botVideo");
 		botVideo->rObj->addVideoSource(botData->videoSrc);
 		botVideo->rSize = botVideo->rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 2.0);
 		botVideo->rPos = cv::Point(RENDERED_VIDEO_SIZE.width-botVideo->rSize.width, RENDERED_VIDEO_SIZE.height-botVideo->rSize.height);
 		botVideo->rObj->addVideoSource(botData->videoSrc);
 		engine->addEntity(botVideo);
 
-		RenderedEntityPtr trackMap = make_render_entity<TrackMapObject>("trackmap");
+		RenderedEntityPtr trackMap = RenderedEntity::make<TrackMapObject>("trackmap");
 		trackMap->rSize = trackMap->rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
 		trackMap->rPos = cv::Point(0,0);
 		trackMap->rObj->addTelemetrySource(topData->telemSrc);
@@ -330,39 +364,39 @@ namespace gpo
 		trackMap->rObj->as<TrackMapObject>()->setDotColor(1,BOT_COLOR);
 		engine->addEntity(trackMap);
 
-		RenderedEntityPtr topFC = make_render_entity<FrictionCircleObject>("topFrictionCircle");
+		RenderedEntityPtr topFC = RenderedEntity::make<FrictionCircleObject>("topFrictionCircle");
 		topFC->rSize = topFC->rObj->getScaledSizeFromTargetHeight(topVideo->rSize.height / 2.0);
 		topFC->rPos = cv::Point(RENDERED_VIDEO_SIZE.width - topVideo->rSize.width - topFC->rSize.width, 0);
 		topFC->rObj->as<FrictionCircleObject>()->setTailLength(fcTailLength);
 		topFC->rObj->addTelemetrySource(topData->telemSrc);
 		engine->addEntity(topFC);
-		RenderedEntityPtr botFC = make_render_entity<FrictionCircleObject>("botFrictionCircle");
+		RenderedEntityPtr botFC = RenderedEntity::make<FrictionCircleObject>("botFrictionCircle");
 		botFC->rSize = botFC->rObj->getScaledSizeFromTargetHeight(botVideo->rSize.height / 2.0);
 		botFC->rPos = cv::Point(RENDERED_VIDEO_SIZE.width - botVideo->rSize.width - botFC->rSize.width, RENDERED_VIDEO_SIZE.height - botVideo->rSize.height);
 		botFC->rObj->as<FrictionCircleObject>()->setTailLength(fcTailLength);
 		botFC->rObj->addTelemetrySource(botData->telemSrc);
 		engine->addEntity(botFC);
 
-		RenderedEntityPtr topLapTimer = make_render_entity<LapTimerObject>("topLapTimer");
+		RenderedEntityPtr topLapTimer = RenderedEntity::make<LapTimerObject>("topLapTimer");
 		topLapTimer->rSize = topLapTimer->rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 10.0);
 		topLapTimer->rPos = cv::Point(0,RENDERED_VIDEO_SIZE.height / 2 - topLapTimer->rSize.height);
 		topLapTimer->rObj->addTelemetrySource(topData->telemSrc);
 		engine->addEntity(topLapTimer);
-		RenderedEntityPtr botLapTimer = make_render_entity<LapTimerObject>("botLapTimer");
+		RenderedEntityPtr botLapTimer = RenderedEntity::make<LapTimerObject>("botLapTimer");
 		botLapTimer->rSize = topLapTimer->rSize;
 		botLapTimer->rPos = cv::Point(0,RENDERED_VIDEO_SIZE.height / 2);
 		botLapTimer->rObj->addTelemetrySource(botData->telemSrc);
 		engine->addEntity(botLapTimer);
 
 		const bool showDebug = false;
-		RenderedEntityPtr topPrintout = make_render_entity<TelemetryPrintoutObject>("topPrintout");
+		RenderedEntityPtr topPrintout = RenderedEntity::make<TelemetryPrintoutObject>("topPrintout");
 		topPrintout->rSize = topPrintout->rObj->getNativeSize();
 		topPrintout->rPos = cv::Point(RENDERED_VIDEO_SIZE.width-topVideo->rSize.width, 0);
 		topPrintout->rObj->addTelemetrySource(topData->telemSrc);
 		topPrintout->rObj->setVisible(showDebug);
 		topPrintout->rObj->as<TelemetryPrintoutObject>()->setFontColor(TOP_COLOR);
 		engine->addEntity(topPrintout);
-		RenderedEntityPtr botPrintout = make_render_entity<TelemetryPrintoutObject>("botPrintout");
+		RenderedEntityPtr botPrintout = RenderedEntity::make<TelemetryPrintoutObject>("botPrintout");
 		botPrintout->rSize = botPrintout->rObj->getNativeSize();
 		botPrintout->rPos = cv::Point(RENDERED_VIDEO_SIZE.width-botVideo->rSize.width, RENDERED_VIDEO_SIZE.height-botVideo->rSize.height);
 		botPrintout->rObj->addTelemetrySource(botData->telemSrc);
@@ -370,25 +404,25 @@ namespace gpo
 		botPrintout->rObj->as<TelemetryPrintoutObject>()->setFontColor(BOT_COLOR);
 		engine->addEntity(botPrintout);
 
-		RenderedEntityPtr topSpeedo = make_render_entity<SpeedometerObject>("topSpeedometer");
+		RenderedEntityPtr topSpeedo = RenderedEntity::make<SpeedometerObject>("topSpeedometer");
 		topSpeedo->rSize = topSpeedo->rObj->getScaledSizeFromTargetHeight(topVideo->rSize.height / 4.0);
 		topSpeedo->rPos = cv::Point(RENDERED_VIDEO_SIZE.width - topVideo->rSize.width - topSpeedo->rSize.width, topVideo->rSize.height - topSpeedo->rSize.height);
 		topSpeedo->rObj->addTelemetrySource(topData->telemSrc);
 		engine->addEntity(topSpeedo);
-		RenderedEntityPtr botSpeedo = make_render_entity<SpeedometerObject>("botSpeedometer");
+		RenderedEntityPtr botSpeedo = RenderedEntity::make<SpeedometerObject>("botSpeedometer");
 		botSpeedo->rSize = botSpeedo->rObj->getScaledSizeFromTargetHeight(botVideo->rSize.height / 4.0);
 		botSpeedo->rPos = cv::Point(RENDERED_VIDEO_SIZE.width - botVideo->rSize.width - botSpeedo->rSize.width, RENDERED_VIDEO_SIZE.height - botSpeedo->rSize.height);
 		botSpeedo->rObj->addTelemetrySource(botData->telemSrc);
 		engine->addEntity(botSpeedo);
 
-		RenderedEntityPtr topText = make_render_entity<TextObject>("topText");
+		RenderedEntityPtr topText = RenderedEntity::make<TextObject>("topText");
 		topText->rPos = cv::Point(RENDERED_VIDEO_SIZE.width - topVideo->rSize.width, 50);
 		topText->rObj->as<TextObject>()->setText("Run A");
 		topText->rObj->as<TextObject>()->setColor(TOP_COLOR);
 		topText->rObj->as<TextObject>()->setScale(2);
 		topText->rObj->as<TextObject>()->setThickness(2);
 		engine->addEntity(topText);
-		RenderedEntityPtr botText = make_render_entity<TextObject>("botText");
+		RenderedEntityPtr botText = RenderedEntity::make<TextObject>("botText");
 		botText->rPos = cv::Point(RENDERED_VIDEO_SIZE.width - botVideo->rSize.width, topVideo->rSize.height + 50);
 		botText->rObj->as<TextObject>()->setText("Run B");
 		botText->rObj->as<TextObject>()->setColor(BOT_COLOR);
@@ -396,7 +430,7 @@ namespace gpo
 		botText->rObj->as<TextObject>()->setThickness(2);
 		engine->addEntity(botText);
 
-		RenderedEntityPtr plot = make_render_entity<TelemetryPlotObject>("plot");
+		RenderedEntityPtr plot = RenderedEntity::make<TelemetryPlotObject>("plot");
 		plot->rSize = plot->rObj->getNativeSize();
 		plot->rPos = cv::Point(0, 900);
 		plot->rObj->addTelemetrySource(topData->telemSrc);
@@ -422,7 +456,7 @@ namespace gpo
 		auto engine = RenderEnginePtr(new RenderEngine);
 		engine->setRenderSize(RENDERED_VIDEO_SIZE);
 
-		RenderedEntityPtr video = make_render_entity<VideoObject>("video");
+		RenderedEntityPtr video = RenderedEntity::make<VideoObject>("video");
 		video->rSize = RENDERED_VIDEO_SIZE;
 		video->rPos = cv::Point(0, 0);
 		video->rObj->addVideoSource(data->videoSrc);
@@ -431,7 +465,7 @@ namespace gpo
 		auto track = data->getDatumTrack();
 		if (track)
 		{
-			RenderedEntityPtr trackMap = make_render_entity<TrackMapObject>("trackmap");
+			RenderedEntityPtr trackMap = RenderedEntity::make<TrackMapObject>("trackmap");
 			trackMap->rSize = trackMap->rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
 			trackMap->rPos = cv::Point(0, 0);
 			trackMap->rObj->addTelemetrySource(data->telemSrc);
@@ -439,26 +473,26 @@ namespace gpo
 			engine->addEntity(trackMap);
 		}
 
-		RenderedEntityPtr frictionCircle = make_render_entity<FrictionCircleObject>("frictionCircle");
+		RenderedEntityPtr frictionCircle = RenderedEntity::make<FrictionCircleObject>("frictionCircle");
 		frictionCircle->rSize = frictionCircle->rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
 		frictionCircle->rPos = RENDERED_VIDEO_SIZE - frictionCircle->rSize;
 		frictionCircle->rObj->as<FrictionCircleObject>()->setTailLength(fcTailLength);
 		frictionCircle->rObj->addTelemetrySource(data->telemSrc);
 		engine->addEntity(frictionCircle);
 
-		RenderedEntityPtr speedo = make_render_entity<SpeedometerObject>("speedometer");
+		RenderedEntityPtr speedo = RenderedEntity::make<SpeedometerObject>("speedometer");
 		speedo->rSize = speedo->rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 6.0);
 		speedo->rPos = cv::Size(0, RENDERED_VIDEO_SIZE.height - speedo->rSize.height);
 		speedo->rObj->addTelemetrySource(data->telemSrc);
 		engine->addEntity(speedo);
 
-		RenderedEntityPtr timer = make_render_entity<LapTimerObject>("lapTimer");
+		RenderedEntityPtr timer = RenderedEntity::make<LapTimerObject>("lapTimer");
 		timer->rSize = timer->rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 10.0);
 		timer->rPos = cv::Size(RENDERED_VIDEO_SIZE.width / 2.0 - timer->rSize.width / 2.0, 0);
 		timer->rObj->addTelemetrySource(data->telemSrc);
 		engine->addEntity(timer);
 
-		RenderedEntityPtr printout = make_render_entity<TelemetryPrintoutObject>("printout");
+		RenderedEntityPtr printout = RenderedEntity::make<TelemetryPrintoutObject>("printout");
 		printout->rSize = printout->rObj->getNativeSize();
 		printout->rPos = video->rPos;
 		printout->rObj->addTelemetrySource(data->telemSrc);
