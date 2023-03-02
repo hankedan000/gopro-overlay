@@ -46,7 +46,7 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
 
         // video preview displays a scaled version of the engine's rendered image.
         // for the mouse event location to be comparable, we need to map it into
-        // render image's coordinate space.
+        // render image's coordinate space. (RoF - Render over Frame)
         auto renderSize = engine_->getRenderSize();
         auto frameSize = getSize();
         double scaleFactorRoF = (double)(renderSize.height) / frameSize.height;
@@ -70,11 +70,16 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
             // not holding an entity yet, so perform mouse focusing logic
             bool focusAcquired = false;
             auto prevFocusedEntity = focusedEntity_;
-            // iterate backwards because we entity that are rendered above others
+            // iterate backwards because entities that are rendered above others
             // should grab the mouse first
             for (int e=(engine_->entityCount()-1); e>=0; e--)
             {
                 auto &entity = engine_->getEntity(e);
+                if ( ! entity.rObj->isVisible())
+                {
+                    continue;
+                }
+
                 if ( ! focusAcquired &&
                     evtPosMapped.x() >= entity.rPos.x && evtPosMapped.x() <= (entity.rPos.x + entity.rSize.width) &&
                     evtPosMapped.y() >= entity.rPos.y && evtPosMapped.y() <= (entity.rPos.y + entity.rSize.height))
