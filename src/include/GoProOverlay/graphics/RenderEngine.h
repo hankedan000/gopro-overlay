@@ -16,7 +16,7 @@ namespace gpo
 
 	using RenderedEntityPtr = std::shared_ptr<RenderedEntity>;
 
-	class RenderedEntity : public ModifiableDrawObject, private ModifiableDrawObjectObserver
+	class RenderedEntity : public ModifiableDrawObject,	private ModifiableDrawObjectObserver
 	{
 	public:
 		RenderedEntity();
@@ -72,7 +72,10 @@ namespace gpo
 	
 	};
 
-	class RenderEngine : public ModifiableDrawObject, private ModifiableDrawObjectObserver
+	class RenderEngine :
+		public ModifiableDrawObject,
+		private ModifiableObjectObserver,
+		private ModifiableDrawObjectObserver
 	{
 	public:
 		RenderEngine();
@@ -127,6 +130,10 @@ namespace gpo
 			const DataSourceManager &dsm);
 
 	private:
+        void
+        onModified(
+            ModifiableObject *modifiable) override;
+		
         void
         onModified(
             ModifiableDrawObject *drawable,

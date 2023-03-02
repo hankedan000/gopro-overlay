@@ -92,6 +92,7 @@ namespace gpo
     void
     ModifiableObject::markObjectModified()
     {
+		spdlog::trace("{} modified", className());
         hasApplyableEdits_ = true;
         hasSavableEdits_ = true;
         for (auto &observer : observers_)

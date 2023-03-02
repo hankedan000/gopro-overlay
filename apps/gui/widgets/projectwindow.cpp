@@ -155,7 +155,6 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     });
     connect(ui->previewAlignment_PushButton, &QPushButton::clicked, this, [this]{
         seekEngineToAlignment(getAlignmentInfoFromUI(),false);
-        render();
         if ( ! ui->customAlignmentCheckBox->isChecked())
         {
             updateCustomAlignmentTableValues();
@@ -169,7 +168,6 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     connect(ui->applyAlignment_PushButton, &QPushButton::clicked, this, [this]{
         applyAlignmentToProject();
         seekEngineToAlignment(getAlignmentInfoFromUI(),true);
-        render();
         ui->resetAlignment_PushButton->setEnabled(false);
         ui->applyAlignment_PushButton->setEnabled(false);
     });
@@ -252,7 +250,6 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         gSeeker->seekToAlignmentInfo(proj_.getAlignmentInfo());
         auto leadIn = ui->leadIn_SpinBox->value();
         gSeeker->seekAllRelativeTime(leadIn * -1.0);// -1 because lead-in is defined as seconds before alignment point
-        render();
     });
     connect(ui->leadOut_SpinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, [this](double value){
         proj_.setLeadOutSeconds(value);
@@ -288,7 +285,6 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         proj_.getEngine()->removeEntity(selectedIndexs.at(0).row());
         setProjectDirty(true);
         reloadRenderEntitiesTable();
-        render();
     });
 
     connect(entitiesTableModel_, &QStandardItemModel::dataChanged, this, [this](
@@ -311,17 +307,12 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
             QStandardItem *visItem = entitiesTableModel_->item(row,col);
             re->rObj->setVisible(visItem->checkState() == Qt::CheckState::Checked);
             setProjectDirty(true);
-            render();
         }
     });
     connect(ui->renderEntitiesTable, &QTableView::clicked, this, [this](const QModelIndex &index){
         const auto row = index.row();
         auto re = proj_.getEngine()->getEntity(row);
         renderEntityPropertiesTab_->setEntity(re);
-    });
-    connect(renderEntityPropertiesTab_, &RenderEntityPropertiesTab::propertyChanged, this, [this]{
-        setProjectDirty(true);
-        render();
     });
 
     // scrubbable video signal handlers

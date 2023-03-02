@@ -10,7 +10,7 @@ namespace Ui {
 class ScrubbableVideo;
 }
 
-class ScrubbableVideo : public QWidget
+class ScrubbableVideo : public QWidget, private gpo::ModifiableDrawObjectObserver
 {
     Q_OBJECT
 
@@ -43,6 +43,12 @@ signals:
     onEntityMoved(
             gpo::RenderedEntity *entity,
             QPoint moveVector);
+
+private:
+    void
+    onModified(
+            gpo::ModifiableDrawObject *drawable,
+            bool needsRerender) override;
 
 private:
     Ui::ScrubbableVideo *ui;

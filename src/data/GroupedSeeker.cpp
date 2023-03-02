@@ -6,7 +6,8 @@
 namespace gpo
 {
 	GroupedSeeker::GroupedSeeker()
-	 : seekers_()
+	 : ModifiableObject("GroupedSeeker")
+	 , seekers_()
 	{
 	}
 
@@ -14,6 +15,7 @@ namespace gpo
 	GroupedSeeker::clear()
 	{
 		seekers_.clear();
+		markObjectModified();
 	}
 
 	void
@@ -21,6 +23,7 @@ namespace gpo
 		TelemetrySeekerPtr seeker)
 	{
 		seekers_.push_back(seeker);
+		markObjectModified();
 	}
 
 	bool
@@ -40,6 +43,7 @@ namespace gpo
 		if (isNewSeeker)
 		{
 			seekers_.push_back(seeker);
+			markObjectModified();
 		}
 		return isNewSeeker;
 	}
@@ -62,6 +66,7 @@ namespace gpo
 		size_t idx)
 	{
 		seekers_.erase(std::next(seekers_.begin(), idx));
+		markObjectModified();
 	}
 
 	void
@@ -83,6 +88,7 @@ namespace gpo
 		{
 			seeker->prev();
 		}
+		markObjectModified();
 	}
 
 	void
@@ -104,6 +110,7 @@ namespace gpo
 		{
 			seeker->next();
 		}
+		markObjectModified();
 	}
 
 	void
@@ -145,6 +152,7 @@ namespace gpo
 				spdlog::error("RenderAlignmentType_E ({}) is not supported!",(int)renderAlignInfo.type);
 				break;
 		}
+		markObjectModified();
 	}
 
 	void
@@ -155,6 +163,7 @@ namespace gpo
 		{
 			seeker->seekToIdx(idx);
 		}
+		markObjectModified();
 	}
 
 	void
@@ -176,6 +185,7 @@ namespace gpo
 		{
 			seeker->seekRelative(amount,forward);
 		}
+		markObjectModified();
 	}
 
 	void
@@ -196,6 +206,7 @@ namespace gpo
 		{
 			seeker->seekRelativeTime(offset_secs);
 		}
+		markObjectModified();
 	}
 
 	void
@@ -265,6 +276,7 @@ namespace gpo
 		{
 			seeker->seekToLapEntry(lap);
 		}
+		markObjectModified();
 		return true;
 	}
 
@@ -294,6 +306,7 @@ namespace gpo
 		{
 			seeker->seekToLapExit(lap);
 		}
+		markObjectModified();
 		return true;
 	}
 
@@ -342,5 +355,31 @@ namespace gpo
 			timeLimits.second = std::max(timeLimits.second,forwardsTimeLimit);
 		}
 		return timeLimits;
+	}
+
+	bool
+	GroupedSeeker::isApplyable(
+		bool noisy) const
+	{
+		return false;
+	}
+
+	bool
+	GroupedSeeker::isSavable(
+		bool noisy) const
+	{
+		return false;
+	}
+
+	bool
+	GroupedSeeker::subclassApplyModifications()
+	{
+		return false;
+	}
+
+	bool
+	GroupedSeeker::subclassSaveModifications()
+	{
+		return false;
 	}
 }

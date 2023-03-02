@@ -28,10 +28,6 @@ public:
     setEntity(
             gpo::RenderedEntityPtr entity);
 
-signals:
-    void
-    propertyChanged();
-
 private:
     Ui::RenderEntityPropertiesTab *ui;
 

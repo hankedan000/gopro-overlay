@@ -21,14 +21,12 @@ RenderEntityPropertiesTab::RenderEntityPropertiesTab(
         if (entity_)
         {
             entity_->rPos.x = newValue;
-            emit propertyChanged();
         }
     });
     connect(ui->entityPositionY_spin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int newValue){
         if (entity_)
         {
             entity_->rPos.y = newValue;
-            emit propertyChanged();
         }
     });
     connect(ui->entitySizeWidth_spin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int newValue){
@@ -47,7 +45,6 @@ RenderEntityPropertiesTab::RenderEntityPropertiesTab(
                 newSize.width = newValue;
             }
             entity_->rSize = newSize;
-            emit propertyChanged();
         }
     });
     connect(ui->entitySizeHeight_spin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int newValue){
@@ -66,7 +63,6 @@ RenderEntityPropertiesTab::RenderEntityPropertiesTab(
                 newSize.height = newValue;
             }
             entity_->rSize = newSize;
-            emit propertyChanged();
         }
     });
 
@@ -77,28 +73,24 @@ RenderEntityPropertiesTab::RenderEntityPropertiesTab(
         if (entity_)
         {
             entity_->rObj->as<gpo::FrictionCircleObject>()->setBorderColor(newColor);
-            emit propertyChanged();
         }
     });
     connect(ui->taillength_spin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int newValue){
         if (entity_)
         {
             entity_->rObj->as<gpo::FrictionCircleObject>()->setTailLength(newValue);
-            emit propertyChanged();
         }
     });
     connect(ui->frictionCircleTail_ColorPicker, &ColorPicker::pickedCV, this, [this](cv::Scalar newColor){
         if (entity_)
         {
             entity_->rObj->as<gpo::FrictionCircleObject>()->setTailColor(newColor);
-            emit propertyChanged();
         }
     });
     connect(ui->frictionCircleDot_ColorPicker, &ColorPicker::pickedCV, this, [this](cv::Scalar newColor){
         if (entity_)
         {
             entity_->rObj->as<gpo::FrictionCircleObject>()->setCurrentDotColor(newColor);
-            emit propertyChanged();
         }
     });
 
@@ -115,7 +107,6 @@ RenderEntityPropertiesTab::RenderEntityPropertiesTab(
         if (entity_)
         {
             entity_->rObj->as<gpo::TelemetryPlotObject>()->setY_Component(yComp);
-            emit propertyChanged();
         }
     });
 }

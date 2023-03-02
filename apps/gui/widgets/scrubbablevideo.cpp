@@ -183,5 +183,28 @@ void
 ScrubbableVideo::setEngine(
         gpo::RenderEnginePtr engine)
 {
+    if (engine_)
+    {
+        // no longer observe the old engine
+        engine_->removeObserver(this);
+    }
+
     engine_ = engine;
+
+    if (engine_)
+    {
+        // begin observing the new engine
+        engine_->addObserver(this);
+    }
+}
+
+void
+ScrubbableVideo::onModified(
+        gpo::ModifiableDrawObject *drawable,
+        bool needsRerender)
+{
+    if (needsRerender)
+    {
+        showImage(engine_->getFrame());
+    }
 }

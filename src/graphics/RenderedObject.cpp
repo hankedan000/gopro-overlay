@@ -20,6 +20,7 @@ namespace gpo
 	ModifiableDrawObject::markObjectModified(
 		bool needsRerender)
 	{
+		spdlog::trace("{} modified. needRerender = {}", className(), needsRerender);
 		needsRerender_ = needsRerender_ || needsRerender;
 		ModifiableObject::markObjectModified();
         for (auto &observer : observers_)

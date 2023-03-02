@@ -45,6 +45,7 @@ namespace gpo
 		cv::Size size)
 	{
 		rFrame_.create(size,CV_8UC3);
+		markObjectModified(true);
 	}
 
 	cv::Size
@@ -58,6 +59,7 @@ namespace gpo
 	{
 		entities_.clear();
 		gSeeker_->clear();
+		markObjectModified(true);
 	}
 
 	void
@@ -90,6 +92,7 @@ namespace gpo
 			auto tSeeker = tSrc->seeker();
 			gSeeker_->addSeekerUnique(tSeeker);
 		}
+		markObjectModified(true);
 	}
 
 	RenderedEntityPtr
@@ -114,6 +117,7 @@ namespace gpo
 		auto entityItr = std::next(entities_.begin(), idx);
 		(*entityItr)->removeObserver(this);
 		entities_.erase(entityItr);
+		markObjectModified(true);
 	}
 
 	size_t
@@ -146,7 +150,7 @@ namespace gpo
 	void
 	RenderEngine::render()
 	{
-		spdlog::info(__func__);
+		spdlog::trace(__func__);
 		rFrame_.setTo(cv::Scalar(0,0,0));// clear frame
 
 		// render all entities. this can be done in parallel
@@ -281,6 +285,17 @@ namespace gpo
 
 	void
 	RenderEngine::onModified(
+		ModifiableObject *modifiable)
+	{
+		if (modifiable == gSeeker_.get())
+		{
+			render();
+		}
+		markObjectModified(true);
+	}
+
+	void
+	RenderEngine::onModified(
 		ModifiableDrawObject *drawable,
 		bool needsRerender)
 	{
@@ -288,7 +303,7 @@ namespace gpo
 		{
 			render();
 		}
-		onModified(this, needsRerender);
+		markObjectModified(needsRerender);
 	}
 
 	RenderEnginePtr
