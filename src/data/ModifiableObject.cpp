@@ -14,6 +14,16 @@ namespace gpo
     {
     }
 
+    ModifiableObject::ModifiableObject(
+        const ModifiableObject &other)
+     : className_(other.className_)
+     , hasApplyableEdits_(other.hasApplyableEdits_)
+     , hasSavableEdits_(other.hasApplyableEdits_)
+     , savePath_(other.savePath_)
+     , observers_()// don't copy observers. they should remain bound only to 'other'.
+    {
+    }
+
     ModifiableObject::~ModifiableObject()
     {
         // make a copy of the observers list in case the observer removes themself in

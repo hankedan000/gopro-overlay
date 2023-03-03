@@ -97,6 +97,15 @@ namespace gpo
          */
         ModifiableDrawObject(
             const std::string &className);
+		
+        /**
+         * Copy constructor
+         * 
+         * @param[in] other
+         * the object to copy
+         */
+        ModifiableDrawObject(
+            const ModifiableDrawObject &other);
 
         virtual
         ~ModifiableDrawObject();

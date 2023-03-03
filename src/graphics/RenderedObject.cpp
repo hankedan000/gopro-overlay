@@ -9,6 +9,15 @@ namespace gpo
 		const std::string &className)
 	 : ModifiableObject(className)
 	 , needsRerender_(false)
+	 , observers_()
+	{
+	}
+
+	ModifiableDrawObject::ModifiableDrawObject(
+		const ModifiableDrawObject &other)
+	 : ModifiableObject(other)
+	 , needsRerender_(other.needsRerender_)
+	 , observers_()// don't copy observers. they should remain bound only to 'other'.
 	{
 	}
 

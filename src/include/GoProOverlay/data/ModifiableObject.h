@@ -54,6 +54,15 @@ namespace gpo
          */
         ModifiableObject(
             const std::string &className);
+        
+        /**
+         * Copy constructor
+         * 
+         * @param[in] other
+         * the object to copy
+         */
+        ModifiableObject(
+            const ModifiableObject &other);
 
         virtual
         ~ModifiableObject();
