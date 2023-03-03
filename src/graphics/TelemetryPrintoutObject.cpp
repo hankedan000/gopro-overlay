@@ -25,7 +25,7 @@ namespace gpo
 	{
 		fontFace_ = face;
 		markNeedsRedraw();
-		markObjectModified();
+		markObjectModified(false,true);
 	}
 
 	void
@@ -34,7 +34,7 @@ namespace gpo
 	{
 		fontColor_ = color;
 		markNeedsRedraw();
-		markObjectModified();
+		markObjectModified(false,true);
 	}
 
 	void

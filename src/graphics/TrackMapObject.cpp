@@ -37,7 +37,7 @@ namespace gpo
 	{
 		dotColors_.at(sourceIdx) = color;
 		markNeedsRedraw();
-		markObjectModified();
+		markObjectModified(false,true);
 	}
 
 	void

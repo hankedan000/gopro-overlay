@@ -18,7 +18,7 @@ namespace gpo
 	{
 		text_ = text;
 		markNeedsRedraw();
-		markObjectModified();
+		markObjectModified(false,true);
 	}
 
 	void
@@ -27,7 +27,7 @@ namespace gpo
 	{
 		fontFace_ = fontFace;
 		markNeedsRedraw();
-		markObjectModified();
+		markObjectModified(false,true);
 	}
 
 	void
@@ -36,7 +36,7 @@ namespace gpo
 	{
 		scale_ = scale;
 		markNeedsRedraw();
-		markObjectModified();
+		markObjectModified(false,true);
 	}
 
 	void
@@ -45,7 +45,7 @@ namespace gpo
 	{
 		color_ = color;
 		markNeedsRedraw();
-		markObjectModified();
+		markObjectModified(false,true);
 	}
 
 	void
@@ -54,7 +54,7 @@ namespace gpo
 	{
 		thickness_ = thickness;
 		markNeedsRedraw();
-		markObjectModified();
+		markObjectModified(false,true);
 	}
 
 	void

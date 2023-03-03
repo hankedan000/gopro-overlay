@@ -271,6 +271,7 @@ namespace gpo
 		engine_->removeObserver(this);// ignore change events while restoring alignment position
 		engine_->getSeeker()->seekToAlignmentInfo(currRenderAlignmentInfo_);
 		engine_->getSeeker()->setAlignmentHere();
+		engine_->getSeeker()->saveModifications();// after calling setAlignmentHere() we need to clear the 'needsSaved' flag
 		engine_->addObserver(this);
 
 		setSavePath(projectRoot);

@@ -6,7 +6,7 @@
 namespace gpo
 {
 	GroupedSeeker::GroupedSeeker()
-	 : ModifiableObject("GroupedSeeker",true,false)
+	 : ModifiableObject("GroupedSeeker",true,true)
 	 , seekers_()
 	{
 	}

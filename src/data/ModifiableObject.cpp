@@ -48,14 +48,14 @@ namespace gpo
             observer->onBeforeDestroy(this);
         }
 
-        if (isSavable() && hasSavableModifications())
+        if (supportsSavingModifications_ && hasSavableModifications())
         {
             spdlog::warn(
                 "{}<{}> was destructed before changes were saved",
                 className_,
                 (void*)this);
         }
-        else if (isApplyable() && hasApplyableModifications())
+        else if (supportsApplyingModifications_ && hasApplyableModifications())
         {
             spdlog::warn(
                 "{}<{}> was destructed before changes were applied",
@@ -87,35 +87,35 @@ namespace gpo
         return savePath_;
     }
 
-    bool
-    ModifiableObject::isApplyable(
-            bool noisy) const
-    {
-        return supportsApplyingModifications_;
-    }
+    // bool
+    // ModifiableObject::isApplyable(
+    //         bool noisy) const
+    // {
+    //     return supportsApplyingModifications_;
+    // }
 
-    bool
-    ModifiableObject::isSavable(
-            bool noisy) const
-    {
-        if ( ! supportsSavingModifications_)
-        {
-            return false;
-        }
-        else if (savePath_.empty())
-        {
-            if (noisy)
-            {
-                spdlog::error(
-                    "save path is not set; therefore {}<{}> is not savable.",
-                    className_,
-                    (void*)this);
-                utils::misc::printCallStack(stdout,10);
-            }
-            return false;
-        }
-        return true;
-    }
+    // bool
+    // ModifiableObject::isSavable(
+    //         bool noisy) const
+    // {
+    //     if ( ! supportsSavingModifications_)
+    //     {
+    //         return false;
+    //     }
+    //     else if (savePath_.empty())
+    //     {
+    //         if (noisy)
+    //         {
+    //             spdlog::error(
+    //                 "save path is not set; therefore {}<{}> is not savable.",
+    //                 className_,
+    //                 (void*)this);
+    //             utils::misc::printCallStack(stdout,10);
+    //         }
+    //         return false;
+    //     }
+    //     return true;
+    // }
 
     void
     ModifiableObject::markObjectModified(
@@ -129,8 +129,34 @@ namespace gpo
             utils::misc::printCallStack(stdout,10);
         }
 
-        hasApplyableEdits_ = hasApplyableEdits_ || needsApply;
-        hasSavableEdits_ = hasSavableEdits_ || needsSave;
+        if (needsApply)
+        {
+            if (supportsApplyingModifications_)
+            {
+                hasApplyableEdits_ = hasApplyableEdits_ || needsApply;
+            }
+            else
+            {
+                spdlog::error(
+                    "{}<{}> marked as 'needsApply' but it doesn't support applying modifications",
+                    className(),
+                    (void*)this);
+            }
+        }
+        if (needsSave)
+        {
+            if (supportsSavingModifications_)
+            {
+                hasSavableEdits_ = hasSavableEdits_ || needsSave;
+            }
+            else
+            {
+                spdlog::error(
+                    "{}<{}> marked as 'needsSave' but it doesn't support saving modifications",
+                    className(),
+                    (void*)this);
+            }
+        }
         for (auto &observer : observers_)
         {
             observer->onModified(this);
@@ -138,19 +164,21 @@ namespace gpo
     }
     
     bool
-    ModifiableObject::applyModifications()
+    ModifiableObject::applyModifications(
+        bool unecessaryIsOkay)
     {
-        if ( ! isApplyable())
+        if ( ! supportsApplyingModifications_)
         {
             spdlog::error(
-                "{} does not support applying modifications",
-                className_);
+                "applyModifications() called, but {}<{}> does not support applying modifications",
+                className_,
+                (void*)this);
             return false;
         }
-        else if ( ! hasApplyableModifications())
+        else if ( ! hasApplyableEdits_ && ! unecessaryIsOkay)
         {
             spdlog::warn(
-                "applyModifications() called, but {}<{}> doesn't have any modifications",
+                "applyModifications() called, but {}<{}> doesn't have any applyable modifications",
                 className_,
                 (void*)this);
             return false;
@@ -159,7 +187,7 @@ namespace gpo
         bool applyOkay = subclassApplyModifications();
         if (applyOkay)
         {
-            clearNeedsApply();
+            hasApplyableEdits_ = false;
             for (auto &observer : observers_)
             {
                 observer->onModificationsApplied(this);
@@ -169,24 +197,26 @@ namespace gpo
     }
 
     bool
-    ModifiableObject::saveModifications()
+    ModifiableObject::saveModifications(
+        bool unecessaryIsOkay)
     {
-        if (hasApplyableModifications() && isApplyable())
+        if (supportsApplyingModifications_ && hasApplyableEdits_)
         {
             applyModifications();
         }
 
-        if ( ! isSavable())
+        if ( ! supportsSavingModifications_)
         {
-            spdlog::warn(
-                "{} does not support saving modifications",
-                className_);
+            spdlog::error(
+                "saveModifications() called, but {}<{}> does not support saving modifications",
+                className_,
+                (void*)this);
             return false;
         }
-        else if ( ! hasSavableModifications())
+        else if ( ! hasSavableEdits_ && ! unecessaryIsOkay)
         {
             spdlog::warn(
-                "saveModifications() called, but {}<{}> doesn't have any modifications",
+                "applyModifications() called, but {}<{}> doesn't have any savable modifications",
                 className_,
                 (void*)this);
             return false;
@@ -195,7 +225,7 @@ namespace gpo
         bool saveOkay = subclassSaveModifications();
         if (saveOkay)
         {
-            clearNeedsSave();
+            hasSavableEdits_ = false;
             for (auto &observer : observers_)
             {
                 observer->onModificationsSaved(this);
@@ -270,6 +300,26 @@ namespace gpo
     ModifiableObject::clearNeedsSave()
     {
         hasSavableEdits_ = false;
+    }
+
+    bool
+    ModifiableObject::subclassApplyModifications()
+    {
+        spdlog::warn(
+            "ModifiableObject's default apply was called. Subclass should override"
+            " 'bool ModifiableObject::subclassApplyModifications()' if they want to"
+            " support applied changes tracking.");
+        return true;
+    }
+
+    bool
+    ModifiableObject::subclassSaveModifications()
+    {
+        spdlog::warn(
+            "ModifiableObject's default save was called. Subclass should override"
+            " 'bool ModifiableObject::subclassSaveModifications()' if they want to"
+            " support save tracking.");
+        return true;
     }
 
 }

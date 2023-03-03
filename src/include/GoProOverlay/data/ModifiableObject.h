@@ -87,31 +87,31 @@ namespace gpo
         const std::filesystem::path &
         getSavePath() const;
 
-        /**
-         * Default behavior just returns true.
-         * Subclass can override this method to provide additional checks
-         * or to prevent the object from apply changes all together.
-         * 
-         * @return
-         * true if the object's applyModifications() method is callable.
-         * false otherwise.
-         */
-        bool
-        isApplyable(
-            bool noisy = true) const;
+        // /**
+        //  * Default behavior just returns true.
+        //  * Subclass can override this method to provide additional checks
+        //  * or to prevent the object from apply changes all together.
+        //  * 
+        //  * @return
+        //  * true if the object's applyModifications() method is callable.
+        //  * false otherwise.
+        //  */
+        // bool
+        // isApplyable(
+        //     bool noisy = true) const;
 
-        /**
-         * Default behavior just checks if the save path has been set.
-         * Subclass can override this method to provide additional checks
-         * or to prevent the object from being saved all together.
-         * 
-         * @return
-         * true if the object's saveModifications() method is callable.
-         * false otherwise.
-         */
-        bool
-        isSavable(
-            bool noisy = true) const;
+        // /**
+        //  * Default behavior just checks if the save path has been set.
+        //  * Subclass can override this method to provide additional checks
+        //  * or to prevent the object from being saved all together.
+        //  * 
+        //  * @return
+        //  * true if the object's saveModifications() method is callable.
+        //  * false otherwise.
+        //  */
+        // bool
+        // isSavable(
+        //     bool noisy = true) const;
 
         virtual
         void
@@ -120,18 +120,30 @@ namespace gpo
             bool needsSave = true);
         
         /**
+         * @param[in] unecessaryIsOkay
+         * true if calling this method while there are no modifications
+         * needing applied is okay (apply operation will be performed regardless).
+         * otherwise, a warning log is produced and the apply operation is not performed.
+         * 
          * @return
          * true if the changes were applied, false otherwise
          */
         bool
-        applyModifications();
+        applyModifications(
+            bool unecessaryIsOkay = false);
 
         /**
+         * @param[in] unecessaryIsOkay
+         * true if calling this method while there are no modifications
+         * needing saved is okay (save operation will be performed regardless).
+         * otherwise, a warning log is produced and the save operation is not performed.
+         * 
          * @return
          * true if the changes were saved, false otherwise
          */
         bool
-        saveModifications();
+        saveModifications(
+            bool unecessaryIsOkay = false);
 
         /**
          * This is like calling setSavePath() and saveModifications() in one
@@ -211,7 +223,7 @@ namespace gpo
          */
         virtual
         bool
-        subclassApplyModifications() = 0;
+        subclassApplyModifications();
 
         /**
          * Subclass should override this method to save any modifications
@@ -221,7 +233,7 @@ namespace gpo
          */
         virtual
         bool
-        subclassSaveModifications() = 0;
+        subclassSaveModifications();
 
     private:
         const std::string className_;

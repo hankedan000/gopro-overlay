@@ -93,9 +93,19 @@ namespace gpo
          * 
          * @param[in] className
          * the object's class name. useful for debugging
+         * 
+         * @param[in] supportsApplyingModifications
+         * true if the class supports applying changes
+         * (ie. the applyModifications() method is allowed to be called)
+         * 
+         * @param[in] supportsSavingModifications
+         * true if the class supports saving modifications itself
+         * (ie. the saveModifications() method is allowed to be called)
          */
         ModifiableDrawObject(
-            const std::string &className);
+            const std::string &className,
+            bool supportsApplyingModifications,
+            bool supportsSavingModifications);
 		
         /**
          * Copy constructor
@@ -135,15 +145,6 @@ namespace gpo
         void
         removeObserver(
             ModifiableDrawObjectObserver *observer);
-
-	protected:
-		// BEGIN ModifiableObject overrides
-        bool
-        subclassApplyModifications() override;
-
-        bool
-        subclassSaveModifications() override;
-		// END ModifiableObject overrides
 
 		void
 		clearNeedsRedraw();
@@ -319,6 +320,9 @@ namespace gpo
 		bool
 		subDecode(
 			const YAML::Node& node) = 0;
+
+		bool
+		subclassSaveModifications() override;
 
 	private:
 

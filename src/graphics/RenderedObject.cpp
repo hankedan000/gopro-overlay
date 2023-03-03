@@ -6,8 +6,10 @@ namespace gpo
 {
 
 	ModifiableDrawObject::ModifiableDrawObject(
-		const std::string &className)
-	 : ModifiableObject(className,true,false)
+		const std::string &className,
+		bool supportsApplyingModifications,
+		bool supportsSavingModifications)
+	 : ModifiableObject(className,supportsApplyingModifications,supportsSavingModifications)
 	 , needsRedraw_(false)
 	 , observers_()
 	{
@@ -61,20 +63,6 @@ namespace gpo
 		observers_.erase(observer);
 	}
 
-	bool
-	ModifiableDrawObject::subclassApplyModifications()
-	{
-		// nothing to apply
-		return true;
-	}
-
-	bool
-	ModifiableDrawObject::subclassSaveModifications()
-	{
-		// we don't support saving indivual RenderedObjects (should never get in here)
-		return false;
-	}
-
 	void
 	ModifiableDrawObject::clearNeedsRedraw()
 	{
@@ -85,7 +73,7 @@ namespace gpo
 		const std::string &typeName,
 		int width,
 		int height)
-	 : ModifiableDrawObject(typeName)
+	 : ModifiableDrawObject(typeName,false,true)
 	 , typeName_(typeName)
 	 , outImg_(height,width,CV_8UC4,cv::Scalar(0,0,0,0))
 	 , visible_(true)
@@ -238,7 +226,7 @@ namespace gpo
 		if (modified)
 		{
 			markNeedsRedraw();
-			markObjectModified();
+			markObjectModified(false,true);
 		}
 	}
 
@@ -319,7 +307,7 @@ namespace gpo
 		vSources_.push_back(vSrc);
 		checkAndNotifyRequirementsMet();
 		markNeedsRedraw();
-		markObjectModified();
+		markObjectModified(false,true);
 		return true;
 	}
 
@@ -336,7 +324,7 @@ namespace gpo
 	{
 		vSources_.at(idx) = vSrc;
 		markNeedsRedraw();
-		markObjectModified();
+		markObjectModified(false,true);
 	}
 
 	VideoSourcePtr
@@ -352,7 +340,7 @@ namespace gpo
 	{
 		vSources_.erase(std::next(vSources_.begin(), idx));
 		markNeedsRedraw();
-		markObjectModified();
+		markObjectModified(false,true);
 	}
 
 	bool
@@ -370,7 +358,7 @@ namespace gpo
 		tSources_.push_back(tSrc);
 		checkAndNotifyRequirementsMet();
 		markNeedsRedraw();
-		markObjectModified();
+		markObjectModified(false,true);
 		return true;
 	}
 
@@ -387,7 +375,7 @@ namespace gpo
 	{
 		tSources_.at(idx) = tSrc;
 		markNeedsRedraw();
-		markObjectModified();
+		markObjectModified(false,true);
 	}
 
 	TelemetrySourcePtr
@@ -403,7 +391,7 @@ namespace gpo
 	{
 		tSources_.erase(std::next(tSources_.begin(), idx));
 		markNeedsRedraw();
-		markObjectModified();
+		markObjectModified(false,true);
 	}
 
 	bool
@@ -577,6 +565,14 @@ namespace gpo
 		}
 
 		return met;
+	}
+
+	bool
+	RenderedObject::subclassSaveModifications()
+	{
+		// we don't do any saving outself, but we assume the RenderEngine
+		// saved us correctly
+		return true;
 	}
 
 	void

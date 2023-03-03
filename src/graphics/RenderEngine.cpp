@@ -16,7 +16,7 @@ namespace gpo
 {
 
 	RenderedEntity::RenderedEntity()
-	 : ModifiableDrawObject("RenderedEntity")
+	 : ModifiableDrawObject("RenderedEntity",false,true)
 	{
 	}
 
@@ -36,7 +36,7 @@ namespace gpo
 	{
 		rSize_ = size;
 		markNeedsRedraw();
-		markObjectModified();
+		markObjectModified(false,true);
 	}
 
 	void
@@ -47,7 +47,7 @@ namespace gpo
 		rSize_.width = w;
 		rSize_.height = h;
 		markNeedsRedraw();
-		markObjectModified();
+		markObjectModified(false,true);
 	}
 
 	const cv::Size &
@@ -62,7 +62,7 @@ namespace gpo
 	{
 		rPos_ = pos;
 		markNeedsRedraw();
-		markObjectModified();
+		markObjectModified(false,true);
 	}
 
 	void
@@ -73,7 +73,7 @@ namespace gpo
 		rPos_.x = x;
 		rPos_.y = y;
 		markNeedsRedraw();
-		markObjectModified();
+		markObjectModified(false,true);
 	}
 
 	const cv::Point &
@@ -87,7 +87,7 @@ namespace gpo
 		const std::string &name)
 	{
 		name_ = name;
-		markObjectModified();
+		markObjectModified(false,true);
 	}
 
 	const std::string &
@@ -97,7 +97,7 @@ namespace gpo
 	}
 
 	RenderEngine::RenderEngine()
-	 : ModifiableDrawObject("RenderEngine")
+	 : ModifiableDrawObject("RenderEngine",false,true)
 	 , rFrame_()
 	 , entities_()
 	 , gSeeker_(std::make_shared<GroupedSeeker>())
@@ -111,7 +111,7 @@ namespace gpo
 	{
 		internalSetRenderSize(size);
 		markNeedsRedraw();
-		markObjectModified();
+		markObjectModified(false,true);
 	}
 
 	cv::Size
@@ -126,7 +126,7 @@ namespace gpo
 		entities_.clear();
 		gSeeker_->clear();
 		markNeedsRedraw();
-		markObjectModified();
+		markObjectModified(false,true);
 	}
 
 	void
@@ -135,7 +135,7 @@ namespace gpo
 	{
 		internalAddEntity(re);
 		markNeedsRedraw();
-		markObjectModified();
+		markObjectModified(false,true);
 	}
 
 	RenderedEntityPtr
@@ -161,7 +161,7 @@ namespace gpo
 		(*entityItr)->removeObserver((ModifiableDrawObjectObserver*)this);
 		entities_.erase(entityItr);
 		markNeedsRedraw();
-		markObjectModified();
+		markObjectModified(false,true);
 	}
 
 	size_t
@@ -389,7 +389,7 @@ namespace gpo
 			if (gSeeker_->hasSavableModifications())
 			{
 				// alignment has changed, and we need to save the engine
-				markObjectModified();
+				markObjectModified(false,true);
 			}
 		}
 		else
@@ -398,7 +398,7 @@ namespace gpo
 				"RenderEngine notified of modification event from {}<{}>.",
 				modifiable->className(),
 				(void*)modifiable);
-			markObjectModified();
+			markObjectModified(false,true);
 		}
 	}
 
