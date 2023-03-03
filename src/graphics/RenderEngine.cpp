@@ -394,7 +394,7 @@ namespace gpo
 		}
 		else
 		{
-			spdlog::info(
+			spdlog::debug(
 				"RenderEngine notified of modification event from {}<{}>.",
 				modifiable->className(),
 				(void*)modifiable);

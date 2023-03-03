@@ -37,7 +37,6 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     progressDialog_(new ProgressDialog(this)),
     renderEntityPropertiesTab_(new RenderEntityPropertiesTab(this))
 {
-    proj_.setShowModificationCallStack(true);
     ui->setupUi(this);
     renderEntityPropertiesTab_->setProject(&proj_);
     this->setWindowTitle(WINDOW_TITLE);

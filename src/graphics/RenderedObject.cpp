@@ -418,7 +418,6 @@ namespace gpo
 		track_ = track;
 		checkAndNotifyRequirementsMet();
 		markNeedsRedraw();
-		markObjectModified();
 		return true;
 	}
 
