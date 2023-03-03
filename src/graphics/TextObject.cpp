@@ -23,7 +23,8 @@ namespace gpo
 		const std::string &text)
 	{
 		text_ = text;
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	void
@@ -31,7 +32,8 @@ namespace gpo
 		int fontFace)
 	{
 		fontFace_ = fontFace;
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	void
@@ -39,7 +41,8 @@ namespace gpo
 		double scale)
 	{
 		scale_ = scale;
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	void
@@ -47,7 +50,8 @@ namespace gpo
 		cv::Scalar color)
 	{
 		color_ = color;
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	void
@@ -55,7 +59,8 @@ namespace gpo
 		int thickness)
 	{
 		thickness_ = thickness;
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	void

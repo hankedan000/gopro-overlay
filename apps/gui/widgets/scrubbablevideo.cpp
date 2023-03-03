@@ -198,12 +198,8 @@ ScrubbableVideo::setEngine(
 }
 
 void
-ScrubbableVideo::onModified(
-        gpo::ModifiableDrawObject *drawable,
-        bool needsRerender)
+ScrubbableVideo::onNeedsRedraw(
+        gpo::ModifiableDrawObject *drawable)
 {
-    if (needsRerender)
-    {
-        showImage(engine_->getFrame());
-    }
+    showImage(engine_->getFrame());
 }

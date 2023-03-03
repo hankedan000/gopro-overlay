@@ -62,7 +62,8 @@ namespace gpo
 		QColor color)
 	{
 		plot_->setTelemetryColor(telemSrc,color,false);// hold off replot until render()
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	std::pair<bool,QColor>
@@ -78,7 +79,8 @@ namespace gpo
 		const std::string &label)
 	{
 		plot_->setTelemetryLabel(telemSrc,label,false);// hold off replot until render()
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	std::pair<bool,std::string>
@@ -93,7 +95,8 @@ namespace gpo
 			TelemetryPlot::X_Component comp)
 	{
 		plot_->setX_Component(comp,false);// hold off replot until render()
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	TelemetryPlot::X_Component
@@ -122,7 +125,8 @@ namespace gpo
 				// leave TelemetryPlot's default title
 				break;
 		}
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	TelemetryPlot::Y_Component
@@ -136,7 +140,8 @@ namespace gpo
 		double duration_sec)
 	{
 		plotWidthTime_sec_ = duration_sec;
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	double

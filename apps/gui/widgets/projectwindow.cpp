@@ -919,7 +919,10 @@ ProjectWindow::onModificationsApplied(
 {
     if (modifiable == proj_.getTrack())
     {
+        // TODO make RenderProject watch for track's change application event
+        // and perform the reprocessDatumTrack() call
         proj_.reprocessDatumTrack();
+        
         updateAlignmentPane();
     }
     else

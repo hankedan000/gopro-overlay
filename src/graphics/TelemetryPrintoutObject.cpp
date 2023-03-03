@@ -30,7 +30,8 @@ namespace gpo
 		int face)
 	{
 		fontFace_ = face;
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	void
@@ -38,7 +39,8 @@ namespace gpo
 		cv::Scalar color)
 	{
 		fontColor_ = color;
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	void

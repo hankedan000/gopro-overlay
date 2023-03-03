@@ -46,9 +46,8 @@ signals:
 
 private:
     void
-    onModified(
-            gpo::ModifiableDrawObject *drawable,
-            bool needsRerender) override;
+    onNeedsRedraw(
+            gpo::ModifiableDrawObject *drawable) override;
 
 private:
     Ui::ScrubbableVideo *ui;

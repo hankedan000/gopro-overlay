@@ -35,7 +35,8 @@ namespace gpo
 		const cv::Size &size)
 	{
 		rSize_ = size;
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	void
@@ -45,7 +46,8 @@ namespace gpo
 	{
 		rSize_.width = w;
 		rSize_.height = h;
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	const cv::Size &
@@ -59,7 +61,8 @@ namespace gpo
 		const cv::Point &pos)
 	{
 		rPos_ = pos;
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	void
@@ -69,7 +72,8 @@ namespace gpo
 	{
 		rPos_.x = x;
 		rPos_.y = y;
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	const cv::Point &
@@ -83,7 +87,7 @@ namespace gpo
 		const std::string &name)
 	{
 		name_ = name;
-		markObjectModified(true);
+		markObjectModified();
 	}
 
 	const std::string &
@@ -93,11 +97,10 @@ namespace gpo
 	}
 
 	void
-	RenderedEntity::onModified(
-		ModifiableDrawObject *drawable,
-		bool needsRerender)
+	RenderedEntity::onNeedsRedraw(
+		ModifiableDrawObject *drawable)
 	{
-		markObjectModified(needsRerender);
+		markNeedsRedraw();
 	}
 
 	RenderEngine::RenderEngine()
@@ -114,7 +117,8 @@ namespace gpo
 		cv::Size size)
 	{
 		rFrame_.create(size,CV_8UC3);
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	cv::Size
@@ -128,7 +132,8 @@ namespace gpo
 	{
 		entities_.clear();
 		gSeeker_->clear();
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	void
@@ -161,7 +166,8 @@ namespace gpo
 			auto tSeeker = tSrc->seeker();
 			gSeeker_->addSeekerUnique(tSeeker);
 		}
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	RenderedEntityPtr
@@ -186,7 +192,8 @@ namespace gpo
 		auto entityItr = std::next(entities_.begin(), idx);
 		(*entityItr)->removeObserver((ModifiableDrawObjectObserver*)this);
 		entities_.erase(entityItr);
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	size_t
@@ -365,20 +372,25 @@ namespace gpo
 		if (modifiable == gSeeker_.get())
 		{
 			render();
+			markNeedsRedraw();
 		}
-		markObjectModified(true);
+		else
+		{
+			spdlog::warn(
+				"RenderEngine notified of modification event it wasn't expecting from object"
+				" {}<{}>. marking object as modified just to be safe.",
+				modifiable->className(),
+				(void*)modifiable);
+		}
+		markObjectModified();
 	}
 
 	void
-	RenderEngine::onModified(
-		ModifiableDrawObject *drawable,
-		bool needsRerender)
+	RenderEngine::onNeedsRedraw(
+		ModifiableDrawObject *drawable)
 	{
-		if (needsRerender)
-		{
-			render();
-		}
-		markObjectModified(needsRerender);
+		render();
+		markNeedsRedraw();
 	}
 
 	RenderEnginePtr

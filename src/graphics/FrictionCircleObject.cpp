@@ -37,7 +37,8 @@ namespace gpo
 		size_t tailLength)
 	{
 		tailLength_ = tailLength;
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	size_t
@@ -52,7 +53,8 @@ namespace gpo
 	{
 		borderColor_ = rgbColor;
 		redrawOutline();
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	cv::Scalar
@@ -66,7 +68,8 @@ namespace gpo
 		cv::Scalar rgbColor)
 	{
 		tailColor_ = rgbColor;
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	cv::Scalar
@@ -80,7 +83,8 @@ namespace gpo
 		cv::Scalar rgbColor)
 	{
 		currentDotColor_ = rgbColor;
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	cv::Scalar

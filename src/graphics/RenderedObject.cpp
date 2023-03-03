@@ -8,7 +8,7 @@ namespace gpo
 	ModifiableDrawObject::ModifiableDrawObject(
 		const std::string &className)
 	 : ModifiableObject(className)
-	 , needsRerender_(false)
+	 , needsRedraw_(false)
 	 , observers_()
 	{
 	}
@@ -16,7 +16,7 @@ namespace gpo
 	ModifiableDrawObject::ModifiableDrawObject(
 		const ModifiableDrawObject &other)
 	 : ModifiableObject(other)
-	 , needsRerender_(other.needsRerender_)
+	 , needsRedraw_(other.needsRedraw_)
 	 , observers_()// don't copy observers. they should remain bound only to 'other'.
 	{
 	}
@@ -26,22 +26,20 @@ namespace gpo
 	}
 
 	void
-	ModifiableDrawObject::markObjectModified(
-		bool needsRerender)
+	ModifiableDrawObject::markNeedsRedraw()
 	{
-		spdlog::trace("{} modified. needRerender = {}", className(), needsRerender);
-		needsRerender_ = needsRerender_ || needsRerender;
-		ModifiableObject::markObjectModified();
+		spdlog::trace("{} modified.", className());
+		needsRedraw_ = true;
         for (auto &observer : observers_)
         {
-            observer->onModified(this, needsRerender_);
+            observer->onNeedsRedraw(this);
         }
 	}
 
 	bool
-	ModifiableDrawObject::needsRerender() const
+	ModifiableDrawObject::needsRedraw() const
 	{
-		return needsRerender_;
+		return needsRedraw_;
 	}
 
 	void
@@ -64,18 +62,6 @@ namespace gpo
 	}
 
 	// BEGIN ModifiableObject overrides
-	void
-	ModifiableDrawObject::markObjectModified()
-	{
-		spdlog::warn(
-			"ModifiedObject::markObjectModified() was called on a ModifiableDrawObject."
-			" Please call ModifiableDrawObject::markObjectModified(bool needsRerender)"
-			" instead. We delegated the call to it just to be safe.");
-
-		// call the ModifiableDrawObject methods just to be safe
-		ModifiableDrawObject::markObjectModified(true);
-	}
-
 	bool
 	ModifiableDrawObject::isSavable(
 		bool /*noisy*/) const
@@ -99,9 +85,9 @@ namespace gpo
 	}
 
 	void
-	ModifiableDrawObject::clearNeedsRerender()
+	ModifiableDrawObject::clearNeedsRedraw()
 	{
-		needsRerender_ = false;
+		needsRedraw_ = false;
 	}
 
 	RenderedObject::RenderedObject(
@@ -128,7 +114,7 @@ namespace gpo
 	{
 		// call subclass's render method
 		subRender();
-		clearNeedsRerender();
+		clearNeedsRedraw();
 	}
 
 	void
@@ -252,7 +238,8 @@ namespace gpo
 		visible_ = visible;
 		if (modified)
 		{
-			markObjectModified(true);
+			markNeedsRedraw();
+			markObjectModified();
 		}
 	}
 
@@ -270,7 +257,9 @@ namespace gpo
 		boundingBoxVisible_ = visible;
 		if (modified)
 		{
-			markObjectModified(true);
+			markNeedsRedraw();
+			// no need to mark as modified since we don't save this
+			// property of the object when encoding/decoding
 		}
 	}
 
@@ -288,7 +277,9 @@ namespace gpo
 		boundingBoxThickness_ = thickness;
 		if (modified)
 		{
-			markObjectModified(true);
+			markNeedsRedraw();
+			// no need to mark as modified since we don't save this
+			// property of the object when encoding/decoding
 		}
 	}
 
@@ -328,7 +319,8 @@ namespace gpo
 
 		vSources_.push_back(vSrc);
 		checkAndNotifyRequirementsMet();
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 		return true;
 	}
 
@@ -344,7 +336,8 @@ namespace gpo
 		VideoSourcePtr vSrc)
 	{
 		vSources_.at(idx) = vSrc;
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	VideoSourcePtr
@@ -359,7 +352,8 @@ namespace gpo
 		size_t idx)
 	{
 		vSources_.erase(std::next(vSources_.begin(), idx));
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	bool
@@ -376,7 +370,8 @@ namespace gpo
 
 		tSources_.push_back(tSrc);
 		checkAndNotifyRequirementsMet();
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 		return true;
 	}
 
@@ -392,7 +387,8 @@ namespace gpo
 		TelemetrySourcePtr tSrc)
 	{
 		tSources_.at(idx) = tSrc;
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	TelemetrySourcePtr
@@ -407,7 +403,8 @@ namespace gpo
 		size_t idx)
 	{
 		tSources_.erase(std::next(tSources_.begin(), idx));
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	bool
@@ -421,7 +418,8 @@ namespace gpo
 
 		track_ = track;
 		checkAndNotifyRequirementsMet();
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 		return true;
 	}
 

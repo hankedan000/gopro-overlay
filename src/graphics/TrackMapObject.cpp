@@ -42,7 +42,8 @@ namespace gpo
 		cv::Scalar color)
 	{
 		dotColors_.at(sourceIdx) = color;
-		markObjectModified(true);
+		markNeedsRedraw();
+		markObjectModified();
 	}
 
 	void

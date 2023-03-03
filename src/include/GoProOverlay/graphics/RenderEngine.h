@@ -94,9 +94,8 @@ namespace gpo
 
 	private:
         void
-        onModified(
-            ModifiableDrawObject *drawable,
-			bool needsRerender) override;
+        onNeedsRedraw(
+            ModifiableDrawObject *drawable) override;
 
 	private:
 		std::unique_ptr<RenderedObject> rObj_;
@@ -169,9 +168,8 @@ namespace gpo
             ModifiableObject *modifiable) override;
 		
         void
-        onModified(
-            ModifiableDrawObject *drawable,
-			bool needsRerender) override;
+        onNeedsRedraw(
+            ModifiableDrawObject *drawable) override;
 	
 	private:
 		cv::UMat rFrame_;

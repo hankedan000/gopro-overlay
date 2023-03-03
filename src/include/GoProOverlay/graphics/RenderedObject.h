@@ -80,9 +80,8 @@ namespace gpo
     public:
         virtual
         void
-        onModified(
-            ModifiableDrawObject *drawable,
-			bool needsRerender)
+        onNeedsRedraw(
+            ModifiableDrawObject *drawable)
 		{}
     };
 
@@ -111,24 +110,19 @@ namespace gpo
         ~ModifiableDrawObject();
 
 		/**
-		 * Call this method, as opposed to ModifiedObject::markObjectModified() to flag
-		 * if the object has been modified in some way.
-		 * 
-		 * Note: to be safe, we override ModifiedObject::markObjectModified() so that
-		 * it calls this method with needsRerendered set true. We also log a warning to
-		 * the console to inform the developer to call this method directly instead.
+		 * Call this method to flag if the object has been modified in some way that
+		 * would require a redraw of it.
 		 */
         void
-        markObjectModified(
-			bool needsRerendered);
+        markNeedsRedraw();
 
 		/**
 		 * @return
 		 * true if the object has been modified in some way (since the last render() call),
-		 * that would require the object to be rerendered. false otherwise.
+		 * that would require the object to be redrawn. false otherwise.
 		 */
 		bool
-		needsRerender() const;
+		needsRedraw() const;
 
 		using ModifiableObject::addObserver;
 
@@ -143,9 +137,6 @@ namespace gpo
             ModifiableDrawObjectObserver *observer);
 
 		// BEGIN ModifiableObject overrides
-        void
-        markObjectModified() override;
-
         bool
         isSavable(
             bool noisy = true) const override;
@@ -161,12 +152,11 @@ namespace gpo
 		// END ModifiableObject overrides
 
 		void
-		clearNeedsRerender();
+		clearNeedsRedraw();
 
 	private:
 		// set true if the object has been modified since the last render call.
-		// cleared when the render() method is called.
-		bool needsRerender_;
+		bool needsRedraw_;
 
         std::unordered_set<ModifiableDrawObjectObserver *> observers_;
 
@@ -351,6 +341,7 @@ namespace gpo
 
 		std::vector<VideoSourcePtr> vSources_;
 		std::vector<TelemetrySourcePtr> tSources_;
+		// TODO use shared_ptr here?
 		const Track *track_;
 
 	private:
