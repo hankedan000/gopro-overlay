@@ -22,6 +22,7 @@ namespace gpo
 	 , currRenderAlignmentInfo_()
 	 , audioExportApproach_(AudioExportApproach_E::eAEA_SingleSource)
 	 , exportFilePath_("")
+	 , ignoreInternalModificationEvents_(false)
 	{
 		engine_->addObserver((ModifiableObjectObserver*)this);
 	}
@@ -62,7 +63,32 @@ namespace gpo
 	RenderProject::setTrack(
 		Track *track)
 	{
-		internalSetTrack(track);
+		if (track_)
+		{
+			track_->removeObserver(this);
+			delete track_;
+		}
+		track_ = track;
+		if (track_)
+		{
+			track_->addObserver(this);
+		}
+
+		#pragma omp parallel for
+		for (size_t i=0; i<dsm_.sourceCount(); i++)
+		{
+			dsm_.getSource(i)->setDatumTrack(track,true);// true - process immediately
+		}
+
+		for (size_t e=0; e<engine_->entityCount(); e++)
+		{
+			const auto &entity = engine_->getEntity(e);
+			DataSourceRequirements dsr = entity->renderObject()->dataSourceRequirements();
+			if (dsr.numTracks == DSR_ONE_OR_MORE || dsr.numTracks > 0)
+			{
+				entity->renderObject()->setTrack(track_);
+			}
+		}
 		markObjectModified();
 	}
 
@@ -234,6 +260,7 @@ namespace gpo
 		const std::filesystem::path trackPath = projectRoot / TRACK_FILENAME;
 
 		bool okay = true;
+		ignoreInternalModificationEvents_ = true;
 
 		YAML::Node projectNode = YAML::LoadFile(projectPath);
 		okay = okay && decode(projectNode);
@@ -248,7 +275,7 @@ namespace gpo
 				if (newTrack->decode(trackNode))
 				{
 					newTrack->setSavePath(trackPath);
-					internalSetTrack(newTrack);
+					setTrack(newTrack);
 				}
 				else
 				{
@@ -268,12 +295,11 @@ namespace gpo
 			}
 		}
 
-		engine_->removeObserver(this);// ignore change events while restoring alignment position
 		engine_->getSeeker()->seekToAlignmentInfo(currRenderAlignmentInfo_);
 		engine_->getSeeker()->setAlignmentHere();
-		engine_->addObserver(this);
 
 		setSavePath(projectRoot);
+		ignoreInternalModificationEvents_ = false;
 		return okay;
 	}
 
@@ -381,41 +407,14 @@ namespace gpo
 	}
 
 	void
-	RenderProject::internalSetTrack(
-		Track *track)
-	{
-		if (track_)
-		{
-			track_->removeObserver(this);
-			delete track_;
-		}
-		track_ = track;
-		if (track_)
-		{
-			track_->addObserver(this);
-		}
-
-		#pragma omp parallel for
-		for (size_t i=0; i<dsm_.sourceCount(); i++)
-		{
-			dsm_.getSource(i)->setDatumTrack(track,true);// true - process immediately
-		}
-
-		for (size_t e=0; e<engine_->entityCount(); e++)
-		{
-			const auto &entity = engine_->getEntity(e);
-			DataSourceRequirements dsr = entity->renderObject()->dataSourceRequirements();
-			if (dsr.numTracks == DSR_ONE_OR_MORE || dsr.numTracks > 0)
-			{
-				entity->renderObject()->setTrack(track_);
-			}
-		}
-	}
-
-	void
 	RenderProject::onModified(
 		ModifiableObject *modifiable)
 	{
+		if (ignoreInternalModificationEvents_)
+		{
+			return;
+		}
+
 		if (modifiable == engine_.get())
 		{
 			markObjectModified(

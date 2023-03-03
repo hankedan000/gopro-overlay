@@ -3,15 +3,9 @@
 namespace gpo
 {
 	VideoObject::VideoObject()
-	 : RenderedObject(1,1)// gets resized in sourcesValid()
+	 : RenderedObject("VideoObject",1,1)// gets resized in sourcesValid()
 	 , prevRenderedFrameIdx_(-1)
 	{
-	}
-
-	std::string
-	VideoObject::typeName() const
-	{
-		return "VideoObject";
 	}
 
 	DataSourceRequirements

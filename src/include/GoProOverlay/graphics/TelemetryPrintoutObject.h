@@ -10,10 +10,6 @@ namespace gpo
 		TelemetryPrintoutObject();
 
 		virtual
-		std::string
-		typeName() const override;
-
-		virtual
 		DataSourceRequirements
 		dataSourceRequirements() const override;
 

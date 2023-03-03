@@ -13,7 +13,7 @@ namespace gpo
 	};
 
 	TrackMapObject::TrackMapObject()
-	 : RenderedObject(TRACK_MAP_RENDER_WIDTH,TRACK_MAP_RENDER_HEIGHT)
+	 : RenderedObject("TrackMapObject",TRACK_MAP_RENDER_WIDTH,TRACK_MAP_RENDER_HEIGHT)
 	 , outlineImg_(TRACK_MAP_RENDER_HEIGHT,TRACK_MAP_RENDER_WIDTH,CV_8UC4,RGBA_COLOR(0,0,0,0))
 	 , ulCoord_()
 	 , lrCoord_()
@@ -22,12 +22,6 @@ namespace gpo
 	 , dotRadius_px_(DEFAULT_DOT_RADIUS_RATIO * TRACK_MAP_RENDER_WIDTH)
 	 , dotColors_()
 	{
-	}
-
-	std::string
-	TrackMapObject::typeName() const
-	{
-		return "TrackMapObject";
 	}
 
 	DataSourceRequirements

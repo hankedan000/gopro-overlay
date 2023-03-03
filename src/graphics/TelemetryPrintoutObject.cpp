@@ -7,16 +7,10 @@ namespace gpo
 	const int PRINTOUT_RENDERED_HEIGHT = 200;
 
 	TelemetryPrintoutObject::TelemetryPrintoutObject()
-	 : RenderedObject(PRINTOUT_RENDERED_WIDTH,PRINTOUT_RENDERED_HEIGHT)
+	 : RenderedObject("TelemetryPrintoutObject",PRINTOUT_RENDERED_WIDTH,PRINTOUT_RENDERED_HEIGHT)
 	 , fontFace_(cv::FONT_HERSHEY_DUPLEX)
 	 , fontColor_(RGBA_COLOR(0,255,0,255))
 	{
-	}
-
-	std::string
-	TelemetryPrintoutObject::typeName() const
-	{
-		return "TelemetryPrintoutObject";
 	}
 
 	DataSourceRequirements

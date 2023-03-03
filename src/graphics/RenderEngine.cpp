@@ -96,13 +96,6 @@ namespace gpo
 		return name_;
 	}
 
-	void
-	RenderedEntity::onNeedsRedraw(
-		ModifiableDrawObject *drawable)
-	{
-		markNeedsRedraw();
-	}
-
 	RenderEngine::RenderEngine()
 	 : ModifiableDrawObject("RenderEngine")
 	 , rFrame_()
@@ -359,6 +352,9 @@ namespace gpo
 		}
 
 		re->addObserver((ModifiableDrawObjectObserver*)this);
+		re->addObserver((ModifiableObjectObserver*)this);
+		re->renderObject()->addObserver((ModifiableDrawObjectObserver*)this);
+		re->renderObject()->addObserver((ModifiableObjectObserver*)this);
 		entities_.push_back(re);
 
 		for (size_t i=0; i<re->renderObject()->numVideoSources(); i++)
@@ -398,10 +394,11 @@ namespace gpo
 		}
 		else
 		{
-			spdlog::warn(
-				"RenderEngine notified of modification event it wasn't expecting from {}<{}>.",
+			spdlog::info(
+				"RenderEngine notified of modification event from {}<{}>.",
 				modifiable->className(),
 				(void*)modifiable);
+			markObjectModified();
 		}
 	}
 

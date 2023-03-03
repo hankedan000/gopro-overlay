@@ -16,7 +16,7 @@ namespace gpo
 
 	using RenderedEntityPtr = std::shared_ptr<RenderedEntity>;
 
-	class RenderedEntity : public ModifiableDrawObject,	private ModifiableDrawObjectObserver
+	class RenderedEntity : public ModifiableDrawObject
 	{
 	public:
 		RenderedEntity();
@@ -33,7 +33,6 @@ namespace gpo
 				"DerivedRenderedObject must inherit RenderedObject as public");
 			auto re = std::make_shared<RenderedEntity>();
 			re->rObj_ = std::make_unique<DerivedRenderedObject>();
-			re->rObj_->addObserver(re.get());
 			re->name_ = re->rObj_->typeName();
 			re->rSize_ = re->rObj_->getNativeSize();
 			re->rPos_ = cv::Point(0,0);
@@ -51,7 +50,6 @@ namespace gpo
 				"DerivedRenderedObject must inherit RenderedObject as public");
 			auto re = std::make_shared<RenderedEntity>();
 			re->rObj_ = std::make_unique<DerivedRenderedObject>();
-			re->rObj_->addObserver(re.get());
 			re->name_ = name;
 			re->rSize_ = re->rObj_->getNativeSize();
 			re->rPos_ = cv::Point(0,0);
@@ -91,11 +89,6 @@ namespace gpo
 
 		const std::string &
 		name() const;
-
-	private:
-        void
-        onNeedsRedraw(
-            ModifiableDrawObject *drawable) override;
 
 	private:
 		std::unique_ptr<RenderedObject> rObj_;

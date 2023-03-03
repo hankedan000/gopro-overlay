@@ -160,12 +160,12 @@ namespace gpo
 	{
 	public:
 		RenderedObject(
+			const std::string &typeName,
 			int width,
 			int height);
 
-		virtual
-		std::string
-		typeName() const = 0;
+		const std::string &
+		typeName() const;
 
 		const cv::UMat &
 		getImage() const;
@@ -326,6 +326,8 @@ namespace gpo
 		checkAndNotifyRequirementsMet();
 
 	protected:
+		std::string typeName_;
+
 		// final rendered image
 		cv::UMat outImg_;
 

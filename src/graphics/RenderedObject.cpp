@@ -82,9 +82,11 @@ namespace gpo
 	}
 
 	RenderedObject::RenderedObject(
+		const std::string &typeName,
 		int width,
 		int height)
-	 : ModifiableDrawObject("RenderedObject")
+	 : ModifiableDrawObject(typeName)
+	 , typeName_(typeName)
 	 , outImg_(height,width,CV_8UC4,cv::Scalar(0,0,0,0))
 	 , visible_(true)
 	 , boundingBoxVisible_(false)
@@ -92,6 +94,12 @@ namespace gpo
 	 , tSources_()
 	 , track_(nullptr)
 	{
+	}
+
+	const std::string &
+	RenderedObject::typeName() const
+	{
+		return typeName_;
 	}
 
 	const cv::UMat &

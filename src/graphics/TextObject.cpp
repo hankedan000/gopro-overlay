@@ -3,19 +3,13 @@
 namespace gpo
 {
 	TextObject::TextObject()
-	 : RenderedObject(1,1)// cv::UMat seg faults if matrix is sized [0,0] :(
+	 : RenderedObject("TextObject",1,1)// cv::UMat seg faults if matrix is sized [0,0] :(
 	 , text_()
 	 , fontFace_(cv::FONT_HERSHEY_DUPLEX)
 	 , scale_(1.0)
 	 , color_(RGBA_COLOR(255,255,255,255))
 	 , thickness_(2)
 	{
-	}
-
-	std::string
-	TextObject::typeName() const
-	{
-		return "TextObject";
 	}
 
 	void

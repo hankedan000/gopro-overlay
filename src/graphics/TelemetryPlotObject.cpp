@@ -9,7 +9,7 @@ namespace gpo
     const int PLOT_RENDER_HEIGHT = 480;
 
 	TelemetryPlotObject::TelemetryPlotObject()
-	 : RenderedObject(PLOT_RENDER_WIDTH,PLOT_RENDER_HEIGHT)
+	 : RenderedObject("TelemetryPlotObject",PLOT_RENDER_WIDTH,PLOT_RENDER_HEIGHT)
 	 , fakeApp_()
 	 , plot_(nullptr)
 	 , plotWidthTime_sec_(6.0)
@@ -42,12 +42,6 @@ namespace gpo
 			delete(fakeApp_.app);
 			delete(fakeApp_.argv[0]);
 		}
-	}
-
-	std::string
-	TelemetryPlotObject::typeName() const
-	{
-		return "TelemetryPlotObject";
 	}
 
 	DataSourceRequirements

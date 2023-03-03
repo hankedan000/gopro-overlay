@@ -12,10 +12,6 @@ namespace gpo
 	public:
 		TextObject();
 
-		virtual
-		std::string
-		typeName() const override;
-
 		void
 		setText(
 			const std::string &text);

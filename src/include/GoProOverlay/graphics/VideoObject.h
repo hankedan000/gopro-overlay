@@ -11,10 +11,6 @@ namespace gpo
 		VideoObject();
 
 		virtual
-		std::string
-		typeName() const override;
-
-		virtual
 		DataSourceRequirements
 		dataSourceRequirements() const override;
 

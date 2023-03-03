@@ -7,14 +7,8 @@ namespace gpo
 	const int SPEEDOMETER_RENDERED_HEIGHT = 200;
 
 	SpeedometerObject::SpeedometerObject()
-	 : RenderedObject(SPEEDOMETER_RENDERED_WIDTH,SPEEDOMETER_RENDERED_HEIGHT)
+	 : RenderedObject("SpeedometerObject",SPEEDOMETER_RENDERED_WIDTH,SPEEDOMETER_RENDERED_HEIGHT)
 	{
-	}
-
-	std::string
-	SpeedometerObject::typeName() const
-	{
-		return "SpeedometerObject";
 	}
 
 	DataSourceRequirements

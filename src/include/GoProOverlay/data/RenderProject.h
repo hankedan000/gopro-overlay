@@ -222,10 +222,6 @@ protected:
 
 private:
 	void
-	internalSetTrack(
-		Track *track);
-	
-	void
 	onModified(
 		ModifiableObject *modifiable) override;
 
@@ -251,6 +247,8 @@ private:
 
 	// user-defined path to the final rendered video file
 	std::filesystem::path exportFilePath_;
+
+	bool ignoreInternalModificationEvents_;
 
 };
 
