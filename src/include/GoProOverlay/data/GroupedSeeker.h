@@ -115,14 +115,6 @@ namespace gpo
 		std::pair<double, double>
 		relativeSeekLimitsTime() const;
 
-        bool
-        isApplyable(
-            bool noisy = true) const override;
-
-        bool
-        isSavable(
-            bool noisy = true) const override;
-
 	protected:
         bool
         subclassApplyModifications() override;

@@ -115,7 +115,7 @@ namespace gpo
 
 		void
 		setRenderSize(
-			cv::Size size);
+			const cv::Size &size);
 
 		cv::Size
 		getRenderSize() const;
@@ -145,6 +145,7 @@ namespace gpo
 		double
 		getHighestFPS() const;
 
+		// FIXME make mathod const and return const &
 		GroupedSeekerPtr
 		getSeeker();
 
@@ -163,6 +164,14 @@ namespace gpo
 			const DataSourceManager &dsm);
 
 	private:
+		void
+		internalAddEntity(
+			const RenderedEntityPtr &re);
+
+		void
+		internalSetRenderSize(
+			const cv::Size &size);
+			
         void
         onModified(
             ModifiableObject *modifiable) override;

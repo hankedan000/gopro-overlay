@@ -7,7 +7,7 @@ namespace gpo
 
 	ModifiableDrawObject::ModifiableDrawObject(
 		const std::string &className)
-	 : ModifiableObject(className)
+	 : ModifiableObject(className,true,false)
 	 , needsRedraw_(false)
 	 , observers_()
 	{
@@ -60,15 +60,6 @@ namespace gpo
 	{
 		observers_.erase(observer);
 	}
-
-	// BEGIN ModifiableObject overrides
-	bool
-	ModifiableDrawObject::isSavable(
-		bool /*noisy*/) const
-	{
-		return false;// we don't support saving individual ModifiableDrawObject
-	}
-	// END ModifiableObject overrides
 
 	bool
 	ModifiableDrawObject::subclassApplyModifications()

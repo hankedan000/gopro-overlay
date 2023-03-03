@@ -6,7 +6,7 @@
 namespace gpo
 {
 	GroupedSeeker::GroupedSeeker()
-	 : ModifiableObject("GroupedSeeker")
+	 : ModifiableObject("GroupedSeeker",true,false)
 	 , seekers_()
 	{
 	}
@@ -15,7 +15,7 @@ namespace gpo
 	GroupedSeeker::clear()
 	{
 		seekers_.clear();
-		markObjectModified();
+		markObjectModified(true,true);
 	}
 
 	void
@@ -23,7 +23,7 @@ namespace gpo
 		TelemetrySeekerPtr seeker)
 	{
 		seekers_.push_back(seeker);
-		markObjectModified();
+		markObjectModified(true,true);
 	}
 
 	bool
@@ -43,7 +43,7 @@ namespace gpo
 		if (isNewSeeker)
 		{
 			seekers_.push_back(seeker);
-			markObjectModified();
+			markObjectModified(true,true);
 		}
 		return isNewSeeker;
 	}
@@ -66,7 +66,7 @@ namespace gpo
 		size_t idx)
 	{
 		seekers_.erase(std::next(seekers_.begin(), idx));
-		markObjectModified();
+		markObjectModified(true,true);
 	}
 
 	void
@@ -88,7 +88,7 @@ namespace gpo
 		{
 			seeker->prev();
 		}
-		markObjectModified();
+		markObjectModified(true,false);
 	}
 
 	void
@@ -110,7 +110,7 @@ namespace gpo
 		{
 			seeker->next();
 		}
-		markObjectModified();
+		markObjectModified(true,false);
 	}
 
 	void
@@ -130,6 +130,7 @@ namespace gpo
 						seeker->seekToIdx(alignItr->second);
 					}
 				}
+				markObjectModified(true,false);
 				break;
 			}
 			case gpo::RenderAlignmentType_E::eRAT_Lap:
@@ -152,7 +153,6 @@ namespace gpo
 				spdlog::error("RenderAlignmentType_E ({}) is not supported!",(int)renderAlignInfo.type);
 				break;
 		}
-		markObjectModified();
 	}
 
 	void
@@ -163,7 +163,7 @@ namespace gpo
 		{
 			seeker->seekToIdx(idx);
 		}
-		markObjectModified();
+		markObjectModified(true,false);
 	}
 
 	void
@@ -185,7 +185,7 @@ namespace gpo
 		{
 			seeker->seekRelative(amount,forward);
 		}
-		markObjectModified();
+		markObjectModified(true,false);
 	}
 
 	void
@@ -206,7 +206,7 @@ namespace gpo
 		{
 			seeker->seekRelativeTime(offset_secs);
 		}
-		markObjectModified();
+		markObjectModified(true,false);
 	}
 
 	void
@@ -216,6 +216,7 @@ namespace gpo
 		{
 			seeker->setAlignmentIdx(seeker->seekedIdx());
 		}
+		markObjectModified(true,true);
 	}
 
 	unsigned int
@@ -276,7 +277,7 @@ namespace gpo
 		{
 			seeker->seekToLapEntry(lap);
 		}
-		markObjectModified();
+		markObjectModified(true,false);
 		return true;
 	}
 
@@ -306,7 +307,7 @@ namespace gpo
 		{
 			seeker->seekToLapExit(lap);
 		}
-		markObjectModified();
+		markObjectModified(true,false);
 		return true;
 	}
 
@@ -358,23 +359,9 @@ namespace gpo
 	}
 
 	bool
-	GroupedSeeker::isApplyable(
-		bool noisy) const
-	{
-		return false;
-	}
-
-	bool
-	GroupedSeeker::isSavable(
-		bool noisy) const
-	{
-		return false;
-	}
-
-	bool
 	GroupedSeeker::subclassApplyModifications()
 	{
-		return false;
+		return true;
 	}
 
 	bool

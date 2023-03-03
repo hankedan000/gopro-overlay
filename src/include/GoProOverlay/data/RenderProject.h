@@ -222,6 +222,10 @@ protected:
 
 private:
 	void
+	internalSetTrack(
+		Track *track);
+	
+	void
 	onModified(
 		ModifiableObject *modifiable) override;
 

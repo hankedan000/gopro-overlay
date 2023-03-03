@@ -37,6 +37,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     progressDialog_(new ProgressDialog(this)),
     renderEntityPropertiesTab_(new RenderEntityPropertiesTab(this))
 {
+    proj_.setShowModificationCallStack(true);
     ui->setupUi(this);
     renderEntityPropertiesTab_->setProject(&proj_);
     this->setWindowTitle(WINDOW_TITLE);
@@ -377,7 +378,6 @@ ProjectWindow::loadProject(
                     false);// holdoff render untill we seek below
 
         updateAlignmentPane();
-        seekEngineToAlignment(getAlignmentInfoFromUI(),true);
         ui->leadIn_SpinBox->setValue(proj_.getLeadInSeconds());
         ui->leadOut_SpinBox->setValue(proj_.getLeadOutSeconds());
         switch (proj_.getAudioExportApproach())
@@ -922,7 +922,7 @@ ProjectWindow::onModificationsApplied(
         // TODO make RenderProject watch for track's change application event
         // and perform the reprocessDatumTrack() call
         proj_.reprocessDatumTrack();
-        
+
         updateAlignmentPane();
     }
     else

@@ -51,9 +51,19 @@ namespace gpo
          * 
          * @param[in] className
          * the object's class name. useful for debugging
+         * 
+         * @param[in] supportsApplyingModifications
+         * true if the class supports applying changes
+         * (ie. the applyModifications() method is allowed to be called)
+         * 
+         * @param[in] supportsSavingModifications
+         * true if the class supports saving modifications itself
+         * (ie. the saveModifications() method is allowed to be called)
          */
         ModifiableObject(
-            const std::string &className);
+            const std::string &className,
+            bool supportsApplyingModifications,
+            bool supportsSavingModifications);
         
         /**
          * Copy constructor
@@ -86,7 +96,6 @@ namespace gpo
          * true if the object's applyModifications() method is callable.
          * false otherwise.
          */
-        virtual
         bool
         isApplyable(
             bool noisy = true) const;
@@ -100,14 +109,15 @@ namespace gpo
          * true if the object's saveModifications() method is callable.
          * false otherwise.
          */
-        virtual
         bool
         isSavable(
             bool noisy = true) const;
 
         virtual
         void
-        markObjectModified();
+        markObjectModified(
+            bool needsApply = true,
+            bool needsSave = true);
         
         /**
          * @return
@@ -215,6 +225,14 @@ namespace gpo
 
     private:
         const std::string className_;
+
+        // true if the class supports applying changes
+        // (ie. the applyModifications() method is allowed to be called)
+        bool supportsApplyingModifications_;
+
+        // true if the class supports saving modifications itself
+        // (ie. the saveModifications() method is allowed to be called)
+        bool supportsSavingModifications_;
 
         // true if the object has been modified since last "apply"
         bool hasApplyableEdits_;

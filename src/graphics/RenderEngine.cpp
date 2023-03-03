@@ -114,9 +114,9 @@ namespace gpo
 
 	void
 	RenderEngine::setRenderSize(
-		cv::Size size)
+		const cv::Size &size)
 	{
-		rFrame_.create(size,CV_8UC3);
+		internalSetRenderSize(size);
 		markNeedsRedraw();
 		markObjectModified();
 	}
@@ -140,32 +140,7 @@ namespace gpo
 	RenderEngine::addEntity(
 		const RenderedEntityPtr &re)
 	{
-		if ( ! re->renderObject())
-		{
-			throw std::runtime_error("rObj is null. can't add entity to engine");
-		}
-
-		// give entity a unique name if it doesn't have one already
-		if (re->name().empty())
-		{
-			re->setName(re->renderObject()->typeName() + "<" + std::to_string((size_t)&re) + ">");
-		}
-
-		re->addObserver((ModifiableDrawObjectObserver*)this);
-		entities_.push_back(re);
-
-		for (size_t i=0; i<re->renderObject()->numVideoSources(); i++)
-		{
-			auto vSrc = re->renderObject()->getVideoSource(i);
-			auto vSeeker = vSrc->seeker();
-			gSeeker_->addSeekerUnique(vSeeker);
-		}
-		for (size_t i=0; i<re->renderObject()->numTelemetrySources(); i++)
-		{
-			auto tSrc = re->renderObject()->getTelemetrySource(i);
-			auto tSeeker = tSrc->seeker();
-			gSeeker_->addSeekerUnique(tSeeker);
-		}
+		internalAddEntity(re);
 		markNeedsRedraw();
 		markObjectModified();
 	}
@@ -313,9 +288,10 @@ namespace gpo
 		const YAML::Node& node,
 		const DataSourceManager &dsm)
 	{
-		setRenderSize(node["renderSize"].as<cv::Size>());
+		internalSetRenderSize(node["renderSize"].as<cv::Size>());
 
 		entities_.clear();
+	 	gSeeker_ = std::make_shared<GroupedSeeker>();
 		if (node["entities"])
 		{
 			const YAML::Node &yEntities = node["entities"];
@@ -357,12 +333,53 @@ namespace gpo
 
 				re->renderObject()->decode(yR_Obj,dsm);
 
-				addEntity(re);
+				internalAddEntity(re);
 			}
 		}
-		// FIXME need to rebuild grouped seeker
+
+		gSeeker_->addObserver(this);
+		markNeedsRedraw();
 
 		return true;
+	}
+
+	void
+	RenderEngine::internalAddEntity(
+		const RenderedEntityPtr &re)
+	{
+		if ( ! re->renderObject())
+		{
+			throw std::runtime_error("rObj is null. can't add entity to engine");
+		}
+
+		// give entity a unique name if it doesn't have one already
+		if (re->name().empty())
+		{
+			re->setName(re->renderObject()->typeName() + "<" + std::to_string((size_t)&re) + ">");
+		}
+
+		re->addObserver((ModifiableDrawObjectObserver*)this);
+		entities_.push_back(re);
+
+		for (size_t i=0; i<re->renderObject()->numVideoSources(); i++)
+		{
+			auto vSrc = re->renderObject()->getVideoSource(i);
+			auto vSeeker = vSrc->seeker();
+			gSeeker_->addSeekerUnique(vSeeker);
+		}
+		for (size_t i=0; i<re->renderObject()->numTelemetrySources(); i++)
+		{
+			auto tSrc = re->renderObject()->getTelemetrySource(i);
+			auto tSeeker = tSrc->seeker();
+			gSeeker_->addSeekerUnique(tSeeker);
+		}
+	}
+
+	void
+	RenderEngine::internalSetRenderSize(
+		const cv::Size &size)
+	{
+		rFrame_.create(size,CV_8UC3);
 	}
 
 	void
@@ -373,16 +390,19 @@ namespace gpo
 		{
 			render();
 			markNeedsRedraw();
+			if (gSeeker_->hasSavableModifications())
+			{
+				// alignment has changed, and we need to save the engine
+				markObjectModified();
+			}
 		}
 		else
 		{
 			spdlog::warn(
-				"RenderEngine notified of modification event it wasn't expecting from object"
-				" {}<{}>. marking object as modified just to be safe.",
+				"RenderEngine notified of modification event it wasn't expecting from {}<{}>.",
 				modifiable->className(),
 				(void*)modifiable);
 		}
-		markObjectModified();
 	}
 
 	void

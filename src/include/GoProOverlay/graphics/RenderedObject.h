@@ -136,12 +136,6 @@ namespace gpo
         removeObserver(
             ModifiableDrawObjectObserver *observer);
 
-		// BEGIN ModifiableObject overrides
-        bool
-        isSavable(
-            bool noisy = true) const override;
-		// END ModifiableObject overrides
-
 	protected:
 		// BEGIN ModifiableObject overrides
         bool

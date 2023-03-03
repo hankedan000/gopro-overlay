@@ -11,8 +11,12 @@ namespace gpo
     bool ModifiableObject::globalShowModificationCallStack_ = false;
 
     ModifiableObject::ModifiableObject(
-            const std::string &className)
+            const std::string &className,
+            bool supportsApplyingModifications,
+            bool supportsSavingModifications)
      : className_(className)
+     , supportsApplyingModifications_(supportsApplyingModifications)
+     , supportsSavingModifications_(supportsSavingModifications)
      , hasApplyableEdits_(false)
      , hasSavableEdits_(false)
      , savePath_()
@@ -24,6 +28,8 @@ namespace gpo
     ModifiableObject::ModifiableObject(
         const ModifiableObject &other)
      : className_(other.className_)
+     , supportsApplyingModifications_(other.supportsApplyingModifications_)
+     , supportsSavingModifications_(other.supportsSavingModifications_)
      , hasApplyableEdits_(other.hasApplyableEdits_)
      , hasSavableEdits_(other.hasApplyableEdits_)
      , savePath_(other.savePath_)
@@ -85,21 +91,26 @@ namespace gpo
     ModifiableObject::isApplyable(
             bool noisy) const
     {
-        return true;
+        return supportsApplyingModifications_;
     }
 
     bool
     ModifiableObject::isSavable(
             bool noisy) const
     {
-        if (savePath_.empty())
+        if ( ! supportsSavingModifications_)
+        {
+            return false;
+        }
+        else if (savePath_.empty())
         {
             if (noisy)
             {
                 spdlog::error(
-                    "save path is not set. {}<{}> is not savable.",
+                    "save path is not set; therefore {}<{}> is not savable.",
                     className_,
                     (void*)this);
+                utils::misc::printCallStack(stdout,10);
             }
             return false;
         }
@@ -107,7 +118,9 @@ namespace gpo
     }
 
     void
-    ModifiableObject::markObjectModified()
+    ModifiableObject::markObjectModified(
+        bool needsApply,
+        bool needsSave)
     {
         if (showModificationCallStack_ || globalShowModificationCallStack_)
         {
@@ -116,8 +129,8 @@ namespace gpo
             utils::misc::printCallStack(stdout,10);
         }
 
-        hasApplyableEdits_ = true;
-        hasSavableEdits_ = true;
+        hasApplyableEdits_ = hasApplyableEdits_ || needsApply;
+        hasSavableEdits_ = hasSavableEdits_ || needsSave;
         for (auto &observer : observers_)
         {
             observer->onModified(this);

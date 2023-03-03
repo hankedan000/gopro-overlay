@@ -12,7 +12,7 @@ const std::string TRACK_FILENAME = "track.yaml";
 namespace gpo
 {
 	RenderProject::RenderProject()
-	 : ModifiableObject("RenderProject")
+	 : ModifiableObject("RenderProject",true,true)
 	 , dsm_()
 	 , engine_(std::make_shared<RenderEngine>())
 	 , track_(nullptr)
@@ -62,32 +62,7 @@ namespace gpo
 	RenderProject::setTrack(
 		Track *track)
 	{
-		if (track_)
-		{
-			track_->removeObserver(this);
-			delete track_;
-		}
-		track_ = track;
-		if (track_)
-		{
-			track_->addObserver(this);
-		}
-
-		#pragma omp parallel for
-		for (size_t i=0; i<dsm_.sourceCount(); i++)
-		{
-			dsm_.getSource(i)->setDatumTrack(track,true);// true - process immediately
-		}
-
-		for (size_t e=0; e<engine_->entityCount(); e++)
-		{
-			const auto &entity = engine_->getEntity(e);
-			DataSourceRequirements dsr = entity->renderObject()->dataSourceRequirements();
-			if (dsr.numTracks == DSR_ONE_OR_MORE || dsr.numTracks > 0)
-			{
-				entity->renderObject()->setTrack(track_);
-			}
-		}
+		internalSetTrack(track);
 		markObjectModified();
 	}
 
@@ -107,8 +82,11 @@ namespace gpo
 	RenderProject::setLeadInSeconds(
 		double dur_secs)
 	{
-		renderLeadIn_sec_ = dur_secs;
-		markObjectModified();
+		if (renderLeadIn_sec_ != dur_secs)
+		{
+			renderLeadIn_sec_ = dur_secs;
+			markObjectModified();
+		}
 	}
 
 	double
@@ -121,8 +99,11 @@ namespace gpo
 	RenderProject::setLeadOutSeconds(
 		double dur_secs)
 	{
-		renderLeadOut_sec_ = dur_secs;
-		markObjectModified();
+		if (renderLeadOut_sec_ != dur_secs)
+		{
+			renderLeadOut_sec_ = dur_secs;
+			markObjectModified();
+		}
 	}
 
 	double
@@ -153,8 +134,11 @@ namespace gpo
 	RenderProject::setAudioExportApproach(
 		const AudioExportApproach_E &approach)
 	{
-		audioExportApproach_ = approach;
-		markObjectModified();
+		if (audioExportApproach_ != approach)
+		{
+			audioExportApproach_ = approach;
+			markObjectModified();
+		}
 	}
 
 	const AudioExportApproach_E &
@@ -264,7 +248,7 @@ namespace gpo
 				if (newTrack->decode(trackNode))
 				{
 					newTrack->setSavePath(trackPath);
-					setTrack(newTrack);
+					internalSetTrack(newTrack);
 				}
 				else
 				{
@@ -283,6 +267,11 @@ namespace gpo
 				okay = false;
 			}
 		}
+
+		engine_->removeObserver(this);// ignore change events while restoring alignment position
+		engine_->getSeeker()->seekToAlignmentInfo(currRenderAlignmentInfo_);
+		engine_->getSeeker()->setAlignmentHere();
+		engine_->addObserver(this);
 
 		setSavePath(projectRoot);
 		return okay;
@@ -392,16 +381,52 @@ namespace gpo
 	}
 
 	void
+	RenderProject::internalSetTrack(
+		Track *track)
+	{
+		if (track_)
+		{
+			track_->removeObserver(this);
+			delete track_;
+		}
+		track_ = track;
+		if (track_)
+		{
+			track_->addObserver(this);
+		}
+
+		#pragma omp parallel for
+		for (size_t i=0; i<dsm_.sourceCount(); i++)
+		{
+			dsm_.getSource(i)->setDatumTrack(track,true);// true - process immediately
+		}
+
+		for (size_t e=0; e<engine_->entityCount(); e++)
+		{
+			const auto &entity = engine_->getEntity(e);
+			DataSourceRequirements dsr = entity->renderObject()->dataSourceRequirements();
+			if (dsr.numTracks == DSR_ONE_OR_MORE || dsr.numTracks > 0)
+			{
+				entity->renderObject()->setTrack(track_);
+			}
+		}
+	}
+
+	void
 	RenderProject::onModified(
 		ModifiableObject *modifiable)
 	{
 		if (modifiable == engine_.get())
 		{
-			markObjectModified();
+			markObjectModified(
+				modifiable->hasApplyableModifications(),
+				modifiable->hasSavableModifications());
 		}
 		else if (modifiable == track_)
 		{
-			markObjectModified();
+			markObjectModified(
+				modifiable->hasApplyableModifications(),
+				modifiable->hasSavableModifications());
 		}
 	}
 }
