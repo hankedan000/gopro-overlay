@@ -248,8 +248,12 @@ namespace gpo
 	RenderedObject::setVisible(
 		bool visible)
 	{
+		bool modified = visible_ != visible;
 		visible_ = visible;
-		markObjectModified(true);
+		if (modified)
+		{
+			markObjectModified(true);
+		}
 	}
 
 	bool
@@ -262,8 +266,12 @@ namespace gpo
 	RenderedObject::setBoundingBoxVisible(
 		bool visible)
 	{
+		bool modified = boundingBoxVisible_ != visible;
 		boundingBoxVisible_ = visible;
-		markObjectModified(true);
+		if (modified)
+		{
+			markObjectModified(true);
+		}
 	}
 
 	bool
@@ -276,8 +284,12 @@ namespace gpo
 	RenderedObject::setBoundingBoxThickness(
 		unsigned int thickness)
 	{
+		bool modified = boundingBoxThickness_ != thickness;
 		boundingBoxThickness_ = thickness;
-		markObjectModified(true);
+		if (modified)
+		{
+			markObjectModified(true);
+		}
 	}
 
 	unsigned int

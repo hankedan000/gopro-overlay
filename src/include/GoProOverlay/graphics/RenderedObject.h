@@ -130,9 +130,13 @@ namespace gpo
 		bool
 		needsRerender() const;
 
+		using ModifiableObject::addObserver;
+
         void
         addObserver(
             ModifiableDrawObjectObserver *observer);
+
+		using ModifiableObject::removeObserver;
 
         void
         removeObserver(

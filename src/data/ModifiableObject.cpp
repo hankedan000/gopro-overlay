@@ -1,9 +1,15 @@
 #include "GoProOverlay/data/ModifiableObject.h"
 
+#include "GoProOverlay/utils/misc/MiscUtils.h"
+
 #include <spdlog/spdlog.h>
 
 namespace gpo
 {
+
+    // init static member
+    bool ModifiableObject::globalShowModificationCallStack_ = false;
+
     ModifiableObject::ModifiableObject(
             const std::string &className)
      : className_(className)
@@ -11,6 +17,7 @@ namespace gpo
      , hasSavableEdits_(false)
      , savePath_()
      , observers_()
+     , showModificationCallStack_(false)
     {
     }
 
@@ -102,7 +109,13 @@ namespace gpo
     void
     ModifiableObject::markObjectModified()
     {
-		spdlog::trace("{} modified", className());
+        if (showModificationCallStack_ || globalShowModificationCallStack_)
+        {
+            // print the call stack that caused this object to be modified
+            spdlog::info("{}() - {}<{}>",__func__,className(),(void*)this);
+            utils::misc::printCallStack(stdout,10);
+        }
+
         hasApplyableEdits_ = true;
         hasSavableEdits_ = true;
         for (auto &observer : observers_)
@@ -215,6 +228,20 @@ namespace gpo
         ModifiableObjectObserver *observer)
     {
         observers_.erase(observer);
+    }
+
+    void
+    ModifiableObject::setShowModificationCallStack(
+        bool show)
+    {
+        showModificationCallStack_ = show;
+    }
+
+    void
+    ModifiableObject::setGlobalShowModificationCallStack(
+        bool show)
+    {
+        globalShowModificationCallStack_ = show;
     }
 
     //---------------------------------------------------------------

@@ -119,7 +119,7 @@ enum AudioExportApproach_E
 	eAEA_MultiSourceSplit = 1
 };
 
-class RenderProject
+class RenderProject : public ModifiableObject, private ModifiableObjectObserver
 {
 public:
 	RenderProject();
@@ -203,10 +203,6 @@ public:
 		bool noisy = false);
 
 	bool
-	save(
-		const std::string &dirPath);
-
-	bool
 	load(
 		const std::string &dirPath);
 
@@ -216,6 +212,18 @@ public:
 	bool
 	decode(
 		const YAML::Node& node);
+
+protected:
+	bool
+	subclassApplyModifications() override;
+
+	bool
+	subclassSaveModifications() override;
+
+private:
+	void
+	onModified(
+		ModifiableObject *modifiable) override;
 
 private:
 	DataSourceManager dsm_;

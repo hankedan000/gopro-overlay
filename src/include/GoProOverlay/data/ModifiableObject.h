@@ -157,6 +157,29 @@ namespace gpo
         removeObserver(
             ModifiableObjectObserver *observer);
 
+        /**
+         * Enable/Disable printing of a call stack when this object is marked
+         * as modified via the markObjectModified() method.
+         * 
+         * @param[in] show
+         * true to enable call stack printing. false to disable.
+         */
+        void
+        setShowModificationCallStack(
+            bool show);
+
+        /**
+         * Enable/Disable printing of a call stack when any ModifiableObjec
+         * is marked as modified via the markObjectModified() method.
+         * 
+         * @param[in] show
+         * true to enable call stack printing. false to disable.
+         */
+        static
+        void
+        setGlobalShowModificationCallStack(
+            bool show);
+
     protected:
         /**
          * Subclasses can call this method to clear 'hasApplyableEdits_'
@@ -203,6 +226,12 @@ namespace gpo
         std::filesystem::path savePath_;
 
         std::unordered_set<ModifiableObjectObserver *> observers_;
+
+        // set true to printout a callstack when this object is marked as modified
+        bool showModificationCallStack_;
+
+        // same concept as 'showModificationCallStack_' but this applies to all instances
+        static bool globalShowModificationCallStack_;
 
     };
 }

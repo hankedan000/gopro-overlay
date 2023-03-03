@@ -104,8 +104,9 @@ namespace gpo
 	 : ModifiableDrawObject("RenderEngine")
 	 , rFrame_()
 	 , entities_()
-	 , gSeeker_(new GroupedSeeker())
+	 , gSeeker_(std::make_shared<GroupedSeeker>())
 	{
+		gSeeker_->addObserver(this);
 	}
 
 	void
@@ -145,7 +146,7 @@ namespace gpo
 			re->setName(re->renderObject()->typeName() + "<" + std::to_string((size_t)&re) + ">");
 		}
 
-		re->addObserver(this);
+		re->addObserver((ModifiableDrawObjectObserver*)this);
 		entities_.push_back(re);
 
 		for (size_t i=0; i<re->renderObject()->numVideoSources(); i++)
@@ -183,7 +184,7 @@ namespace gpo
 	{
 		// FIXME need to rebuild grouped seeker
 		auto entityItr = std::next(entities_.begin(), idx);
-		(*entityItr)->removeObserver(this);
+		(*entityItr)->removeObserver((ModifiableDrawObjectObserver*)this);
 		entities_.erase(entityItr);
 		markObjectModified(true);
 	}

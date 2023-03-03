@@ -12,8 +12,9 @@ const std::string TRACK_FILENAME = "track.yaml";
 namespace gpo
 {
 	RenderProject::RenderProject()
-	 : dsm_()
-	 , engine_(new RenderEngine())
+	 : ModifiableObject("RenderProject")
+	 , dsm_()
+	 , engine_(std::make_shared<RenderEngine>())
 	 , track_(nullptr)
 	 , renderLeadIn_sec_(0.0)
 	 , renderLeadOut_sec_(0.0)
@@ -22,6 +23,7 @@ namespace gpo
 	 , audioExportApproach_(AudioExportApproach_E::eAEA_SingleSource)
 	 , exportFilePath_("")
 	{
+		engine_->addObserver((ModifiableObjectObserver*)this);
 	}
 
 	RenderProject::~RenderProject()
@@ -51,6 +53,9 @@ namespace gpo
 		dsm_.clear();
 		engine_->clear();
 		setTrack(nullptr);
+		setSavePath("");
+		clearNeedsApply();
+		clearNeedsSave();
 	}
 
 	void
@@ -59,9 +64,14 @@ namespace gpo
 	{
 		if (track_)
 		{
+			track_->removeObserver(this);
 			delete track_;
 		}
 		track_ = track;
+		if (track_)
+		{
+			track_->addObserver(this);
+		}
 
 		#pragma omp parallel for
 		for (size_t i=0; i<dsm_.sourceCount(); i++)
@@ -78,6 +88,7 @@ namespace gpo
 				entity->renderObject()->setTrack(track_);
 			}
 		}
+		markObjectModified();
 	}
 
 	Track *
@@ -97,6 +108,7 @@ namespace gpo
 		double dur_secs)
 	{
 		renderLeadIn_sec_ = dur_secs;
+		markObjectModified();
 	}
 
 	double
@@ -110,6 +122,7 @@ namespace gpo
 		double dur_secs)
 	{
 		renderLeadOut_sec_ = dur_secs;
+		markObjectModified();
 	}
 
 	double
@@ -127,6 +140,7 @@ namespace gpo
 		{
 			lastNonCustomAlignmentInfo_ = renderAlignmentInfo;
 		}
+		markObjectModified();
 	}
 
 	const RenderAlignmentInfo &
@@ -140,6 +154,7 @@ namespace gpo
 		const AudioExportApproach_E &approach)
 	{
 		audioExportApproach_ = approach;
+		markObjectModified();
 	}
 
 	const AudioExportApproach_E &
@@ -153,6 +168,7 @@ namespace gpo
 		const std::filesystem::path &path)
 	{
 		exportFilePath_ = path;
+		markObjectModified();
 	}
 
 	const std::filesystem::path &
@@ -177,7 +193,13 @@ namespace gpo
 	{
 		if (engine != nullptr)
 		{
+			if (engine_)
+			{
+				engine_->removeObserver((ModifiableObjectObserver*)this);
+			}
 			engine_ = engine;
+			engine_->addObserver((ModifiableObjectObserver*)this);
+			markObjectModified();
 		}
 	}
 
@@ -212,52 +234,6 @@ namespace gpo
 			return projectFileExists;
 		}
 		return false;
-	}
-
-	bool
-	RenderProject::save(
-		const std::string &dirPath)
-	{
-		const std::filesystem::path projectRoot(dirPath);
-		if ( ! std::filesystem::exists(projectRoot))
-		{
-			// make project directory if it doesn't exist already
-			if ( ! std::filesystem::create_directories(projectRoot))
-			{
-				spdlog::error("failed to create project root directory '{}'",projectRoot.c_str());
-				return false;
-			}
-		}
-		else if ( ! std::filesystem::is_directory(projectRoot))
-		{
-			// path exists, but it's not a directory, so bail out
-			spdlog::error("projectRoot must be a directory. '{}'",projectRoot.c_str());
-			return false;
-		}
-
-		const std::filesystem::path projectPath = projectRoot / PROJECT_FILENAME;
-
-		YAML::Node yProject = encode();
-		std::ofstream projOFS(projectPath);
-		projOFS << yProject;
-		projOFS.close();
-
-		if (track_)
-		{
-			YAML::Node trackNode = track_->encode();
-			std::filesystem::path trackPath = track_->getSavePath();
-			if (trackPath.empty())
-			{
-				trackPath = projectRoot / TRACK_FILENAME;
-				track_->setSavePath(trackPath);
-			}
-			std::ofstream trackOFS(trackPath);
-			trackOFS << trackNode;
-			trackOFS.close();
-			track_->saveModifications();
-		}
-
-		return true;
 	}
 
 	bool
@@ -308,6 +284,7 @@ namespace gpo
 			}
 		}
 
+		setSavePath(projectRoot);
 		return okay;
 	}
 
@@ -361,5 +338,70 @@ namespace gpo
 		exportFilePath_ = strExportFilePath;
 
 		return okay;
+	}
+
+	bool
+	RenderProject::subclassApplyModifications()
+	{
+		return false;
+	}
+
+	bool
+	RenderProject::subclassSaveModifications()
+	{
+		const std::filesystem::path &projectRoot = getSavePath();
+		if ( ! std::filesystem::exists(projectRoot))
+		{
+			// make project directory if it doesn't exist already
+			if ( ! std::filesystem::create_directories(projectRoot))
+			{
+				spdlog::error("failed to create project root directory '{}'",projectRoot.c_str());
+				return false;
+			}
+		}
+		else if ( ! std::filesystem::is_directory(projectRoot))
+		{
+			// path exists, but it's not a directory, so bail out
+			spdlog::error("projectRoot must be a directory. '{}'",projectRoot.c_str());
+			return false;
+		}
+
+		const std::filesystem::path projectPath = projectRoot / PROJECT_FILENAME;
+
+		YAML::Node yProject = encode();
+		std::ofstream projOFS(projectPath);
+		projOFS << yProject;
+		projOFS.close();
+
+		if (track_)
+		{
+			YAML::Node trackNode = track_->encode();
+			std::filesystem::path trackPath = track_->getSavePath();
+			if (trackPath.empty())
+			{
+				trackPath = projectRoot / TRACK_FILENAME;
+				track_->setSavePath(trackPath);
+			}
+			std::ofstream trackOFS(trackPath);
+			trackOFS << trackNode;
+			trackOFS.close();
+			track_->saveModifications();
+		}
+
+		return true;
+	}
+
+	void
+	RenderProject::onModified(
+		ModifiableObject *modifiable)
+	{
+		if (modifiable == engine_.get())
+		{
+			markObjectModified();
+		}
+		else if (modifiable == track_)
+		{
+			markObjectModified();
+		}
 	}
 }
