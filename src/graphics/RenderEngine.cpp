@@ -24,6 +24,74 @@ namespace gpo
 	{
 	}
 
+	const std::unique_ptr<RenderedObject> &
+	RenderedEntity::renderObject() const
+	{
+		return rObj_;
+	}
+
+	void
+	RenderedEntity::setRenderSize(
+		const cv::Size &size)
+	{
+		rSize_ = size;
+		markObjectModified(true);
+	}
+
+	void
+	RenderedEntity::setRenderSize(
+		int w,
+		int h)
+	{
+		rSize_.width = w;
+		rSize_.height = h;
+		markObjectModified(true);
+	}
+
+	const cv::Size &
+	RenderedEntity::renderSize() const
+	{
+		return rSize_;
+	}
+
+	void
+	RenderedEntity::setRenderPosition(
+		const cv::Point &pos)
+	{
+		rPos_ = pos;
+		markObjectModified(true);
+	}
+
+	void
+	RenderedEntity::setRenderPosition(
+		int x,
+		int y)
+	{
+		rPos_.x = x;
+		rPos_.y = y;
+		markObjectModified(true);
+	}
+
+	const cv::Point &
+	RenderedEntity::renderPosition() const
+	{
+		return rPos_;
+	}
+
+	void
+	RenderedEntity::setName(
+		const std::string &name)
+	{
+		name_ = name;
+		markObjectModified(true);
+	}
+
+	const std::string &
+	RenderedEntity::name() const
+	{
+		return name_;
+	}
+
 	void
 	RenderedEntity::onModified(
 		ModifiableDrawObject *drawable,
@@ -66,29 +134,29 @@ namespace gpo
 	RenderEngine::addEntity(
 		const RenderedEntityPtr &re)
 	{
-		if ( ! re->rObj)
+		if ( ! re->renderObject())
 		{
 			throw std::runtime_error("rObj is null. can't add entity to engine");
 		}
 
 		// give entity a unique name if it doesn't have one already
-		if (re->name.empty())
+		if (re->name().empty())
 		{
-			re->name = re->rObj->typeName() + "<" + std::to_string((size_t)&re) + ">";
+			re->setName(re->renderObject()->typeName() + "<" + std::to_string((size_t)&re) + ">");
 		}
 
 		re->addObserver(this);
 		entities_.push_back(re);
 
-		for (size_t i=0; i<re->rObj->numVideoSources(); i++)
+		for (size_t i=0; i<re->renderObject()->numVideoSources(); i++)
 		{
-			auto vSrc = re->rObj->getVideoSource(i);
+			auto vSrc = re->renderObject()->getVideoSource(i);
 			auto vSeeker = vSrc->seeker();
 			gSeeker_->addSeekerUnique(vSeeker);
 		}
-		for (size_t i=0; i<re->rObj->numTelemetrySources(); i++)
+		for (size_t i=0; i<re->renderObject()->numTelemetrySources(); i++)
 		{
-			auto tSrc = re->rObj->getTelemetrySource(i);
+			auto tSrc = re->renderObject()->getTelemetrySource(i);
 			auto tSeeker = tSrc->seeker();
 			gSeeker_->addSeekerUnique(tSeeker);
 		}
@@ -132,9 +200,9 @@ namespace gpo
 		double fps = 0.0;
 		for (const auto &entity : entities_)
 		{
-			for (size_t i=0; i<entity->rObj->numVideoSources(); i++)
+			for (size_t i=0; i<entity->renderObject()->numVideoSources(); i++)
 			{
-				auto vSrc = entity->rObj->getVideoSource(i);
+				auto vSrc = entity->renderObject()->getVideoSource(i);
 				fps = std::max(fps, vSrc->fps());
 			}
 		}
@@ -157,50 +225,50 @@ namespace gpo
 		#pragma omp parallel for
 		for (const auto &ent : entities_)
 		{
-			if ( ! ent->rObj->isVisible())
+			if ( ! ent->renderObject()->isVisible())
 			{
 				continue;
 			}
 
 			try
 			{
-				ent->rObj->render();
+				ent->renderObject()->render();
 			}
 			catch (const std::exception &e)
 			{
-				spdlog::error("caught std::exception while processing rObj<{}>. what() = {}",
-					ent->rObj->typeName().c_str(),
+				spdlog::error("caught std::exception while processing rObj<{}>. what({}",
+					ent->renderObject()->typeName().c_str(),
 					e.what());
 			}
 			catch (...)
 			{
 				spdlog::error("caught unknown exception while processing rObj<{}>.",
-					ent->rObj->typeName().c_str());
+					ent->renderObject()->typeName().c_str());
 			}
 		}
 
 		// draw all entities into frame
 		for (const auto &ent : entities_)
 		{
-			if ( ! ent->rObj->isVisible())
+			if ( ! ent->renderObject()->isVisible())
 			{
 				continue;
 			}
 
 			try
 			{
-				ent->rObj->drawInto(rFrame_,ent->rPos.x, ent->rPos.y,ent->rSize);
+				ent->renderObject()->drawInto(rFrame_,ent->renderPosition().x, ent->renderPosition().y,ent->renderSize());
 			}
 			catch (const std::exception &e)
 			{
-				spdlog::error("caught std::exception while processing rObj<{}>. what() = {}",
-					ent->rObj->typeName().c_str(),
+				spdlog::error("caught std::exception while processing rObj<{}>. what({}",
+					ent->renderObject()->typeName().c_str(),
 					e.what());
 			}
 			catch (...)
 			{
 				spdlog::error("caught unknown exception while processing rObj<{}>.",
-					ent->rObj->typeName().c_str());
+					ent->renderObject()->typeName().c_str());
 			}
 		}
 	}
@@ -222,10 +290,10 @@ namespace gpo
 		for (const auto &ent : entities_)
 		{
 			YAML::Node yEntity;
-			yEntity["rObj"] = ent->rObj->encode();
-			yEntity["rSize"] = ent->rSize;
-			yEntity["rPos"] = ent->rPos;
-			yEntity["name"] = ent->name;
+			yEntity["rObj"] = ent->renderObject()->encode();
+			yEntity["rSize"] = ent->renderSize();
+			yEntity["rPos"] = ent->renderPosition();
+			yEntity["name"] = ent->name();
 			yEntities.push_back(yEntity);
 		}
 
@@ -269,11 +337,17 @@ namespace gpo
 				else
 					throw std::runtime_error("unsupported decode for RenderedObject type " + typeName);
 
-				YAML_TO_FIELD(yEntity,"rSize",re->rSize);
-				YAML_TO_FIELD(yEntity,"rPos",re->rPos);
-				YAML_TO_FIELD(yEntity,"name",re->name);
+				cv::Size eSize;
+				YAML_TO_FIELD(yEntity,"rSize",eSize);
+				re->setRenderSize(eSize);
+				cv::Point ePos;
+				YAML_TO_FIELD(yEntity,"rPos",ePos);
+				re->setRenderPosition(ePos);
+				std::string eName;
+				YAML_TO_FIELD(yEntity,"name",eName);
+				re->setName(eName);
 
-				re->rObj->decode(yR_Obj,dsm);
+				re->renderObject()->decode(yR_Obj,dsm);
 
 				addEntity(re);
 			}
@@ -357,103 +431,103 @@ namespace gpo
 		engine->setRenderSize(RENDERED_VIDEO_SIZE);
 
 		RenderedEntityPtr topVideo = RenderedEntity::make<VideoObject>("topVideo");
-		topVideo->rObj->addVideoSource(topData->videoSrc);
-		topVideo->rSize = topVideo->rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 2.0);
-		topVideo->rPos = cv::Point(RENDERED_VIDEO_SIZE.width-topVideo->rSize.width, 0);
-		topVideo->rObj->addVideoSource(topData->videoSrc);
+		topVideo->renderObject()->addVideoSource(topData->videoSrc);
+		topVideo->setRenderSize(topVideo->renderObject()->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 2.0));
+		topVideo->setRenderPosition(cv::Point(RENDERED_VIDEO_SIZE.width-topVideo->renderSize().width, 0));
+		topVideo->renderObject()->addVideoSource(topData->videoSrc);
 		engine->addEntity(topVideo);
 		RenderedEntityPtr botVideo = RenderedEntity::make<VideoObject>("botVideo");
-		botVideo->rObj->addVideoSource(botData->videoSrc);
-		botVideo->rSize = botVideo->rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 2.0);
-		botVideo->rPos = cv::Point(RENDERED_VIDEO_SIZE.width-botVideo->rSize.width, RENDERED_VIDEO_SIZE.height-botVideo->rSize.height);
-		botVideo->rObj->addVideoSource(botData->videoSrc);
+		botVideo->renderObject()->addVideoSource(botData->videoSrc);
+		botVideo->setRenderSize(botVideo->renderObject()->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 2.0));
+		botVideo->setRenderPosition(cv::Point(RENDERED_VIDEO_SIZE.width-botVideo->renderSize().width, RENDERED_VIDEO_SIZE.height-botVideo->renderSize().height));
+		botVideo->renderObject()->addVideoSource(botData->videoSrc);
 		engine->addEntity(botVideo);
 
 		RenderedEntityPtr trackMap = RenderedEntity::make<TrackMapObject>("trackmap");
-		trackMap->rSize = trackMap->rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
-		trackMap->rPos = cv::Point(0,0);
-		trackMap->rObj->addTelemetrySource(topData->telemSrc);
-		trackMap->rObj->addTelemetrySource(botData->telemSrc);
-		trackMap->rObj->setTrack(topData->getDatumTrack());
-		trackMap->rObj->as<TrackMapObject>()->setDotColor(0,TOP_COLOR);
-		trackMap->rObj->as<TrackMapObject>()->setDotColor(1,BOT_COLOR);
+		trackMap->setRenderSize(trackMap->renderObject()->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0));
+		trackMap->setRenderPosition(cv::Point(0,0));
+		trackMap->renderObject()->addTelemetrySource(topData->telemSrc);
+		trackMap->renderObject()->addTelemetrySource(botData->telemSrc);
+		trackMap->renderObject()->setTrack(topData->getDatumTrack());
+		trackMap->renderObject()->as<TrackMapObject>()->setDotColor(0,TOP_COLOR);
+		trackMap->renderObject()->as<TrackMapObject>()->setDotColor(1,BOT_COLOR);
 		engine->addEntity(trackMap);
 
 		RenderedEntityPtr topFC = RenderedEntity::make<FrictionCircleObject>("topFrictionCircle");
-		topFC->rSize = topFC->rObj->getScaledSizeFromTargetHeight(topVideo->rSize.height / 2.0);
-		topFC->rPos = cv::Point(RENDERED_VIDEO_SIZE.width - topVideo->rSize.width - topFC->rSize.width, 0);
-		topFC->rObj->as<FrictionCircleObject>()->setTailLength(fcTailLength);
-		topFC->rObj->addTelemetrySource(topData->telemSrc);
+		topFC->setRenderSize(topFC->renderObject()->getScaledSizeFromTargetHeight(topVideo->renderSize().height / 2.0));
+		topFC->setRenderPosition(cv::Point(RENDERED_VIDEO_SIZE.width - topVideo->renderSize().width - topFC->renderSize().width, 0));
+		topFC->renderObject()->as<FrictionCircleObject>()->setTailLength(fcTailLength);
+		topFC->renderObject()->addTelemetrySource(topData->telemSrc);
 		engine->addEntity(topFC);
 		RenderedEntityPtr botFC = RenderedEntity::make<FrictionCircleObject>("botFrictionCircle");
-		botFC->rSize = botFC->rObj->getScaledSizeFromTargetHeight(botVideo->rSize.height / 2.0);
-		botFC->rPos = cv::Point(RENDERED_VIDEO_SIZE.width - botVideo->rSize.width - botFC->rSize.width, RENDERED_VIDEO_SIZE.height - botVideo->rSize.height);
-		botFC->rObj->as<FrictionCircleObject>()->setTailLength(fcTailLength);
-		botFC->rObj->addTelemetrySource(botData->telemSrc);
+		botFC->setRenderSize(botFC->renderObject()->getScaledSizeFromTargetHeight(botVideo->renderSize().height / 2.0));
+		botFC->setRenderPosition(cv::Point(RENDERED_VIDEO_SIZE.width - botVideo->renderSize().width - botFC->renderSize().width, RENDERED_VIDEO_SIZE.height - botVideo->renderSize().height));
+		botFC->renderObject()->as<FrictionCircleObject>()->setTailLength(fcTailLength);
+		botFC->renderObject()->addTelemetrySource(botData->telemSrc);
 		engine->addEntity(botFC);
 
 		RenderedEntityPtr topLapTimer = RenderedEntity::make<LapTimerObject>("topLapTimer");
-		topLapTimer->rSize = topLapTimer->rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 10.0);
-		topLapTimer->rPos = cv::Point(0,RENDERED_VIDEO_SIZE.height / 2 - topLapTimer->rSize.height);
-		topLapTimer->rObj->addTelemetrySource(topData->telemSrc);
+		topLapTimer->setRenderSize(topLapTimer->renderObject()->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 10.0));
+		topLapTimer->setRenderPosition(cv::Point(0,RENDERED_VIDEO_SIZE.height / 2 - topLapTimer->renderSize().height));
+		topLapTimer->renderObject()->addTelemetrySource(topData->telemSrc);
 		engine->addEntity(topLapTimer);
 		RenderedEntityPtr botLapTimer = RenderedEntity::make<LapTimerObject>("botLapTimer");
-		botLapTimer->rSize = topLapTimer->rSize;
-		botLapTimer->rPos = cv::Point(0,RENDERED_VIDEO_SIZE.height / 2);
-		botLapTimer->rObj->addTelemetrySource(botData->telemSrc);
+		botLapTimer->setRenderSize(topLapTimer->renderSize());
+		botLapTimer->setRenderPosition(cv::Point(0,RENDERED_VIDEO_SIZE.height / 2));
+		botLapTimer->renderObject()->addTelemetrySource(botData->telemSrc);
 		engine->addEntity(botLapTimer);
 
 		const bool showDebug = false;
 		RenderedEntityPtr topPrintout = RenderedEntity::make<TelemetryPrintoutObject>("topPrintout");
-		topPrintout->rSize = topPrintout->rObj->getNativeSize();
-		topPrintout->rPos = cv::Point(RENDERED_VIDEO_SIZE.width-topVideo->rSize.width, 0);
-		topPrintout->rObj->addTelemetrySource(topData->telemSrc);
-		topPrintout->rObj->setVisible(showDebug);
-		topPrintout->rObj->as<TelemetryPrintoutObject>()->setFontColor(TOP_COLOR);
+		topPrintout->setRenderSize(topPrintout->renderObject()->getNativeSize());
+		topPrintout->setRenderPosition(cv::Point(RENDERED_VIDEO_SIZE.width-topVideo->renderSize().width, 0));
+		topPrintout->renderObject()->addTelemetrySource(topData->telemSrc);
+		topPrintout->renderObject()->setVisible(showDebug);
+		topPrintout->renderObject()->as<TelemetryPrintoutObject>()->setFontColor(TOP_COLOR);
 		engine->addEntity(topPrintout);
 		RenderedEntityPtr botPrintout = RenderedEntity::make<TelemetryPrintoutObject>("botPrintout");
-		botPrintout->rSize = botPrintout->rObj->getNativeSize();
-		botPrintout->rPos = cv::Point(RENDERED_VIDEO_SIZE.width-botVideo->rSize.width, RENDERED_VIDEO_SIZE.height-botVideo->rSize.height);
-		botPrintout->rObj->addTelemetrySource(botData->telemSrc);
-		botPrintout->rObj->setVisible(showDebug);
-		botPrintout->rObj->as<TelemetryPrintoutObject>()->setFontColor(BOT_COLOR);
+		botPrintout->setRenderSize(botPrintout->renderObject()->getNativeSize());
+		botPrintout->setRenderPosition(cv::Point(RENDERED_VIDEO_SIZE.width-botVideo->renderSize().width, RENDERED_VIDEO_SIZE.height-botVideo->renderSize().height));
+		botPrintout->renderObject()->addTelemetrySource(botData->telemSrc);
+		botPrintout->renderObject()->setVisible(showDebug);
+		botPrintout->renderObject()->as<TelemetryPrintoutObject>()->setFontColor(BOT_COLOR);
 		engine->addEntity(botPrintout);
 
 		RenderedEntityPtr topSpeedo = RenderedEntity::make<SpeedometerObject>("topSpeedometer");
-		topSpeedo->rSize = topSpeedo->rObj->getScaledSizeFromTargetHeight(topVideo->rSize.height / 4.0);
-		topSpeedo->rPos = cv::Point(RENDERED_VIDEO_SIZE.width - topVideo->rSize.width - topSpeedo->rSize.width, topVideo->rSize.height - topSpeedo->rSize.height);
-		topSpeedo->rObj->addTelemetrySource(topData->telemSrc);
+		topSpeedo->setRenderSize(topSpeedo->renderObject()->getScaledSizeFromTargetHeight(topVideo->renderSize().height / 4.0));
+		topSpeedo->setRenderPosition(cv::Point(RENDERED_VIDEO_SIZE.width - topVideo->renderSize().width - topSpeedo->renderSize().width, topVideo->renderSize().height - topSpeedo->renderSize().height));
+		topSpeedo->renderObject()->addTelemetrySource(topData->telemSrc);
 		engine->addEntity(topSpeedo);
 		RenderedEntityPtr botSpeedo = RenderedEntity::make<SpeedometerObject>("botSpeedometer");
-		botSpeedo->rSize = botSpeedo->rObj->getScaledSizeFromTargetHeight(botVideo->rSize.height / 4.0);
-		botSpeedo->rPos = cv::Point(RENDERED_VIDEO_SIZE.width - botVideo->rSize.width - botSpeedo->rSize.width, RENDERED_VIDEO_SIZE.height - botSpeedo->rSize.height);
-		botSpeedo->rObj->addTelemetrySource(botData->telemSrc);
+		botSpeedo->setRenderSize(botSpeedo->renderObject()->getScaledSizeFromTargetHeight(botVideo->renderSize().height / 4.0));
+		botSpeedo->setRenderPosition(cv::Point(RENDERED_VIDEO_SIZE.width - botVideo->renderSize().width - botSpeedo->renderSize().width, RENDERED_VIDEO_SIZE.height - botSpeedo->renderSize().height));
+		botSpeedo->renderObject()->addTelemetrySource(botData->telemSrc);
 		engine->addEntity(botSpeedo);
 
 		RenderedEntityPtr topText = RenderedEntity::make<TextObject>("topText");
-		topText->rPos = cv::Point(RENDERED_VIDEO_SIZE.width - topVideo->rSize.width, 50);
-		topText->rObj->as<TextObject>()->setText("Run A");
-		topText->rObj->as<TextObject>()->setColor(TOP_COLOR);
-		topText->rObj->as<TextObject>()->setScale(2);
-		topText->rObj->as<TextObject>()->setThickness(2);
+		topText->setRenderPosition(cv::Point(RENDERED_VIDEO_SIZE.width - topVideo->renderSize().width, 50));
+		topText->renderObject()->as<TextObject>()->setText("Run A");
+		topText->renderObject()->as<TextObject>()->setColor(TOP_COLOR);
+		topText->renderObject()->as<TextObject>()->setScale(2);
+		topText->renderObject()->as<TextObject>()->setThickness(2);
 		engine->addEntity(topText);
 		RenderedEntityPtr botText = RenderedEntity::make<TextObject>("botText");
-		botText->rPos = cv::Point(RENDERED_VIDEO_SIZE.width - botVideo->rSize.width, topVideo->rSize.height + 50);
-		botText->rObj->as<TextObject>()->setText("Run B");
-		botText->rObj->as<TextObject>()->setColor(BOT_COLOR);
-		botText->rObj->as<TextObject>()->setScale(2);
-		botText->rObj->as<TextObject>()->setThickness(2);
+		botText->setRenderPosition(cv::Point(RENDERED_VIDEO_SIZE.width - botVideo->renderSize().width, topVideo->renderSize().height + 50));
+		botText->renderObject()->as<TextObject>()->setText("Run B");
+		botText->renderObject()->as<TextObject>()->setColor(BOT_COLOR);
+		botText->renderObject()->as<TextObject>()->setScale(2);
+		botText->renderObject()->as<TextObject>()->setThickness(2);
 		engine->addEntity(botText);
 
 		RenderedEntityPtr plot = RenderedEntity::make<TelemetryPlotObject>("plot");
-		plot->rSize = plot->rObj->getNativeSize();
-		plot->rPos = cv::Point(0, 900);
-		plot->rObj->addTelemetrySource(topData->telemSrc);
-		plot->rObj->as<TelemetryPlotObject>()->setTelemetryLabel(topData->telemSrc,"Run A");
-		plot->rObj->as<TelemetryPlotObject>()->setTelemetryColor(topData->telemSrc,QColor(TOP_COLOR[2],TOP_COLOR[1],TOP_COLOR[0],TOP_COLOR[3]));// OpenCV is BGRA; Qt is RGBA
-		plot->rObj->as<TelemetryPlotObject>()->addTelemetrySource(botData->telemSrc);
-		plot->rObj->as<TelemetryPlotObject>()->setTelemetryLabel(botData->telemSrc,"Run B");
-		plot->rObj->as<TelemetryPlotObject>()->setTelemetryColor(botData->telemSrc,QColor(BOT_COLOR[2],BOT_COLOR[1],BOT_COLOR[0],BOT_COLOR[3]));// OpenCV is BGRA; Qt is RGBA
+		plot->setRenderSize(plot->renderObject()->getNativeSize());
+		plot->setRenderPosition(cv::Point(0, 900));
+		plot->renderObject()->addTelemetrySource(topData->telemSrc);
+		plot->renderObject()->as<TelemetryPlotObject>()->setTelemetryLabel(topData->telemSrc,"Run A");
+		plot->renderObject()->as<TelemetryPlotObject>()->setTelemetryColor(topData->telemSrc,QColor(TOP_COLOR[2],TOP_COLOR[1],TOP_COLOR[0],TOP_COLOR[3]));// OpenCV is BGRA; Qt is RGBA
+		plot->renderObject()->as<TelemetryPlotObject>()->addTelemetrySource(botData->telemSrc);
+		plot->renderObject()->as<TelemetryPlotObject>()->setTelemetryLabel(botData->telemSrc,"Run B");
+		plot->renderObject()->as<TelemetryPlotObject>()->setTelemetryColor(botData->telemSrc,QColor(BOT_COLOR[2],BOT_COLOR[1],BOT_COLOR[0],BOT_COLOR[3]));// OpenCV is BGRA; Qt is RGBA
 		engine->addEntity(plot);
 
 		return engine;
@@ -472,46 +546,46 @@ namespace gpo
 		engine->setRenderSize(RENDERED_VIDEO_SIZE);
 
 		RenderedEntityPtr video = RenderedEntity::make<VideoObject>("video");
-		video->rSize = RENDERED_VIDEO_SIZE;
-		video->rPos = cv::Point(0, 0);
-		video->rObj->addVideoSource(data->videoSrc);
+		video->setRenderSize(RENDERED_VIDEO_SIZE);
+		video->setRenderPosition(cv::Point(0, 0));
+		video->renderObject()->addVideoSource(data->videoSrc);
 		engine->addEntity(video);
 
 		auto track = data->getDatumTrack();
 		if (track)
 		{
 			RenderedEntityPtr trackMap = RenderedEntity::make<TrackMapObject>("trackmap");
-			trackMap->rSize = trackMap->rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
-			trackMap->rPos = cv::Point(0, 0);
-			trackMap->rObj->addTelemetrySource(data->telemSrc);
-			trackMap->rObj->setTrack(track);
+			trackMap->setRenderSize(trackMap->renderObject()->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0));
+			trackMap->setRenderPosition(cv::Point(0, 0));
+			trackMap->renderObject()->addTelemetrySource(data->telemSrc);
+			trackMap->renderObject()->setTrack(track);
 			engine->addEntity(trackMap);
 		}
 
 		RenderedEntityPtr frictionCircle = RenderedEntity::make<FrictionCircleObject>("frictionCircle");
-		frictionCircle->rSize = frictionCircle->rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0);
-		frictionCircle->rPos = RENDERED_VIDEO_SIZE - frictionCircle->rSize;
-		frictionCircle->rObj->as<FrictionCircleObject>()->setTailLength(fcTailLength);
-		frictionCircle->rObj->addTelemetrySource(data->telemSrc);
+		frictionCircle->setRenderSize(frictionCircle->renderObject()->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 3.0));
+		frictionCircle->setRenderPosition(RENDERED_VIDEO_SIZE - frictionCircle->renderSize());
+		frictionCircle->renderObject()->as<FrictionCircleObject>()->setTailLength(fcTailLength);
+		frictionCircle->renderObject()->addTelemetrySource(data->telemSrc);
 		engine->addEntity(frictionCircle);
 
 		RenderedEntityPtr speedo = RenderedEntity::make<SpeedometerObject>("speedometer");
-		speedo->rSize = speedo->rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 6.0);
-		speedo->rPos = cv::Size(0, RENDERED_VIDEO_SIZE.height - speedo->rSize.height);
-		speedo->rObj->addTelemetrySource(data->telemSrc);
+		speedo->setRenderSize(speedo->renderObject()->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 6.0));
+		speedo->setRenderPosition(cv::Size(0, RENDERED_VIDEO_SIZE.height - speedo->renderSize().height));
+		speedo->renderObject()->addTelemetrySource(data->telemSrc);
 		engine->addEntity(speedo);
 
 		RenderedEntityPtr timer = RenderedEntity::make<LapTimerObject>("lapTimer");
-		timer->rSize = timer->rObj->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 10.0);
-		timer->rPos = cv::Size(RENDERED_VIDEO_SIZE.width / 2.0 - timer->rSize.width / 2.0, 0);
-		timer->rObj->addTelemetrySource(data->telemSrc);
+		timer->setRenderSize(timer->renderObject()->getScaledSizeFromTargetHeight(RENDERED_VIDEO_SIZE.height / 10.0));
+		timer->setRenderPosition(cv::Size(RENDERED_VIDEO_SIZE.width / 2.0 - timer->renderSize().width / 2.0, 0));
+		timer->renderObject()->addTelemetrySource(data->telemSrc);
 		engine->addEntity(timer);
 
 		RenderedEntityPtr printout = RenderedEntity::make<TelemetryPrintoutObject>("printout");
-		printout->rSize = printout->rObj->getNativeSize();
-		printout->rPos = video->rPos;
-		printout->rObj->addTelemetrySource(data->telemSrc);
-		printout->rObj->setVisible(false);
+		printout->setRenderSize(printout->renderObject()->getNativeSize());
+		printout->setRenderPosition(video->renderPosition());
+		printout->renderObject()->addTelemetrySource(data->telemSrc);
+		printout->renderObject()->setVisible(false);
 		engine->addEntity(printout);
 
 		return engine;

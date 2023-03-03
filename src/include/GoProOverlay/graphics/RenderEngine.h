@@ -32,11 +32,11 @@ namespace gpo
 				std::is_convertible<DerivedRenderedObject*, RenderedObject*>::value,
 				"DerivedRenderedObject must inherit RenderedObject as public");
 			auto re = std::make_shared<RenderedEntity>();
-			re->rObj = std::make_unique<DerivedRenderedObject>();
-			re->rObj->addObserver(re.get());
-			re->name = re->rObj->typeName();
-			re->rSize = re->rObj->getNativeSize();
-			re->rPos = cv::Point(0,0);
+			re->rObj_ = std::make_unique<DerivedRenderedObject>();
+			re->rObj_->addObserver(re.get());
+			re->name_ = re->rObj_->typeName();
+			re->rSize_ = re->rObj_->getNativeSize();
+			re->rPos_ = cv::Point(0,0);
 			return re;
 		}
 
@@ -50,13 +50,47 @@ namespace gpo
 				std::is_convertible<DerivedRenderedObject*, RenderedObject*>::value,
 				"DerivedRenderedObject must inherit RenderedObject as public");
 			auto re = std::make_shared<RenderedEntity>();
-			re->rObj = std::make_unique<DerivedRenderedObject>();
-			re->rObj->addObserver(re.get());
-			re->name = name;
-			re->rSize = re->rObj->getNativeSize();
-			re->rPos = cv::Point(0,0);
+			re->rObj_ = std::make_unique<DerivedRenderedObject>();
+			re->rObj_->addObserver(re.get());
+			re->name_ = name;
+			re->rSize_ = re->rObj_->getNativeSize();
+			re->rPos_ = cv::Point(0,0);
 			return re;
 		}
+
+		const std::unique_ptr<RenderedObject> &
+		renderObject() const;
+
+		void
+		setRenderSize(
+			const cv::Size &size);
+
+		void
+		setRenderSize(
+			int w,
+			int h);
+
+		const cv::Size &
+		renderSize() const;
+
+		void
+		setRenderPosition(
+			const cv::Point &pos);
+
+		void
+		setRenderPosition(
+			int x,
+			int y);
+
+		const cv::Point &
+		renderPosition() const;
+
+		void
+		setName(
+			const std::string &name);
+
+		const std::string &
+		name() const;
 
 	private:
         void
@@ -64,11 +98,11 @@ namespace gpo
             ModifiableDrawObject *drawable,
 			bool needsRerender) override;
 
-	public:
-		std::unique_ptr<RenderedObject> rObj;
-		cv::Size rSize;
-		cv::Point rPos;
-		std::string name;
+	private:
+		std::unique_ptr<RenderedObject> rObj_;
+		cv::Size rSize_;
+		cv::Point rPos_;
+		std::string name_;
 	
 	};
 

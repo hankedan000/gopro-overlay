@@ -305,7 +305,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         if (col == ENTITY_VISIBILITY_COLUMN)
         {
             QStandardItem *visItem = entitiesTableModel_->item(row,col);
-            re->rObj->setVisible(visItem->checkState() == Qt::CheckState::Checked);
+            re->renderObject()->setVisible(visItem->checkState() == Qt::CheckState::Checked);
             setProjectDirty(true);
         }
     });
@@ -603,18 +603,18 @@ ProjectWindow::reloadRenderEntitiesTable()
         QList<QStandardItem *> row;
 
         QStandardItem *nameItem = new QStandardItem;
-        nameItem->setText(entity->name.c_str());
+        nameItem->setText(entity->name().c_str());
         row.append(nameItem);
 
         QStandardItem *typeItem = new QStandardItem;
-        typeItem->setText(entity->rObj->typeName().c_str());
+        typeItem->setText(entity->renderObject()->typeName().c_str());
         typeItem->setEditable(false);
         row.append(typeItem);
 
         QStandardItem *visibleItem = new QStandardItem;
         visibleItem->setCheckable(true);
         visibleItem->setCheckState(
-                    entity->rObj->isVisible() ?
+                    entity->renderObject()->isVisible() ?
                     Qt::CheckState::Checked :
                     Qt::CheckState::Unchecked);
         row.append(visibleItem);

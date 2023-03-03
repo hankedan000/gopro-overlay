@@ -136,9 +136,9 @@ int main(int argc, char *argv[])
 	for (size_t ee=0; ee<engine->entityCount(); ee++)
 	{
 		const auto &entity = engine->getEntity(ee);
-		if (entity->rObj->typeName() == "LapTimerObject")
+		if (entity->renderObject()->typeName() == "LapTimerObject")
 		{
-			entity->rObj->setVisible(false);
+			entity->renderObject()->setVisible(false);
 		}
 	}
 

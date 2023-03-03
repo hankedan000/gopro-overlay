@@ -43,7 +43,7 @@ RenderThread::run()
     // disable bounding boxes prior to render
     for (size_t ee=0; ee<engine->entityCount(); ee++)
     {
-        engine->getEntity(ee)->rObj->setBoundingBoxVisible(false);
+        engine->getEntity(ee)->renderObject()->setBoundingBoxVisible(false);
     }
 
     const auto seekerCount = gSeeker->seekerCount();

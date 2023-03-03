@@ -75,23 +75,23 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
             for (int e=(engine_->entityCount()-1); e>=0; e--)
             {
                 const auto &entity = engine_->getEntity(e);
-                if ( ! entity->rObj->isVisible())
+                if ( ! entity->renderObject()->isVisible())
                 {
                     continue;
                 }
 
                 if ( ! focusAcquired &&
-                    evtPosMapped.x() >= entity->rPos.x && evtPosMapped.x() <= (entity->rPos.x + entity->rSize.width) &&
-                    evtPosMapped.y() >= entity->rPos.y && evtPosMapped.y() <= (entity->rPos.y + entity->rSize.height))
+                    evtPosMapped.x() >= entity->renderPosition().x && evtPosMapped.x() <= (entity->renderPosition().x + entity->renderSize().width) &&
+                    evtPosMapped.y() >= entity->renderPosition().y && evtPosMapped.y() <= (entity->renderPosition().y + entity->renderSize().height))
                 {
                     focusedEntity_ = entity;
-                    entity->rObj->setBoundingBoxVisible(true);
-                    entity->rObj->setBoundingBoxThickness(boundingBoxThickness);
+                    entity->renderObject()->setBoundingBoxVisible(true);
+                    entity->renderObject()->setBoundingBoxThickness(boundingBoxThickness);
                     focusAcquired = true;
                 }
                 else
                 {
-                    entity->rObj->setBoundingBoxVisible(false);
+                    entity->renderObject()->setBoundingBoxVisible(false);
                 }
             }
 
@@ -108,8 +108,7 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
             // holding an entity, so move entity based on mouse location
             QPoint mouseDelta = event->pos() - mousePosWhenGrabbed_;
             QPoint entityNewPos = entityPosWhenGrabbed_ + mouseDelta * scaleFactorRoF;
-            grabbedEntity_->rPos.x = entityNewPos.x();
-            grabbedEntity_->rPos.y = entityNewPos.y();
+            grabbedEntity_->setRenderPosition(entityNewPos.x(), entityNewPos.y());
             rerender = true;
         }
 
@@ -125,8 +124,8 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
         {
             grabbedEntity_ = focusedEntity_;
             mousePosWhenGrabbed_ = event->pos();
-            entityPosWhenGrabbed_.setX(focusedEntity_->rPos.x);
-            entityPosWhenGrabbed_.setY(focusedEntity_->rPos.y);
+            entityPosWhenGrabbed_.setX(focusedEntity_->renderPosition().x);
+            entityPosWhenGrabbed_.setY(focusedEntity_->renderPosition().y);
             emit onEntitySelected(grabbedEntity_.get());
         }
     });
@@ -134,7 +133,7 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
         if (grabbedEntity_)
         {
             // determine in the entity was moved while it was being held
-            QPoint moveVector(grabbedEntity_->rPos.x,grabbedEntity_->rPos.y);
+            QPoint moveVector(grabbedEntity_->renderPosition().x,grabbedEntity_->renderPosition().y);
             moveVector -= entityPosWhenGrabbed_;
             if (moveVector.manhattanLength() > 0)
             {

@@ -72,10 +72,10 @@ namespace gpo
 		for (size_t e=0; e<engine_->entityCount(); e++)
 		{
 			const auto &entity = engine_->getEntity(e);
-			DataSourceRequirements dsr = entity->rObj->dataSourceRequirements();
+			DataSourceRequirements dsr = entity->renderObject()->dataSourceRequirements();
 			if (dsr.numTracks == DSR_ONE_OR_MORE || dsr.numTracks > 0)
 			{
-				entity->rObj->setTrack(track_);
+				entity->renderObject()->setTrack(track_);
 			}
 		}
 	}
