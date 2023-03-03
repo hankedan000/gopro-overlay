@@ -78,7 +78,7 @@ RenderThread::run()
     {
         engine->render();
         vWriter_.write(engine->getFrame());
-        gSeeker->nextAll();
+        gSeeker->nextAll(true,false);
         emit progressChanged(progress++,total);
     }
     vWriter_.release();

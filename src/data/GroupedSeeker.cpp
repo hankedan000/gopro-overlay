@@ -93,7 +93,8 @@ namespace gpo
 
 	void
 	GroupedSeeker::nextAll(
-			bool onlyIfAllHaveNext)
+			bool onlyIfAllHaveNext,
+			bool sendModificationEvent)
 	{
 		if (onlyIfAllHaveNext)
 		{
@@ -110,7 +111,10 @@ namespace gpo
 		{
 			seeker->next();
 		}
-		markObjectModified(true,false);
+		if (sendModificationEvent)
+		{
+			markObjectModified(true,false);
+		}
 	}
 
 	void

@@ -41,7 +41,8 @@ namespace gpo
 
 		void
 		nextAll(
-			bool onlyIfAllHaveNext = true);
+			bool onlyIfAllHaveNext = true,
+			bool sendModificationEvent = true);
 
 		void
 		seekToAlignmentInfo(
