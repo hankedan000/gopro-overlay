@@ -736,14 +736,16 @@ namespace gpo
 	// Track protected methods
 	//--------------------------------------------------------------
 	bool
-	Track::subclassApplyModifications()
+	Track::subclassApplyModifications(
+        bool unnecessaryIsOkay)
 	{
 		// apply means nothing to use right now
 		return true;
 	}
 
 	bool
-	Track::subclassSaveModifications()
+	Track::subclassSaveModifications(
+        bool unnecessaryIsOkay)
 	{
 		auto path = getSavePath();
 		try

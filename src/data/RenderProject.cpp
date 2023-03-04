@@ -248,6 +248,9 @@ namespace gpo
 				if (newTrack->decode(trackNode))
 				{
 					newTrack->setSavePath(trackPath);
+					// call save to clear modification flags from loading
+					// kind of a hack...
+					newTrack->saveModifications(true);
 					internalSetTrack(newTrack);
 				}
 				else
@@ -271,8 +274,11 @@ namespace gpo
 		engine_->removeObserver(this);// ignore change events while restoring alignment position
 		engine_->getSeeker()->seekToAlignmentInfo(currRenderAlignmentInfo_);
 		engine_->getSeeker()->setAlignmentHere();
-		engine_->getSeeker()->saveModifications();// after calling setAlignmentHere() we need to clear the 'needsSaved' flag
 		engine_->addObserver(this);
+
+		// call save to clear modification flags from loading
+		// kind of a hack...
+		engine_->saveModifications(true);
 
 		setSavePath(projectRoot);
 		return okay;
@@ -331,13 +337,15 @@ namespace gpo
 	}
 
 	bool
-	RenderProject::subclassApplyModifications()
+	RenderProject::subclassApplyModifications(
+        bool unnecessaryIsOkay)
 	{
 		return false;
 	}
 
 	bool
-	RenderProject::subclassSaveModifications()
+	RenderProject::subclassSaveModifications(
+        bool unnecessaryIsOkay)
 	{
 		const std::filesystem::path &projectRoot = getSavePath();
 		if ( ! std::filesystem::exists(projectRoot))
@@ -375,8 +383,10 @@ namespace gpo
 			std::ofstream trackOFS(trackPath);
 			trackOFS << trackNode;
 			trackOFS.close();
-			track_->saveModifications();
+			track_->saveModifications(unnecessaryIsOkay);
 		}
+
+		engine_->saveModifications(unnecessaryIsOkay);
 
 		return true;
 	}

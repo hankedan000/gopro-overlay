@@ -568,7 +568,8 @@ namespace gpo
 	}
 
 	bool
-	RenderedObject::subclassSaveModifications()
+	RenderedObject::subclassSaveModifications(
+        bool unnecessaryIsOkay)
 	{
 		// we don't do any saving outself, but we assume the RenderEngine
 		// saved us correctly

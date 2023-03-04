@@ -322,7 +322,8 @@ namespace gpo
 			const YAML::Node& node) = 0;
 
 		bool
-		subclassSaveModifications() override;
+		subclassSaveModifications(
+        	bool unnecessaryIsOkay) override;
 
 	private:
 

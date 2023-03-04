@@ -94,7 +94,7 @@ namespace gpo
             bool needsSave = true);
         
         /**
-         * @param[in] unecessaryIsOkay
+         * @param[in] unnecessaryIsOkay
          * true if calling this method while there are no modifications
          * needing applied is okay (apply operation will be performed regardless).
          * otherwise, a warning log is produced and the apply operation is not performed.
@@ -104,10 +104,10 @@ namespace gpo
          */
         bool
         applyModifications(
-            bool unecessaryIsOkay = false);
+            bool unnecessaryIsOkay = false);
 
         /**
-         * @param[in] unecessaryIsOkay
+         * @param[in] unnecessaryIsOkay
          * true if calling this method while there are no modifications
          * needing saved is okay (save operation will be performed regardless).
          * otherwise, a warning log is produced and the save operation is not performed.
@@ -117,7 +117,7 @@ namespace gpo
          */
         bool
         saveModifications(
-            bool unecessaryIsOkay = false);
+            bool unnecessaryIsOkay = false);
 
         /**
          * This is like calling setSavePath() and saveModifications() in one
@@ -197,7 +197,8 @@ namespace gpo
          */
         virtual
         bool
-        subclassApplyModifications();
+        subclassApplyModifications(
+            bool unnecessaryIsOkay);
 
         /**
          * Subclass should override this method to save any modifications
@@ -207,7 +208,8 @@ namespace gpo
          */
         virtual
         bool
-        subclassSaveModifications();
+        subclassSaveModifications(
+            bool unnecessaryIsOkay);
 
     private:
         const std::string className_;

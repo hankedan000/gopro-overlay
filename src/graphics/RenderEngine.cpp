@@ -96,6 +96,13 @@ namespace gpo
 		return name_;
 	}
 
+	bool
+	RenderedEntity::subclassSaveModifications(
+		bool unnecessaryIsOkay)
+	{
+		return rObj_->saveModifications(unnecessaryIsOkay);
+	}
+
 	RenderEngine::RenderEngine()
 	 : ModifiableDrawObject("RenderEngine",false,true)
 	 , rFrame_()
@@ -334,6 +341,23 @@ namespace gpo
 		markNeedsRedraw();
 
 		return true;
+	}
+
+	bool
+	RenderEngine::subclassSaveModifications(
+		bool unnecessaryIsOkay)
+	{
+		// render project stores our data by calling encode() and packing
+		// it's information into it's own YAML file. we just need to make
+		// sure all our underlying objects get saved to clear the flag.
+		bool saveOkay = gSeeker_->saveModifications(unnecessaryIsOkay);
+
+		for (const auto &entity : entities_)
+		{
+			saveOkay = entity->saveModifications(unnecessaryIsOkay) && saveOkay;
+		}
+
+		return saveOkay;
 	}
 
 	void

@@ -90,6 +90,11 @@ namespace gpo
 		const std::string &
 		name() const;
 
+	protected:
+		bool
+		subclassSaveModifications(
+        	bool unnecessaryIsOkay) override;
+
 	private:
 		std::unique_ptr<RenderedObject> rObj_;
 		cv::Size rSize_;
@@ -155,6 +160,11 @@ namespace gpo
 		decode(
 			const YAML::Node& node,
 			const DataSourceManager &dsm);
+
+	protected:
+		bool
+		subclassSaveModifications(
+        	bool unnecessaryIsOkay) override;
 
 	private:
 		void

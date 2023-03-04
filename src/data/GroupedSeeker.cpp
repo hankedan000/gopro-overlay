@@ -363,14 +363,16 @@ namespace gpo
 	}
 
 	bool
-	GroupedSeeker::subclassApplyModifications()
+	GroupedSeeker::subclassApplyModifications(
+        bool unnecessaryIsOkay)
 	{
 		return true;
 	}
 
 	bool
-	GroupedSeeker::subclassSaveModifications()
+	GroupedSeeker::subclassSaveModifications(
+        bool unnecessaryIsOkay)
 	{
-		return false;
+		return true;
 	}
 }

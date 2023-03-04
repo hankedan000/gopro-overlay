@@ -135,7 +135,7 @@ namespace gpo
     
     bool
     ModifiableObject::applyModifications(
-        bool unecessaryIsOkay)
+        bool unnecessaryIsOkay)
     {
         if ( ! supportsApplyingModifications_)
         {
@@ -145,7 +145,7 @@ namespace gpo
                 (void*)this);
             return false;
         }
-        else if ( ! hasApplyableEdits_ && ! unecessaryIsOkay)
+        else if ( ! hasApplyableEdits_ && ! unnecessaryIsOkay)
         {
             spdlog::warn(
                 "applyModifications() called, but {}<{}> doesn't have any applyable modifications",
@@ -154,7 +154,7 @@ namespace gpo
             return false;
         }
 
-        bool applyOkay = subclassApplyModifications();
+        bool applyOkay = subclassApplyModifications(unnecessaryIsOkay);
         if (applyOkay)
         {
             hasApplyableEdits_ = false;
@@ -168,7 +168,7 @@ namespace gpo
 
     bool
     ModifiableObject::saveModifications(
-        bool unecessaryIsOkay)
+        bool unnecessaryIsOkay)
     {
         if (supportsApplyingModifications_ && hasApplyableEdits_)
         {
@@ -183,7 +183,7 @@ namespace gpo
                 (void*)this);
             return false;
         }
-        else if ( ! hasSavableEdits_ && ! unecessaryIsOkay)
+        else if ( ! hasSavableEdits_ && ! unnecessaryIsOkay)
         {
             spdlog::warn(
                 "applyModifications() called, but {}<{}> doesn't have any savable modifications",
@@ -192,7 +192,7 @@ namespace gpo
             return false;
         }
 
-        bool saveOkay = subclassSaveModifications();
+        bool saveOkay = subclassSaveModifications(unnecessaryIsOkay);
         if (saveOkay)
         {
             hasSavableEdits_ = false;
@@ -273,22 +273,26 @@ namespace gpo
     }
 
     bool
-    ModifiableObject::subclassApplyModifications()
+    ModifiableObject::subclassApplyModifications(
+        bool unnecessaryIsOkay)
     {
         spdlog::warn(
-            "ModifiableObject's default apply was called. Subclass should override"
-            " 'bool ModifiableObject::subclassApplyModifications()' if they want to"
-            " support applied changes tracking.");
+            "ModifiableObject's default apply was called on {}. Subclass should"
+            " override 'bool ModifiableObject::subclassApplyModifications()' if"
+            " they want to support applied changes tracking.",
+            className_);
         return true;
     }
 
     bool
-    ModifiableObject::subclassSaveModifications()
+    ModifiableObject::subclassSaveModifications(
+        bool unnecessaryIsOkay)
     {
         spdlog::warn(
-            "ModifiableObject's default save was called. Subclass should override"
-            " 'bool ModifiableObject::subclassSaveModifications()' if they want to"
-            " support save tracking.");
+            "ModifiableObject's default save was called on {}. Subclass should"
+            " override 'bool ModifiableObject::subclassSaveModifications()' if"
+            " they want to support save changes tracking.",
+            className_);
         return true;
     }
 

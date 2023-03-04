@@ -118,10 +118,12 @@ namespace gpo
 
 	protected:
         bool
-        subclassApplyModifications() override;
+        subclassApplyModifications(
+       		bool unnecessaryIsOkay) override;
 
         bool
-        subclassSaveModifications() override;
+        subclassSaveModifications(
+        	bool unnecessaryIsOkay) override;
 
 	private:
 		std::vector<TelemetrySeekerPtr> seekers_;
