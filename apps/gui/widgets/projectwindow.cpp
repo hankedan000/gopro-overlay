@@ -336,6 +336,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
 ProjectWindow::~ProjectWindow()
 {
     delete ui;
+    delete previewWindow_;
 }
 
 bool

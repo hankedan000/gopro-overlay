@@ -48,14 +48,14 @@ namespace gpo
             observer->onBeforeDestroy(this);
         }
 
-        if (supportsSavingModifications_ && hasSavableModifications())
+        if (supportsSavingModifications_ && hasSavableEdits_)
         {
             spdlog::warn(
                 "{}<{}> was destructed before changes were saved",
                 className_,
                 (void*)this);
         }
-        else if (supportsApplyingModifications_ && hasApplyableModifications())
+        else if (supportsApplyingModifications_ && hasApplyableEdits_)
         {
             spdlog::warn(
                 "{}<{}> was destructed before changes were applied",
@@ -86,36 +86,6 @@ namespace gpo
     {
         return savePath_;
     }
-
-    // bool
-    // ModifiableObject::isApplyable(
-    //         bool noisy) const
-    // {
-    //     return supportsApplyingModifications_;
-    // }
-
-    // bool
-    // ModifiableObject::isSavable(
-    //         bool noisy) const
-    // {
-    //     if ( ! supportsSavingModifications_)
-    //     {
-    //         return false;
-    //     }
-    //     else if (savePath_.empty())
-    //     {
-    //         if (noisy)
-    //         {
-    //             spdlog::error(
-    //                 "save path is not set; therefore {}<{}> is not savable.",
-    //                 className_,
-    //                 (void*)this);
-    //             utils::misc::printCallStack(stdout,10);
-    //         }
-    //         return false;
-    //     }
-    //     return true;
-    // }
 
     void
     ModifiableObject::markObjectModified(

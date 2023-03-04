@@ -87,32 +87,6 @@ namespace gpo
         const std::filesystem::path &
         getSavePath() const;
 
-        // /**
-        //  * Default behavior just returns true.
-        //  * Subclass can override this method to provide additional checks
-        //  * or to prevent the object from apply changes all together.
-        //  * 
-        //  * @return
-        //  * true if the object's applyModifications() method is callable.
-        //  * false otherwise.
-        //  */
-        // bool
-        // isApplyable(
-        //     bool noisy = true) const;
-
-        // /**
-        //  * Default behavior just checks if the save path has been set.
-        //  * Subclass can override this method to provide additional checks
-        //  * or to prevent the object from being saved all together.
-        //  * 
-        //  * @return
-        //  * true if the object's saveModifications() method is callable.
-        //  * false otherwise.
-        //  */
-        // bool
-        // isSavable(
-        //     bool noisy = true) const;
-
         virtual
         void
         markObjectModified(
