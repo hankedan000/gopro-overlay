@@ -6,7 +6,7 @@
 namespace gpo
 {
 	GroupedSeeker::GroupedSeeker()
-	 : ModifiableObject("GroupedSeeker",true,true)
+	 : ModifiableObject("GroupedSeeker",false,true)
 	 , seekers_()
 	{
 	}
@@ -15,7 +15,7 @@ namespace gpo
 	GroupedSeeker::clear()
 	{
 		seekers_.clear();
-		markObjectModified(true,true);
+		markObjectModified(false,true);
 	}
 
 	void
@@ -23,7 +23,7 @@ namespace gpo
 		TelemetrySeekerPtr seeker)
 	{
 		seekers_.push_back(seeker);
-		markObjectModified(true,true);
+		markObjectModified(false,true);
 	}
 
 	bool
@@ -43,7 +43,7 @@ namespace gpo
 		if (isNewSeeker)
 		{
 			seekers_.push_back(seeker);
-			markObjectModified(true,true);
+			markObjectModified(false,true);
 		}
 		return isNewSeeker;
 	}
@@ -66,7 +66,7 @@ namespace gpo
 		size_t idx)
 	{
 		seekers_.erase(std::next(seekers_.begin(), idx));
-		markObjectModified(true,true);
+		markObjectModified(false,true);
 	}
 
 	void
@@ -88,7 +88,7 @@ namespace gpo
 		{
 			seeker->prev();
 		}
-		markObjectModified(true,false);
+		markObjectModified(false,false);
 	}
 
 	void
@@ -113,7 +113,7 @@ namespace gpo
 		}
 		if (sendModificationEvent)
 		{
-			markObjectModified(true,false);
+			markObjectModified(false,false);
 		}
 	}
 
@@ -134,7 +134,7 @@ namespace gpo
 						seeker->seekToIdx(alignItr->second);
 					}
 				}
-				markObjectModified(true,false);
+				markObjectModified(false,false);
 				break;
 			}
 			case gpo::RenderAlignmentType_E::eRAT_Lap:
@@ -167,7 +167,7 @@ namespace gpo
 		{
 			seeker->seekToIdx(idx);
 		}
-		markObjectModified(true,false);
+		markObjectModified(false,false);
 	}
 
 	void
@@ -189,7 +189,7 @@ namespace gpo
 		{
 			seeker->seekRelative(amount,forward);
 		}
-		markObjectModified(true,false);
+		markObjectModified(false,false);
 	}
 
 	void
@@ -210,7 +210,7 @@ namespace gpo
 		{
 			seeker->seekRelativeTime(offset_secs);
 		}
-		markObjectModified(true,false);
+		markObjectModified(false,false);
 	}
 
 	void
@@ -220,7 +220,7 @@ namespace gpo
 		{
 			seeker->setAlignmentIdx(seeker->seekedIdx());
 		}
-		markObjectModified(true,true);
+		markObjectModified(false,true);
 	}
 
 	unsigned int
@@ -281,7 +281,7 @@ namespace gpo
 		{
 			seeker->seekToLapEntry(lap);
 		}
-		markObjectModified(true,false);
+		markObjectModified(false,false);
 		return true;
 	}
 
@@ -311,7 +311,7 @@ namespace gpo
 		{
 			seeker->seekToLapExit(lap);
 		}
-		markObjectModified(true,false);
+		markObjectModified(false,false);
 		return true;
 	}
 
