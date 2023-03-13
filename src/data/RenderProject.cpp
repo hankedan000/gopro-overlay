@@ -245,11 +245,11 @@ namespace gpo
 		if (track_)
 		{
 			YAML::Node trackNode = track_->encode();
-			const std::filesystem::path DEFAULT_TRACK_PATH = projectRoot / TRACK_FILENAME;
 			std::filesystem::path trackPath = track_->getSavePath();
 			if (trackPath.empty())
 			{
-				trackPath = DEFAULT_TRACK_PATH;
+				trackPath = projectRoot / TRACK_FILENAME;
+				track_->setSavePath(trackPath);
 			}
 			std::ofstream trackOFS(trackPath);
 			trackOFS << trackNode;
