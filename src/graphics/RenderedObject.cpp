@@ -78,6 +78,7 @@ namespace gpo
 	 , outImg_(height,width,CV_8UC4,cv::Scalar(0,0,0,0))
 	 , visible_(true)
 	 , boundingBoxVisible_(false)
+	 , boundingBoxThickness_(1)
 	 , vSources_()
 	 , tSources_()
 	 , track_(nullptr)
@@ -185,7 +186,7 @@ namespace gpo
 			}
 		}
 
-		if (boundingBoxVisible_)
+		if (boundingBoxVisible_ && boundingBoxThickness_ > 0)
 		{
 			cv::rectangle(intoImg,destROI,CV_RGB(255,255,255),boundingBoxThickness_);
 		}
