@@ -938,7 +938,7 @@ ProjectWindow::onModificationsApplied(
 void
 ProjectWindow::onActionSaveProject()
 {
-    proj_.saveModifications();
+    proj_.saveModifications(true);// true - unecessary save is ok
 }
 
 void
