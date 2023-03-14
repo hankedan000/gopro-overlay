@@ -23,7 +23,23 @@ namespace utils
 			// no track objects to process
 			return true;
 		}
-;
+		size_t totalGatesInTrack = 0;
+		for (const auto &trackObj : trackObjs)
+		{
+			if (trackObj->isGate())
+			{
+				totalGatesInTrack += 1;
+			}
+			else if (trackObj->isSector())
+			{
+				totalGatesInTrack += 2;
+			}
+			else
+			{
+				spdlog::warn("unknown track object. it's not a gate and it's not a sector.");
+			}
+		}
+
 		bitset_clear(avail);
 		int currLap = -1;
 		int sectorSeq = 1;// increments everytime we exit a sector
@@ -54,7 +70,12 @@ namespace utils
 			onTrackFindInitialIdx = std::get<2>(findRes);
 			onTrackFindWindow = {5,100};// reduce search space once we've found initial location
 
+			// see if we crossed 'gate'. if so, then move to the next logical gate in the 'trackObjs'
+			// list. we check these in a loop because sectors can have gates that are back-to-back,
+			// in which case we want to quickly progress through them and look for the next one that
+			// hasn't be crossed yet.
 			bool movedToNextObject = false;
+			size_t numMoves = 0;
 			do
 			{
 				movedToNextObject = false;
@@ -100,6 +121,7 @@ namespace utils
 						isSector = (*tpoItr)->isSector();
 						isEntry = true;
 						movedToNextObject = true;
+						numMoves++;
 					}
 					else
 					{
@@ -111,6 +133,7 @@ namespace utils
 						isSector = (*tpoItr)->isSector();
 						isEntry = true;
 						movedToNextObject = true;
+						numMoves++;
 					}
 				}
 				else if (crossed && isSector)
@@ -121,6 +144,7 @@ namespace utils
 						gate = (*tpoItr)->getExitGate();
 						isEntry = false;
 						movedToNextObject = true;
+						numMoves++;
 					}
 					else if (++tpoItr != trackObjs.end())
 					{
@@ -130,6 +154,7 @@ namespace utils
 						isSector = (*tpoItr)->isSector();
 						isEntry = true;
 						movedToNextObject = true;
+						numMoves++;
 					}
 					else
 					{
@@ -141,10 +166,11 @@ namespace utils
 						isSector = (*tpoItr)->isSector();
 						isEntry = true;
 						movedToNextObject = true;
+						numMoves++;
 					}
 				}
 			}
-			while (movedToNextObject);
+			while (movedToNextObject && numMoves < (totalGatesInTrack - 1));
 
 			// update telemetry sample
 			trackData.lap = currLap;
