@@ -13,7 +13,7 @@ namespace gpo
 	};
 
 	TrackMapObject::TrackMapObject()
-	 : RenderedObject(TRACK_MAP_RENDER_WIDTH,TRACK_MAP_RENDER_HEIGHT)
+	 : RenderedObject("TrackMapObject",TRACK_MAP_RENDER_WIDTH,TRACK_MAP_RENDER_HEIGHT)
 	 , outlineImg_(TRACK_MAP_RENDER_HEIGHT,TRACK_MAP_RENDER_WIDTH,CV_8UC4,RGBA_COLOR(0,0,0,0))
 	 , ulCoord_()
 	 , lrCoord_()
@@ -22,12 +22,6 @@ namespace gpo
 	 , dotRadius_px_(DEFAULT_DOT_RADIUS_RATIO * TRACK_MAP_RENDER_WIDTH)
 	 , dotColors_()
 	{
-	}
-
-	std::string
-	TrackMapObject::typeName() const
-	{
-		return "TrackMapObject";
 	}
 
 	DataSourceRequirements
@@ -42,25 +36,8 @@ namespace gpo
 		cv::Scalar color)
 	{
 		dotColors_.at(sourceIdx) = color;
-	}
-
-	void
-	TrackMapObject::render()
-	{
-		outlineImg_.copyTo(outImg_);
-		if ( ! requirementsMet())
-		{
-			return;
-		}
-
-		for (unsigned int ss=0; ss<tSources_.size(); ss++)
-		{
-			auto telemSrc = tSources_.at(ss);
-
-			const auto &currSample = telemSrc->at(telemSrc->seekedIdx());
-			auto dotPoint = coordToPoint(currSample.trackData.onTrackLL);
-			cv::circle(outImg_,dotPoint,dotRadius_px_,dotColors_.at(ss),cv::FILLED);
-		}
+		markNeedsRedraw();
+		markObjectModified(false,true);
 	}
 
 	void
@@ -167,6 +144,25 @@ namespace gpo
 		return cv::Point(
 			PX_MARGIN + (coord.lon - ulCoord_.lon) * pxPerDeg_,
 			PX_MARGIN + (coord.lat - ulCoord_.lat) * -pxPerDeg_);
+	}
+
+	void
+	TrackMapObject::subRender()
+	{
+		outlineImg_.copyTo(outImg_);
+		if ( ! requirementsMet())
+		{
+			return;
+		}
+
+		for (unsigned int ss=0; ss<tSources_.size(); ss++)
+		{
+			auto telemSrc = tSources_.at(ss);
+
+			const auto &currSample = telemSrc->at(telemSrc->seekedIdx());
+			auto dotPoint = coordToPoint(currSample.trackData.onTrackLL);
+			cv::circle(outImg_,dotPoint,dotRadius_px_,dotColors_.at(ss),cv::FILLED);
+		}
 	}
 
 	YAML::Node

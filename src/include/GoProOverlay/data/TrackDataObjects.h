@@ -426,10 +426,12 @@ namespace gpo
 
 	protected:
         bool
-        subclassApplyModifications();
+        subclassApplyModifications(
+        	bool unnecessaryIsOkay);
 
         bool
-        subclassSaveModifications();
+        subclassSaveModifications(
+        	bool unnecessaryIsOkay);
 
 	private:
 		TrackGate *start_;

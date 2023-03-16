@@ -3,39 +3,15 @@
 namespace gpo
 {
 	VideoObject::VideoObject()
-	 : RenderedObject(1,1)// gets resized in sourcesValid()
+	 : RenderedObject("VideoObject",1,1)// gets resized in sourcesValid()
 	 , prevRenderedFrameIdx_(-1)
 	{
-	}
-
-	std::string
-	VideoObject::typeName() const
-	{
-		return "VideoObject";
 	}
 
 	DataSourceRequirements
 	VideoObject::dataSourceRequirements() const
 	{
 		return DataSourceRequirements(1,0,0);
-	}
-
-	void
-	VideoObject::render()
-	{
-		if ( ! requirementsMet())
-		{
-			return;
-		}
-		auto vSource = vSources_.front();
-
-		auto frameIdx = vSource->seekedIdx();
-		bool needNewFrame = frameIdx != prevRenderedFrameIdx_;
-		if (needNewFrame && ! vSource->getFrame(outImg_,frameIdx))
-		{
-			throw std::runtime_error("getFrame() failed on frameIdx " + std::to_string(frameIdx));
-		}
-		prevRenderedFrameIdx_ = frameIdx;
 	}
 
 	void
@@ -66,6 +42,24 @@ namespace gpo
 	VideoObject::sourcesValid()
 	{
 		outImg_.create(vSources_.front()->frameSize(),CV_8UC3);
+	}
+
+	void
+	VideoObject::subRender()
+	{
+		if ( ! requirementsMet())
+		{
+			return;
+		}
+		auto vSource = vSources_.front();
+
+		auto frameIdx = vSource->seekedIdx();
+		bool needNewFrame = frameIdx != prevRenderedFrameIdx_;
+		if (needNewFrame && ! vSource->getFrame(outImg_,frameIdx))
+		{
+			throw std::runtime_error("getFrame() failed on frameIdx " + std::to_string(frameIdx));
+		}
+		prevRenderedFrameIdx_ = frameIdx;
 	}
 
 	YAML::Node

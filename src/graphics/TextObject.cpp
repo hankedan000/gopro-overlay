@@ -3,7 +3,7 @@
 namespace gpo
 {
 	TextObject::TextObject()
-	 : RenderedObject(1,1)// cv::UMat seg faults if matrix is sized [0,0] :(
+	 : RenderedObject("TextObject",1,1)// cv::UMat seg faults if matrix is sized [0,0] :(
 	 , text_()
 	 , fontFace_(cv::FONT_HERSHEY_DUPLEX)
 	 , scale_(1.0)
@@ -12,17 +12,13 @@ namespace gpo
 	{
 	}
 
-	std::string
-	TextObject::typeName() const
-	{
-		return "TextObject";
-	}
-
 	void
 	TextObject::setText(
 		const std::string &text)
 	{
 		text_ = text;
+		markNeedsRedraw();
+		markObjectModified(false,true);
 	}
 
 	void
@@ -30,6 +26,8 @@ namespace gpo
 		int fontFace)
 	{
 		fontFace_ = fontFace;
+		markNeedsRedraw();
+		markObjectModified(false,true);
 	}
 
 	void
@@ -37,6 +35,8 @@ namespace gpo
 		double scale)
 	{
 		scale_ = scale;
+		markNeedsRedraw();
+		markObjectModified(false,true);
 	}
 
 	void
@@ -44,6 +44,8 @@ namespace gpo
 		cv::Scalar color)
 	{
 		color_ = color;
+		markNeedsRedraw();
+		markObjectModified(false,true);
 	}
 
 	void
@@ -51,12 +53,8 @@ namespace gpo
 		int thickness)
 	{
 		thickness_ = thickness;
-	}
-
-	void
-	TextObject::render()
-	{
-		// do no rendering. we draw text directly into the image in drawInto()
+		markNeedsRedraw();
+		markObjectModified(false,true);
 	}
 
 	void
@@ -81,6 +79,12 @@ namespace gpo
 		cv::Size renderSize)
 	{
 		drawInto(intoImg,originX,originY);
+	}
+
+	void
+	TextObject::subRender()
+	{
+		// do no rendering. we draw text directly into the image in drawInto()
 	}
 
 	YAML::Node

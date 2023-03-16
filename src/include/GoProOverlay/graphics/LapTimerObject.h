@@ -10,18 +10,14 @@ namespace gpo
 		LapTimerObject();
 
 		virtual
-		std::string
-		typeName() const override;
-
-		virtual
 		DataSourceRequirements
 		dataSourceRequirements() const override;
 
+	protected:
 		virtual
 		void
-		render() override;
+		subRender() override;
 
-	protected:
 		virtual
 		YAML::Node
 		subEncode() const override;

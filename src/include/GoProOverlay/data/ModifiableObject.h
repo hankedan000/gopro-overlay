@@ -51,9 +51,28 @@ namespace gpo
          * 
          * @param[in] className
          * the object's class name. useful for debugging
+         * 
+         * @param[in] supportsApplyingModifications
+         * true if the class supports applying changes
+         * (ie. the applyModifications() method is allowed to be called)
+         * 
+         * @param[in] supportsSavingModifications
+         * true if the class supports saving modifications itself
+         * (ie. the saveModifications() method is allowed to be called)
          */
         ModifiableObject(
-            const std::string &className);
+            const std::string &className,
+            bool supportsApplyingModifications,
+            bool supportsSavingModifications);
+        
+        /**
+         * Copy constructor
+         * 
+         * @param[in] other
+         * the object to copy
+         */
+        ModifiableObject(
+            const ModifiableObject &other);
 
         virtual
         ~ModifiableObject();
@@ -68,51 +87,37 @@ namespace gpo
         const std::filesystem::path &
         getSavePath() const;
 
-        /**
-         * Default behavior just returns true.
-         * Subclass can override this method to provide additional checks
-         * or to prevent the object from apply changes all together.
-         * 
-         * @return
-         * true if the object's applyModifications() method is callable.
-         * false otherwise.
-         */
-        virtual
-        bool
-        isApplyable(
-            bool noisy = true) const;
-
-        /**
-         * Default behavior just checks if the save path has been set.
-         * Subclass can override this method to provide additional checks
-         * or to prevent the object from being saved all together.
-         * 
-         * @return
-         * true if the object's saveModifications() method is callable.
-         * false otherwise.
-         */
-        virtual
-        bool
-        isSavable(
-            bool noisy = true) const;
-
         virtual
         void
-        markObjectModified();
+        markObjectModified(
+            bool needsApply = true,
+            bool needsSave = true);
         
         /**
+         * @param[in] unnecessaryIsOkay
+         * true if calling this method while there are no modifications
+         * needing applied is okay (apply operation will be performed regardless).
+         * otherwise, a warning log is produced and the apply operation is not performed.
+         * 
          * @return
          * true if the changes were applied, false otherwise
          */
         bool
-        applyModifications();
+        applyModifications(
+            bool unnecessaryIsOkay = false);
 
         /**
+         * @param[in] unnecessaryIsOkay
+         * true if calling this method while there are no modifications
+         * needing saved is okay (save operation will be performed regardless).
+         * otherwise, a warning log is produced and the save operation is not performed.
+         * 
          * @return
          * true if the changes were saved, false otherwise
          */
         bool
-        saveModifications();
+        saveModifications(
+            bool unnecessaryIsOkay = false);
 
         /**
          * This is like calling setSavePath() and saveModifications() in one
@@ -148,6 +153,29 @@ namespace gpo
         removeObserver(
             ModifiableObjectObserver *observer);
 
+        /**
+         * Enable/Disable printing of a call stack when this object is marked
+         * as modified via the markObjectModified() method.
+         * 
+         * @param[in] show
+         * true to enable call stack printing. false to disable.
+         */
+        void
+        setShowModificationCallStack(
+            bool show);
+
+        /**
+         * Enable/Disable printing of a call stack when any ModifiableObjec
+         * is marked as modified via the markObjectModified() method.
+         * 
+         * @param[in] show
+         * true to enable call stack printing. false to disable.
+         */
+        static
+        void
+        setGlobalShowModificationCallStack(
+            bool show);
+
     protected:
         /**
          * Subclasses can call this method to clear 'hasApplyableEdits_'
@@ -169,7 +197,8 @@ namespace gpo
          */
         virtual
         bool
-        subclassApplyModifications() = 0;
+        subclassApplyModifications(
+            bool unnecessaryIsOkay);
 
         /**
          * Subclass should override this method to save any modifications
@@ -179,10 +208,19 @@ namespace gpo
          */
         virtual
         bool
-        subclassSaveModifications() = 0;
+        subclassSaveModifications(
+            bool unnecessaryIsOkay);
 
     private:
         const std::string className_;
+
+        // true if the class supports applying changes
+        // (ie. the applyModifications() method is allowed to be called)
+        bool supportsApplyingModifications_;
+
+        // true if the class supports saving modifications itself
+        // (ie. the saveModifications() method is allowed to be called)
+        bool supportsSavingModifications_;
 
         // true if the object has been modified since last "apply"
         bool hasApplyableEdits_;
@@ -194,6 +232,12 @@ namespace gpo
         std::filesystem::path savePath_;
 
         std::unordered_set<ModifiableObjectObserver *> observers_;
+
+        // set true to printout a callstack when this object is marked as modified
+        bool showModificationCallStack_;
+
+        // same concept as 'showModificationCallStack_' but this applies to all instances
+        static bool globalShowModificationCallStack_;
 
     };
 }

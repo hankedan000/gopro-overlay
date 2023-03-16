@@ -10,10 +10,6 @@ namespace gpo
 		TelemetryPrintoutObject();
 
 		virtual
-		std::string
-		typeName() const override;
-
-		virtual
 		DataSourceRequirements
 		dataSourceRequirements() const override;
 
@@ -25,11 +21,11 @@ namespace gpo
 		setFontColor(
 			cv::Scalar color);
 
+	protected:
 		virtual
 		void
-		render() override;
+		subRender() override;
 
-	protected:
 		virtual
 		YAML::Node
 		subEncode() const override;

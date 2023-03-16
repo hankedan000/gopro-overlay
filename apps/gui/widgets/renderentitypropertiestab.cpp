@@ -20,24 +20,28 @@ RenderEntityPropertiesTab::RenderEntityPropertiesTab(
     connect(ui->entityPositionX_spin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int newValue){
         if (entity_)
         {
-            entity_->rPos.x = newValue;
-            emit propertyChanged();
+            entity_->setRenderPosition(
+                newValue,
+                entity_->renderPosition().y
+            );
         }
     });
     connect(ui->entityPositionY_spin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int newValue){
         if (entity_)
         {
-            entity_->rPos.y = newValue;
-            emit propertyChanged();
+            entity_->setRenderPosition(
+                entity_->renderPosition().x,
+                newValue
+            );
         }
     });
     connect(ui->entitySizeWidth_spin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int newValue){
         if (entity_)
         {
-            auto newSize = entity_->rSize;
+            auto newSize = entity_->renderSize();
             if (ui->keepRatio_CheckBox->isChecked())
             {
-                auto nativeSize = entity_->rObj->getNativeSize();
+                auto nativeSize = entity_->renderObject()->getNativeSize();
                 double ratio = (double)(newValue)/nativeSize.width;
                 newSize.width = nativeSize.width * ratio;
                 newSize.height = nativeSize.height * ratio;
@@ -46,17 +50,16 @@ RenderEntityPropertiesTab::RenderEntityPropertiesTab(
             {
                 newSize.width = newValue;
             }
-            entity_->rSize = newSize;
-            emit propertyChanged();
+            entity_->setRenderSize(newSize);
         }
     });
     connect(ui->entitySizeHeight_spin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int newValue){
         if (entity_)
         {
-            auto newSize = entity_->rSize;
+            auto newSize = entity_->renderSize();
             if (ui->keepRatio_CheckBox->isChecked())
             {
-                auto nativeSize = entity_->rObj->getNativeSize();
+                auto nativeSize = entity_->renderObject()->getNativeSize();
                 double ratio = (double)(newValue)/nativeSize.height;
                 newSize.width = nativeSize.width * ratio;
                 newSize.height = nativeSize.height * ratio;
@@ -65,8 +68,7 @@ RenderEntityPropertiesTab::RenderEntityPropertiesTab(
             {
                 newSize.height = newValue;
             }
-            entity_->rSize = newSize;
-            emit propertyChanged();
+            entity_->setRenderSize(newSize);
         }
     });
 
@@ -76,33 +78,25 @@ RenderEntityPropertiesTab::RenderEntityPropertiesTab(
     connect(ui->frictionCircleBorder_ColorPicker, &ColorPicker::pickedCV, this, [this](cv::Scalar newColor){
         if (entity_)
         {
-            auto frictionCircle = reinterpret_cast<gpo::FrictionCircleObject*>(entity_->rObj);
-            frictionCircle->setBorderColor(newColor);
-            emit propertyChanged();
+            entity_->renderObject()->as<gpo::FrictionCircleObject>()->setBorderColor(newColor);
         }
     });
     connect(ui->taillength_spin, QOverload<int>::of(&QSpinBox::valueChanged), this, [this](int newValue){
         if (entity_)
         {
-            auto frictionCircle = reinterpret_cast<gpo::FrictionCircleObject*>(entity_->rObj);
-            frictionCircle->setTailLength(newValue);
-            emit propertyChanged();
+            entity_->renderObject()->as<gpo::FrictionCircleObject>()->setTailLength(newValue);
         }
     });
     connect(ui->frictionCircleTail_ColorPicker, &ColorPicker::pickedCV, this, [this](cv::Scalar newColor){
         if (entity_)
         {
-            auto frictionCircle = reinterpret_cast<gpo::FrictionCircleObject*>(entity_->rObj);
-            frictionCircle->setTailColor(newColor);
-            emit propertyChanged();
+            entity_->renderObject()->as<gpo::FrictionCircleObject>()->setTailColor(newColor);
         }
     });
     connect(ui->frictionCircleDot_ColorPicker, &ColorPicker::pickedCV, this, [this](cv::Scalar newColor){
         if (entity_)
         {
-            auto frictionCircle = reinterpret_cast<gpo::FrictionCircleObject*>(entity_->rObj);
-            frictionCircle->setCurrentDotColor(newColor);
-            emit propertyChanged();
+            entity_->renderObject()->as<gpo::FrictionCircleObject>()->setCurrentDotColor(newColor);
         }
     });
 
@@ -118,9 +112,7 @@ RenderEntityPropertiesTab::RenderEntityPropertiesTab(
         auto yComp = (TelemetryPlot::Y_Component)ui->yComponent_ComboBox->itemData(index).toULongLong();
         if (entity_)
         {
-            auto telemPlot = reinterpret_cast<gpo::TelemetryPlotObject*>(entity_->rObj);
-            telemPlot->setY_Component(yComp);
-            emit propertyChanged();
+            entity_->renderObject()->as<gpo::TelemetryPlotObject>()->setY_Component(yComp);
         }
     });
 }
@@ -139,7 +131,7 @@ RenderEntityPropertiesTab::setProject(
 
 void
 RenderEntityPropertiesTab::setEntity(
-        gpo::RenderEngine::RenderedEntity *entity)
+        gpo::RenderedEntityPtr entity)
 {
     ui->entityProperties_ScrollArea->hide();
 
@@ -160,11 +152,11 @@ RenderEntityPropertiesTab::setEntity(
     if (entity)
     {
         // RenderEntity UI elements
-        ui->entityName_LineEdit->setText(entity->name.c_str());
-        ui->entityPositionX_spin->setValue(entity->rPos.x);
-        ui->entityPositionY_spin->setValue(entity->rPos.y);
-        ui->entitySizeWidth_spin->setValue(entity->rSize.width);
-        ui->entitySizeHeight_spin->setValue(entity->rSize.height);
+        ui->entityName_LineEdit->setText(entity->name().c_str());
+        ui->entityPositionX_spin->setValue(entity->renderPosition().x);
+        ui->entityPositionY_spin->setValue(entity->renderPosition().y);
+        ui->entitySizeWidth_spin->setValue(entity->renderSize().width);
+        ui->entitySizeHeight_spin->setValue(entity->renderSize().height);
 
         ui->entityProperties_ScrollArea->show();
 
@@ -187,9 +179,9 @@ RenderEntityPropertiesTab::setEntity(
             }
         }
 
-        auto sourceReqs = entity->rObj->dataSourceRequirements();
-        size_t videoSlotsToPopulate = std::max((size_t)sourceReqs.minVideos(),entity->rObj->numVideoSources());
-        size_t telemSlotsToPopulate = std::max((size_t)sourceReqs.minTelemetry(),entity->rObj->numTelemetrySources());
+        auto sourceReqs = entity->renderObject()->dataSourceRequirements();
+        size_t videoSlotsToPopulate = std::max((size_t)sourceReqs.minVideos(),entity->renderObject()->numVideoSources());
+        size_t telemSlotsToPopulate = std::max((size_t)sourceReqs.minTelemetry(),entity->renderObject()->numTelemetrySources());
 
         auto videoTable = ui->videoSources_TableView;
         videoTable->setRowCount(videoSlotsToPopulate);
@@ -199,9 +191,9 @@ RenderEntityPropertiesTab::setEntity(
         for (size_t vv=0; vv<videoSlotsToPopulate; vv++)
         {
             std::string selectedSourceName = "";// empty means not set yet
-            if (vv < entity->rObj->numVideoSources())
+            if (vv < entity->renderObject()->numVideoSources())
             {
-                selectedSourceName = entity->rObj->getVideoSource(vv)->getDataSourceName();
+                selectedSourceName = entity->renderObject()->getVideoSource(vv)->getDataSourceName();
             }
 
             QComboBox *videoComboBox = new QComboBox(videoTable);
@@ -219,9 +211,9 @@ RenderEntityPropertiesTab::setEntity(
         for (size_t tt=0; tt<telemSlotsToPopulate; tt++)
         {
             std::string selectedSourceName = "";// empty means not set yet
-            if (tt < entity->rObj->numTelemetrySources())
+            if (tt < entity->renderObject()->numTelemetrySources())
             {
-                selectedSourceName = entity->rObj->getTelemetrySource(tt)->getDataSourceName();
+                selectedSourceName = entity->renderObject()->getTelemetrySource(tt)->getDataSourceName();
             }
 
             QComboBox *telemetryComboBox = new QComboBox(telemetryTable);
@@ -233,10 +225,10 @@ RenderEntityPropertiesTab::setEntity(
         // --------------------------------
 
         // RenderedObject subclass UI elements
-        std::string objectTypeName = entity->rObj->typeName();
+        std::string objectTypeName = entity->renderObject()->typeName();
         if (objectTypeName == "FrictionCircleObject")
         {
-            auto frictionCircle = reinterpret_cast<gpo::FrictionCircleObject*>(entity->rObj);
+            auto frictionCircle = entity->renderObject()->as<gpo::FrictionCircleObject>();
             ui->frictionCircleBorder_ColorPicker->setColorCV(frictionCircle->getBorderColor());
             ui->taillength_spin->setValue(frictionCircle->getTailLength());
             ui->frictionCircleTail_ColorPicker->setColorCV(frictionCircle->getTailColor());
@@ -254,8 +246,7 @@ RenderEntityPropertiesTab::setEntity(
         }
         else if (objectTypeName == "TelemetryPlotObject")
         {
-            auto telemPlot = reinterpret_cast<gpo::TelemetryPlotObject*>(entity->rObj);
-            auto plotsY_Comp = telemPlot->getY_Component();
+            auto plotsY_Comp = entity->renderObject()->as<gpo::TelemetryPlotObject>()->getY_Component();
             for (int i=0; i<ui->yComponent_ComboBox->count(); i++)
             {
                 int yCompInt = ui->yComponent_ComboBox->itemData(i).toInt();

@@ -7,17 +7,11 @@ namespace gpo
 	const int LAPTIMER_RENDERED_HEIGHT = 200;
 
 	LapTimerObject::LapTimerObject()
-	 : RenderedObject(LAPTIMER_RENDERED_WIDTH,LAPTIMER_RENDERED_HEIGHT)
+	 : RenderedObject("LapTimerObject",LAPTIMER_RENDERED_WIDTH,LAPTIMER_RENDERED_HEIGHT)
 	 , bgImg_(LAPTIMER_RENDERED_HEIGHT,LAPTIMER_RENDERED_WIDTH,CV_8UC4,RGBA_COLOR(0,0,0,0))
 	 , textColor_(RGBA_COLOR(255,255,255,255))
 	 , lapTime_(0.0)
 	{
-	}
-
-	std::string
-	LapTimerObject::typeName() const
-	{
-		return "LapTimerObject";
 	}
 
 	DataSourceRequirements
@@ -27,7 +21,7 @@ namespace gpo
 	}
 
 	void
-	LapTimerObject::render()
+	LapTimerObject::subRender()
 	{
 		bgImg_.copyTo(outImg_);
 		if ( ! requirementsMet())

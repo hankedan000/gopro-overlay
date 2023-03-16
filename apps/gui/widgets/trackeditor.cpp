@@ -423,8 +423,8 @@ TrackEditor::releaseTrack()
 void
 TrackEditor::configureFileMenuButtons()
 {
-    ui->actionSave_Track->setEnabled(track_ != nullptr && track_->isSavable(false));
-    ui->actionSave_Track_as->setEnabled(track_ != nullptr && track_->isSavable(false) && iOwnTrack_);
+    ui->actionSave_Track->setEnabled(track_ != nullptr);
+    ui->actionSave_Track_as->setEnabled(track_ != nullptr && iOwnTrack_);
     ui->actionLoad_Track->setEnabled(true);
 }
 

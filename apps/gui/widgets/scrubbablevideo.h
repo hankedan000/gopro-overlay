@@ -10,7 +10,7 @@ namespace Ui {
 class ScrubbableVideo;
 }
 
-class ScrubbableVideo : public QWidget
+class ScrubbableVideo : public QWidget, private gpo::ModifiableDrawObjectObserver
 {
     Q_OBJECT
 
@@ -37,12 +37,17 @@ public:
 signals:
     void
     onEntitySelected(
-            gpo::RenderEngine::RenderedEntity *entity);
+            gpo::RenderedEntity *entity);
 
     void
     onEntityMoved(
-            gpo::RenderEngine::RenderedEntity *entity,
+            gpo::RenderedEntity *entity,
             QPoint moveVector);
+
+private:
+    void
+    onNeedsRedraw(
+            gpo::ModifiableDrawObject *drawable) override;
 
 private:
     Ui::ScrubbableVideo *ui;
@@ -51,9 +56,9 @@ private:
     gpo::RenderEnginePtr engine_;
 
     // entity the mouse is currently floating over
-    gpo::RenderEngine::RenderedEntity *focusedEntity_;
+    gpo::RenderedEntityPtr focusedEntity_;
     // entity the mouse is grabbing (clicked and held)
-    gpo::RenderEngine::RenderedEntity *grabbedEntity_;
+    gpo::RenderedEntityPtr grabbedEntity_;
     // local mouse position when mouse press event occurred
     QPoint mousePosWhenGrabbed_;
     // the entities original render location when mouse press event occurred

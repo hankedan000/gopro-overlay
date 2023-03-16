@@ -11,16 +11,8 @@ namespace gpo
 		VideoObject();
 
 		virtual
-		std::string
-		typeName() const override;
-
-		virtual
 		DataSourceRequirements
 		dataSourceRequirements() const override;
-
-		virtual
-		void
-		render() override;
 
 		void
 		drawInto(
@@ -29,6 +21,10 @@ namespace gpo
 			cv::Size renderSize) override;
 
 	protected:
+		virtual
+		void
+		subRender() override;
+
 		// callback from RenderedObject class when all source requirements are met
 		virtual
 		void

@@ -7,7 +7,7 @@ namespace gpo
 	const int F_CIRCLE_RENDER_HEIGHT = 480;
 
 	FrictionCircleObject::FrictionCircleObject()
-	 : RenderedObject(F_CIRCLE_RENDER_WIDTH,F_CIRCLE_RENDER_HEIGHT)
+	 : RenderedObject("FrictionCircleObject",F_CIRCLE_RENDER_WIDTH,F_CIRCLE_RENDER_HEIGHT)
 	 , outlineImg_(F_CIRCLE_RENDER_HEIGHT,F_CIRCLE_RENDER_WIDTH,CV_8UC4,RGBA_COLOR(0,0,0,0))
 	 , tailLength_(0)
 	 , radius_px_(200)
@@ -18,12 +18,6 @@ namespace gpo
 	 , currentDotColor_(RGBA_COLOR(255,255,255,255))
 	{
 		redrawOutline();
-	}
-
-	std::string
-	FrictionCircleObject::typeName() const
-	{
-		return "FrictionCircleObject";
 	}
 
 	DataSourceRequirements
@@ -37,6 +31,8 @@ namespace gpo
 		size_t tailLength)
 	{
 		tailLength_ = tailLength;
+		markNeedsRedraw();
+		markObjectModified(false,true);
 	}
 
 	size_t
@@ -51,6 +47,8 @@ namespace gpo
 	{
 		borderColor_ = rgbColor;
 		redrawOutline();
+		markNeedsRedraw();
+		markObjectModified(false,true);
 	}
 
 	cv::Scalar
@@ -64,6 +62,8 @@ namespace gpo
 		cv::Scalar rgbColor)
 	{
 		tailColor_ = rgbColor;
+		markNeedsRedraw();
+		markObjectModified(false,true);
 	}
 
 	cv::Scalar
@@ -77,6 +77,8 @@ namespace gpo
 		cv::Scalar rgbColor)
 	{
 		currentDotColor_ = rgbColor;
+		markNeedsRedraw();
+		markObjectModified(false,true);
 	}
 
 	cv::Scalar
@@ -86,7 +88,7 @@ namespace gpo
 	}
 
 	void
-	FrictionCircleObject::render()
+	FrictionCircleObject::subRender()
 	{
 		outlineImg_.copyTo(outImg_);
 		if ( ! requirementsMet())
