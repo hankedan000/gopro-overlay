@@ -6,7 +6,7 @@
 #include <GoProTelem/GoProTelem.h>
 #include <GoProTelem/SampleMath.h>
 #include <GoProOverlay/utils/DataProcessingUtils.h>
-#include <GoProOverlay/utils/io/CSV_Utils.h>
+#include <GoProOverlay/utils/io/csv.h>
 
 namespace gpo
 {
