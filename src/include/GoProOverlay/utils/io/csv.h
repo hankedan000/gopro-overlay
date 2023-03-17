@@ -19,8 +19,8 @@ namespace io
 		size_t colIdx,
 		void *structOut)
 	{
-		*reinterpret_cast<MEMBER_T *>(reinterpret_cast<uint8_t*>(structOut) + FIELD_OFFSET) =
-			row[colIdx].get<MEMBER_T>();
+		auto cellValue = row[colIdx].get<double>();
+		*reinterpret_cast<MEMBER_T *>(reinterpret_cast<uint8_t*>(structOut) + FIELD_OFFSET) = cellValue;
 	}
 
 	template <typename STRUCT_T, typename MEMBER_T, size_t FIELD_OFFSET>
@@ -47,6 +47,8 @@ namespace io
 		structToCsvRow<STRUCT_T, typeof(STRUCT_T,MEMBER), offsetof(STRUCT_T,MEMBER)>\
 	}
 
+	static constexpr CSV_ColumnParser CSVPARSER_IGNORED = {"", nullptr, nullptr};
+
 	#define CSV_ROW_ITR_GET(OUT_VAR,ROW_ITR,COL_IDX) OUT_VAR = (*ROW_ITR)[COL_IDX].get<std::remove_reference<decltype(OUT_VAR)>::type>()
 
 	bool
@@ -71,5 +73,11 @@ namespace io
 	readMegaSquirtLog(
 		const std::string mslPath,
 		std::vector<gpo::ECU_TimedSample> &ecuTelem);
+    
+	bool
+    readTelemetryFromSoloStormCSV(
+        const std::filesystem::path &csvFilepath,
+        gpo::TelemetrySamplesPtr tSamps,
+		gpo::DataAvailableBitSet &avail);
 }
 }

@@ -388,6 +388,25 @@ namespace gpo
 	}
 
 	DataSourcePtr
+	DataSource::loadDataFromSoloStormCSV(
+		const std::filesystem::path &csvFile)
+	{
+		auto newSrc = std::make_shared<DataSource>();
+		newSrc->originFile_ = csvFile;
+		newSrc->sourceName_ = csvFile.filename();
+		newSrc->samples_ = std::make_shared<TelemetrySamples>();
+		utils::io::readTelemetryFromSoloStormCSV(
+			csvFile,
+			newSrc->samples_,
+			newSrc->dataAvail_);
+
+		newSrc->seeker = std::make_shared<TelemetrySeeker>(newSrc);
+		newSrc->telemSrc = std::make_shared<TelemetrySource>(newSrc);
+
+		return newSrc;
+	}
+
+	DataSourcePtr
 	DataSource::loadTelemetryFromCSV(
 		const std::filesystem::path &csvFile)
 	{
