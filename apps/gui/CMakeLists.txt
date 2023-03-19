@@ -1,5 +1,7 @@
 add_subdirectory(widgets)
 
+set(CMAKE_AUTORCC ON)
+
 add_executable(TrackEditorApp
 	TrackEditorApp.cpp
 )
@@ -25,6 +27,7 @@ target_link_libraries(TelemetryMergerStandalone PUBLIC
 
 add_executable(ProjectApp
 	ProjectApp.cpp
+	"${CMAKE_CURRENT_SOURCE_DIR}/res/resources.qrc"
 )
 target_link_libraries(ProjectApp PUBLIC
 	GoProOverlay
