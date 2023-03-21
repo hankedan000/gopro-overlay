@@ -189,6 +189,9 @@ ScrubbableVideo::setEngine(
     }
 
     engine_ = engine;
+    // release focused/grabbed entities that belonged to old engine
+    focusedEntity_ = nullptr;
+    grabbedEntity_ = nullptr;
 
     if (engine_)
     {
