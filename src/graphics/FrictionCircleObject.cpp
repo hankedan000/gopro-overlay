@@ -1,5 +1,7 @@
 #include "GoProOverlay/graphics/FrictionCircleObject.h"
 
+#include "GoProOverlay/utils/OpenCV_Utils.h"
+
 namespace gpo
 {
 
@@ -162,6 +164,18 @@ namespace gpo
 	FrictionCircleObject::redrawOutline()
 	{
 		outlineImg_.setTo(RGBA_COLOR(0,0,0,0));
+
+		// add a grey translucent background
+		int bgWidth = outlineImg_.size().width;
+		int bgHeight = outlineImg_.size().height;
+		cv::rounded_rectangle(
+			outlineImg_,
+			cv::Point(0,0),
+			cv::Point(bgWidth,bgHeight),
+			BACKGROUND_COLOR,
+			cv::FILLED,
+			cv::LINE_AA,
+			BACKGROUND_RADIUS);
 
 		// draw outer circle
 		cv::circle(outlineImg_,center_,radius_px_,borderColor_,8);

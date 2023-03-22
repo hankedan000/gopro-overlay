@@ -24,6 +24,7 @@ add_library("${LIBNAME}" STATIC
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/VideoObject.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/utils/DataProcessingUtils.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/utils/LineSegmentUtils.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/utils/OpenCV_Utils.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/utils/io/CSV_Utils.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/utils/misc/MiscUtils.cpp"
 	

@@ -1,5 +1,7 @@
 #include "GoProOverlay/graphics/SpeedometerObject.h"
 
+#include "GoProOverlay/utils/OpenCV_Utils.h"
+
 namespace gpo
 {
 
@@ -30,9 +32,21 @@ namespace gpo
 
 		outImg_.setTo(RGBA_COLOR(0,0,0,0));
 
+		// add a grey translucent background
+		int bgWidth = outImg_.size().width;
+		int bgHeight = outImg_.size().height;
+		cv::rounded_rectangle(
+			outImg_,
+			cv::Point(0,0),
+			cv::Point(bgWidth,bgHeight),
+			BACKGROUND_COLOR,
+			cv::FILLED,
+			cv::LINE_AA,
+			BACKGROUND_RADIUS);
+
 		int speedMPH = round(telemSamp.gpSamp.gps.speed2D * 2.23694);// m/s to mph
 		char tmpStr[1024];
-		sprintf(tmpStr,"%2dmph",speedMPH);
+		sprintf(tmpStr,"%3dmph",speedMPH);
 		cv::putText(
 			outImg_, // target image
 			tmpStr, // text

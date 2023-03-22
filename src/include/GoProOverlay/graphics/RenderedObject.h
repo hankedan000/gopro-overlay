@@ -23,6 +23,9 @@ namespace gpo
 	const int DSR_ONE_OR_MORE = -1;
 	const int DSR_ZERO_OR_MORE = -2;
 
+	#define BACKGROUND_COLOR RGBA_COLOR(0,0,0,100)
+	const int BACKGROUND_RADIUS = 50;
+
 	struct DataSourceRequirements
 	{
 	public:

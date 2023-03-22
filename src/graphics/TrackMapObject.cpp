@@ -1,5 +1,7 @@
 #include "GoProOverlay/graphics/TrackMapObject.h"
 
+#include "GoProOverlay/utils/OpenCV_Utils.h"
+
 namespace gpo
 {
 	const int TRACK_MAP_RENDER_WIDTH = 600;
@@ -103,18 +105,17 @@ namespace gpo
 			pxPerDeg_ = (getNativeWidth() - PX_MARGIN * 2) / deltaLon;
 		}
 
-		const bool drawBackground = false;
-		if (drawBackground)
-		{
-			int bgWidth = deltaLon * pxPerDeg_ + PX_MARGIN * 2;
-			int bgHeight = deltaLat * pxPerDeg_ + PX_MARGIN * 2;
-			cv::rectangle(
-				outlineImg_,
-				cv::Point(0,0),
-				cv::Point(bgWidth,bgHeight),
-				RGBA_COLOR(0,0,0,100),
-				cv::FILLED);
-		}
+		// add a grey translucent background
+		int bgWidth = deltaLon * pxPerDeg_ + PX_MARGIN * 2;
+		int bgHeight = deltaLat * pxPerDeg_ + PX_MARGIN * 2;
+		cv::rounded_rectangle(
+			outlineImg_,
+			cv::Point(0,0),
+			cv::Point(bgWidth,bgHeight),
+			BACKGROUND_COLOR,
+			cv::FILLED,
+			cv::LINE_AA,
+			BACKGROUND_RADIUS);
 
 		cv::Point prevPoint;
 		for (size_t i=trackStartIdx; i<trackEndIdx; i++)
