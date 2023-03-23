@@ -50,13 +50,13 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
         auto renderSize = engine_->getRenderSize();
         auto frameSize = getSize();
         double scaleFactorRoF = (double)(renderSize.height) / frameSize.height;
-        auto evtPosMapped = QPoint(scaleFactorRoF * event->x(), scaleFactorRoF * event->y());
+        auto evtPosMapped = QPoint(scaleFactorRoF * event->position().x(), scaleFactorRoF * event->position().y());
         spdlog::debug("=======================");
         spdlog::debug("frameSize_: w = {}; h = {};",frameSize.width,frameSize.height);
         spdlog::debug("renderSize: w = {}; h = {};",renderSize.width,renderSize.height);
         spdlog::debug("scaleFactorRoF = {};",scaleFactorRoF);
         spdlog::debug("evtPosMapped: x = {}; y = {}",evtPosMapped.x(),evtPosMapped.y());
-        spdlog::debug("event: x = {}; y = {}",event->x(),event->y());
+        spdlog::debug("event: x = {}; y = {}",event->position().x(),event->position().y());
         spdlog::debug("=======================");
 
         bool rerender = false;

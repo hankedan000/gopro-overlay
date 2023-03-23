@@ -47,8 +47,8 @@ AlignmentPlot::AlignmentPlot(QWidget *parent) :
     connect(ui->plot, &QCustomPlot::mousePress, this,
         [this](QMouseEvent *event){
         spdlog::trace("mousePress");
-        mousePressPos_px_.setX(event->x());
-        mousePressPos_px_.setY(event->y());
+        mousePressPos_px_.setX(event->position().x());
+        mousePressPos_px_.setY(event->position().y());
         mousePressed_ = true;
         mouseMoved_ = false;
         if ( ! selectedSrc_)
@@ -90,9 +90,9 @@ AlignmentPlot::AlignmentPlot(QWidget *parent) :
 
         if (selectedSrcHeld_)
         {
-            int deltaX_px = event->x() - mousePressPos_px_.x();
+            int deltaX_px = event->position().x() - mousePressPos_px_.x();
             int deltaX_coord =
-                ui->plot->xAxis->pixelToCoord(event->x()) -
+                ui->plot->xAxis->pixelToCoord(event->position().x()) -
                 ui->plot->xAxis->pixelToCoord(mousePressPos_px_.x());
             spdlog::debug("moving '{}'; deltaX_px = {}; deltaX_coord = {}",
                 selectedSrc_->getDataSourceName(),

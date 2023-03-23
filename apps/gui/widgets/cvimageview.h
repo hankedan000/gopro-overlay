@@ -39,7 +39,7 @@ public:
     virtual
     void
     enterEvent(
-            QEvent *event) override;
+            QEnterEvent *event) override;
 
     virtual
     void

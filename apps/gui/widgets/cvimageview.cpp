@@ -48,7 +48,7 @@ CvImageView::mouseReleaseEvent(
 
 void
 CvImageView::enterEvent(
-        QEvent *event)
+        QEnterEvent *event)
 {
     setMouseTracking(true);
 }
