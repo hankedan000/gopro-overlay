@@ -33,3 +33,12 @@ target_link_libraries(ProjectApp PUBLIC
 	GoProOverlay
 	AppWidgets
 )
+
+add_executable(DataViewerApp
+	DataViewerApp.cpp
+	"${CMAKE_CURRENT_SOURCE_DIR}/res/resources.qrc"
+)
+target_link_libraries(DataViewerApp PUBLIC
+	GoProOverlay
+	AppWidgets
+)

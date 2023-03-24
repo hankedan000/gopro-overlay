@@ -5,6 +5,9 @@ set(QT_WIDGETS_SOURCES
 	ColorPicker.h
 	ColorPicker.cpp
 	ColorPicker.ui
+	DataViewerWindow.h
+	DataViewerWindow.cpp
+	DataViewerWindow.ui
 	cvimageview.h
 	cvimageview.cpp
 	cvimageview.ui
@@ -42,12 +45,15 @@ set(QT_WIDGETS_SOURCES
 	trackview.cpp
 	trackview.ui
 
+	utils/ProjectSettings.h
+	utils/ProjectSettings.cpp
 	utils/QModifiableObjectObserver.h
 	utils/QModifiableObjectObserver.cpp
 
 	# grumble grumble... MOC needs to know where these are
 	# see https://stackoverflow.com/questions/14010922/qt-undefined-reference-to-vtable
 	"${CMAKE_CURRENT_SOURCE_DIR}/../../../src/include/GoProOverlay/graphics/TelemetryPlot.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/utils/ProjectSettings.h"
 	"${CMAKE_CURRENT_SOURCE_DIR}/utils/QModifiableObjectObserver.h"
 )
 
