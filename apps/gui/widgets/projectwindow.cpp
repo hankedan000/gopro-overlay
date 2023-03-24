@@ -2,13 +2,11 @@
 #include "ui_projectwindow.h"
 
 #include "GoProOverlay/utils/misc/MiscUtils.h"
+#include "utils/ProjectSettings.h"
 
 #include <QFileDialog>
 #include <QMessageBox>
 #include <spdlog/spdlog.h>
-
-const QString RECENT_PROJECT_KEY = "RECENT_PROJECTS";
-const int MAX_RECENT_PROJECTS = 10;
 
 // constants for the rendered entity tables
 const int ENTITY_NAME_COLUMN       = 0;
@@ -25,7 +23,6 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::ProjectWindow),
     previewResolutionActionGroup_(new QActionGroup(this)),
-    settings(QSettings::Format::NativeFormat, QSettings::UserScope, "ProjectWindow", "GoProOverlay Render Project Application"),
     proj_(),
     sourcesTableModel_(new QStandardItemModel(0,3,this)),
     entitiesTableModel_(new QStandardItemModel(0,3,this)),
@@ -414,7 +411,7 @@ ProjectWindow::loadProject(
     bool loadOkay = proj_.load(projectDir);
     if (loadOkay)
     {
-        addProjectToRecentHistory(projectDir);
+        gpo::ProjectSettings::setMostRecentProject(projectDir.c_str());
 
         // update menus that change based on project
         reloadDataSourceTable();
@@ -556,36 +553,17 @@ ProjectWindow::addSourceToTable(
 void
 ProjectWindow::populateRecentProjects()
 {
-    QStringList recentProjects = settings.value(
-                RECENT_PROJECT_KEY,
-                QStringList()).toStringList();
+    QStringList recentProjects = gpo::ProjectSettings::getRecentProjects();
     ui->menuLoad_Recent_Project->clear();
     ui->menuLoad_Recent_Project->setEnabled(recentProjects.size() > 0);
 
-    // populate recent projects dropdown menu, keeping track of ones that no longer exist
-    std::vector<QString> projectsToRemove;
+    // populate recent projects dropdown menu
     for (const auto &projectPath : recentProjects)
     {
-        if ( ! gpo::RenderProject::isValidProject(projectPath.toStdString()))
-        {
-            spdlog::warn("recent project '{}' no longer exists. removing it from history.",projectPath.toStdString());
-            projectsToRemove.push_back(projectPath);
-            continue;
-        }
         auto action = new QAction(this);
         action->setText(projectPath);
         connect(action,&QAction::triggered,this,[this,projectPath]{ loadProject(projectPath.toStdString()); });
         ui->menuLoad_Recent_Project->addAction(action);
-    }
-
-    // remove projects from history that no longer exist
-    if (projectsToRemove.size() > 0)
-    {
-        for (const auto &project : projectsToRemove)
-        {
-            recentProjects.removeOne(project);
-        }
-        settings.setValue(RECENT_PROJECT_KEY,recentProjects);
     }
 }
 
@@ -884,22 +862,6 @@ ProjectWindow::askToOverwriteExport()
 }
 
 void
-ProjectWindow::addProjectToRecentHistory(
-        const std::string &projectDir)
-{
-    QStringList recentProjects = settings.value(
-                RECENT_PROJECT_KEY,
-                QStringList()).toStringList();
-    recentProjects.removeAll(projectDir.c_str());
-    recentProjects.push_front(projectDir.c_str());
-    if (recentProjects.size() >= MAX_RECENT_PROJECTS)
-    {
-        recentProjects.pop_back();// remove oldests
-    }
-    settings.setValue(RECENT_PROJECT_KEY, recentProjects);
-}
-
-void
 ProjectWindow::plotTelemetry(
         gpo::DataSourcePtr dataSrc)
 {
@@ -1021,7 +983,7 @@ ProjectWindow::onActionSaveProjectAs()
     if (proj_.saveModificationsAs(filepath))
     {
         configureMenuActions();
-        addProjectToRecentHistory(filepath);
+        gpo::ProjectSettings::setMostRecentProject(filepath.c_str());
     }
 }
 
