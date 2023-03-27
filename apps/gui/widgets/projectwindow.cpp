@@ -963,6 +963,12 @@ ProjectWindow::onActionSaveProjectAs()
         return;
     }
 
+    // default export path to where project is
+    std::filesystem::path exportFilePath = filepath;
+    exportFilePath /= RenderThread::DEFAULT_EXPORT_FILENAME;
+    ui->exportFileLineEdit->setText(exportFilePath.c_str());
+    proj_.setExportFilePath(exportFilePath);
+
     if (proj_.saveModificationsAs(filepath))
     {
         configureMenuActions();
