@@ -2,6 +2,7 @@
 #define DATAVIEWERWINDOW_H
 
 #include <QMainWindow>
+#include <QStandardItemModel>
 
 #include "GoProOverlay/data/RenderProject.h"
 
@@ -34,8 +35,13 @@ private:
     void
     configureMenuActions();
 
+    void
+    populateTopCompareTable();
+
 private:
     Ui::DataViewerWindow *ui;
+    QStandardItemModel *topCompareTableModel_;
+    QStandardItemModel *sectorDetailsTableModel_;
 
     gpo::RenderProject proj_;
 
