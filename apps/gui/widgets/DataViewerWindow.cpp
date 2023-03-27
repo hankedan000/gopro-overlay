@@ -1,17 +1,31 @@
 #include "DataViewerWindow.h"
 #include "ui_DataViewerWindow.h"
 
+#include <QFileDialog>
 #include <spdlog/spdlog.h>
 
 #include "utils/ProjectSettings.h"
 
 DataViewerWindow::DataViewerWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::DataViewerWindow)
+    ui(new Ui::DataViewerWindow),
+    topCompareTableModel_(new QStandardItemModel(this)),
+    sectorDetailsTableModel_(new QStandardItemModel(this))
 {
     ui->setupUi(this);
+    ui->topCompare_TableView->setModel(topCompareTableModel_);
+    ui->sectorDetails_TableView->setModel(sectorDetailsTableModel_);
 
     populateRecentProjects();
+
+    connect(ui->actionLoad_Project, &QAction::triggered, this, [this]{
+        std::string filepath = QFileDialog::getExistingDirectory(
+                    this,
+                    "Open Project",
+                    QDir::homePath()).toStdString();
+
+        loadProject(filepath);
+    });
 }
 
 DataViewerWindow::~DataViewerWindow()
@@ -29,10 +43,11 @@ DataViewerWindow::loadProject(
     bool loadOkay = proj_.load(projectDir);
     if (loadOkay)
     {
+        // update recent projects history and refresh menu
         gpo::ProjectSettings::setMostRecentProject(projectDir.c_str());
         populateRecentProjects();
 
-        // TODO do stuff with the project on load
+        ui->trackView->setTrack(proj_.getTrack());
     }
     else
     {
@@ -40,6 +55,7 @@ DataViewerWindow::loadProject(
     }
 
     configureMenuActions();
+    populateTopCompareTable();
 }
 
 void
@@ -50,6 +66,7 @@ DataViewerWindow::closeProject()
         spdlog::info("closing project '{}'",proj_.getSavePath().c_str());
         proj_.clear();
         configureMenuActions();
+        populateTopCompareTable();
     }
 }
 
@@ -83,4 +100,24 @@ DataViewerWindow::configureMenuActions()
     // ui->actionSave_Project->setEnabled(isProjectOpened());
     // ui->actionSave_Project_as->setEnabled(true);
     ui->actionLoad_Project->setEnabled(true);
+}
+
+void
+DataViewerWindow::populateTopCompareTable()
+{
+    topCompareTableModel_->clear();
+
+    const auto &dsm = proj_.dataSourceManager();
+    for (size_t ss=0; ss<dsm.sourceCount(); ss++)
+    {
+        const auto &dSrc = dsm.getSource(ss);
+
+        QList<QStandardItem *> row;
+
+        QStandardItem *nameItem = new QStandardItem;
+        nameItem->setText(dSrc->getSourceName().c_str());
+        row.append(nameItem);
+
+        topCompareTableModel_->appendRow(row);
+    }
 }
