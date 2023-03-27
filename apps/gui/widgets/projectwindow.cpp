@@ -185,6 +185,25 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
             proj_.setExportFilePath(newExportFilePath);
         }
     });
+    connect(ui->browseExportButton, &QPushButton::clicked, this, [this]{
+        // default dialog's directory to user's home dir
+        QString currentExportPath = proj_.getExportFilePath().c_str();
+
+        // open "Save As" dialog
+        std::string filepath = QFileDialog::getSaveFileName(
+                    this,
+                    "Export Path",
+                    currentExportPath,
+                    "MP4 (*.mp4 *.MP4)").toStdString();
+        if (filepath.empty())
+        {
+            // dialog was close without selecting a path
+            return;
+        }
+
+        ui->exportFileLineEdit->setText(filepath.c_str());
+        proj_.setExportFilePath(filepath);
+    });
     connect(ui->exportButton, &QPushButton::clicked, this, [this]{
         QString exportDir = RenderThread::DEFAULT_EXPORT_DIR.c_str();
         QString exportFilename = RenderThread::DEFAULT_EXPORT_FILENAME.c_str();
