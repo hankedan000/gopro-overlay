@@ -13,6 +13,8 @@ DataViewerWindow::DataViewerWindow(QWidget *parent) :
     sectorDetailsTableModel_(new QStandardItemModel(this))
 {
     ui->setupUi(this);
+    ui->topSplitter->setSizes(QList<int>({75000, 25000}));
+    ui->centralSplitter->setSizes(QList<int>{25000,75000});
     ui->topCompare_TableView->setModel(topCompareTableModel_);
     ui->sectorDetails_TableView->setModel(sectorDetailsTableModel_);
 
