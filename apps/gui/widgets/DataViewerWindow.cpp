@@ -2,15 +2,20 @@
 #include "ui_DataViewerWindow.h"
 
 #include <QFileDialog>
+#include <QMessageBox>
 #include <spdlog/spdlog.h>
 
 #include "utils/ProjectSettings.h"
+
+const int SOURCE_NAME_COLUMN = 0;
 
 DataViewerWindow::DataViewerWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::DataViewerWindow),
     topCompareTableModel_(new QStandardItemModel(this)),
-    sectorDetailsTableModel_(new QStandardItemModel(this))
+    sectorDetailsTableModel_(new QStandardItemModel(this)),
+    proj_(),
+    projectObserver_()
 {
     ui->setupUi(this);
     ui->topSplitter->setSizes(QList<int>({75000, 25000}));
@@ -18,8 +23,18 @@ DataViewerWindow::DataViewerWindow(QWidget *parent) :
     ui->topCompare_TableView->setModel(topCompareTableModel_);
     ui->sectorDetails_TableView->setModel(sectorDetailsTableModel_);
 
-    populateRecentProjects();
+    projectObserver_.bindModifiable(&proj_);
+    projectObserver_.bindWidget(this, "Data Viewer");
 
+    populateRecentProjects();
+    configureMenuActions();
+
+    connect(ui->actionSave_Project, &QAction::triggered, this, [this]{
+        saveProject();
+    });
+    connect(ui->actionSave_Project_as, &QAction::triggered, this, [this]{
+        saveProjectAs();
+    });
     connect(ui->actionLoad_Project, &QAction::triggered, this, [this]{
         std::string filepath = QFileDialog::getExistingDirectory(
                     this,
@@ -28,11 +43,50 @@ DataViewerWindow::DataViewerWindow(QWidget *parent) :
 
         loadProject(filepath);
     });
+    connect(topCompareTableModel_, &QStandardItemModel::dataChanged, this, [this](
+            const QModelIndex &topLeft,
+            const QModelIndex &bottomRight,
+            const QVector<int> &roles){
+        int editWidth = bottomRight.column() - topLeft.column();
+        int editHeight = topLeft.row() - bottomRight.row();
+        if (editWidth != 0 || editHeight != 0)
+        {
+            spdlog::warn("multi-cell edit in 'topCompare_TableView' is not supported");
+            return;
+        }
+
+        int row = topLeft.row();
+        int col = topLeft.column();
+        auto &dsm = proj_.dataSourceManager();
+        if (col == SOURCE_NAME_COLUMN)
+        {
+            QStandardItem *nameItem = topCompareTableModel_->item(row,col);
+            dsm.setSourceName(row,nameItem->text().toStdString());
+        }
+    });
 }
 
 DataViewerWindow::~DataViewerWindow()
 {
     delete ui;
+}
+
+void
+DataViewerWindow::closeEvent(
+    QCloseEvent *event)
+{
+    if (maybeSave())
+    {
+        if (isProjectOpened())
+        {
+            saveProject();
+        }
+        else
+        {
+            saveProjectAs();
+        }
+    }
+    QApplication::closeAllWindows();
 }
 
 void
@@ -58,6 +112,41 @@ DataViewerWindow::loadProject(
 
     configureMenuActions();
     populateTopCompareTable();
+}
+
+void
+DataViewerWindow::saveProject()
+{
+    proj_.saveModifications(true);// true - unecessary save is ok
+}
+
+void
+DataViewerWindow::saveProjectAs()
+{
+    // default dialog's directory to user's home dir
+    QString suggestedDir = QDir::homePath();
+    if (isProjectOpened())
+    {
+        // open dialog to dir where existing project is located
+        suggestedDir = proj_.getSavePath().parent_path().c_str();
+    }
+
+    // open "Save As" dialog
+    std::string filepath = QFileDialog::getExistingDirectory(
+                this,
+                "Save Project As",
+                suggestedDir).toStdString();
+    if (filepath.empty())
+    {
+        // dialog was close without selecting a path
+        return;
+    }
+
+    if (proj_.saveModificationsAs(filepath))
+    {
+        configureMenuActions();
+        gpo::ProjectSettings::setMostRecentProject(filepath.c_str());
+    }
 }
 
 void
@@ -98,9 +187,8 @@ DataViewerWindow::populateRecentProjects()
 void
 DataViewerWindow::configureMenuActions()
 {
-    // TODO add these to the UI
-    // ui->actionSave_Project->setEnabled(isProjectOpened());
-    // ui->actionSave_Project_as->setEnabled(true);
+    ui->actionSave_Project->setEnabled(isProjectOpened());
+    ui->actionSave_Project_as->setEnabled(isProjectOpened());
     ui->actionLoad_Project->setEnabled(true);
 }
 
@@ -122,4 +210,19 @@ DataViewerWindow::populateTopCompareTable()
 
         topCompareTableModel_->appendRow(row);
     }
+}
+
+bool
+DataViewerWindow::maybeSave()
+{
+    if (proj_.hasSavableModifications())
+    {
+        auto msgBox = new QMessageBox(
+                    QMessageBox::Icon::Warning,
+                    "Unsaved Changes",
+                    "Your project has unsaved changes!\nDo you want to save before closing?",
+                    QMessageBox::Yes | QMessageBox::No);
+        return msgBox->exec() == QMessageBox::Yes;
+    }
+    return false;
 }

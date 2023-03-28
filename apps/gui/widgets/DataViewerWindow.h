@@ -5,6 +5,7 @@
 #include <QStandardItemModel>
 
 #include "GoProOverlay/data/RenderProject.h"
+#include "utils/QModifiableObjectObserver.h"
 
 namespace Ui {
 class DataViewerWindow;
@@ -15,12 +16,25 @@ class DataViewerWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit DataViewerWindow(QWidget *parent = nullptr);
+    explicit
+    DataViewerWindow(
+        QWidget *parent = nullptr);
+    
     ~DataViewerWindow();
+
+    void
+    closeEvent(
+        QCloseEvent *event) override;
 
     void
     loadProject(
         const std::string &projectDir);
+
+    void
+    saveProject();
+
+    void
+    saveProjectAs();
     
     void
     closeProject();
@@ -38,12 +52,16 @@ private:
     void
     populateTopCompareTable();
 
+    bool
+    maybeSave();
+
 private:
     Ui::DataViewerWindow *ui;
     QStandardItemModel *topCompareTableModel_;
     QStandardItemModel *sectorDetailsTableModel_;
 
     gpo::RenderProject proj_;
+    QModifiableObjectObserver projectObserver_;
 
 };
 
