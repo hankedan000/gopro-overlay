@@ -5,6 +5,7 @@
 #include <vector>
 #include <yaml-cpp/yaml.h>
 
+#include "ModifiableObject.h"
 #include "TelemetrySeeker.h"
 #include "TelemetrySource.h"
 #include "TrackDataObjects.h"
@@ -17,7 +18,7 @@ namespace gpo
 
 	using DataSourcePtr = std::shared_ptr<DataSource>;
 
-	class DataSource
+	class DataSource : public ModifiableObject
 	{
 	public:
 		DataSource();
@@ -195,6 +196,15 @@ namespace gpo
 			DataAvailableBitSet dataToTake,
 			const bool growVector);
 
+	protected:
+        bool
+        subclassApplyModifications(
+       		bool unnecessaryIsOkay) override;
+
+        bool
+        subclassSaveModifications(
+        	bool unnecessaryIsOkay) override;
+
 	public:
 		TelemetrySeekerPtr seeker;
 		TelemetrySourcePtr telemSrc;
@@ -224,10 +234,10 @@ namespace gpo
 
 	};
 
-	class DataSourceManager
+	class DataSourceManager : public ModifiableObject, public ModifiableObjectObserver
 	{
 	public:
-		DataSourceManager() = default;
+		DataSourceManager();
 
 		void
 		clear();
@@ -280,11 +290,25 @@ namespace gpo
 		decode(
 			const YAML::Node& node);
 
+	protected:
+        bool
+        subclassApplyModifications(
+       		bool unnecessaryIsOkay) override;
+
+        bool
+        subclassSaveModifications(
+        	bool unnecessaryIsOkay) override;
+
 	private:
 		bool
 		addVideoSourceWithName(
 			const std::string &filepath,
 			const std::string &name);
+
+        virtual
+        void
+        onModified(
+            ModifiableObject *modifiable) override;
 
 	private:
 		std::vector<DataSourcePtr> sources_ = {};

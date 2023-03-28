@@ -12,7 +12,8 @@
 namespace gpo
 {
 	DataSource::DataSource()
-	 : seeker(nullptr)
+	 : ModifiableObject("DataSource",false,true)
+	 , seeker(nullptr)
 	 , telemSrc(nullptr)
 	 , videoSrc(nullptr)
 	 , vCapture_()
@@ -634,6 +635,25 @@ namespace gpo
 		return mergedSamples;
 	}
 
+	bool
+	DataSource::subclassApplyModifications(
+        bool unnecessaryIsOkay)
+	{
+		return true;
+	}
+
+	bool
+	DataSource::subclassSaveModifications(
+        bool unnecessaryIsOkay)
+	{
+		return true;
+	}
+
+	DataSourceManager::DataSourceManager()
+	 : ModifiableObject("DataSourceManager", false, true)
+	{
+	}
+
 	void
 	DataSourceManager::clear()
 	{
@@ -669,7 +689,9 @@ namespace gpo
 		size_t idx,
 		const std::string &name)
 	{
-		sources_.at(idx)->sourceName_ = name;
+		auto &src = sources_.at(idx);
+		src->sourceName_ = name;
+		src->markObjectModified(false,true);
 	}
 
 	std::string
@@ -777,6 +799,25 @@ namespace gpo
 	}
 
 	bool
+	DataSourceManager::subclassApplyModifications(
+        bool unnecessaryIsOkay)
+	{
+		return true;
+	}
+
+	bool
+	DataSourceManager::subclassSaveModifications(
+        bool unnecessaryIsOkay)
+	{
+		for (auto &source : sources_)
+		{
+			source->saveModifications(unnecessaryIsOkay);
+		}
+		
+		return true;
+	}
+
+	bool
 	DataSourceManager::addVideoSourceWithName(
 		const std::string &filepath,
 		const std::string &name)
@@ -786,8 +827,18 @@ namespace gpo
 		{
 			dataSrc->sourceName_ = name;
 			sources_.push_back(dataSrc);
+			dataSrc->addObserver(this);
 		}
 		return dataSrc != nullptr;
+	}
+
+	void
+	DataSourceManager::onModified(
+		ModifiableObject *modifiable)
+	{
+		markObjectModified(
+			modifiable->hasApplyableModifications(),
+			modifiable->hasSavableModifications());
 	}
 
 }

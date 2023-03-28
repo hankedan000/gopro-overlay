@@ -24,6 +24,7 @@ namespace gpo
 	 , exportFilePath_("")
 	{
 		engine_->addObserver((ModifiableObjectObserver*)this);
+		dsm_.addObserver(this);
 	}
 
 	DataSourceManager &
@@ -373,6 +374,7 @@ namespace gpo
 		}
 
 		engine_->saveModifications(unnecessaryIsOkay);
+		dsm_.saveModifications(unnecessaryIsOkay);
 
 		return true;
 	}
@@ -419,6 +421,12 @@ namespace gpo
 				modifiable->hasSavableModifications());
 		}
 		else if (modifiable == static_cast<ModifiableObject *>(track_.get()))
+		{
+			markObjectModified(
+				modifiable->hasApplyableModifications(),
+				modifiable->hasSavableModifications());
+		}
+		else if (modifiable == &dsm_)
 		{
 			markObjectModified(
 				modifiable->hasApplyableModifications(),
