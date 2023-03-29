@@ -7,7 +7,12 @@
 
 #include "utils/ProjectSettings.h"
 
-const int SOURCE_NAME_COLUMN = 0;
+enum TopTableColumns
+{
+    eINCLUDE = 0,
+    eNAME = 1,
+    eLAP_TIME = 2
+};
 
 DataViewerWindow::DataViewerWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -58,10 +63,17 @@ DataViewerWindow::DataViewerWindow(QWidget *parent) :
         int row = topLeft.row();
         int col = topLeft.column();
         auto &dsm = proj_.dataSourceManager();
-        if (col == SOURCE_NAME_COLUMN)
+        QStandardItem *item = topCompareTableModel_->item(row,col);
+        if (col == TopTableColumns::eINCLUDE)
         {
-            QStandardItem *nameItem = topCompareTableModel_->item(row,col);
-            dsm.setSourceName(row,nameItem->text().toStdString());
+            ui->trackView->setSourceVisible(
+                row,
+                item->checkState() == Qt::CheckState::Checked,
+                true);// redraw now
+        }
+        else if (col == TopTableColumns::eNAME)
+        {
+            dsm.setSourceName(row,item->text().toStdString());
         }
     });
 }
@@ -105,7 +117,7 @@ DataViewerWindow::loadProject(
 
         // --------------------------
         // add all entities to the trackview
-        
+
         ui->trackView->setTrack(proj_.getTrack(), false);
 
         ui->trackView->clearSources(false);
@@ -213,6 +225,8 @@ DataViewerWindow::populateTopCompareTable()
 {
     topCompareTableModel_->clear();
 
+    QStringList headings = {"Include", "Name", "Lap Time"};
+
     const auto &dsm = proj_.dataSourceManager();
     for (size_t ss=0; ss<dsm.sourceCount(); ss++)
     {
@@ -220,12 +234,25 @@ DataViewerWindow::populateTopCompareTable()
 
         QList<QStandardItem *> row;
 
+        QStandardItem *includeItem = new QStandardItem;
+        includeItem->setCheckable(true);
+        includeItem->setCheckState(Qt::CheckState::Checked);
+        includeItem->setToolTip("toggle inclusion in data comparison");
+        row.append(includeItem);
+
         QStandardItem *nameItem = new QStandardItem;
         nameItem->setText(dSrc->getSourceName().c_str());
         row.append(nameItem);
 
+        QStandardItem *lapTimeItem = new QStandardItem;
+        lapTimeItem->setText("0.000");
+        lapTimeItem->setEditable(false);
+        row.append(lapTimeItem);
+
         topCompareTableModel_->appendRow(row);
     }
+
+    topCompareTableModel_->setHorizontalHeaderLabels(headings);
 }
 
 bool
