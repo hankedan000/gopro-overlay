@@ -58,9 +58,12 @@ TrackView::paintEvent(
 
     drawTrackPath(painter,track_);
 
-    for (const auto &source : sources_)
+    for (const auto &srcObjs : sources_)
     {
-        drawTelemetryPath(painter,source);
+        if (srcObjs.visible)
+        {
+            drawTelemetryPath(painter, srcObjs.telemSrc);
+        }
     }
 
     // draw start/finish gates
@@ -298,15 +301,18 @@ TrackView::addSource(
     bool redraw)
 {
 	// prevent telemSrc from being added again
-	for (const auto &mSource : sources_)
+	for (const auto &srcObjs : sources_)
 	{
-		if (mSource.get() == telemSrc.get())
+		if (srcObjs.telemSrc.get() == telemSrc.get())
 		{
 			return;
 		}
 	}
 
-    sources_.push_back(telemSrc);
+    SourceObjects newSrcObjs;
+    newSrcObjs.telemSrc = telemSrc;
+    newSrcObjs.visible = true;
+    sources_.push_back(newSrcObjs);
 
     if (redraw)
     {
@@ -318,7 +324,7 @@ const gpo::TelemetrySourcePtr &
 TrackView::getSource(
     size_t idx) const
 {
-    return sources_.at(idx);
+    return sources_.at(idx).telemSrc;
 }
 
 void
@@ -328,7 +334,7 @@ TrackView::removeSource(
 {
 	for (size_t i=0; i<numSources();)
 	{
-		if (sources_.at(i) == telemSrc)
+		if (sources_.at(i).telemSrc.get() == telemSrc.get())
 		{
 			removeSource(i,redraw);
 		}
@@ -399,6 +405,20 @@ TrackView::fitTrackToView(
         // track is wider than it is tall
         pxPerDeg_ = (width() - PX_MARGIN * 2) / deltaLon;
     }
+
+    if (redraw)
+    {
+        update();
+    }
+}
+
+void
+TrackView::setSourceVisible(
+    size_t sourceIdx,
+    bool visible,
+    bool redraw)
+{
+    sources_.at(sourceIdx).visible = visible;
 
     if (redraw)
     {

@@ -28,6 +28,14 @@ public:
     // user should return true in filter callback to accept the path.
     using PlacementFilter = std::function<bool (size_t /*pathIdx*/)>;
 
+private:
+	struct SourceObjects
+	{
+        gpo::TelemetrySourcePtr telemSrc;
+
+        bool visible;
+    };
+
 public:
     explicit TrackView(QWidget *parent = nullptr);
     ~TrackView();
@@ -89,6 +97,12 @@ public:
 
     void
     fitTrackToView(
+        bool redraw = true);
+
+    void
+    setSourceVisible(
+        size_t sourceIdx,
+        bool visible,
         bool redraw = true);
 
     void
@@ -187,7 +201,7 @@ private:
     double pxPerDeg_;
     gpo::Track *track_;
 
-    std::vector<gpo::TelemetrySourcePtr> sources_;
+    std::vector<SourceObjects> sources_;
 
     struct MouseLocationInfo
     {
