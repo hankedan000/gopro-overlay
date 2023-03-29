@@ -58,7 +58,34 @@ public:
 
     void
     setTrack(
-            gpo::Track *track);
+            gpo::Track *track,
+            bool redraw = true);
+
+	void
+	addSource(
+		gpo::TelemetrySourcePtr telemSrc,
+		bool redraw = true);
+
+	const gpo::TelemetrySourcePtr &
+	getSource(
+		size_t idx) const;
+
+	void
+	removeSource(
+		gpo::TelemetrySourcePtr telemSrc,
+		bool redraw = true);
+
+	void
+	removeSource(
+		size_t idx,
+		bool redraw = true);
+
+	void
+	clearSources(
+		bool redraw = true);
+
+	size_t
+	numSources() const;
 
     void
     fitTrackToView(
@@ -113,6 +140,11 @@ private:
     drawTrackPath(
             QPainter &painter,
             const gpo::Track *track);
+    
+    void
+    drawTelemetryPath(
+            QPainter &painter,
+            const gpo::TelemetrySourcePtr &telemSrc);
 
     void
     drawDetectionGate(
@@ -154,6 +186,8 @@ private:
     cv::Vec2d trackLR_coord_;
     double pxPerDeg_;
     gpo::Track *track_;
+
+    std::vector<gpo::TelemetrySourcePtr> sources_;
 
     struct MouseLocationInfo
     {
