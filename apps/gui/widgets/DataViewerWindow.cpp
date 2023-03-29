@@ -103,7 +103,23 @@ DataViewerWindow::loadProject(
         gpo::ProjectSettings::setMostRecentProject(projectDir.c_str());
         populateRecentProjects();
 
-        ui->trackView->setTrack(proj_.getTrack());
+        // --------------------------
+        // add all entities to the trackview
+        
+        ui->trackView->setTrack(proj_.getTrack(), false);
+
+        ui->trackView->clearSources(false);
+        auto &dsm = proj_.dataSourceManager();
+        for (size_t ss=0; ss<dsm.sourceCount(); ss++)
+        {
+            const auto &source = dsm.getSource(ss);
+            if (source->hasTelemetry())
+            {
+                ui->trackView->addSource(source->telemSrc, false);
+            }
+        }
+
+        ui->trackView->update();// redraw
     }
     else
     {
