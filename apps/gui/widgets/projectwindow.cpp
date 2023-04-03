@@ -485,7 +485,7 @@ void
 ProjectWindow::configureMenuActions()
 {
     ui->actionSave_Project->setEnabled(isProjectOpened());
-    ui->actionSave_Project_as->setEnabled(isProjectOpened());
+    ui->actionSave_Project_as->setEnabled(true);
     ui->actionLoad_Project->setEnabled(true);
 }
 
