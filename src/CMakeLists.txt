@@ -25,7 +25,9 @@ add_library("${LIBNAME}" STATIC
 	"${CMAKE_CURRENT_SOURCE_DIR}/utils/DataProcessingUtils.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/utils/LineSegmentUtils.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/utils/OpenCV_Utils.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/utils/io/CSV_Utils.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/utils/io/csv/gpo.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/utils/io/csv/msq.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/utils/io/csv/solostorm.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/utils/misc/MiscUtils.cpp"
 	
 	# MOC needs to know where this... grumble grumble

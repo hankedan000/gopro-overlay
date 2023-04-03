@@ -6,7 +6,7 @@
 #include <GoProTelem/GoProTelem.h>
 #include <GoProTelem/SampleMath.h>
 #include <GoProOverlay/utils/DataProcessingUtils.h>
-#include <GoProOverlay/utils/io/CSV_Utils.h>
+#include <GoProOverlay/utils/io/csv.h>
 
 namespace gpo
 {
@@ -380,6 +380,25 @@ namespace gpo
 			sampOut.t_offset = ecuSamp.t_offset;
 			sampOut.ecuSamp = ecuSamp.sample;
 		}
+
+		newSrc->seeker = std::make_shared<TelemetrySeeker>(newSrc);
+		newSrc->telemSrc = std::make_shared<TelemetrySource>(newSrc);
+
+		return newSrc;
+	}
+
+	DataSourcePtr
+	DataSource::loadDataFromSoloStormCSV(
+		const std::filesystem::path &csvFile)
+	{
+		auto newSrc = std::make_shared<DataSource>();
+		newSrc->originFile_ = csvFile;
+		newSrc->sourceName_ = csvFile.filename();
+		newSrc->samples_ = std::make_shared<TelemetrySamples>();
+		utils::io::readTelemetryFromSoloStormCSV(
+			csvFile,
+			newSrc->samples_,
+			newSrc->dataAvail_);
 
 		newSrc->seeker = std::make_shared<TelemetrySeeker>(newSrc);
 		newSrc->telemSrc = std::make_shared<TelemetrySource>(newSrc);

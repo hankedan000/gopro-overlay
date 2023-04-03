@@ -120,6 +120,11 @@ namespace gpo
 
 		static
 		DataSourcePtr
+		loadDataFromSoloStormCSV(
+			const std::filesystem::path &csvFile);
+
+		static
+		DataSourcePtr
 		loadTelemetryFromCSV(
 			const std::filesystem::path &csvFile);
 

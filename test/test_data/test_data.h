@@ -10,4 +10,9 @@ namespace test_data
     {
         static const char *MS2E_AUTOCROSS = TEST_DATA_ROOT "/ecu_logs/msq/ms2e_autocross.msl";
     }
+
+    namespace solostorm
+    {
+        static const char *AUTOCROSS = TEST_DATA_ROOT "/solostorm/20230312_solostorm.csv";
+    }
 }
