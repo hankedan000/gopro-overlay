@@ -643,35 +643,35 @@ namespace gpo
 			bitToTake = eDA_TRACK_ON_TRACK_LATLON;
 			if (bitset_is_set(dataToTake, bitToTake))
 			{
-				dstSamp.trackData.onTrackLL = srcSamp.trackData.onTrackLL;
+				dstSamp.calcSamp.onTrackLL = srcSamp.calcSamp.onTrackLL;
 				bitset_set_bit(dataAvail_, bitToTake);
 				bitset_clr_bit(dataToTake, bitToTake);
 			}
 			bitToTake = eDA_TRACK_LAP;
 			if (bitset_is_set(dataToTake, bitToTake))
 			{
-				dstSamp.trackData.lap = srcSamp.trackData.lap;
+				dstSamp.calcSamp.lap = srcSamp.calcSamp.lap;
 				bitset_set_bit(dataAvail_, bitToTake);
 				bitset_clr_bit(dataToTake, bitToTake);
 			}
 			bitToTake = eDA_TRACK_LAP_TIME_OFFSET;
 			if (bitset_is_set(dataToTake, bitToTake))
 			{
-				dstSamp.trackData.lapTimeOffset = srcSamp.trackData.lapTimeOffset;
+				dstSamp.calcSamp.lapTimeOffset = srcSamp.calcSamp.lapTimeOffset;
 				bitset_set_bit(dataAvail_, bitToTake);
 				bitset_clr_bit(dataToTake, bitToTake);
 			}
 			bitToTake = eDA_TRACK_SECTOR;
 			if (bitset_is_set(dataToTake, bitToTake))
 			{
-				dstSamp.trackData.sector = srcSamp.trackData.sector;
+				dstSamp.calcSamp.sector = srcSamp.calcSamp.sector;
 				bitset_set_bit(dataAvail_, bitToTake);
 				bitset_clr_bit(dataToTake, bitToTake);
 			}
 			bitToTake = eDA_TRACK_SECTOR_TIME_OFFSET;
 			if (bitset_is_set(dataToTake, bitToTake))
 			{
-				dstSamp.trackData.sectorTimeOffset = srcSamp.trackData.sectorTimeOffset;
+				dstSamp.calcSamp.sectorTimeOffset = srcSamp.calcSamp.sectorTimeOffset;
 				bitset_set_bit(dataAvail_, bitToTake);
 				bitset_clr_bit(dataToTake, bitToTake);
 			}

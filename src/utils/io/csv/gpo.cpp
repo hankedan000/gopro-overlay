@@ -33,12 +33,12 @@ namespace io
 	static constexpr CSV_ColumnParser CSVPARSER_ECU_TPS = MAKE_PARSER(gpo::TelemetrySample, ecuSamp.tps, "tps");
 	static constexpr CSV_ColumnParser CSVPARSER_ECU_BOOST = MAKE_PARSER(gpo::TelemetrySample, ecuSamp.boost_psi, "boost");
 
-	static constexpr CSV_ColumnParser CSVPARSER_TRACK_ON_TRACK_LAT = MAKE_PARSER(gpo::TelemetrySample, trackData.onTrackLL.lat, "onTrackLL_lat");
-	static constexpr CSV_ColumnParser CSVPARSER_TRACK_ON_TRACK_LON = MAKE_PARSER(gpo::TelemetrySample, trackData.onTrackLL.lon, "onTrackLL_lon");
-	static constexpr CSV_ColumnParser CSVPARSER_TRACK_LAP = MAKE_PARSER(gpo::TelemetrySample, trackData.lap, "lap");
-	static constexpr CSV_ColumnParser CSVPARSER_TRACK_LAP_TIME_OFFSET = MAKE_PARSER(gpo::TelemetrySample, trackData.lapTimeOffset, "lapTimeOffset");
-	static constexpr CSV_ColumnParser CSVPARSER_TRACK_SECTOR = MAKE_PARSER(gpo::TelemetrySample, trackData.sector, "sector");
-	static constexpr CSV_ColumnParser CSVPARSER_TRACK_SECTOR_TIME_OFFSET = MAKE_PARSER(gpo::TelemetrySample, trackData.sectorTimeOffset, "sectorTimeOffset");
+	static constexpr CSV_ColumnParser CSVPARSER_CALC_ON_TRACK_LAT = MAKE_PARSER(gpo::TelemetrySample, calcSamp.onTrackLL.lat, "onTrackLL_lat");
+	static constexpr CSV_ColumnParser CSVPARSER_CALC_ON_TRACK_LON = MAKE_PARSER(gpo::TelemetrySample, calcSamp.onTrackLL.lon, "onTrackLL_lon");
+	static constexpr CSV_ColumnParser CSVPARSER_CALC_LAP = MAKE_PARSER(gpo::TelemetrySample, calcSamp.lap, "lap");
+	static constexpr CSV_ColumnParser CSVPARSER_CALC_LAP_TIME_OFFSET = MAKE_PARSER(gpo::TelemetrySample, calcSamp.lapTimeOffset, "lapTimeOffset");
+	static constexpr CSV_ColumnParser CSVPARSER_CALC_SECTOR = MAKE_PARSER(gpo::TelemetrySample, calcSamp.sector, "sector");
+	static constexpr CSV_ColumnParser CSVPARSER_CALC_SECTOR_TIME_OFFSET = MAKE_PARSER(gpo::TelemetrySample, calcSamp.sectorTimeOffset, "sectorTimeOffset");
 
 	bool
     writeTelemetryToCSV(
@@ -120,24 +120,24 @@ namespace io
 		// -----------------------------
 		if (bitset_is_set(avail, gpo::eDA_TRACK_ON_TRACK_LATLON))
 		{
-			columns.push_back(CSVPARSER_TRACK_ON_TRACK_LAT);
-			columns.push_back(CSVPARSER_TRACK_ON_TRACK_LON);
+			columns.push_back(CSVPARSER_CALC_ON_TRACK_LAT);
+			columns.push_back(CSVPARSER_CALC_ON_TRACK_LON);
 		}
 		if (bitset_is_set(avail, gpo::eDA_TRACK_LAP))
 		{
-			columns.push_back(CSVPARSER_TRACK_LAP);
+			columns.push_back(CSVPARSER_CALC_LAP);
 		}
 		if (bitset_is_set(avail, gpo::eDA_TRACK_LAP_TIME_OFFSET))
 		{
-			columns.push_back(CSVPARSER_TRACK_LAP_TIME_OFFSET);
+			columns.push_back(CSVPARSER_CALC_LAP_TIME_OFFSET);
 		}
 		if (bitset_is_set(avail, gpo::eDA_TRACK_SECTOR))
 		{
-			columns.push_back(CSVPARSER_TRACK_SECTOR);
+			columns.push_back(CSVPARSER_CALC_SECTOR);
 		}
 		if (bitset_is_set(avail, gpo::eDA_TRACK_SECTOR_TIME_OFFSET))
 		{
-			columns.push_back(CSVPARSER_TRACK_SECTOR_TIME_OFFSET);
+			columns.push_back(CSVPARSER_CALC_SECTOR_TIME_OFFSET);
 		}
 
 		std::vector<std::string> headings;
@@ -308,34 +308,34 @@ namespace io
 			// ----------------------
 			// TrackData telemetry
 			// ----------------------
-			else if (colName == CSVPARSER_TRACK_ON_TRACK_LAT.columnTitle)
+			else if (colName == CSVPARSER_CALC_ON_TRACK_LAT.columnTitle)
 			{
-				columns.push_back(CSVPARSER_TRACK_ON_TRACK_LAT);
+				columns.push_back(CSVPARSER_CALC_ON_TRACK_LAT);
 				bitset_set_bit(avail, gpo::eDA_TRACK_ON_TRACK_LATLON);
 			}
-			else if (colName == CSVPARSER_TRACK_ON_TRACK_LON.columnTitle)
+			else if (colName == CSVPARSER_CALC_ON_TRACK_LON.columnTitle)
 			{
-				columns.push_back(CSVPARSER_TRACK_ON_TRACK_LON);
+				columns.push_back(CSVPARSER_CALC_ON_TRACK_LON);
 				bitset_set_bit(avail, gpo::eDA_TRACK_ON_TRACK_LATLON);
 			}
-			else if (colName == CSVPARSER_TRACK_LAP.columnTitle)
+			else if (colName == CSVPARSER_CALC_LAP.columnTitle)
 			{
-				columns.push_back(CSVPARSER_TRACK_LAP);
+				columns.push_back(CSVPARSER_CALC_LAP);
 				bitset_set_bit(avail, gpo::eDA_TRACK_LAP);
 			}
-			else if (colName == CSVPARSER_TRACK_LAP_TIME_OFFSET.columnTitle)
+			else if (colName == CSVPARSER_CALC_LAP_TIME_OFFSET.columnTitle)
 			{
-				columns.push_back(CSVPARSER_TRACK_LAP_TIME_OFFSET);
+				columns.push_back(CSVPARSER_CALC_LAP_TIME_OFFSET);
 				bitset_set_bit(avail, gpo::eDA_TRACK_LAP_TIME_OFFSET);
 			}
-			else if (colName == CSVPARSER_TRACK_SECTOR.columnTitle)
+			else if (colName == CSVPARSER_CALC_SECTOR.columnTitle)
 			{
-				columns.push_back(CSVPARSER_TRACK_SECTOR);
+				columns.push_back(CSVPARSER_CALC_SECTOR);
 				bitset_set_bit(avail, gpo::eDA_TRACK_SECTOR);
 			}
-			else if (colName == CSVPARSER_TRACK_SECTOR_TIME_OFFSET.columnTitle)
+			else if (colName == CSVPARSER_CALC_SECTOR_TIME_OFFSET.columnTitle)
 			{
-				columns.push_back(CSVPARSER_TRACK_SECTOR_TIME_OFFSET);
+				columns.push_back(CSVPARSER_CALC_SECTOR_TIME_OFFSET);
 				bitset_set_bit(avail, gpo::eDA_TRACK_SECTOR_TIME_OFFSET);
 			}
 			else

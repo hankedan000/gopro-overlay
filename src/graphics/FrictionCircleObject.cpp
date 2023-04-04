@@ -111,16 +111,16 @@ namespace gpo
 			bool isLast = i == telemSrc->seekedIdx();
 			auto color = (isLast ? currentDotColor_ : tailColor_);
 			int dotRadius = (isLast ? 20 : 6);
-			const auto &accl = telemSrc->at(i).gpSamp.accl;
+			const auto &vehiAccl = telemSrc->at(i).calcSamp.vehiAccl;
 
 			auto drawPoint = cv::Point(
-				(accl.x / 9.8) * radius_px_ + center_.x,
-				(accl.y / -9.8) * radius_px_ + center_.y);
+				vehiAccl.lat_g * radius_px_ + center_.x,
+				vehiAccl.lon_g * radius_px_ + center_.y);
 			cv::circle(outImg_,drawPoint,dotRadius,color,cv::FILLED);
 
 			if (isLast)
 			{
-				double netG = std::sqrt((accl.x*accl.x) + (accl.y*accl.y)) / 9.8;
+				double netG = std::sqrt((vehiAccl.lat_g*vehiAccl.lat_g) + (vehiAccl.lon_g*vehiAccl.lon_g));
 				char tmpStr[1024];
 				sprintf(tmpStr,"%.1fg",netG);
 				cv::putText(

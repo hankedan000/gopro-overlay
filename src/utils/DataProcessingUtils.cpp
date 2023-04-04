@@ -6,6 +6,8 @@
 
 namespace utils
 {
+
+	double GRAVITY = 9.80665;
 	
 	bool
 	computeTrackTimes(
@@ -57,18 +59,25 @@ namespace utils
 		for (size_t ii=0; ii<tSamps->size(); ii++)
 		{
 			auto &samp = tSamps->at(ii);
-			auto &trackData = samp.trackData;
+			auto &calcSamp = samp.calcSamp;
 			cv::Vec2d currCoord(samp.gpSamp.gps.coord.lat,samp.gpSamp.gps.coord.lon);
 			auto findRes = track->findClosestPointWithIdx(
 						currCoord,
 						onTrackFindInitialIdx,
 						onTrackFindWindow);
 			const auto &foundCoord = std::get<1>(findRes);
-			trackData.onTrackLL.lat = foundCoord[0];
-			trackData.onTrackLL.lon = foundCoord[1];
+			calcSamp.onTrackLL.lat = foundCoord[0];
+			calcSamp.onTrackLL.lon = foundCoord[1];
 			bitset_set_bit(avail, gpo::eDA_TRACK_ON_TRACK_LATLON);
 			onTrackFindInitialIdx = std::get<2>(findRes);
 			onTrackFindWindow = {5,100};// reduce search space once we've found initial location
+
+			// ---------------------
+			// compute vehicle g-forces
+			calcSamp.vehiAccl.lat_g = samp.gpSamp.accl.x / GRAVITY;
+			calcSamp.vehiAccl.lon_g = samp.gpSamp.accl.y / -GRAVITY;
+
+			// ---------------------
 
 			// see if we crossed 'gate'. if so, then move to the next logical gate in the 'trackObjs'
 			// list. we check these in a loop because sectors can have gates that are back-to-back,
@@ -173,15 +182,15 @@ namespace utils
 			while (movedToNextObject && numMoves < (totalGatesInTrack - 1));
 
 			// update telemetry sample
-			trackData.lap = currLap;
-			trackData.lapTimeOffset = (currLap == -1 ? 0.0 : samp.t_offset - lapStartTimeOffset);
+			calcSamp.lap = currLap;
+			calcSamp.lapTimeOffset = (currLap == -1 ? 0.0 : samp.t_offset - lapStartTimeOffset);
 			if (currLap != -1)
 			{
 				bitset_set_bit(avail, gpo::eDA_TRACK_LAP);
 				bitset_set_bit(avail, gpo::eDA_TRACK_LAP_TIME_OFFSET);
 			}
-			trackData.sector = currSector;
-			trackData.sectorTimeOffset = (currSector == -1 ? 0.0 : samp.t_offset - sectorStartTimeOffset);
+			calcSamp.sector = currSector;
+			calcSamp.sectorTimeOffset = (currSector == -1 ? 0.0 : samp.t_offset - sectorStartTimeOffset);
 			if (currSector != -1)
 			{
 				bitset_set_bit(avail, gpo::eDA_TRACK_SECTOR);
@@ -238,10 +247,10 @@ namespace utils
 		// lerp(out.gpSamp, a.gpSamp, b.gpSamp, ratio);
 		lerp(out.ecuSamp, a.ecuSamp, b.ecuSamp, ratio);
 		// FIELD_LERP(out,a,b,ratio,onTrackLL);
-		FIELD_LERP_ROUNDED(out,a,b,ratio,trackData.lap);
-		FIELD_LERP(out,a,b,ratio,trackData.lapTimeOffset);
-		FIELD_LERP_ROUNDED(out,a,b,ratio,trackData.sector);
-		FIELD_LERP(out,a,b,ratio,trackData.sectorTimeOffset);
+		FIELD_LERP_ROUNDED(out,a,b,ratio,calcSamp.lap);
+		FIELD_LERP(out,a,b,ratio,calcSamp.lapTimeOffset);
+		FIELD_LERP_ROUNDED(out,a,b,ratio,calcSamp.sector);
+		FIELD_LERP(out,a,b,ratio,calcSamp.sectorTimeOffset);
 	}
 
 	void

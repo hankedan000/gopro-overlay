@@ -225,7 +225,7 @@ namespace gpo
 		auto dataSrcPtr = dataSrc_.lock();
 		for (size_t i=0; i<size(); i++)
 		{
-			const auto &trackData = dataSrcPtr->samples_->at(i).trackData;
+			const auto &trackData = dataSrcPtr->samples_->at(i).calcSamp;
 			if (prevSampLap == -1 && trackData.lap > 0)
 			{
 				// entered a lap

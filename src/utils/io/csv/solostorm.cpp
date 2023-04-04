@@ -21,12 +21,12 @@ namespace io
 	static constexpr CSV_ColumnParser CSVPARSER_SSTORM_ECU_ENGINE_SPEED = MAKE_PARSER(gpo::TelemetrySample, ecuSamp.engineSpeed_rpm, "RPM");
 	static constexpr CSV_ColumnParser CSVPARSER_SSTORM_ECU_TPS = MAKE_PARSER(gpo::TelemetrySample, ecuSamp.tps, "THROTTLE (%)");
 
-	static constexpr CSV_ColumnParser CSVPARSER_SSTORM_TRACK_ON_TRACK_LAT = MAKE_PARSER(gpo::TelemetrySample, trackData.onTrackLL.lat, "MATH_GRID_X");
-	static constexpr CSV_ColumnParser CSVPARSER_SSTORM_TRACK_ON_TRACK_LON = MAKE_PARSER(gpo::TelemetrySample, trackData.onTrackLL.lon, "MATH_GRID_Y");
-	static constexpr CSV_ColumnParser CSVPARSER_SSTORM_TRACK_LAP = MAKE_PARSER(gpo::TelemetrySample, trackData.lap, "MATH_LAP_NUMBER");
-	static constexpr CSV_ColumnParser CSVPARSER_SSTORM_TRACK_LAP_TIME_OFFSET = MAKE_PARSER(gpo::TelemetrySample, trackData.lapTimeOffset, "MATH_LAP_ELAPSED_TIME");
-	static constexpr CSV_ColumnParser CSVPARSER_SSTORM_TRACK_SECTOR = MAKE_PARSER(gpo::TelemetrySample, trackData.sector, "MATH_SECTOR_NUMBER");
-	static constexpr CSV_ColumnParser CSVPARSER_SSTORM_TRACK_SECTOR_TIME_OFFSET = MAKE_PARSER(gpo::TelemetrySample, trackData.sectorTimeOffset, "MATH_SECTOR_ELAPSED_TIME");
+	static constexpr CSV_ColumnParser CSVPARSER_SSTORM_CALC_ON_TRACK_LAT = MAKE_PARSER(gpo::TelemetrySample, calcSamp.onTrackLL.lat, "MATH_GRID_X");
+	static constexpr CSV_ColumnParser CSVPARSER_SSTORM_CALC_ON_TRACK_LON = MAKE_PARSER(gpo::TelemetrySample, calcSamp.onTrackLL.lon, "MATH_GRID_Y");
+	static constexpr CSV_ColumnParser CSVPARSER_SSTORM_CALC_LAP = MAKE_PARSER(gpo::TelemetrySample, calcSamp.lap, "MATH_LAP_NUMBER");
+	static constexpr CSV_ColumnParser CSVPARSER_SSTORM_CALC_LAP_TIME_OFFSET = MAKE_PARSER(gpo::TelemetrySample, calcSamp.lapTimeOffset, "MATH_LAP_ELAPSED_TIME");
+	static constexpr CSV_ColumnParser CSVPARSER_SSTORM_CALC_SECTOR = MAKE_PARSER(gpo::TelemetrySample, calcSamp.sector, "MATH_SECTOR_NUMBER");
+	static constexpr CSV_ColumnParser CSVPARSER_SSTORM_CALC_SECTOR_TIME_OFFSET = MAKE_PARSER(gpo::TelemetrySample, calcSamp.sectorTimeOffset, "MATH_SECTOR_ELAPSED_TIME");
 
 	bool
     readTelemetryFromSoloStormCSV(
@@ -102,34 +102,34 @@ namespace io
 			// ----------------------
 			// TrackData telemetry
 			// ----------------------
-			else if (colName == CSVPARSER_SSTORM_TRACK_ON_TRACK_LAT.columnTitle)
+			else if (colName == CSVPARSER_SSTORM_CALC_ON_TRACK_LAT.columnTitle)
 			{
-				columns.push_back(CSVPARSER_SSTORM_TRACK_ON_TRACK_LAT);
+				columns.push_back(CSVPARSER_SSTORM_CALC_ON_TRACK_LAT);
 				bitset_set_bit(avail, gpo::eDA_TRACK_ON_TRACK_LATLON);
 			}
-			else if (colName == CSVPARSER_SSTORM_TRACK_ON_TRACK_LON.columnTitle)
+			else if (colName == CSVPARSER_SSTORM_CALC_ON_TRACK_LON.columnTitle)
 			{
-				columns.push_back(CSVPARSER_SSTORM_TRACK_ON_TRACK_LON);
+				columns.push_back(CSVPARSER_SSTORM_CALC_ON_TRACK_LON);
 				bitset_set_bit(avail, gpo::eDA_TRACK_ON_TRACK_LATLON);
 			}
-			else if (colName == CSVPARSER_SSTORM_TRACK_LAP.columnTitle)
+			else if (colName == CSVPARSER_SSTORM_CALC_LAP.columnTitle)
 			{
-				columns.push_back(CSVPARSER_SSTORM_TRACK_LAP);
+				columns.push_back(CSVPARSER_SSTORM_CALC_LAP);
 				bitset_set_bit(avail, gpo::eDA_TRACK_LAP);
 			}
-			else if (colName == CSVPARSER_SSTORM_TRACK_LAP_TIME_OFFSET.columnTitle)
+			else if (colName == CSVPARSER_SSTORM_CALC_LAP_TIME_OFFSET.columnTitle)
 			{
-				columns.push_back(CSVPARSER_SSTORM_TRACK_LAP_TIME_OFFSET);
+				columns.push_back(CSVPARSER_SSTORM_CALC_LAP_TIME_OFFSET);
 				bitset_set_bit(avail, gpo::eDA_TRACK_LAP_TIME_OFFSET);
 			}
-			else if (colName == CSVPARSER_SSTORM_TRACK_SECTOR.columnTitle)
+			else if (colName == CSVPARSER_SSTORM_CALC_SECTOR.columnTitle)
 			{
-				columns.push_back(CSVPARSER_SSTORM_TRACK_SECTOR);
+				columns.push_back(CSVPARSER_SSTORM_CALC_SECTOR);
 				bitset_set_bit(avail, gpo::eDA_TRACK_SECTOR);
 			}
-			else if (colName == CSVPARSER_SSTORM_TRACK_SECTOR_TIME_OFFSET.columnTitle)
+			else if (colName == CSVPARSER_SSTORM_CALC_SECTOR_TIME_OFFSET.columnTitle)
 			{
-				columns.push_back(CSVPARSER_SSTORM_TRACK_SECTOR_TIME_OFFSET);
+				columns.push_back(CSVPARSER_SSTORM_CALC_SECTOR_TIME_OFFSET);
 				bitset_set_bit(avail, gpo::eDA_TRACK_SECTOR_TIME_OFFSET);
 			}
 			else

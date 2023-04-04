@@ -57,7 +57,19 @@ namespace gpo
 		double t_offset;
 	};
 
-	struct TrackData
+	struct VehicleAccl
+	{
+		// lateral g-forces (turning) experienced by vehicle. (+) is to vehicle's
+		// right side when facing natural direction of motion. Does not include
+		// acceleration due to gravity.
+		float lat_g;
+
+		// longitudinal g-forces (braking/accelerating) experienced by vehicle.
+		// (+) is facing natural direction of motion.
+		float lon_g;
+	};
+
+	struct CalcSample
 	{
 		// corrected location of vehicle on the track.
 		// currently uses a simple nearest distance algorithm based on where the
@@ -79,6 +91,9 @@ namespace gpo
 		// if within a sector (sector != -1), this value represents the time offset
 		// from when we croseed the sector's entry gate
 		double sectorTimeOffset;
+
+		// lateral & longitudinal g-forces experienced by the vehicle
+		VehicleAccl vehiAccl;
 	};
 
 	struct TelemetrySample
@@ -89,7 +104,7 @@ namespace gpo
 
 		ECU_Sample ecuSamp;
 
-		TrackData trackData;
+		CalcSample calcSamp;
 	};
 
 	static_assert(std::is_standard_layout<TelemetrySample>::value && std::is_trivial<TelemetrySample>::value, "TelemetrySample must be a POD type");
