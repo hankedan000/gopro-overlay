@@ -6,8 +6,168 @@
 
 namespace utils
 {
+	
+	float
+	magnitude(
+		const cv::Vec3f &v)
+	{
+		return std::sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+	}
+	
+	cv::Vec3f
+	normalize(
+		const cv::Vec3f &v)
+	{
+		float m = magnitude(v);
+		cv::Vec3f norm;
+		norm[0] = v[0] / m;
+		norm[1] = v[1] / m;
+		norm[2] = v[2] / m;
+		return norm;
+	}
 
-	double GRAVITY = 9.80665;
+	float
+	dot(
+		const cv::Vec3f &a,
+		const cv::Vec3f &b)
+	{
+		return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+	}
+	
+	cv::Vec3f
+	projection(
+		const cv::Vec3f &vec,
+		const cv::Vec3f &vecOnto)
+	{
+		// projection is equal to
+		// u = dot(a, norm(b)) * norm(b)
+		float d = dot(vec,vecOnto);
+		cv::Vec3f prj;
+		prj[0] = d * vecOnto[0];
+		prj[1] = d * vecOnto[1];
+		prj[2] = d * vecOnto[2];
+		return prj;
+	}
+
+	bool
+	computeVehicleDirectionVectors(
+		gpo::TelemetrySamplesPtr tSamps,
+		const gpo::DataAvailableBitSet &avail,
+		cv::Vec3f &latDir,
+		cv::Vec3f &lonDir)
+	{
+		if (tSamps->empty())
+		{
+			return false;
+		}
+
+		// default init
+		latDir[Vec3::x] = +0.0;
+		latDir[Vec3::y] = +0.0;
+		latDir[Vec3::z] = +0.0;
+		lonDir[Vec3::x] = +0.0;
+		lonDir[Vec3::y] = +0.0;
+		lonDir[Vec3::z] = +0.0;
+
+		// Assume camera is always recording toward the vehicle's direction of motion
+		// TODO if we wanted to improve this, we could detect when the vehicle's GPS
+		// speed is increasing while there is no gyroscopic motion (acceleration in
+		// a straight line). The direction of the average acceleration vector would
+		// tell you the vehicle's longitudinal direction.
+		lonDir[Vec3::y] = -1.0;
+
+		if (bitset_is_set(avail, gpo::DataAvailable::eDA_GOPRO_GRAV))
+		{
+			// base lateral direction vectors on direction of gravity
+			// and our assumption on the vehicle's longitudinal direction.
+			const auto &grav0 = tSamps->at(0).gpSamp.grav;
+			const float G_THRESHOLD = 0.5;// half G
+			if (grav0.x > G_THRESHOLD)
+			{
+				latDir[Vec3::z] = -1.0;
+			}
+			else if (grav0.x < -G_THRESHOLD)
+			{
+				latDir[Vec3::z] = +1.0;
+			}
+			else if (grav0.z > G_THRESHOLD)
+			{
+				latDir[Vec3::x] = +1.0;
+			}
+			else if (grav0.z < -G_THRESHOLD)
+			{
+				latDir[Vec3::x] = -1.0;
+			}
+			else
+			{
+				spdlog::warn("lateral direction vector is indeterminate based on gravity");
+				latDir[Vec3::x] = -1.0;
+			}
+		}
+		else
+		{
+			spdlog::warn("using default lateral direction vectors");
+			latDir[Vec3::x] = -1.0;
+		}
+
+		return true;
+	}
+
+	bool
+	computeVehicleAcceleration(
+		gpo::TelemetrySamplesPtr tSamps,
+		gpo::DataAvailableBitSet &avail,
+		const cv::Vec3f &latDir,
+		const cv::Vec3f &lonDir)
+	{
+		// FIXME set data available bits for computed vehicle direction
+		const cv::Vec3f latDirNorm = normalize(latDir);
+		const cv::Vec3f lonDirNorm = normalize(lonDir);
+
+		// find non-zero component of lateral & longidtudinal direction vectors.
+		// we'll use these later when projecting the net accerlation vector onto
+		// the lateral & longitudinal direction vectors.
+		size_t iiLat = 0;
+		size_t iiLon = 0;
+		for (size_t ii=0; ii<3; ii++)
+		{
+			if (latDirNorm[ii] != 0.0)
+			{
+				iiLat = ii;
+			}
+			if (lonDirNorm[ii] != 0.0)
+			{
+				iiLon = ii;
+			}
+		}
+
+		for (size_t ii=0; ii<tSamps->size(); ii++)
+		{
+			auto &samp = tSamps->at(ii);
+
+			// get net acceleration vector
+			cv::Vec3d accl;
+			accl[Vec3::x] = samp.gpSamp.accl.x;
+			accl[Vec3::y] = samp.gpSamp.accl.y;
+			accl[Vec3::z] = samp.gpSamp.accl.z;
+
+			// remove gravity vector if provided
+			if (bitset_is_set(avail, gpo::DataAvailable::eDA_GOPRO_GRAV))
+			{
+				accl[Vec3::x] -= samp.gpSamp.grav.x;
+				accl[Vec3::y] -= samp.gpSamp.grav.y;
+				accl[Vec3::z] -= samp.gpSamp.grav.z;
+			}
+
+			// compute lateral & longitudinal g-force vectors based on directionality
+			cv::Vec3f latProj = projection(accl,latDirNorm);
+			cv::Vec3f lonProj = projection(accl,lonDirNorm);
+			samp.calcSamp.vehiAccl.lat_g = latProj[iiLat] / latDirNorm[iiLat] / constants::GRAVITY;
+			samp.calcSamp.vehiAccl.lon_g = lonProj[iiLon] / lonDirNorm[iiLon] / constants::GRAVITY;
+		}
+
+		return true;
+	}
 	
 	bool
 	computeTrackTimes(
@@ -42,7 +202,10 @@ namespace utils
 			}
 		}
 
-		bitset_clear(avail);
+		bitset_clr_bit(avail, gpo::eDA_TRACK_LAP);
+		bitset_clr_bit(avail, gpo::eDA_TRACK_LAP_TIME_OFFSET);
+		bitset_clr_bit(avail, gpo::eDA_TRACK_SECTOR);
+		bitset_clr_bit(avail, gpo::eDA_TRACK_SECTOR_TIME_OFFSET);
 		int currLap = -1;
 		int sectorSeq = 1;// increments everytime we exit a sector
 		int currSector = -1;
@@ -71,13 +234,6 @@ namespace utils
 			bitset_set_bit(avail, gpo::eDA_TRACK_ON_TRACK_LATLON);
 			onTrackFindInitialIdx = std::get<2>(findRes);
 			onTrackFindWindow = {5,100};// reduce search space once we've found initial location
-
-			// ---------------------
-			// compute vehicle g-forces
-			calcSamp.vehiAccl.lat_g = samp.gpSamp.accl.x / GRAVITY;
-			calcSamp.vehiAccl.lon_g = samp.gpSamp.accl.y / -GRAVITY;
-
-			// ---------------------
 
 			// see if we crossed 'gate'. if so, then move to the next logical gate in the 'trackObjs'
 			// list. we check these in a loop because sectors can have gates that are back-to-back,

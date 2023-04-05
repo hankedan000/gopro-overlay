@@ -249,6 +249,33 @@ DataProcessingUtilsTest::smoothMovingAvgStructured()
 	// TODO check 'c' and 'f' fields too
 }
 
+void
+DataProcessingUtilsTest::vectorMath()
+{
+	// test magnitude()
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, utils::magnitude({+1,0,0}), 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, utils::magnitude({-1,0,0}), 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(sqrt(14), utils::magnitude({1,2,3}), 0.001);
+
+	// test normalize()
+	cv::Vec3f a(1,2,3);
+	cv::Vec3f aNorm = utils::normalize(a);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0, utils::magnitude(aNorm), 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0/sqrt(14), aNorm[0], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(2.0/sqrt(14), aNorm[1], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(3.0/sqrt(14), aNorm[2], 0.001);
+
+	// test dot()
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(32.0, utils::dot({1,2,3},{1,5,7}), 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(-25.0, utils::dot({3,2,7},{-4,4,-3}), 0.001);
+
+	// test projection()
+	cv::Vec3f proj = utils::projection({-1,4,2},utils::normalize({1,0,3}));
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(1.0/2.0, proj[0], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(0.0, proj[1], 0.001);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(3.0/2.0, proj[2], 0.001);
+}
+
 int main()
 {
 	CppUnit::TextUi::TestRunner runner;

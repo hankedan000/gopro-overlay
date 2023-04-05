@@ -1,5 +1,6 @@
 #include "GoProOverlay/data/DataSource.h"
 
+#include <cmath>
 #include <filesystem>
 #include <spdlog/spdlog.h>
 
@@ -59,13 +60,18 @@ namespace gpo
 	bool
 	DataSource::reprocessDatumTrack()
 	{
-		if (datumTrack_ == nullptr)
+		if (datumTrack_ == nullptr || samples_->empty())
 		{
 			// nothing to process
 			return true;
 		}
 
 		bool okay = utils::computeTrackTimes(datumTrack_,samples_,dataAvail_);
+
+		// FIXME move somewhere else (ie. don't need track to do this)
+		cv::Vec3f latDir, lonDir;
+		bool dirOkay = utils::computeVehicleDirectionVectors(samples_,dataAvail_,latDir,lonDir);
+		okay = dirOkay && utils::computeVehicleAcceleration(samples_,dataAvail_,latDir,lonDir);
 
 		// smooth accelerometer data
 		if (false)

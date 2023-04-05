@@ -4,8 +4,80 @@
 #include "GoProOverlay/data/TrackDataObjects.h"
 #include "GoProOverlay/utils/RingFIFO.hpp"
 
+namespace constants
+{
+	inline const double GRAVITY = 9.80665;
+}
+
+enum Vec3
+{
+	x = 0,
+	y = 1,
+	z = 2
+};
+
 namespace utils
 {
+	
+	float
+	magnitude(
+		const cv::Vec3f &v);
+	
+	cv::Vec3f
+	normalize(
+		const cv::Vec3f &v);
+
+	float
+	dot(
+		const cv::Vec3f &a,
+		const cv::Vec3f &b);
+	
+	/**
+	 * @param[in] vec
+	 * Vector to project.
+	 * 
+	 * @param[in] vecOnto
+	 * Vector to project onto. Must be normalized.
+	 * 
+	 * @return
+	 * The projected vector of 'a' onto 'b'
+	 */
+	cv::Vec3f
+	projection(
+		const cv::Vec3f &vec,
+		const cv::Vec3f &vecOnto);
+
+	/**
+	 * Calculates the vehicle's lateral & longitudinal acceleration vectors.
+	 * 
+	 * @param[in] tSamps
+	 * Telemetery samples to process
+	 * 
+	 * @param[in] avail
+	 * The data that's available in the samples
+	 * 
+	 * @param[out] latDir
+	 * The computed lateral direction vector
+	 * 
+	 * @param[out] lonDir
+	 * The computed longitudinal direction vector
+	 * 
+	 * @return
+	 * true if the calculation was successful, false otherwise
+	 */
+	bool
+	computeVehicleDirectionVectors(
+		gpo::TelemetrySamplesPtr tSamps,
+		const gpo::DataAvailableBitSet &avail,
+		cv::Vec3f &latDir,
+		cv::Vec3f &lonDir);
+
+	bool
+	computeVehicleAcceleration(
+		gpo::TelemetrySamplesPtr tSamps,
+		gpo::DataAvailableBitSet &avail,
+		const cv::Vec3f &latDir,
+		const cv::Vec3f &lonDir);
 
 	bool
 	computeTrackTimes(
