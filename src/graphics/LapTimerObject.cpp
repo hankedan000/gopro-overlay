@@ -30,7 +30,7 @@ namespace gpo
 		}
 
 		auto telemSrc = tSources_.front();
-		const auto &trackData = telemSrc->at(telemSrc->seekedIdx()).trackData;
+		const auto &trackData = telemSrc->at(telemSrc->seekedIdx()).calcSamp;
 		if (trackData.lap != -1)
 		{
 			lapTime_ = trackData.lapTimeOffset;

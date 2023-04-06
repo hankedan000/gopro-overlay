@@ -28,12 +28,14 @@ namespace gpo
 		eDA_ECU_TPS = 66,
 		eDA_ECU_BOOST = 67,
 
-		// Track
-		eDA_TRACK_ON_TRACK_LATLON = 192,
-		eDA_TRACK_LAP = 193,
-		eDA_TRACK_LAP_TIME_OFFSET = 194,
-		eDA_TRACK_SECTOR = 195,
-		eDA_TRACK_SECTOR_TIME_OFFSET = 196
+		// Calculated
+		eDA_CALC_ON_TRACK_LATLON = 192,
+		eDA_CALC_LAP = 193,
+		eDA_CALC_LAP_TIME_OFFSET = 194,
+		eDA_CALC_SECTOR = 195,
+		eDA_CALC_SECTOR_TIME_OFFSET = 196,
+		eDA_CALC_SMOOTH_ACCL = 197,
+		eDA_CALC_VEHI_ACCL = 198
 	};
 
 	using DataAvailableBitSet = pod_bitset<uint64_t,4>;
@@ -57,7 +59,20 @@ namespace gpo
 		double t_offset;
 	};
 
-	struct TrackData
+	// Acceleration normalized to the vehicle body and its natural direction of 
+	// motion (ie. forward for a car). Acceleration due to gravity is removed.
+	struct VehicleAccl
+	{
+		// lateral g-forces (turning) experienced by vehicle. (+) is to vehicle's
+		// right side when facing natural direction of motion.
+		float lat_g;
+
+		// longitudinal g-forces (braking/accelerating) experienced by vehicle.
+		// (+) is facing natural direction of motion.
+		float lon_g;
+	};
+
+	struct CalcSample
 	{
 		// corrected location of vehicle on the track.
 		// currently uses a simple nearest distance algorithm based on where the
@@ -79,6 +94,12 @@ namespace gpo
 		// if within a sector (sector != -1), this value represents the time offset
 		// from when we croseed the sector's entry gate
 		double sectorTimeOffset;
+
+		// net acceleration vector that has been smoothed using a windowed average
+		gpt::AcclSample smoothAccl;
+
+		// lateral & longitudinal g-forces experienced by the vehicle
+		VehicleAccl vehiAccl;
 	};
 
 	struct TelemetrySample
@@ -89,7 +110,7 @@ namespace gpo
 
 		ECU_Sample ecuSamp;
 
-		TrackData trackData;
+		CalcSample calcSamp;
 	};
 
 	static_assert(std::is_standard_layout<TelemetrySample>::value && std::is_trivial<TelemetrySample>::value, "TelemetrySample must be a POD type");
