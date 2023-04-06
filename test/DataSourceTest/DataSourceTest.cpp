@@ -117,11 +117,11 @@ DataSourceTest::testLoadFromSoloStormCSV()
 	bitset_set_bit(expectedAvail, gpo::eDA_GOPRO_GPS_LATLON);
 	bitset_set_bit(expectedAvail, gpo::eDA_ECU_ENGINE_SPEED);
 	bitset_set_bit(expectedAvail, gpo::eDA_ECU_TPS);
-	bitset_set_bit(expectedAvail, gpo::eDA_TRACK_ON_TRACK_LATLON);
-	bitset_set_bit(expectedAvail, gpo::eDA_TRACK_LAP);
-	bitset_set_bit(expectedAvail, gpo::eDA_TRACK_LAP_TIME_OFFSET);
-	bitset_set_bit(expectedAvail, gpo::eDA_TRACK_SECTOR);
-	bitset_set_bit(expectedAvail, gpo::eDA_TRACK_SECTOR_TIME_OFFSET);
+	bitset_set_bit(expectedAvail, gpo::eDA_CALC_ON_TRACK_LATLON);
+	bitset_set_bit(expectedAvail, gpo::eDA_CALC_LAP);
+	bitset_set_bit(expectedAvail, gpo::eDA_CALC_LAP_TIME_OFFSET);
+	bitset_set_bit(expectedAvail, gpo::eDA_CALC_SECTOR);
+	bitset_set_bit(expectedAvail, gpo::eDA_CALC_SECTOR_TIME_OFFSET);
 	CPPUNIT_ASSERT(bitset_equal(srcFromMsq->dataAvailable(), expectedAvail));
 
 	// check samples were parsed correctly (trivial range check)

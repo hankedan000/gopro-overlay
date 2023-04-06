@@ -161,7 +161,8 @@ namespace utils
 	smoothMovingAvgStructured(
 		const STRUCT_T *inVector,
 		STRUCT_T *outVector,
-		size_t *fieldOffsets,
+		size_t *inFieldOffsets,
+		size_t *outFieldOffsets,
 		size_t nFields,
 		size_t nElements,
 		size_t windowSize)
@@ -169,8 +170,8 @@ namespace utils
 		for (size_t ff=0; ff<nFields; ff++)
 		{
 			smoothMovingAvg<FIELD_T>(
-				(const void *)((const char *)(inVector) + fieldOffsets[ff]),
-				(void *)((char *)(outVector) + fieldOffsets[ff]),
+				(const void *)((const char *)(inVector) + inFieldOffsets[ff]),
+				(void *)((char *)(outVector) + outFieldOffsets[ff]),
 				nElements,
 				windowSize,
 				sizeof(STRUCT_T),

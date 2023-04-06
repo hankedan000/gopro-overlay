@@ -37,6 +37,10 @@ namespace gpo
 		getDatumTrack() const;
 
 		bool
+		calcVehicleAcceleration(
+			size_t smoothingWindowSize = 30);
+
+		bool
 		reprocessDatumTrack();
 
 		int

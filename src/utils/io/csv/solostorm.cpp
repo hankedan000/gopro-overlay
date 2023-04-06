@@ -105,32 +105,32 @@ namespace io
 			else if (colName == CSVPARSER_SSTORM_CALC_ON_TRACK_LAT.columnTitle)
 			{
 				columns.push_back(CSVPARSER_SSTORM_CALC_ON_TRACK_LAT);
-				bitset_set_bit(avail, gpo::eDA_TRACK_ON_TRACK_LATLON);
+				bitset_set_bit(avail, gpo::eDA_CALC_ON_TRACK_LATLON);
 			}
 			else if (colName == CSVPARSER_SSTORM_CALC_ON_TRACK_LON.columnTitle)
 			{
 				columns.push_back(CSVPARSER_SSTORM_CALC_ON_TRACK_LON);
-				bitset_set_bit(avail, gpo::eDA_TRACK_ON_TRACK_LATLON);
+				bitset_set_bit(avail, gpo::eDA_CALC_ON_TRACK_LATLON);
 			}
 			else if (colName == CSVPARSER_SSTORM_CALC_LAP.columnTitle)
 			{
 				columns.push_back(CSVPARSER_SSTORM_CALC_LAP);
-				bitset_set_bit(avail, gpo::eDA_TRACK_LAP);
+				bitset_set_bit(avail, gpo::eDA_CALC_LAP);
 			}
 			else if (colName == CSVPARSER_SSTORM_CALC_LAP_TIME_OFFSET.columnTitle)
 			{
 				columns.push_back(CSVPARSER_SSTORM_CALC_LAP_TIME_OFFSET);
-				bitset_set_bit(avail, gpo::eDA_TRACK_LAP_TIME_OFFSET);
+				bitset_set_bit(avail, gpo::eDA_CALC_LAP_TIME_OFFSET);
 			}
 			else if (colName == CSVPARSER_SSTORM_CALC_SECTOR.columnTitle)
 			{
 				columns.push_back(CSVPARSER_SSTORM_CALC_SECTOR);
-				bitset_set_bit(avail, gpo::eDA_TRACK_SECTOR);
+				bitset_set_bit(avail, gpo::eDA_CALC_SECTOR);
 			}
 			else if (colName == CSVPARSER_SSTORM_CALC_SECTOR_TIME_OFFSET.columnTitle)
 			{
 				columns.push_back(CSVPARSER_SSTORM_CALC_SECTOR_TIME_OFFSET);
-				bitset_set_bit(avail, gpo::eDA_TRACK_SECTOR_TIME_OFFSET);
+				bitset_set_bit(avail, gpo::eDA_CALC_SECTOR_TIME_OFFSET);
 			}
 			else
 			{
