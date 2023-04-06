@@ -59,11 +59,12 @@ namespace gpo
 		double t_offset;
 	};
 
+	// Acceleration normalized to the vehicle body and its natural direction of 
+	// motion (ie. forward for a car). Acceleration due to gravity is removed.
 	struct VehicleAccl
 	{
 		// lateral g-forces (turning) experienced by vehicle. (+) is to vehicle's
-		// right side when facing natural direction of motion. Does not include
-		// acceleration due to gravity.
+		// right side when facing natural direction of motion.
 		float lat_g;
 
 		// longitudinal g-forces (braking/accelerating) experienced by vehicle.

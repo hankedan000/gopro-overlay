@@ -235,7 +235,7 @@ DataProcessingUtilsTest::smoothMovingAvgStructured()
 		offsetof(TestStruct, c),
 		offsetof(TestStruct, f)
 	};
-	utils::smoothMovingAvgStructured<TestStruct,double>(dataA,dataB,fieldOffsets,3,N,3);
+	utils::smoothMovingAvgStructured<TestStruct,double>(dataA,dataB,fieldOffsets,fieldOffsets,3,N,3);
 	CPPUNIT_ASSERT_DOUBLES_EQUAL(0.500, dataB[0].a, 0.001);
 	CPPUNIT_ASSERT_DOUBLES_EQUAL(1.000, dataB[1].a, 0.001);
 	CPPUNIT_ASSERT_DOUBLES_EQUAL(2.000, dataB[2].a, 0.001);

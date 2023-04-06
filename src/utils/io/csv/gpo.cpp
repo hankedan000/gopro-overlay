@@ -39,6 +39,11 @@ namespace io
 	static constexpr CSV_ColumnParser CSVPARSER_CALC_LAP_TIME_OFFSET = MAKE_PARSER(gpo::TelemetrySample, calcSamp.lapTimeOffset, "lapTimeOffset");
 	static constexpr CSV_ColumnParser CSVPARSER_CALC_SECTOR = MAKE_PARSER(gpo::TelemetrySample, calcSamp.sector, "sector");
 	static constexpr CSV_ColumnParser CSVPARSER_CALC_SECTOR_TIME_OFFSET = MAKE_PARSER(gpo::TelemetrySample, calcSamp.sectorTimeOffset, "sectorTimeOffset");
+	static constexpr CSV_ColumnParser CSVPARSER_CALC_SMOOTH_ACCL_X = MAKE_PARSER(gpo::TelemetrySample, calcSamp.smoothAccl.x, "smoothAccl_x");
+	static constexpr CSV_ColumnParser CSVPARSER_CALC_SMOOTH_ACCL_Y = MAKE_PARSER(gpo::TelemetrySample, calcSamp.smoothAccl.y, "smoothAccl_y");
+	static constexpr CSV_ColumnParser CSVPARSER_CALC_SMOOTH_ACCL_Z = MAKE_PARSER(gpo::TelemetrySample, calcSamp.smoothAccl.z, "smoothAccl_z");
+	static constexpr CSV_ColumnParser CSVPARSER_CALC_VEHI_ACCL_LAT = MAKE_PARSER(gpo::TelemetrySample, calcSamp.vehiAccl.lat_g, "vehiAcclLat");
+	static constexpr CSV_ColumnParser CSVPARSER_CALC_VEHI_ACCL_LON = MAKE_PARSER(gpo::TelemetrySample, calcSamp.vehiAccl.lon_g, "vehiAcclLon");
 
 	bool
     writeTelemetryToCSV(
@@ -116,7 +121,7 @@ namespace io
 		}
 
 		// -----------------------------
-		// Processed telemetery
+		// Calculated telemetery
 		// -----------------------------
 		if (bitset_is_set(avail, gpo::eDA_CALC_ON_TRACK_LATLON))
 		{
@@ -138,6 +143,17 @@ namespace io
 		if (bitset_is_set(avail, gpo::eDA_CALC_SECTOR_TIME_OFFSET))
 		{
 			columns.push_back(CSVPARSER_CALC_SECTOR_TIME_OFFSET);
+		}
+		if (bitset_is_set(avail, gpo::eDA_CALC_SMOOTH_ACCL))
+		{
+			columns.push_back(CSVPARSER_CALC_SMOOTH_ACCL_X);
+			columns.push_back(CSVPARSER_CALC_SMOOTH_ACCL_Y);
+			columns.push_back(CSVPARSER_CALC_SMOOTH_ACCL_Z);
+		}
+		if (bitset_is_set(avail, gpo::eDA_CALC_VEHI_ACCL))
+		{
+			columns.push_back(CSVPARSER_CALC_VEHI_ACCL_LAT);
+			columns.push_back(CSVPARSER_CALC_VEHI_ACCL_LON);
 		}
 
 		std::vector<std::string> headings;
@@ -306,7 +322,7 @@ namespace io
 				bitset_set_bit(avail, gpo::eDA_ECU_BOOST);
 			}
 			// ----------------------
-			// TrackData telemetry
+			// Calculated telemetry
 			// ----------------------
 			else if (colName == CSVPARSER_CALC_ON_TRACK_LAT.columnTitle)
 			{
@@ -337,6 +353,31 @@ namespace io
 			{
 				columns.push_back(CSVPARSER_CALC_SECTOR_TIME_OFFSET);
 				bitset_set_bit(avail, gpo::eDA_CALC_SECTOR_TIME_OFFSET);
+			}
+			else if (colName == CSVPARSER_CALC_SMOOTH_ACCL_X.columnTitle)
+			{
+				columns.push_back(CSVPARSER_CALC_SMOOTH_ACCL_X);
+				bitset_set_bit(avail, gpo::eDA_CALC_SMOOTH_ACCL);
+			}
+			else if (colName == CSVPARSER_CALC_SMOOTH_ACCL_Y.columnTitle)
+			{
+				columns.push_back(CSVPARSER_CALC_SMOOTH_ACCL_Y);
+				bitset_set_bit(avail, gpo::eDA_CALC_SMOOTH_ACCL);
+			}
+			else if (colName == CSVPARSER_CALC_SMOOTH_ACCL_Z.columnTitle)
+			{
+				columns.push_back(CSVPARSER_CALC_SMOOTH_ACCL_Z);
+				bitset_set_bit(avail, gpo::eDA_CALC_SMOOTH_ACCL);
+			}
+			else if (colName == CSVPARSER_CALC_VEHI_ACCL_LAT.columnTitle)
+			{
+				columns.push_back(CSVPARSER_CALC_VEHI_ACCL_LAT);
+				bitset_set_bit(avail, gpo::eDA_CALC_VEHI_ACCL);
+			}
+			else if (colName == CSVPARSER_CALC_VEHI_ACCL_LON.columnTitle)
+			{
+				columns.push_back(CSVPARSER_CALC_VEHI_ACCL_LON);
+				bitset_set_bit(avail, gpo::eDA_CALC_VEHI_ACCL);
 			}
 			else
 			{

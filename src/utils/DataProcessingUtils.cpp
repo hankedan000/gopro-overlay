@@ -442,6 +442,9 @@ namespace utils
 		FIELD_LERP(out,a,b,ratio,calcSamp.lapTimeOffset);
 		FIELD_LERP_ROUNDED(out,a,b,ratio,calcSamp.sector);
 		FIELD_LERP(out,a,b,ratio,calcSamp.sectorTimeOffset);
+		lerp(out.calcSamp.smoothAccl, a.calcSamp.smoothAccl, b.calcSamp.smoothAccl, ratio);
+		FIELD_LERP(out,a,b,ratio,calcSamp.vehiAccl.lat_g);
+		FIELD_LERP(out,a,b,ratio,calcSamp.vehiAccl.lon_g);
 	}
 
 	void
