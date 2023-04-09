@@ -69,6 +69,30 @@ namespace gpo
 		markObjectModified(false,true);
 	}
 
+	bool
+	GroupedSeeker::removeAllSeekers(
+		TelemetrySeekerPtr seeker)
+	{
+		bool removed = false;
+		auto it = seekers_.begin();
+		while(it != seekers_.end())
+		{
+			if((*it) == seeker)
+			{
+				it = seekers_.erase(it);
+				removed = true;
+			}
+			else
+			{
+				++it;
+			}
+		}
+
+		markObjectModified(false,removed);
+
+		return removed;
+	}
+
 	void
 	GroupedSeeker::prevAll(
 			bool onlyIfAllHavePrev)
