@@ -241,6 +241,31 @@ namespace gpo
 		return entities_.size();
 	}
 
+	bool
+	RenderEngine::repositionEntity(
+		size_t idxFrom,
+		size_t idxTo)
+	{
+		if (idxFrom >= entities_.size() && idxTo >= entities_.size())
+		{
+			return false;
+		}
+		else if(idxFrom == idxTo)
+		{
+			return false;
+		}
+
+		auto entToMove = entities_.at(idxFrom);
+		entities_.erase(std::next(entities_.begin(),idxFrom));
+		entities_.insert(std::next(entities_.begin(),idxTo), entToMove);
+
+		render();
+		markNeedsRedraw();
+		markObjectModified(false,true);
+		
+		return true;
+	}
+
 	double
 	RenderEngine::getHighestFPS() const
 	{

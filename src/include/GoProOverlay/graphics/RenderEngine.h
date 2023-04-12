@@ -140,6 +140,11 @@ namespace gpo
 		size_t
 		entityCount() const;
 
+		bool
+		repositionEntity(
+			size_t idxFrom,
+			size_t idxTo);
+
 		double
 		getHighestFPS() const;
 
