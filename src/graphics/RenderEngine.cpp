@@ -163,10 +163,74 @@ namespace gpo
 	RenderEngine::removeEntity(
 		size_t idx)
 	{
-		// FIXME need to rebuild grouped seeker
-		auto entityItr = std::next(entities_.begin(), idx);
-		(*entityItr)->removeObserver((ModifiableDrawObjectObserver*)this);
-		entities_.erase(entityItr);
+		auto itrToRemove = std::next(entities_.begin(), idx);
+		(*itrToRemove)->removeObserver((ModifiableDrawObjectObserver*)this);
+
+		// ------------------------------------------------------------
+		// rebuild GroupedSeeker before finally removing entity
+
+		// build a map of telemetery seekers references by the removed enetity
+		std::unordered_map<TelemetrySeekerPtr, unsigned int> seekerRefCount;
+		auto reToRemove = (*itrToRemove);
+		for (size_t i=0; i<reToRemove->renderObject()->numVideoSources(); i++)
+		{
+			auto vSrc = reToRemove->renderObject()->getVideoSource(i);
+			auto vSeeker = vSrc->seeker();
+			seekerRefCount[vSeeker] = 1;
+		}
+		for (size_t i=0; i<reToRemove->renderObject()->numTelemetrySources(); i++)
+		{
+			auto tSrc = reToRemove->renderObject()->getTelemetrySource(i);
+			auto tSeeker = tSrc->seeker();
+			seekerRefCount[tSeeker] = 1;
+		}
+
+		// count telemetry references from other entities to see if the removed
+		// enetity had exclusive reference.
+		for (const auto &re : entities_)
+		{
+			if (re.get() == reToRemove.get())
+			{
+				// only count seeker references on the other entities
+				continue;
+			}
+
+			for (size_t i=0; i<re->renderObject()->numVideoSources(); i++)
+			{
+				auto vSrc = re->renderObject()->getVideoSource(i);
+				auto vSeeker = vSrc->seeker();
+				auto refCountItr = seekerRefCount.find(vSeeker);
+				if (refCountItr != seekerRefCount.end())
+				{
+					refCountItr->second++;
+				}
+			}
+			for (size_t i=0; i<re->renderObject()->numTelemetrySources(); i++)
+			{
+				auto tSrc = re->renderObject()->getTelemetrySource(i);
+				auto tSeeker = tSrc->seeker();
+				auto refCountItr = seekerRefCount.find(tSeeker);
+				if (refCountItr != seekerRefCount.end())
+				{
+					refCountItr->second++;
+				}
+			}
+		}
+
+		// if any references were exclusive to the removed entity, then we must
+		// also remove those telemetry seekers from the GroupedSeeker
+		for (const auto &refCountEntry : seekerRefCount)
+		{
+			if (refCountEntry.second == 1)
+			{
+				gSeeker_->removeAllSeekers(refCountEntry.first);
+			}
+		}
+
+		// ------------------------------------------------------------
+
+		entities_.erase(itrToRemove);
+		render();
 		markNeedsRedraw();
 		markObjectModified(false,true);
 	}
@@ -175,6 +239,31 @@ namespace gpo
 	RenderEngine::entityCount() const
 	{
 		return entities_.size();
+	}
+
+	bool
+	RenderEngine::repositionEntity(
+		size_t idxFrom,
+		size_t idxTo)
+	{
+		if (idxFrom >= entities_.size() && idxTo >= entities_.size())
+		{
+			return false;
+		}
+		else if(idxFrom == idxTo)
+		{
+			return false;
+		}
+
+		auto entToMove = entities_.at(idxFrom);
+		entities_.erase(std::next(entities_.begin(),idxFrom));
+		entities_.insert(std::next(entities_.begin(),idxTo), entToMove);
+
+		render();
+		markNeedsRedraw();
+		markObjectModified(false,true);
+		
+		return true;
 	}
 
 	double

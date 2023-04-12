@@ -35,6 +35,19 @@ namespace gpo
 		removeSeeker(
 			size_t idx);
 
+		/**
+		 * Removes all seeker that match the following
+		 * 
+		 * @param[in] seeker
+		 * the seeker pointer to remove
+		 * 
+		 * @return
+		 * true if any were removed. false otherwise.
+		 */
+		bool
+		removeAllSeekers(
+			TelemetrySeekerPtr seeker);
+
 		void
 		prevAll(
 			bool onlyIfAllHavePrev = true);

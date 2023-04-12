@@ -301,6 +301,36 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         proj_.getEngine()->removeEntity(selectedIndexs.at(0).row());
         reloadRenderEntitiesTable();
     });
+    connect(ui->moveEntityUp_ToolButton, &QToolButton::clicked, this, [this]{
+        auto selectionModel = ui->renderEntitiesTable->selectionModel();
+        auto selectedIndexs = selectionModel->selectedIndexes();
+        if (selectedIndexs.empty())
+        {
+            return;// nothing to remove
+        }
+
+        size_t fromIdx = selectedIndexs.at(0).row();
+        size_t toIdx = fromIdx - 1;
+        auto rows = entitiesTableModel_->takeRow(fromIdx);
+        entitiesTableModel_->insertRow(toIdx, rows);
+        ui->renderEntitiesTable->selectRow(toIdx);
+        proj_.getEngine()->repositionEntity(fromIdx, toIdx);
+    });
+    connect(ui->moveEntityDown_ToolButton, &QToolButton::clicked, this, [this]{
+        auto selectionModel = ui->renderEntitiesTable->selectionModel();
+        auto selectedIndexs = selectionModel->selectedIndexes();
+        if (selectedIndexs.empty())
+        {
+            return;// nothing to remove
+        }
+
+        size_t fromIdx = selectedIndexs.at(0).row();
+        size_t toIdx = fromIdx + 1;
+        auto rows = entitiesTableModel_->takeRow(fromIdx);
+        entitiesTableModel_->insertRow(toIdx, rows);
+        ui->renderEntitiesTable->selectRow(toIdx);
+        proj_.getEngine()->repositionEntity(fromIdx, toIdx);
+    });
 
     connect(entitiesTableModel_, &QStandardItemModel::dataChanged, this, [this](
             const QModelIndex &topLeft,
