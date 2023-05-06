@@ -1,0 +1,11 @@
+[requires]
+opencv/4.5.5
+spdlog/1.11.0
+yaml-cpp/0.7.0
+
+[generators]
+CMakeDeps
+CMakeToolchain
+
+[options]
+opencv*:with_webp=False

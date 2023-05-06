@@ -1,7 +1,5 @@
 add_subdirectory(gopro-telem)
-add_subdirectory(yaml-cpp)
 add_subdirectory(qcustomplot)
-add_subdirectory(spdlog)
 
 # create header-only target for tqdm (if it was cloned correctly)
 find_path(TQDM_INCLUDE_DIR

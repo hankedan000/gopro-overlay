@@ -22,7 +22,10 @@ option(GOPROOVERLAY_BUILD_APPS "Build apps" ${GOPROOVERLAY_MASTER_PROJECT})
 # testing options
 option(GOPROOVERLAY_BUILD_TESTS "Build tests" ${GOPROOVERLAY_MASTER_PROJECT})
 
-find_package( OpenCV REQUIRED )
+find_package(spdlog REQUIRED)
+find_package(yaml-cpp)
+
+find_package(OpenCV REQUIRED)
 include_directories( ${OpenCV_INCLUDE_DIRS} )
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)

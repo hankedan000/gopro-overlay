@@ -4,12 +4,6 @@
 [submodule "extern/cpptqdm"]
 	path = extern/cpptqdm
 	url = https://github.com/aminnj/cpptqdm.git
-[submodule "extern/yaml-cpp"]
-	path = extern/yaml-cpp
-	url = https://github.com/jbeder/yaml-cpp.git
-[submodule "extern/spdlog"]
-	path = extern/spdlog
-	url = https://github.com/gabime/spdlog.git
 [submodule "extern/csv-parser"]
 	path = extern/csv-parser
 	url = https://github.com/vincentlaucsb/csv-parser.git
