@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1063</width>
-    <height>754</height>
+    <height>787</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -115,7 +115,10 @@
                  </size>
                 </property>
                 <property name="text">
-                 <string>-</string>
+                 <string/>
+                </property>
+                <property name="icon">
+                 <iconset theme="list-remove"/>
                 </property>
                </widget>
               </item>
@@ -131,21 +134,30 @@
                  </size>
                 </property>
                 <property name="text">
-                 <string>+</string>
+                 <string/>
+                </property>
+                <property name="icon">
+                 <iconset theme="list-add"/>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QToolButton" name="moveEntityDown_ToolButton">
                 <property name="text">
-                 <string>↓</string>
+                 <string/>
+                </property>
+                <property name="icon">
+                 <iconset theme="go-down"/>
                 </property>
                </widget>
               </item>
               <item>
                <widget class="QToolButton" name="moveEntityUp_ToolButton">
                 <property name="text">
-                 <string>↑</string>
+                 <string/>
+                </property>
+                <property name="icon">
+                 <iconset theme="go-up"/>
                 </property>
                </widget>
               </item>

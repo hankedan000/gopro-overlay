@@ -135,10 +135,10 @@ int main(int argc, char *argv[])
 	// disable LapTimerObjects (useless without a meaningful track datum)
 	for (size_t ee=0; ee<engine->entityCount(); ee++)
 	{
-		auto &entity = engine->getEntity(ee);
-		if (entity.rObj->typeName() == "LapTimerObject")
+		const auto &entity = engine->getEntity(ee);
+		if (entity->renderObject()->typeName() == "LapTimerObject")
 		{
-			entity.rObj->setVisible(false);
+			entity->renderObject()->setVisible(false);
 		}
 	}
 

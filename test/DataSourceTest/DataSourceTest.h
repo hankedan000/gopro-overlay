@@ -9,6 +9,7 @@ class DataSourceTest : public CppUnit::TestFixture
 	CPPUNIT_TEST_SUITE(DataSourceTest);
 	CPPUNIT_TEST(testLoadFromTelemetry);
 	CPPUNIT_TEST(testLoadFromMegaSquirtLog);
+	CPPUNIT_TEST(testLoadFromSoloStormCSV);
 	CPPUNIT_TEST(testTelemetryMerge);
 	CPPUNIT_TEST_SUITE_END();
 
@@ -20,6 +21,7 @@ public:
 protected:
 	void testLoadFromTelemetry();
 	void testLoadFromMegaSquirtLog();
+	void testLoadFromSoloStormCSV();
 	void testTelemetryMerge();
 
 private:

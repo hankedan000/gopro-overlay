@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <vector>
 #include <yaml-cpp/yaml.h>
 
@@ -9,24 +10,110 @@
 
 namespace gpo
 {
-	class RenderEngine
+
+	// forward declare
+	class RenderedEntity;
+
+	using RenderedEntityPtr = std::shared_ptr<RenderedEntity>;
+
+	class RenderedEntity : public ModifiableDrawObject
 	{
 	public:
-		class RenderedEntity
-		{
-		public:
-			RenderedObject *rObj;
-			cv::Size rSize;
-			cv::Point rPos;
-			std::string name;
-		};
+		RenderedEntity();
 
+		~RenderedEntity();
+
+		template<class DerivedRenderedObject>
+		static
+		RenderedEntityPtr
+		make()
+		{
+			static_assert(
+				std::is_convertible<DerivedRenderedObject*, RenderedObject*>::value,
+				"DerivedRenderedObject must inherit RenderedObject as public");
+			auto re = std::make_shared<RenderedEntity>();
+			re->rObj_ = std::make_unique<DerivedRenderedObject>();
+			re->name_ = re->rObj_->typeName();
+			re->rSize_ = re->rObj_->getNativeSize();
+			re->rPos_ = cv::Point(0,0);
+			return re;
+		}
+
+		template<class DerivedRenderedObject>
+		static
+		RenderedEntityPtr
+		make(
+			const std::string &name)
+		{
+			static_assert(
+				std::is_convertible<DerivedRenderedObject*, RenderedObject*>::value,
+				"DerivedRenderedObject must inherit RenderedObject as public");
+			auto re = std::make_shared<RenderedEntity>();
+			re->rObj_ = std::make_unique<DerivedRenderedObject>();
+			re->name_ = name;
+			re->rSize_ = re->rObj_->getNativeSize();
+			re->rPos_ = cv::Point(0,0);
+			return re;
+		}
+
+		const std::unique_ptr<RenderedObject> &
+		renderObject() const;
+
+		void
+		setRenderSize(
+			const cv::Size &size);
+
+		void
+		setRenderSize(
+			int w,
+			int h);
+
+		const cv::Size &
+		renderSize() const;
+
+		void
+		setRenderPosition(
+			const cv::Point &pos);
+
+		void
+		setRenderPosition(
+			int x,
+			int y);
+
+		const cv::Point &
+		renderPosition() const;
+
+		void
+		setName(
+			const std::string &name);
+
+		const std::string &
+		name() const;
+
+	protected:
+		bool
+		subclassSaveModifications(
+        	bool unnecessaryIsOkay) override;
+
+	private:
+		std::unique_ptr<RenderedObject> rObj_;
+		cv::Size rSize_;
+		cv::Point rPos_;
+		std::string name_;
+	
+	};
+
+	class RenderEngine :
+		public ModifiableDrawObject,
+		private ModifiableObjectObserver,
+		private ModifiableDrawObjectObserver
+	{
 	public:
 		RenderEngine();
 
 		void
 		setRenderSize(
-			cv::Size size);
+			const cv::Size &size);
 
 		cv::Size
 		getRenderSize() const;
@@ -36,13 +123,13 @@ namespace gpo
 
 		void
 		addEntity(
-			RenderedEntity re);
+			const RenderedEntityPtr &re);
 
-		RenderedEntity &
+		RenderedEntityPtr
 		getEntity(
 			size_t idx);
 
-		const RenderedEntity &
+		const RenderedEntityPtr &
 		getEntity(
 			size_t idx) const;
 
@@ -53,9 +140,15 @@ namespace gpo
 		size_t
 		entityCount() const;
 
+		bool
+		repositionEntity(
+			size_t idxFrom,
+			size_t idxTo);
+
 		double
 		getHighestFPS() const;
 
+		// FIXME make mathod const and return const &
 		GroupedSeekerPtr
 		getSeeker();
 
@@ -73,9 +166,31 @@ namespace gpo
 			const YAML::Node& node,
 			const DataSourceManager &dsm);
 
+	protected:
+		bool
+		subclassSaveModifications(
+        	bool unnecessaryIsOkay) override;
+
+	private:
+		void
+		internalAddEntity(
+			const RenderedEntityPtr &re);
+
+		void
+		internalSetRenderSize(
+			const cv::Size &size);
+			
+        void
+        onModified(
+            ModifiableObject *modifiable) override;
+		
+        void
+        onNeedsRedraw(
+            ModifiableDrawObject *drawable) override;
+	
 	private:
 		cv::UMat rFrame_;
-		std::vector<RenderedEntity> entities_;
+		std::vector<RenderedEntityPtr> entities_;
 		GroupedSeekerPtr gSeeker_;
 
 	};

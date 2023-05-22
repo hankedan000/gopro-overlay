@@ -12,10 +12,6 @@ namespace gpo
 	public:
 		TextObject();
 
-		virtual
-		std::string
-		typeName() const override;
-
 		void
 		setText(
 			const std::string &text);
@@ -38,10 +34,6 @@ namespace gpo
 
 		virtual
 		void
-		render() override;
-
-		virtual
-		void
 		drawInto(
 			cv::UMat &intoImg,
 			int originX, int originY);
@@ -54,6 +46,10 @@ namespace gpo
 			cv::Size renderSize);
 
 	protected:
+		virtual
+		void
+		subRender() override;
+
 		virtual
 		YAML::Node
 		subEncode() const override;

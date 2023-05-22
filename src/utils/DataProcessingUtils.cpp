@@ -7,6 +7,203 @@
 namespace utils
 {
 	
+	float
+	magnitude(
+		const cv::Vec3f &v)
+	{
+		return std::sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+	}
+	
+	cv::Vec3f
+	normalize(
+		const cv::Vec3f &v)
+	{
+		float m = magnitude(v);
+		cv::Vec3f norm;
+		norm[0] = v[0] / m;
+		norm[1] = v[1] / m;
+		norm[2] = v[2] / m;
+		return norm;
+	}
+
+	float
+	dot(
+		const cv::Vec3f &a,
+		const cv::Vec3f &b)
+	{
+		return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+	}
+	
+	cv::Vec3f
+	projection(
+		const cv::Vec3f &vec,
+		const cv::Vec3f &vecOnto)
+	{
+		// projection is equal to
+		// u = dot(a, norm(b)) * norm(b)
+		float d = dot(vec,vecOnto);
+		cv::Vec3f prj;
+		prj[0] = d * vecOnto[0];
+		prj[1] = d * vecOnto[1];
+		prj[2] = d * vecOnto[2];
+		return prj;
+	}
+
+	bool
+	computeVehicleDirectionVectors(
+		gpo::TelemetrySamplesPtr tSamps,
+		const gpo::DataAvailableBitSet &avail,
+		cv::Vec3f &latDir,
+		cv::Vec3f &lonDir)
+	{
+		if (tSamps->empty())
+		{
+			return false;
+		}
+
+		// default init
+		latDir[Vec3::x] = +0.0;
+		latDir[Vec3::y] = +0.0;
+		latDir[Vec3::z] = +0.0;
+		lonDir[Vec3::x] = +0.0;
+		lonDir[Vec3::y] = +0.0;
+		lonDir[Vec3::z] = +0.0;
+
+		// Assume camera is always recording toward the vehicle's direction of motion
+		// TODO if we wanted to improve this, we could detect when the vehicle's GPS
+		// speed is increasing while there is no gyroscopic motion (acceleration in
+		// a straight line). The direction of the average acceleration vector would
+		// tell you the vehicle's longitudinal direction.
+		lonDir[Vec3::y] = -1.0;
+
+		if (bitset_is_set(avail, gpo::DataAvailable::eDA_GOPRO_GRAV))
+		{
+			// base lateral direction vectors on direction of gravity
+			// and our assumption on the vehicle's longitudinal direction.
+			const auto &grav0 = tSamps->at(0).gpSamp.grav;
+			const float G_THRESHOLD = 0.5;// half G
+			if (grav0.x > G_THRESHOLD)
+			{
+				latDir[Vec3::z] = -1.0;
+			}
+			else if (grav0.x < -G_THRESHOLD)
+			{
+				latDir[Vec3::z] = +1.0;
+			}
+			else if (grav0.z > G_THRESHOLD)
+			{
+				latDir[Vec3::x] = +1.0;
+			}
+			else if (grav0.z < -G_THRESHOLD)
+			{
+				latDir[Vec3::x] = -1.0;
+			}
+			else
+			{
+				spdlog::warn("lateral direction vector is indeterminate based on gravity");
+				latDir[Vec3::x] = -1.0;
+			}
+		}
+		else
+		{
+			spdlog::warn("telemetry doesn't have gravity vector. using default lateral direction vectors");
+			latDir[Vec3::x] = -1.0;
+		}
+
+		return true;
+	}
+
+	bool
+	computeVehicleAcceleration(
+		gpo::TelemetrySamplesPtr tSamps,
+		gpo::DataAvailableBitSet &avail,
+		const cv::Vec3f &latDir,
+		const cv::Vec3f &lonDir)
+	{
+		const cv::Vec3f latDirNorm = normalize(latDir);
+		const cv::Vec3f lonDirNorm = normalize(lonDir);
+
+		// find non-zero component of lateral & longidtudinal direction vectors.
+		// we'll use these later when projecting the net accerlation vector onto
+		// the lateral & longitudinal direction vectors.
+		size_t iiLat = 0;
+		size_t iiLon = 0;
+		for (size_t ii=0; ii<3; ii++)
+		{
+			if (latDirNorm[ii] != 0.0)
+			{
+				iiLat = ii;
+			}
+			if (lonDirNorm[ii] != 0.0)
+			{
+				iiLon = ii;
+			}
+		}
+
+		// -----------------------------------
+		// determine where we should source our acceleration from.
+		// prefer smoothed acceleration if available.
+
+		enum AcclSource
+		{
+			eNormalAccl,
+			eSmoothedAccl
+		};
+
+		AcclSource acclSource = AcclSource::eNormalAccl;
+		if (bitset_is_set(avail, gpo::DataAvailable::eDA_CALC_SMOOTH_ACCL))
+		{
+			acclSource = AcclSource::eSmoothedAccl;
+		}
+		else if ( ! bitset_is_set(avail, gpo::DataAvailable::eDA_GOPRO_ACCL))
+		{
+			spdlog::error("{} - telemetry has no acceleration source", __func__);
+			return false;
+		}
+
+		// -----------------------------------
+		// compute vehicle acceleration at each sample
+
+		for (size_t ii=0; ii<tSamps->size(); ii++)
+		{
+			auto &samp = tSamps->at(ii);
+
+			// get net acceleration vector
+			cv::Vec3d accl;
+			switch (acclSource)
+			{
+				case AcclSource::eNormalAccl:
+					accl[Vec3::x] = samp.gpSamp.accl.x;
+					accl[Vec3::y] = samp.gpSamp.accl.y;
+					accl[Vec3::z] = samp.gpSamp.accl.z;
+					break;
+				case AcclSource::eSmoothedAccl:
+					accl[Vec3::x] = samp.calcSamp.smoothAccl.x;
+					accl[Vec3::y] = samp.calcSamp.smoothAccl.y;
+					accl[Vec3::z] = samp.calcSamp.smoothAccl.z;
+					break;
+			}
+
+			// remove gravity vector if provided
+			if (bitset_is_set(avail, gpo::DataAvailable::eDA_GOPRO_GRAV))
+			{
+				accl[Vec3::x] -= samp.gpSamp.grav.x * constants::GRAVITY;
+				accl[Vec3::y] -= samp.gpSamp.grav.y * constants::GRAVITY;
+				accl[Vec3::z] -= samp.gpSamp.grav.z * constants::GRAVITY;
+			}
+
+			// compute lateral & longitudinal g-force vectors based on directionality
+			cv::Vec3f latProj = projection(accl,latDirNorm);
+			cv::Vec3f lonProj = projection(accl,lonDirNorm);
+			samp.calcSamp.vehiAccl.lat_g = latProj[iiLat] / latDirNorm[iiLat] / constants::GRAVITY;
+			samp.calcSamp.vehiAccl.lon_g = lonProj[iiLon] / lonDirNorm[iiLon] / constants::GRAVITY;
+		}
+
+		bitset_set_bit(avail, gpo::DataAvailable::eDA_CALC_VEHI_ACCL);
+
+		return true;
+	}
+	
 	bool
 	computeTrackTimes(
 		const gpo::Track *track,
@@ -40,7 +237,10 @@ namespace utils
 			}
 		}
 
-		bitset_clear(avail);
+		bitset_clr_bit(avail, gpo::eDA_CALC_LAP);
+		bitset_clr_bit(avail, gpo::eDA_CALC_LAP_TIME_OFFSET);
+		bitset_clr_bit(avail, gpo::eDA_CALC_SECTOR);
+		bitset_clr_bit(avail, gpo::eDA_CALC_SECTOR_TIME_OFFSET);
 		int currLap = -1;
 		int sectorSeq = 1;// increments everytime we exit a sector
 		int currSector = -1;
@@ -57,16 +257,16 @@ namespace utils
 		for (size_t ii=0; ii<tSamps->size(); ii++)
 		{
 			auto &samp = tSamps->at(ii);
-			auto &trackData = samp.trackData;
+			auto &calcSamp = samp.calcSamp;
 			cv::Vec2d currCoord(samp.gpSamp.gps.coord.lat,samp.gpSamp.gps.coord.lon);
 			auto findRes = track->findClosestPointWithIdx(
 						currCoord,
 						onTrackFindInitialIdx,
 						onTrackFindWindow);
 			const auto &foundCoord = std::get<1>(findRes);
-			trackData.onTrackLL.lat = foundCoord[0];
-			trackData.onTrackLL.lon = foundCoord[1];
-			bitset_set_bit(avail, gpo::eDA_TRACK_ON_TRACK_LATLON);
+			calcSamp.onTrackLL.lat = foundCoord[0];
+			calcSamp.onTrackLL.lon = foundCoord[1];
+			bitset_set_bit(avail, gpo::eDA_CALC_ON_TRACK_LATLON);
 			onTrackFindInitialIdx = std::get<2>(findRes);
 			onTrackFindWindow = {5,100};// reduce search space once we've found initial location
 
@@ -173,19 +373,19 @@ namespace utils
 			while (movedToNextObject && numMoves < (totalGatesInTrack - 1));
 
 			// update telemetry sample
-			trackData.lap = currLap;
-			trackData.lapTimeOffset = (currLap == -1 ? 0.0 : samp.t_offset - lapStartTimeOffset);
+			calcSamp.lap = currLap;
+			calcSamp.lapTimeOffset = (currLap == -1 ? 0.0 : samp.t_offset - lapStartTimeOffset);
 			if (currLap != -1)
 			{
-				bitset_set_bit(avail, gpo::eDA_TRACK_LAP);
-				bitset_set_bit(avail, gpo::eDA_TRACK_LAP_TIME_OFFSET);
+				bitset_set_bit(avail, gpo::eDA_CALC_LAP);
+				bitset_set_bit(avail, gpo::eDA_CALC_LAP_TIME_OFFSET);
 			}
-			trackData.sector = currSector;
-			trackData.sectorTimeOffset = (currSector == -1 ? 0.0 : samp.t_offset - sectorStartTimeOffset);
+			calcSamp.sector = currSector;
+			calcSamp.sectorTimeOffset = (currSector == -1 ? 0.0 : samp.t_offset - sectorStartTimeOffset);
 			if (currSector != -1)
 			{
-				bitset_set_bit(avail, gpo::eDA_TRACK_SECTOR);
-				bitset_set_bit(avail, gpo::eDA_TRACK_SECTOR_TIME_OFFSET);
+				bitset_set_bit(avail, gpo::eDA_CALC_SECTOR);
+				bitset_set_bit(avail, gpo::eDA_CALC_SECTOR_TIME_OFFSET);
 			}
 
 			prevCoord = foundCoord;
@@ -238,10 +438,13 @@ namespace utils
 		// lerp(out.gpSamp, a.gpSamp, b.gpSamp, ratio);
 		lerp(out.ecuSamp, a.ecuSamp, b.ecuSamp, ratio);
 		// FIELD_LERP(out,a,b,ratio,onTrackLL);
-		FIELD_LERP_ROUNDED(out,a,b,ratio,trackData.lap);
-		FIELD_LERP(out,a,b,ratio,trackData.lapTimeOffset);
-		FIELD_LERP_ROUNDED(out,a,b,ratio,trackData.sector);
-		FIELD_LERP(out,a,b,ratio,trackData.sectorTimeOffset);
+		FIELD_LERP_ROUNDED(out,a,b,ratio,calcSamp.lap);
+		FIELD_LERP(out,a,b,ratio,calcSamp.lapTimeOffset);
+		FIELD_LERP_ROUNDED(out,a,b,ratio,calcSamp.sector);
+		FIELD_LERP(out,a,b,ratio,calcSamp.sectorTimeOffset);
+		lerp(out.calcSamp.smoothAccl, a.calcSamp.smoothAccl, b.calcSamp.smoothAccl, ratio);
+		FIELD_LERP(out,a,b,ratio,calcSamp.vehiAccl.lat_g);
+		FIELD_LERP(out,a,b,ratio,calcSamp.vehiAccl.lon_g);
 	}
 
 	void

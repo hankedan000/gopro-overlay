@@ -1,5 +1,7 @@
 #include "GoProOverlay/graphics/FrictionCircleObject.h"
 
+#include "GoProOverlay/utils/OpenCV_Utils.h"
+
 namespace gpo
 {
 
@@ -7,7 +9,7 @@ namespace gpo
 	const int F_CIRCLE_RENDER_HEIGHT = 480;
 
 	FrictionCircleObject::FrictionCircleObject()
-	 : RenderedObject(F_CIRCLE_RENDER_WIDTH,F_CIRCLE_RENDER_HEIGHT)
+	 : RenderedObject("FrictionCircleObject",F_CIRCLE_RENDER_WIDTH,F_CIRCLE_RENDER_HEIGHT)
 	 , outlineImg_(F_CIRCLE_RENDER_HEIGHT,F_CIRCLE_RENDER_WIDTH,CV_8UC4,RGBA_COLOR(0,0,0,0))
 	 , tailLength_(0)
 	 , radius_px_(200)
@@ -18,12 +20,6 @@ namespace gpo
 	 , currentDotColor_(RGBA_COLOR(255,255,255,255))
 	{
 		redrawOutline();
-	}
-
-	std::string
-	FrictionCircleObject::typeName() const
-	{
-		return "FrictionCircleObject";
 	}
 
 	DataSourceRequirements
@@ -37,6 +33,8 @@ namespace gpo
 		size_t tailLength)
 	{
 		tailLength_ = tailLength;
+		markNeedsRedraw();
+		markObjectModified(false,true);
 	}
 
 	size_t
@@ -51,6 +49,8 @@ namespace gpo
 	{
 		borderColor_ = rgbColor;
 		redrawOutline();
+		markNeedsRedraw();
+		markObjectModified(false,true);
 	}
 
 	cv::Scalar
@@ -64,6 +64,8 @@ namespace gpo
 		cv::Scalar rgbColor)
 	{
 		tailColor_ = rgbColor;
+		markNeedsRedraw();
+		markObjectModified(false,true);
 	}
 
 	cv::Scalar
@@ -77,6 +79,8 @@ namespace gpo
 		cv::Scalar rgbColor)
 	{
 		currentDotColor_ = rgbColor;
+		markNeedsRedraw();
+		markObjectModified(false,true);
 	}
 
 	cv::Scalar
@@ -86,7 +90,7 @@ namespace gpo
 	}
 
 	void
-	FrictionCircleObject::render()
+	FrictionCircleObject::subRender()
 	{
 		outlineImg_.copyTo(outImg_);
 		if ( ! requirementsMet())
@@ -107,16 +111,16 @@ namespace gpo
 			bool isLast = i == telemSrc->seekedIdx();
 			auto color = (isLast ? currentDotColor_ : tailColor_);
 			int dotRadius = (isLast ? 20 : 6);
-			const auto &accl = telemSrc->at(i).gpSamp.accl;
+			const auto &vehiAccl = telemSrc->at(i).calcSamp.vehiAccl;
 
 			auto drawPoint = cv::Point(
-				(accl.x / 9.8) * radius_px_ + center_.x,
-				(accl.y / -9.8) * radius_px_ + center_.y);
+				vehiAccl.lat_g * radius_px_ + center_.x,
+				vehiAccl.lon_g * radius_px_ + center_.y);
 			cv::circle(outImg_,drawPoint,dotRadius,color,cv::FILLED);
 
 			if (isLast)
 			{
-				double netG = std::sqrt((accl.x*accl.x) + (accl.y*accl.y)) / 9.8;
+				double netG = std::sqrt((vehiAccl.lat_g*vehiAccl.lat_g) + (vehiAccl.lon_g*vehiAccl.lon_g));
 				char tmpStr[1024];
 				sprintf(tmpStr,"%.1fg",netG);
 				cv::putText(
@@ -160,6 +164,18 @@ namespace gpo
 	FrictionCircleObject::redrawOutline()
 	{
 		outlineImg_.setTo(RGBA_COLOR(0,0,0,0));
+
+		// add a grey translucent background
+		int bgWidth = outlineImg_.size().width;
+		int bgHeight = outlineImg_.size().height;
+		cv::rounded_rectangle(
+			outlineImg_,
+			cv::Point(0,0),
+			cv::Point(bgWidth,bgHeight),
+			BACKGROUND_COLOR,
+			cv::FILLED,
+			cv::LINE_AA,
+			BACKGROUND_RADIUS);
 
 		// draw outer circle
 		cv::circle(outlineImg_,center_,radius_px_,borderColor_,8);

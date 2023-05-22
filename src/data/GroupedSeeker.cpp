@@ -6,7 +6,8 @@
 namespace gpo
 {
 	GroupedSeeker::GroupedSeeker()
-	 : seekers_()
+	 : ModifiableObject("GroupedSeeker",false,true)
+	 , seekers_()
 	{
 	}
 
@@ -14,6 +15,7 @@ namespace gpo
 	GroupedSeeker::clear()
 	{
 		seekers_.clear();
+		markObjectModified(false,true);
 	}
 
 	void
@@ -21,6 +23,7 @@ namespace gpo
 		TelemetrySeekerPtr seeker)
 	{
 		seekers_.push_back(seeker);
+		markObjectModified(false,true);
 	}
 
 	bool
@@ -40,6 +43,7 @@ namespace gpo
 		if (isNewSeeker)
 		{
 			seekers_.push_back(seeker);
+			markObjectModified(false,true);
 		}
 		return isNewSeeker;
 	}
@@ -62,6 +66,31 @@ namespace gpo
 		size_t idx)
 	{
 		seekers_.erase(std::next(seekers_.begin(), idx));
+		markObjectModified(false,true);
+	}
+
+	bool
+	GroupedSeeker::removeAllSeekers(
+		TelemetrySeekerPtr seeker)
+	{
+		bool removed = false;
+		auto it = seekers_.begin();
+		while(it != seekers_.end())
+		{
+			if((*it) == seeker)
+			{
+				it = seekers_.erase(it);
+				removed = true;
+			}
+			else
+			{
+				++it;
+			}
+		}
+
+		markObjectModified(false,removed);
+
+		return removed;
 	}
 
 	void
@@ -83,11 +112,13 @@ namespace gpo
 		{
 			seeker->prev();
 		}
+		markObjectModified(false,false);
 	}
 
 	void
 	GroupedSeeker::nextAll(
-			bool onlyIfAllHaveNext)
+			bool onlyIfAllHaveNext,
+			bool sendModificationEvent)
 	{
 		if (onlyIfAllHaveNext)
 		{
@@ -103,6 +134,10 @@ namespace gpo
 		for (auto &seeker : seekers_)
 		{
 			seeker->next();
+		}
+		if (sendModificationEvent)
+		{
+			markObjectModified(false,false);
 		}
 	}
 
@@ -123,6 +158,7 @@ namespace gpo
 						seeker->seekToIdx(alignItr->second);
 					}
 				}
+				markObjectModified(false,false);
 				break;
 			}
 			case gpo::RenderAlignmentType_E::eRAT_Lap:
@@ -155,6 +191,7 @@ namespace gpo
 		{
 			seeker->seekToIdx(idx);
 		}
+		markObjectModified(false,false);
 	}
 
 	void
@@ -176,6 +213,7 @@ namespace gpo
 		{
 			seeker->seekRelative(amount,forward);
 		}
+		markObjectModified(false,false);
 	}
 
 	void
@@ -196,6 +234,7 @@ namespace gpo
 		{
 			seeker->seekRelativeTime(offset_secs);
 		}
+		markObjectModified(false,false);
 	}
 
 	void
@@ -205,6 +244,7 @@ namespace gpo
 		{
 			seeker->setAlignmentIdx(seeker->seekedIdx());
 		}
+		markObjectModified(false,true);
 	}
 
 	unsigned int
@@ -265,6 +305,7 @@ namespace gpo
 		{
 			seeker->seekToLapEntry(lap);
 		}
+		markObjectModified(false,false);
 		return true;
 	}
 
@@ -294,6 +335,7 @@ namespace gpo
 		{
 			seeker->seekToLapExit(lap);
 		}
+		markObjectModified(false,false);
 		return true;
 	}
 
@@ -342,5 +384,19 @@ namespace gpo
 			timeLimits.second = std::max(timeLimits.second,forwardsTimeLimit);
 		}
 		return timeLimits;
+	}
+
+	bool
+	GroupedSeeker::subclassApplyModifications(
+        bool unnecessaryIsOkay)
+	{
+		return true;
+	}
+
+	bool
+	GroupedSeeker::subclassSaveModifications(
+        bool unnecessaryIsOkay)
+	{
+		return true;
 	}
 }

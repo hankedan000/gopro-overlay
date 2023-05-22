@@ -1,5 +1,7 @@
 #include "GoProOverlay/graphics/TrackMapObject.h"
 
+#include "GoProOverlay/utils/OpenCV_Utils.h"
+
 namespace gpo
 {
 	const int TRACK_MAP_RENDER_WIDTH = 600;
@@ -13,7 +15,7 @@ namespace gpo
 	};
 
 	TrackMapObject::TrackMapObject()
-	 : RenderedObject(TRACK_MAP_RENDER_WIDTH,TRACK_MAP_RENDER_HEIGHT)
+	 : RenderedObject("TrackMapObject",TRACK_MAP_RENDER_WIDTH,TRACK_MAP_RENDER_HEIGHT)
 	 , outlineImg_(TRACK_MAP_RENDER_HEIGHT,TRACK_MAP_RENDER_WIDTH,CV_8UC4,RGBA_COLOR(0,0,0,0))
 	 , ulCoord_()
 	 , lrCoord_()
@@ -22,12 +24,6 @@ namespace gpo
 	 , dotRadius_px_(DEFAULT_DOT_RADIUS_RATIO * TRACK_MAP_RENDER_WIDTH)
 	 , dotColors_()
 	{
-	}
-
-	std::string
-	TrackMapObject::typeName() const
-	{
-		return "TrackMapObject";
 	}
 
 	DataSourceRequirements
@@ -42,25 +38,8 @@ namespace gpo
 		cv::Scalar color)
 	{
 		dotColors_.at(sourceIdx) = color;
-	}
-
-	void
-	TrackMapObject::render()
-	{
-		outlineImg_.copyTo(outImg_);
-		if ( ! requirementsMet())
-		{
-			return;
-		}
-
-		for (unsigned int ss=0; ss<tSources_.size(); ss++)
-		{
-			auto telemSrc = tSources_.at(ss);
-
-			const auto &currSample = telemSrc->at(telemSrc->seekedIdx());
-			auto dotPoint = coordToPoint(currSample.trackData.onTrackLL);
-			cv::circle(outImg_,dotPoint,dotRadius_px_,dotColors_.at(ss),cv::FILLED);
-		}
+		markNeedsRedraw();
+		markObjectModified(false,true);
 	}
 
 	void
@@ -126,18 +105,17 @@ namespace gpo
 			pxPerDeg_ = (getNativeWidth() - PX_MARGIN * 2) / deltaLon;
 		}
 
-		const bool drawBackground = false;
-		if (drawBackground)
-		{
-			int bgWidth = deltaLon * pxPerDeg_ + PX_MARGIN * 2;
-			int bgHeight = deltaLat * pxPerDeg_ + PX_MARGIN * 2;
-			cv::rectangle(
-				outlineImg_,
-				cv::Point(0,0),
-				cv::Point(bgWidth,bgHeight),
-				RGBA_COLOR(0,0,0,100),
-				cv::FILLED);
-		}
+		// add a grey translucent background
+		int bgWidth = deltaLon * pxPerDeg_ + PX_MARGIN * 2;
+		int bgHeight = deltaLat * pxPerDeg_ + PX_MARGIN * 2;
+		cv::rounded_rectangle(
+			outlineImg_,
+			cv::Point(0,0),
+			cv::Point(bgWidth,bgHeight),
+			BACKGROUND_COLOR,
+			cv::FILLED,
+			cv::LINE_AA,
+			BACKGROUND_RADIUS);
 
 		cv::Point prevPoint;
 		for (size_t i=trackStartIdx; i<trackEndIdx; i++)
@@ -167,6 +145,25 @@ namespace gpo
 		return cv::Point(
 			PX_MARGIN + (coord.lon - ulCoord_.lon) * pxPerDeg_,
 			PX_MARGIN + (coord.lat - ulCoord_.lat) * -pxPerDeg_);
+	}
+
+	void
+	TrackMapObject::subRender()
+	{
+		outlineImg_.copyTo(outImg_);
+		if ( ! requirementsMet())
+		{
+			return;
+		}
+
+		for (unsigned int ss=0; ss<tSources_.size(); ss++)
+		{
+			auto telemSrc = tSources_.at(ss);
+
+			const auto &currSample = telemSrc->at(telemSrc->seekedIdx());
+			auto dotPoint = coordToPoint(currSample.calcSamp.onTrackLL);
+			cv::circle(outImg_,dotPoint,dotRadius_px_,dotColors_.at(ss),cv::FILLED);
+		}
 	}
 
 	YAML::Node

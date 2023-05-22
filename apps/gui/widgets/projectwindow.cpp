@@ -1,6 +1,8 @@
 #include "projectwindow.h"
 #include "ui_projectwindow.h"
 
+#include "GoProOverlay/utils/misc/MiscUtils.h"
+
 #include <QFileDialog>
 #include <QMessageBox>
 #include <spdlog/spdlog.h>
@@ -24,7 +26,6 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     ui(new Ui::ProjectWindow),
     previewResolutionActionGroup_(new QActionGroup(this)),
     settings(QSettings::Format::NativeFormat, QSettings::UserScope, "ProjectWindow", "GoProOverlay Render Project Application"),
-    currProjectDir_(),
     proj_(),
     sourcesTableModel_(new QStandardItemModel(0,3,this)),
     entitiesTableModel_(new QStandardItemModel(0,3,this)),
@@ -32,7 +33,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     previewWindow_(new ScrubbableVideo()),
     reWizSingle_(new RenderEngineWizardSingleVideo(this,&proj_)),
     reWizTopBot_(new RenderEngineWizard_TopBottom(this,&proj_)),
-    projectDirty_(false),
+    projectObserver_(),
     progressDialog_(new ProgressDialog(this)),
     renderEntityPropertiesTab_(new RenderEntityPropertiesTab(this))
 {
@@ -61,11 +62,14 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     exportFilePath /= RenderThread::DEFAULT_EXPORT_FILENAME;
     ui->exportFileLineEdit->setText(exportFilePath.c_str());
 
+    projectObserver_.bindModifiable(&proj_);
+    projectObserver_.bindWidget(this, "Project Editor");
+
     // menu actions
     connect(ui->actionNew_Project, &QAction::triggered, this, [this]{
         if (maybeSave())
         {
-            if (currProjectDir_.empty())
+            if (proj_.getSavePath().empty())
             {
                 onActionSaveProjectAs();
             }
@@ -77,8 +81,6 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
 
         // clear old project
         proj_.clear();
-        currProjectDir_.clear();
-        projectDirty_ = false;
 
         // reset UI elements related to project
         reloadDataSourceTable();
@@ -139,7 +141,6 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         proj_.setTrack(newTrack);
         ui->renderEngineBox->setEnabled(true);
         ui->alignAndExportBox->setEnabled(true);
-        setProjectDirty(true);
 
         trackEditor_->setTrack(newTrack);
         newTrack->addObserver(this);
@@ -155,7 +156,6 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     });
     connect(ui->previewAlignment_PushButton, &QPushButton::clicked, this, [this]{
         seekEngineToAlignment(getAlignmentInfoFromUI(),false);
-        render();
         if ( ! ui->customAlignmentCheckBox->isChecked())
         {
             updateCustomAlignmentTableValues();
@@ -169,12 +169,11 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     connect(ui->applyAlignment_PushButton, &QPushButton::clicked, this, [this]{
         applyAlignmentToProject();
         seekEngineToAlignment(getAlignmentInfoFromUI(),true);
-        render();
         ui->resetAlignment_PushButton->setEnabled(false);
         ui->applyAlignment_PushButton->setEnabled(false);
     });
     connect(ui->exportFileLineEdit, &QLineEdit::editingFinished, this, [this]{
-        if (currProjectDir_.empty())
+        if (proj_.getSavePath().empty())
         {
             // no project loaded yet
             return;
@@ -184,8 +183,26 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         if (newExportFilePath != proj_.getExportFilePath())
         {
             proj_.setExportFilePath(newExportFilePath);
-            setProjectDirty(true);
         }
+    });
+    connect(ui->browseExportButton, &QPushButton::clicked, this, [this]{
+        // default dialog's directory to user's home dir
+        QString currentExportPath = proj_.getExportFilePath().c_str();
+
+        // open "Save As" dialog
+        std::string filepath = QFileDialog::getSaveFileName(
+                    this,
+                    "Export Path",
+                    currentExportPath,
+                    "MP4 (*.mp4 *.MP4)").toStdString();
+        if (filepath.empty())
+        {
+            // dialog was close without selecting a path
+            return;
+        }
+
+        ui->exportFileLineEdit->setText(filepath.c_str());
+        proj_.setExportFilePath(filepath);
     });
     connect(ui->exportButton, &QPushButton::clicked, this, [this]{
         QString exportDir = RenderThread::DEFAULT_EXPORT_DIR.c_str();
@@ -244,7 +261,6 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     });
     connect(ui->leadIn_SpinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, [this](double value){
         proj_.setLeadInSeconds(value);
-        setProjectDirty(true);
     });
     connect(ui->jumpToLeadIn_ToolButton, &QToolButton::clicked, this, [this]{
         auto engine = proj_.getEngine();
@@ -252,18 +268,15 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
         gSeeker->seekToAlignmentInfo(proj_.getAlignmentInfo());
         auto leadIn = ui->leadIn_SpinBox->value();
         gSeeker->seekAllRelativeTime(leadIn * -1.0);// -1 because lead-in is defined as seconds before alignment point
-        render();
     });
     connect(ui->leadOut_SpinBox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), this, [this](double value){
         proj_.setLeadOutSeconds(value);
-        setProjectDirty(true);
     });
     connect(ui->jumpToLeadOut_ToolButton, &QToolButton::clicked, this, [this]{
         spdlog::warn("jump to lead-out not implemented");
     });
     connect(ui->audioApproach_ComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index){
         proj_.setAudioExportApproach((gpo::AudioExportApproach_E)index);
-        setProjectDirty(true);
     });
 
     // connect engine wizards
@@ -286,9 +299,37 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
 
         // only support removal of 1 row right now
         proj_.getEngine()->removeEntity(selectedIndexs.at(0).row());
-        setProjectDirty(true);
         reloadRenderEntitiesTable();
-        render();
+    });
+    connect(ui->moveEntityUp_ToolButton, &QToolButton::clicked, this, [this]{
+        auto selectionModel = ui->renderEntitiesTable->selectionModel();
+        auto selectedIndexs = selectionModel->selectedIndexes();
+        if (selectedIndexs.empty())
+        {
+            return;// nothing to remove
+        }
+
+        size_t fromIdx = selectedIndexs.at(0).row();
+        size_t toIdx = fromIdx - 1;
+        auto rows = entitiesTableModel_->takeRow(fromIdx);
+        entitiesTableModel_->insertRow(toIdx, rows);
+        ui->renderEntitiesTable->selectRow(toIdx);
+        proj_.getEngine()->repositionEntity(fromIdx, toIdx);
+    });
+    connect(ui->moveEntityDown_ToolButton, &QToolButton::clicked, this, [this]{
+        auto selectionModel = ui->renderEntitiesTable->selectionModel();
+        auto selectedIndexs = selectionModel->selectedIndexes();
+        if (selectedIndexs.empty())
+        {
+            return;// nothing to remove
+        }
+
+        size_t fromIdx = selectedIndexs.at(0).row();
+        size_t toIdx = fromIdx + 1;
+        auto rows = entitiesTableModel_->takeRow(fromIdx);
+        entitiesTableModel_->insertRow(toIdx, rows);
+        ui->renderEntitiesTable->selectRow(toIdx);
+        proj_.getEngine()->repositionEntity(fromIdx, toIdx);
     });
 
     connect(entitiesTableModel_, &QStandardItemModel::dataChanged, this, [this](
@@ -303,44 +344,30 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
             return;
         }
 
-        const auto row = topLeft.row();
-        const auto col = topLeft.column();
-        QStandardItem *entityNameItem = entitiesTableModel_->item(row,ENTITY_NAME_COLUMN);
-        // recover the encoded pointer to a RenderedEntity within the name's data()
-        QVariant v = entityNameItem->data();
-        auto re = reinterpret_cast<gpo::RenderEngine::RenderedEntity *>(v.toULongLong());
+        int row = topLeft.row();
+        int col = topLeft.column();
+        auto re = proj_.getEngine()->getEntity(row);
         if (col == ENTITY_VISIBILITY_COLUMN)
         {
             QStandardItem *visItem = entitiesTableModel_->item(row,col);
-            re->rObj->setVisible(visItem->checkState() == Qt::CheckState::Checked);
-            setProjectDirty(true);
-            render();
+            re->renderObject()->setVisible(visItem->checkState() == Qt::CheckState::Checked);
         }
     });
     connect(ui->renderEntitiesTable, &QTableView::clicked, this, [this](const QModelIndex &index){
         const auto row = index.row();
-        QStandardItem *entityNameItem = entitiesTableModel_->item(row,ENTITY_NAME_COLUMN);
-        // recover the encoded pointer to a RenderedEntity within the name's data()
-        QVariant v = entityNameItem->data();
-        auto re = reinterpret_cast<gpo::RenderEngine::RenderedEntity *>(v.toULongLong());
+        auto re = proj_.getEngine()->getEntity(row);
         renderEntityPropertiesTab_->setEntity(re);
-    });
-    connect(renderEntityPropertiesTab_, &RenderEntityPropertiesTab::propertyChanged, this, [this]{
-        setProjectDirty(true);
-        render();
     });
 
     // scrubbable video signal handlers
-    connect(previewWindow_, &ScrubbableVideo::onEntitySelected, this, [this](gpo::RenderEngine::RenderedEntity *entity){
+    connect(previewWindow_, &ScrubbableVideo::onEntitySelected, this, [this](gpo::RenderedEntity *entity){
+        auto engine = proj_.getEngine();
         // when an entity is selected in the video preview, highlight it in the entity table
         // and also display it in the properties pane.
         for (int r=0; r<entitiesTableModel_->rowCount(); r++)
         {
-            QStandardItem *entityNameItem = entitiesTableModel_->item(r,ENTITY_NAME_COLUMN);
-            // recover the encoded pointer to a RenderedEntity within the name's data()
-            QVariant v = entityNameItem->data();
-            auto re = reinterpret_cast<gpo::RenderEngine::RenderedEntity *>(v.toULongLong());
-            if (re == entity)
+            auto re = engine->getEntity(r);
+            if (re.get() == entity)
             {
                 ui->renderEntitiesTable->selectRow(r);
                 renderEntityPropertiesTab_->setEntity(re);
@@ -348,11 +375,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
             }
         }
     });
-    connect(previewWindow_, &ScrubbableVideo::onEntityMoved, this, [this](gpo::RenderEngine::RenderedEntity *entity, QPoint moveVector){
-        setProjectDirty(true);
-    });
 
-    setProjectDirty(false);
     configureMenuActions();
     populateRecentProjects();
     updateTrackPane();
@@ -361,34 +384,24 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
 ProjectWindow::~ProjectWindow()
 {
     delete ui;
+    delete previewWindow_;
 }
 
 bool
 ProjectWindow::isProjectOpened() const
 {
-    return ! currProjectDir_.empty();
+    return ! proj_.getSavePath().empty();
 }
 
 void
 ProjectWindow::closeProject()
 {
-    if ( ! currProjectDir_.empty())
+    if (isProjectOpened())
     {
-        spdlog::info("closing project '{}'",currProjectDir_);
-        currProjectDir_.clear();
+        spdlog::info("closing project '{}'",proj_.getSavePath().c_str());
+        proj_.clear();
         configureMenuActions();
-        setProjectDirty(false);
     }
-}
-
-bool
-ProjectWindow::saveProject(
-        const std::string &projectDir)
-{
-    spdlog::info("saving project to '{}'",projectDir);
-    bool success = proj_.save(projectDir);
-    setProjectDirty( ! success);
-    return success;
 }
 
 bool
@@ -401,7 +414,6 @@ ProjectWindow::loadProject(
     bool loadOkay = proj_.load(projectDir);
     if (loadOkay)
     {
-        currProjectDir_ = projectDir;
         addProjectToRecentHistory(projectDir);
 
         // update menus that change based on project
@@ -415,7 +427,6 @@ ProjectWindow::loadProject(
                     false);// holdoff render untill we seek below
 
         updateAlignmentPane();
-        seekEngineToAlignment(getAlignmentInfoFromUI(),true);
         ui->leadIn_SpinBox->setValue(proj_.getLeadInSeconds());
         ui->leadOut_SpinBox->setValue(proj_.getLeadOutSeconds());
         switch (proj_.getAudioExportApproach())
@@ -449,8 +460,6 @@ ProjectWindow::loadProject(
             ui->renderEngineBox->setEnabled(true);
             ui->alignAndExportBox->setEnabled(true);
         }
-
-        setProjectDirty(false);
     }
     else
     {
@@ -471,7 +480,6 @@ ProjectWindow::importVideoSource(
     {
         reloadDataSourceTable();
         updateTrackPane();
-        setProjectDirty(true);
     }
     return importOkay;
 }
@@ -615,24 +623,23 @@ ProjectWindow::reloadRenderEntitiesTable()
     auto engine = proj_.getEngine();
     for (size_t ee=0; ee<engine->entityCount(); ee++)
     {
-        auto &entity = engine->getEntity(ee);
+        const auto &entity = engine->getEntity(ee);
 
         QList<QStandardItem *> row;
 
         QStandardItem *nameItem = new QStandardItem;
-        nameItem->setText(entity.name.c_str());
-        nameItem->setData(QVariant(reinterpret_cast<qulonglong>((void*)(&entity))));
+        nameItem->setText(entity->name().c_str());
         row.append(nameItem);
 
         QStandardItem *typeItem = new QStandardItem;
-        typeItem->setText(entity.rObj->typeName().c_str());
+        typeItem->setText(entity->renderObject()->typeName().c_str());
         typeItem->setEditable(false);
         row.append(typeItem);
 
         QStandardItem *visibleItem = new QStandardItem;
         visibleItem->setCheckable(true);
         visibleItem->setCheckState(
-                    entity.rObj->isVisible() ?
+                    entity->renderObject()->isVisible() ?
                     Qt::CheckState::Checked :
                     Qt::CheckState::Unchecked);
         row.append(visibleItem);
@@ -763,7 +770,6 @@ ProjectWindow::applyAlignmentToProject()
 {
     auto rai = getAlignmentInfoFromUI();
     proj_.setAlignmentInfo(rai);
-    setProjectDirty(true);
 }
 
 void
@@ -834,36 +840,18 @@ ProjectWindow::render()
 }
 
 void
-ProjectWindow::setProjectDirty(
-        bool dirty)
-{
-    projectDirty_ = dirty;
-    QString title = WINDOW_TITLE;
-    if ( ! currProjectDir_.empty())
-    {
-        title += " - ";
-        title += currProjectDir_.c_str();
-    }
-    if (projectDirty_)
-    {
-        title += " *";
-    }
-    setWindowTitle(title);
-}
-
-void
 ProjectWindow::closeEvent(
         QCloseEvent *event)
 {
     if (maybeSave())
     {
-        if (currProjectDir_.empty())
+        if (isProjectOpened())
         {
-            onActionSaveProjectAs();
+            onActionSaveProject();
         }
         else
         {
-            onActionSaveProject();
+            onActionSaveProjectAs();
         }
     }
     QApplication::closeAllWindows();
@@ -872,7 +860,7 @@ ProjectWindow::closeEvent(
 bool
 ProjectWindow::maybeSave()
 {
-    if (projectDirty_)
+    if (proj_.hasSavableModifications())
     {
         auto msgBox = new QMessageBox(
                     QMessageBox::Icon::Warning,
@@ -962,7 +950,7 @@ ProjectWindow::onModified(
 {
     if (modifiable == proj_.getTrack())
     {
-        setProjectDirty(true);
+        // do nothing
     }
     else
     {
@@ -980,7 +968,10 @@ ProjectWindow::onModificationsApplied(
 {
     if (modifiable == proj_.getTrack())
     {
+        // TODO make RenderProject watch for track's change application event
+        // and perform the reprocessDatumTrack() call
         proj_.reprocessDatumTrack();
+
         updateAlignmentPane();
     }
     else
@@ -996,7 +987,7 @@ ProjectWindow::onModificationsApplied(
 void
 ProjectWindow::onActionSaveProject()
 {
-    saveProject(currProjectDir_);
+    proj_.saveModifications(true);// true - unecessary save is ok
 }
 
 void
@@ -1004,11 +995,10 @@ ProjectWindow::onActionSaveProjectAs()
 {
     // default dialog's directory to user's home dir
     QString suggestedDir = QDir::homePath();
-    if ( ! currProjectDir_.empty())
+    if (isProjectOpened())
     {
         // open dialog to dir where existing project is located
-        const std::filesystem::path tmpFsPath = currProjectDir_;
-        suggestedDir = tmpFsPath.parent_path().c_str();
+        suggestedDir = proj_.getSavePath().parent_path().c_str();
     }
 
     // open "Save As" dialog
@@ -1022,9 +1012,14 @@ ProjectWindow::onActionSaveProjectAs()
         return;
     }
 
-    if (saveProject(filepath))
+    // default export path to where project is
+    std::filesystem::path exportFilePath = filepath;
+    exportFilePath /= RenderThread::DEFAULT_EXPORT_FILENAME;
+    ui->exportFileLineEdit->setText(exportFilePath.c_str());
+    proj_.setExportFilePath(exportFilePath);
+
+    if (proj_.saveModificationsAs(filepath))
     {
-        currProjectDir_ = filepath;
         configureMenuActions();
         addProjectToRecentHistory(filepath);
     }
@@ -1065,7 +1060,6 @@ ProjectWindow::onEngineCreated(
         gpo::RenderEnginePtr newEngine)
 {
     proj_.setEngine(newEngine);
-    setProjectDirty(true);
     reloadRenderEntitiesTable();
     updateAlignmentPane();
     updatePreviewWindowWithNewEngine(

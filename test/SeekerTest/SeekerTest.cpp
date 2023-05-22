@@ -36,16 +36,16 @@ SeekerTest::lapIndexLookup()
 	// ----------------------------------------------
 	// an "autocross" style data set where there's 1 lap and junk at begin/end
 
-	tSamps.at(0).trackData.lap = -1;
-	tSamps.at(1).trackData.lap = 1;// start gate
-	tSamps.at(2).trackData.lap = 1;
-	tSamps.at(3).trackData.lap = 1;
-	tSamps.at(4).trackData.lap = 1;
-	tSamps.at(5).trackData.lap = 1;
-	tSamps.at(6).trackData.lap = 1;
-	tSamps.at(7).trackData.lap = 1;// finish gate
-	tSamps.at(8).trackData.lap = -1;
-	tSamps.at(9).trackData.lap = -1;
+	tSamps.at(0).calcSamp.lap = -1;
+	tSamps.at(1).calcSamp.lap = 1;// start gate
+	tSamps.at(2).calcSamp.lap = 1;
+	tSamps.at(3).calcSamp.lap = 1;
+	tSamps.at(4).calcSamp.lap = 1;
+	tSamps.at(5).calcSamp.lap = 1;
+	tSamps.at(6).calcSamp.lap = 1;
+	tSamps.at(7).calcSamp.lap = 1;// finish gate
+	tSamps.at(8).calcSamp.lap = -1;
+	tSamps.at(9).calcSamp.lap = -1;
 
 	auto dataSrc = gpo::DataSource::makeDataFromTelemetry(tSamps);
 	auto seeker = dataSrc->seeker;
@@ -66,16 +66,16 @@ SeekerTest::lapIndexLookup()
 	// a "circuit" track scenario where we enter somewhere random then do a much
 	// of back-to-back start/finish gate entries
 
-	tSamps.at(0).trackData.lap = -1;
-	tSamps.at(1).trackData.lap = 1;
-	tSamps.at(2).trackData.lap = 1;
-	tSamps.at(3).trackData.lap = 1;
-	tSamps.at(4).trackData.lap = 1;
-	tSamps.at(5).trackData.lap = 2;
-	tSamps.at(6).trackData.lap = 2;
-	tSamps.at(7).trackData.lap = 2;
-	tSamps.at(8).trackData.lap = 2;
-	tSamps.at(9).trackData.lap = 3;// could be a corner case where we never saw an exit gate (pitted in early)
+	tSamps.at(0).calcSamp.lap = -1;
+	tSamps.at(1).calcSamp.lap = 1;
+	tSamps.at(2).calcSamp.lap = 1;
+	tSamps.at(3).calcSamp.lap = 1;
+	tSamps.at(4).calcSamp.lap = 1;
+	tSamps.at(5).calcSamp.lap = 2;
+	tSamps.at(6).calcSamp.lap = 2;
+	tSamps.at(7).calcSamp.lap = 2;
+	tSamps.at(8).calcSamp.lap = 2;
+	tSamps.at(9).calcSamp.lap = 3;// could be a corner case where we never saw an exit gate (pitted in early)
 
 	dataSrc = gpo::DataSource::makeDataFromTelemetry(tSamps);
 	seeker = dataSrc->seeker;
@@ -104,16 +104,16 @@ SeekerTest::lapIndexLookup()
 	// ----------------------------------------------
 	// never enter any laps
 
-	tSamps.at(0).trackData.lap = -1;
-	tSamps.at(1).trackData.lap = -1;
-	tSamps.at(2).trackData.lap = -1;
-	tSamps.at(3).trackData.lap = -1;
-	tSamps.at(4).trackData.lap = -1;
-	tSamps.at(5).trackData.lap = -1;
-	tSamps.at(6).trackData.lap = -1;
-	tSamps.at(7).trackData.lap = -1;
-	tSamps.at(8).trackData.lap = -1;
-	tSamps.at(9).trackData.lap = -1;
+	tSamps.at(0).calcSamp.lap = -1;
+	tSamps.at(1).calcSamp.lap = -1;
+	tSamps.at(2).calcSamp.lap = -1;
+	tSamps.at(3).calcSamp.lap = -1;
+	tSamps.at(4).calcSamp.lap = -1;
+	tSamps.at(5).calcSamp.lap = -1;
+	tSamps.at(6).calcSamp.lap = -1;
+	tSamps.at(7).calcSamp.lap = -1;
+	tSamps.at(8).calcSamp.lap = -1;
+	tSamps.at(9).calcSamp.lap = -1;
 
 	dataSrc = gpo::DataSource::makeDataFromTelemetry(tSamps);
 	seeker = dataSrc->seeker;
@@ -124,16 +124,16 @@ SeekerTest::lapIndexLookup()
 	// ----------------------------------------------
 	// some crazy thing that probably doesn't have any physical meaning
 
-	tSamps.at(0).trackData.lap = 1;// only case that hasn't started with -1 so far!
-	tSamps.at(1).trackData.lap = 1;
-	tSamps.at(2).trackData.lap = -1;
-	tSamps.at(3).trackData.lap = -1;
-	tSamps.at(4).trackData.lap = 2;
-	tSamps.at(5).trackData.lap = 2;
-	tSamps.at(6).trackData.lap = -1;
-	tSamps.at(7).trackData.lap = 3;
-	tSamps.at(8).trackData.lap = 3;
-	tSamps.at(9).trackData.lap = 3;
+	tSamps.at(0).calcSamp.lap = 1;// only case that hasn't started with -1 so far!
+	tSamps.at(1).calcSamp.lap = 1;
+	tSamps.at(2).calcSamp.lap = -1;
+	tSamps.at(3).calcSamp.lap = -1;
+	tSamps.at(4).calcSamp.lap = 2;
+	tSamps.at(5).calcSamp.lap = 2;
+	tSamps.at(6).calcSamp.lap = -1;
+	tSamps.at(7).calcSamp.lap = 3;
+	tSamps.at(8).calcSamp.lap = 3;
+	tSamps.at(9).calcSamp.lap = 3;
 
 	dataSrc = gpo::DataSource::makeDataFromTelemetry(tSamps);
 	seeker = dataSrc->seeker;

@@ -12,10 +12,6 @@ namespace gpo
 		TrackMapObject();
 
 		virtual
-		std::string
-		typeName() const override;
-
-		virtual
 		DataSourceRequirements
 		dataSourceRequirements() const override;
 
@@ -24,11 +20,11 @@ namespace gpo
 			size_t sourceIdx,
 			cv::Scalar color);
 
+	protected:
 		virtual
 		void
-		render() override;
+		subRender() override;
 
-	protected:
 		// callback from RenderedObject class when all source requirements are met
 		virtual
 		void

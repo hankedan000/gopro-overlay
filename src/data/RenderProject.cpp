@@ -12,8 +12,9 @@ const std::string TRACK_FILENAME = "track.yaml";
 namespace gpo
 {
 	RenderProject::RenderProject()
-	 : dsm_()
-	 , engine_(new RenderEngine())
+	 : ModifiableObject("RenderProject",true,true)
+	 , dsm_()
+	 , engine_(std::make_shared<RenderEngine>())
 	 , track_(nullptr)
 	 , renderLeadIn_sec_(0.0)
 	 , renderLeadOut_sec_(0.0)
@@ -22,6 +23,7 @@ namespace gpo
 	 , audioExportApproach_(AudioExportApproach_E::eAEA_SingleSource)
 	 , exportFilePath_("")
 	{
+		engine_->addObserver((ModifiableObjectObserver*)this);
 	}
 
 	RenderProject::~RenderProject()
@@ -51,33 +53,17 @@ namespace gpo
 		dsm_.clear();
 		engine_->clear();
 		setTrack(nullptr);
+		setSavePath("");
+		clearNeedsApply();
+		clearNeedsSave();
 	}
 
 	void
 	RenderProject::setTrack(
 		Track *track)
 	{
-		if (track_)
-		{
-			delete track_;
-		}
-		track_ = track;
-
-		#pragma omp parallel for
-		for (size_t i=0; i<dsm_.sourceCount(); i++)
-		{
-			dsm_.getSource(i)->setDatumTrack(track,true);// true - process immediately
-		}
-
-		for (size_t e=0; e<engine_->entityCount(); e++)
-		{
-			auto &entity = engine_->getEntity(e);
-			DataSourceRequirements dsr = entity.rObj->dataSourceRequirements();
-			if (dsr.numTracks == DSR_ONE_OR_MORE || dsr.numTracks > 0)
-			{
-				entity.rObj->setTrack(track_);
-			}
-		}
+		internalSetTrack(track);
+		markObjectModified();
 	}
 
 	Track *
@@ -96,7 +82,11 @@ namespace gpo
 	RenderProject::setLeadInSeconds(
 		double dur_secs)
 	{
-		renderLeadIn_sec_ = dur_secs;
+		if (renderLeadIn_sec_ != dur_secs)
+		{
+			renderLeadIn_sec_ = dur_secs;
+			markObjectModified();
+		}
 	}
 
 	double
@@ -109,7 +99,11 @@ namespace gpo
 	RenderProject::setLeadOutSeconds(
 		double dur_secs)
 	{
-		renderLeadOut_sec_ = dur_secs;
+		if (renderLeadOut_sec_ != dur_secs)
+		{
+			renderLeadOut_sec_ = dur_secs;
+			markObjectModified();
+		}
 	}
 
 	double
@@ -127,6 +121,7 @@ namespace gpo
 		{
 			lastNonCustomAlignmentInfo_ = renderAlignmentInfo;
 		}
+		markObjectModified();
 	}
 
 	const RenderAlignmentInfo &
@@ -139,7 +134,11 @@ namespace gpo
 	RenderProject::setAudioExportApproach(
 		const AudioExportApproach_E &approach)
 	{
-		audioExportApproach_ = approach;
+		if (audioExportApproach_ != approach)
+		{
+			audioExportApproach_ = approach;
+			markObjectModified();
+		}
 	}
 
 	const AudioExportApproach_E &
@@ -153,6 +152,7 @@ namespace gpo
 		const std::filesystem::path &path)
 	{
 		exportFilePath_ = path;
+		markObjectModified();
 	}
 
 	const std::filesystem::path &
@@ -177,7 +177,13 @@ namespace gpo
 	{
 		if (engine != nullptr)
 		{
+			if (engine_)
+			{
+				engine_->removeObserver((ModifiableObjectObserver*)this);
+			}
 			engine_ = engine;
+			engine_->addObserver((ModifiableObjectObserver*)this);
+			markObjectModified();
 		}
 	}
 
@@ -215,52 +221,6 @@ namespace gpo
 	}
 
 	bool
-	RenderProject::save(
-		const std::string &dirPath)
-	{
-		const std::filesystem::path projectRoot(dirPath);
-		if ( ! std::filesystem::exists(projectRoot))
-		{
-			// make project directory if it doesn't exist already
-			if ( ! std::filesystem::create_directories(projectRoot))
-			{
-				spdlog::error("failed to create project root directory '{}'",projectRoot.c_str());
-				return false;
-			}
-		}
-		else if ( ! std::filesystem::is_directory(projectRoot))
-		{
-			// path exists, but it's not a directory, so bail out
-			spdlog::error("projectRoot must be a directory. '{}'",projectRoot.c_str());
-			return false;
-		}
-
-		const std::filesystem::path projectPath = projectRoot / PROJECT_FILENAME;
-
-		YAML::Node yProject = encode();
-		std::ofstream projOFS(projectPath);
-		projOFS << yProject;
-		projOFS.close();
-
-		if (track_)
-		{
-			YAML::Node trackNode = track_->encode();
-			std::filesystem::path trackPath = track_->getSavePath();
-			if (trackPath.empty())
-			{
-				trackPath = projectRoot / TRACK_FILENAME;
-				track_->setSavePath(trackPath);
-			}
-			std::ofstream trackOFS(trackPath);
-			trackOFS << trackNode;
-			trackOFS.close();
-			track_->saveModifications();
-		}
-
-		return true;
-	}
-
-	bool
 	RenderProject::load(
 		const std::string &dirPath)
 	{
@@ -288,7 +248,10 @@ namespace gpo
 				if (newTrack->decode(trackNode))
 				{
 					newTrack->setSavePath(trackPath);
-					setTrack(newTrack);
+					// call save to clear modification flags from loading
+					// kind of a hack...
+					newTrack->saveModifications(true);
+					internalSetTrack(newTrack);
 				}
 				else
 				{
@@ -308,6 +271,16 @@ namespace gpo
 			}
 		}
 
+		engine_->removeObserver(this);// ignore change events while restoring alignment position
+		engine_->getSeeker()->seekToAlignmentInfo(currRenderAlignmentInfo_);
+		engine_->getSeeker()->setAlignmentHere();
+		engine_->addObserver(this);
+
+		// call save to clear modification flags from loading
+		// kind of a hack...
+		engine_->saveModifications(true);
+
+		setSavePath(projectRoot);
 		return okay;
 	}
 
@@ -361,5 +334,106 @@ namespace gpo
 		exportFilePath_ = strExportFilePath;
 
 		return okay;
+	}
+
+	bool
+	RenderProject::subclassApplyModifications(
+        bool unnecessaryIsOkay)
+	{
+		return false;
+	}
+
+	bool
+	RenderProject::subclassSaveModifications(
+        bool unnecessaryIsOkay)
+	{
+		const std::filesystem::path &projectRoot = getSavePath();
+		if ( ! std::filesystem::exists(projectRoot))
+		{
+			// make project directory if it doesn't exist already
+			if ( ! std::filesystem::create_directories(projectRoot))
+			{
+				spdlog::error("failed to create project root directory '{}'",projectRoot.c_str());
+				return false;
+			}
+		}
+		else if ( ! std::filesystem::is_directory(projectRoot))
+		{
+			// path exists, but it's not a directory, so bail out
+			spdlog::error("projectRoot must be a directory. '{}'",projectRoot.c_str());
+			return false;
+		}
+
+		const std::filesystem::path projectPath = projectRoot / PROJECT_FILENAME;
+
+		YAML::Node yProject = encode();
+		std::ofstream projOFS(projectPath);
+		projOFS << yProject;
+		projOFS.close();
+
+		if (track_)
+		{
+			YAML::Node trackNode = track_->encode();
+			std::filesystem::path trackPath = projectRoot / TRACK_FILENAME;
+			std::ofstream trackOFS(trackPath);
+			trackOFS << trackNode;
+			trackOFS.close();
+			track_->setSavePath(trackPath);
+			track_->saveModifications(unnecessaryIsOkay);
+		}
+
+		engine_->saveModifications(unnecessaryIsOkay);
+
+		return true;
+	}
+
+	void
+	RenderProject::internalSetTrack(
+		Track *track)
+	{
+		if (track_)
+		{
+			track_->removeObserver(this);
+			delete track_;
+		}
+		track_ = track;
+		if (track_)
+		{
+			track_->addObserver(this);
+		}
+
+		#pragma omp parallel for
+		for (size_t i=0; i<dsm_.sourceCount(); i++)
+		{
+			dsm_.getSource(i)->setDatumTrack(track,true);// true - process immediately
+		}
+
+		for (size_t e=0; e<engine_->entityCount(); e++)
+		{
+			const auto &entity = engine_->getEntity(e);
+			DataSourceRequirements dsr = entity->renderObject()->dataSourceRequirements();
+			if (dsr.numTracks == DSR_ONE_OR_MORE || dsr.numTracks > 0)
+			{
+				entity->renderObject()->setTrack(track_);
+			}
+		}
+	}
+
+	void
+	RenderProject::onModified(
+		ModifiableObject *modifiable)
+	{
+		if (modifiable == engine_.get())
+		{
+			markObjectModified(
+				modifiable->hasApplyableModifications(),
+				modifiable->hasSavableModifications());
+		}
+		else if (modifiable == track_)
+		{
+			markObjectModified(
+				modifiable->hasApplyableModifications(),
+				modifiable->hasSavableModifications());
+		}
 	}
 }

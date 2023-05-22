@@ -325,7 +325,7 @@ namespace gpo
 
 	Track::Track(
 		const std::vector<cv::Vec2d> &path)
-	 : ModifiableObject("Track")
+	 : ModifiableObject("Track",true,true)
 	 , start_(new TrackGate(this, "startGate", 0, GateType_E::eGT_Start))
 	 , finish_(new TrackGate(this, "finishGate", path.size() - 1, GateType_E::eGT_Finish))
 	 , sectors_()
@@ -736,14 +736,16 @@ namespace gpo
 	// Track protected methods
 	//--------------------------------------------------------------
 	bool
-	Track::subclassApplyModifications()
+	Track::subclassApplyModifications(
+        bool unnecessaryIsOkay)
 	{
 		// apply means nothing to use right now
 		return true;
 	}
 
 	bool
-	Track::subclassSaveModifications()
+	Track::subclassSaveModifications(
+        bool unnecessaryIsOkay)
 	{
 		auto path = getSavePath();
 		try

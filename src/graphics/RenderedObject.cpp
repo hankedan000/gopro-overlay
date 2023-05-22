@@ -4,22 +4,105 @@
 
 namespace gpo
 {
+
+	ModifiableDrawObject::ModifiableDrawObject(
+		const std::string &className,
+		bool supportsApplyingModifications,
+		bool supportsSavingModifications)
+	 : ModifiableObject(className,supportsApplyingModifications,supportsSavingModifications)
+	 , needsRedraw_(false)
+	 , observers_()
+	{
+	}
+
+	ModifiableDrawObject::ModifiableDrawObject(
+		const ModifiableDrawObject &other)
+	 : ModifiableObject(other)
+	 , needsRedraw_(other.needsRedraw_)
+	 , observers_()// don't copy observers. they should remain bound only to 'other'.
+	{
+	}
+
+	ModifiableDrawObject::~ModifiableDrawObject()
+	{
+	}
+
+	void
+	ModifiableDrawObject::markNeedsRedraw()
+	{
+		spdlog::trace("{} modified.", className());
+		needsRedraw_ = true;
+        for (auto &observer : observers_)
+        {
+            observer->onNeedsRedraw(this);
+        }
+	}
+
+	bool
+	ModifiableDrawObject::needsRedraw() const
+	{
+		return needsRedraw_;
+	}
+
+	void
+	ModifiableDrawObject::addObserver(
+		ModifiableDrawObjectObserver *observer)
+	{
+        if (observer == nullptr)
+        {
+            spdlog::warn("can't add a null ModifiableDrawObjectObserver. ignoring add.'");
+            return;
+        }
+        observers_.insert(observer);
+	}
+
+	void
+	ModifiableDrawObject::removeObserver(
+		ModifiableDrawObjectObserver *observer)
+	{
+		observers_.erase(observer);
+	}
+
+	void
+	ModifiableDrawObject::clearNeedsRedraw()
+	{
+		needsRedraw_ = false;
+	}
+
 	RenderedObject::RenderedObject(
+		const std::string &typeName,
 		int width,
 		int height)
-	 : outImg_(height,width,CV_8UC4,cv::Scalar(0,0,0,0))
+	 : ModifiableDrawObject(typeName,false,true)
+	 , typeName_(typeName)
+	 , outImg_(height,width,CV_8UC4,cv::Scalar(0,0,0,0))
 	 , visible_(true)
 	 , boundingBoxVisible_(false)
+	 , boundingBoxThickness_(1)
 	 , vSources_()
 	 , tSources_()
 	 , track_(nullptr)
 	{
 	}
 
+	const std::string &
+	RenderedObject::typeName() const
+	{
+		return typeName_;
+	}
+
 	const cv::UMat &
 	RenderedObject::getImage() const
 	{
 		return outImg_;
+	}
+
+	void
+	RenderedObject::render()
+	{
+		// call subclass's render method
+		subRender();
+		clearNeedsRedraw();
 	}
 
 	void
@@ -103,7 +186,7 @@ namespace gpo
 			}
 		}
 
-		if (boundingBoxVisible_)
+		if (boundingBoxVisible_ && boundingBoxThickness_ > 0)
 		{
 			cv::rectangle(intoImg,destROI,CV_RGB(255,255,255),boundingBoxThickness_);
 		}
@@ -139,7 +222,13 @@ namespace gpo
 	RenderedObject::setVisible(
 		bool visible)
 	{
+		bool modified = visible_ != visible;
 		visible_ = visible;
+		if (modified)
+		{
+			markNeedsRedraw();
+			markObjectModified(false,true);
+		}
 	}
 
 	bool
@@ -152,7 +241,14 @@ namespace gpo
 	RenderedObject::setBoundingBoxVisible(
 		bool visible)
 	{
+		bool modified = boundingBoxVisible_ != visible;
 		boundingBoxVisible_ = visible;
+		if (modified)
+		{
+			markNeedsRedraw();
+			// no need to mark as modified since we don't save this
+			// property of the object when encoding/decoding
+		}
 	}
 
 	bool
@@ -165,7 +261,14 @@ namespace gpo
 	RenderedObject::setBoundingBoxThickness(
 		unsigned int thickness)
 	{
+		bool modified = boundingBoxThickness_ != thickness;
 		boundingBoxThickness_ = thickness;
+		if (modified)
+		{
+			markNeedsRedraw();
+			// no need to mark as modified since we don't save this
+			// property of the object when encoding/decoding
+		}
 	}
 
 	unsigned int
@@ -204,6 +307,8 @@ namespace gpo
 
 		vSources_.push_back(vSrc);
 		checkAndNotifyRequirementsMet();
+		markNeedsRedraw();
+		markObjectModified(false,true);
 		return true;
 	}
 
@@ -219,6 +324,8 @@ namespace gpo
 		VideoSourcePtr vSrc)
 	{
 		vSources_.at(idx) = vSrc;
+		markNeedsRedraw();
+		markObjectModified(false,true);
 	}
 
 	VideoSourcePtr
@@ -233,6 +340,8 @@ namespace gpo
 		size_t idx)
 	{
 		vSources_.erase(std::next(vSources_.begin(), idx));
+		markNeedsRedraw();
+		markObjectModified(false,true);
 	}
 
 	bool
@@ -249,6 +358,8 @@ namespace gpo
 
 		tSources_.push_back(tSrc);
 		checkAndNotifyRequirementsMet();
+		markNeedsRedraw();
+		markObjectModified(false,true);
 		return true;
 	}
 
@@ -264,6 +375,8 @@ namespace gpo
 		TelemetrySourcePtr tSrc)
 	{
 		tSources_.at(idx) = tSrc;
+		markNeedsRedraw();
+		markObjectModified(false,true);
 	}
 
 	TelemetrySourcePtr
@@ -278,6 +391,8 @@ namespace gpo
 		size_t idx)
 	{
 		tSources_.erase(std::next(tSources_.begin(), idx));
+		markNeedsRedraw();
+		markObjectModified(false,true);
 	}
 
 	bool
@@ -291,6 +406,7 @@ namespace gpo
 
 		track_ = track;
 		checkAndNotifyRequirementsMet();
+		markNeedsRedraw();
 		return true;
 	}
 
@@ -450,6 +566,15 @@ namespace gpo
 		}
 
 		return met;
+	}
+
+	bool
+	RenderedObject::subclassSaveModifications(
+        bool unnecessaryIsOkay)
+	{
+		// we don't do any saving outself, but we assume the RenderEngine
+		// saved us correctly
+		return true;
 	}
 
 	void

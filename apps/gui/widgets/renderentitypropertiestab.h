@@ -26,18 +26,14 @@ public:
 
     void
     setEntity(
-            gpo::RenderEngine::RenderedEntity *entity);
-
-signals:
-    void
-    propertyChanged();
+            gpo::RenderedEntityPtr entity);
 
 private:
     Ui::RenderEntityPropertiesTab *ui;
 
     gpo::RenderProject *project_;
 
-    gpo::RenderEngine::RenderedEntity *entity_;
+    gpo::RenderedEntityPtr entity_;
 
 };
 

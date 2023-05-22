@@ -1,12 +1,14 @@
 #include "GoProOverlay/data/DataSource.h"
 
+#include <cmath>
 #include <filesystem>
 #include <spdlog/spdlog.h>
 
 #include <GoProTelem/GoProTelem.h>
 #include <GoProTelem/SampleMath.h>
 #include <GoProOverlay/utils/DataProcessingUtils.h>
-#include <GoProOverlay/utils/io/CSV_Utils.h>
+#include <GoProOverlay/utils/io/csv.h>
+#include "GoProOverlay/utils/TickTockUtils.h"
 
 namespace gpo
 {
@@ -57,33 +59,53 @@ namespace gpo
 	}
 
 	bool
+	DataSource::calcVehicleAcceleration(
+		size_t smoothingWindowSize)
+	{
+		if (samples_->empty())
+		{
+			// nothing to process
+			return true;
+		}
+
+		// smooth accelerometer data
+		size_t inFieldOffsets[] = {
+			offsetof(gpo::TelemetrySample, gpSamp.accl.x),
+			offsetof(gpo::TelemetrySample, gpSamp.accl.y),
+			offsetof(gpo::TelemetrySample, gpSamp.accl.z)
+		};
+		size_t outFieldOffsets[] = {
+			offsetof(gpo::TelemetrySample, calcSamp.smoothAccl.x),
+			offsetof(gpo::TelemetrySample, calcSamp.smoothAccl.y),
+			offsetof(gpo::TelemetrySample, calcSamp.smoothAccl.z)
+		};
+		utils::smoothMovingAvgStructured<gpo::TelemetrySample,decltype(gpt::AcclSample::x)>(
+			samples_->data(),
+			samples_->data(),
+			inFieldOffsets,
+			outFieldOffsets,
+			3,// 3 fields; x,y,z
+			samples_->size(),
+			smoothingWindowSize);
+		bitset_set_bit(dataAvail_, DataAvailable::eDA_CALC_SMOOTH_ACCL);
+
+		cv::Vec3f latDir, lonDir;
+		bool okay = utils::computeVehicleDirectionVectors(samples_,dataAvail_,latDir,lonDir);
+		okay = okay && utils::computeVehicleAcceleration(samples_,dataAvail_,latDir,lonDir);
+
+		return okay;
+	}
+
+	bool
 	DataSource::reprocessDatumTrack()
 	{
-		if (datumTrack_ == nullptr)
+		if (datumTrack_ == nullptr || samples_->empty())
 		{
 			// nothing to process
 			return true;
 		}
 
 		bool okay = utils::computeTrackTimes(datumTrack_,samples_,dataAvail_);
-
-		// smooth accelerometer data
-		if (false)
-		{
-			// TODO put this in a better place
-			size_t acclFieldOffsets[] = {
-				offsetof(gpo::TelemetrySample, gpSamp.accl.x),
-				offsetof(gpo::TelemetrySample, gpSamp.accl.y),
-				offsetof(gpo::TelemetrySample, gpSamp.accl.z)
-			};
-			utils::smoothMovingAvgStructured<gpo::TelemetrySample,decltype(gpt::AcclSample::x)>(
-				samples_->data(),
-				samples_->data(),
-				acclFieldOffsets,
-				3,// 3 fields; x,y,z
-				samples_->size(),
-				30);
-		}
 
 		if (okay)
 		{
@@ -348,6 +370,9 @@ namespace gpo
 			bitset_set_bit(newSrc->dataAvail_, gpo::eDA_GOPRO_GPS_SPEED3D);
 		}
 
+		// smooth acceleration and compute lateral/logitudinal acceleration
+		newSrc->calcVehicleAcceleration(30);
+
 		newSrc->seeker = std::make_shared<TelemetrySeeker>(newSrc);
 		newSrc->telemSrc = std::make_shared<TelemetrySource>(newSrc);
 		newSrc->videoSrc = std::make_shared<VideoSource>(newSrc);
@@ -380,6 +405,25 @@ namespace gpo
 			sampOut.t_offset = ecuSamp.t_offset;
 			sampOut.ecuSamp = ecuSamp.sample;
 		}
+
+		newSrc->seeker = std::make_shared<TelemetrySeeker>(newSrc);
+		newSrc->telemSrc = std::make_shared<TelemetrySource>(newSrc);
+
+		return newSrc;
+	}
+
+	DataSourcePtr
+	DataSource::loadDataFromSoloStormCSV(
+		const std::filesystem::path &csvFile)
+	{
+		auto newSrc = std::make_shared<DataSource>();
+		newSrc->originFile_ = csvFile;
+		newSrc->sourceName_ = csvFile.filename();
+		newSrc->samples_ = std::make_shared<TelemetrySamples>();
+		utils::io::readTelemetryFromSoloStormCSV(
+			csvFile,
+			newSrc->samples_,
+			newSrc->dataAvail_);
 
 		newSrc->seeker = std::make_shared<TelemetrySeeker>(newSrc);
 		newSrc->telemSrc = std::make_shared<TelemetrySource>(newSrc);
@@ -621,38 +665,38 @@ namespace gpo
 			}
 
 			// merge in Track samples
-			bitToTake = eDA_TRACK_ON_TRACK_LATLON;
+			bitToTake = eDA_CALC_ON_TRACK_LATLON;
 			if (bitset_is_set(dataToTake, bitToTake))
 			{
-				dstSamp.trackData.onTrackLL = srcSamp.trackData.onTrackLL;
+				dstSamp.calcSamp.onTrackLL = srcSamp.calcSamp.onTrackLL;
 				bitset_set_bit(dataAvail_, bitToTake);
 				bitset_clr_bit(dataToTake, bitToTake);
 			}
-			bitToTake = eDA_TRACK_LAP;
+			bitToTake = eDA_CALC_LAP;
 			if (bitset_is_set(dataToTake, bitToTake))
 			{
-				dstSamp.trackData.lap = srcSamp.trackData.lap;
+				dstSamp.calcSamp.lap = srcSamp.calcSamp.lap;
 				bitset_set_bit(dataAvail_, bitToTake);
 				bitset_clr_bit(dataToTake, bitToTake);
 			}
-			bitToTake = eDA_TRACK_LAP_TIME_OFFSET;
+			bitToTake = eDA_CALC_LAP_TIME_OFFSET;
 			if (bitset_is_set(dataToTake, bitToTake))
 			{
-				dstSamp.trackData.lapTimeOffset = srcSamp.trackData.lapTimeOffset;
+				dstSamp.calcSamp.lapTimeOffset = srcSamp.calcSamp.lapTimeOffset;
 				bitset_set_bit(dataAvail_, bitToTake);
 				bitset_clr_bit(dataToTake, bitToTake);
 			}
-			bitToTake = eDA_TRACK_SECTOR;
+			bitToTake = eDA_CALC_SECTOR;
 			if (bitset_is_set(dataToTake, bitToTake))
 			{
-				dstSamp.trackData.sector = srcSamp.trackData.sector;
+				dstSamp.calcSamp.sector = srcSamp.calcSamp.sector;
 				bitset_set_bit(dataAvail_, bitToTake);
 				bitset_clr_bit(dataToTake, bitToTake);
 			}
-			bitToTake = eDA_TRACK_SECTOR_TIME_OFFSET;
+			bitToTake = eDA_CALC_SECTOR_TIME_OFFSET;
 			if (bitset_is_set(dataToTake, bitToTake))
 			{
-				dstSamp.trackData.sectorTimeOffset = srcSamp.trackData.sectorTimeOffset;
+				dstSamp.calcSamp.sectorTimeOffset = srcSamp.calcSamp.sectorTimeOffset;
 				bitset_set_bit(dataAvail_, bitToTake);
 				bitset_clr_bit(dataToTake, bitToTake);
 			}

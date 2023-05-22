@@ -74,24 +74,24 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
             // should grab the mouse first
             for (int e=(engine_->entityCount()-1); e>=0; e--)
             {
-                auto &entity = engine_->getEntity(e);
-                if ( ! entity.rObj->isVisible())
+                const auto &entity = engine_->getEntity(e);
+                if ( ! entity->renderObject()->isVisible())
                 {
                     continue;
                 }
 
                 if ( ! focusAcquired &&
-                    evtPosMapped.x() >= entity.rPos.x && evtPosMapped.x() <= (entity.rPos.x + entity.rSize.width) &&
-                    evtPosMapped.y() >= entity.rPos.y && evtPosMapped.y() <= (entity.rPos.y + entity.rSize.height))
+                    evtPosMapped.x() >= entity->renderPosition().x && evtPosMapped.x() <= (entity->renderPosition().x + entity->renderSize().width) &&
+                    evtPosMapped.y() >= entity->renderPosition().y && evtPosMapped.y() <= (entity->renderPosition().y + entity->renderSize().height))
                 {
-                    focusedEntity_ = &entity;
-                    entity.rObj->setBoundingBoxVisible(true);
-                    entity.rObj->setBoundingBoxThickness(boundingBoxThickness);
+                    focusedEntity_ = entity;
+                    entity->renderObject()->setBoundingBoxVisible(true);
+                    entity->renderObject()->setBoundingBoxThickness(boundingBoxThickness);
                     focusAcquired = true;
                 }
                 else
                 {
-                    entity.rObj->setBoundingBoxVisible(false);
+                    entity->renderObject()->setBoundingBoxVisible(false);
                 }
             }
 
@@ -108,8 +108,7 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
             // holding an entity, so move entity based on mouse location
             QPoint mouseDelta = event->pos() - mousePosWhenGrabbed_;
             QPoint entityNewPos = entityPosWhenGrabbed_ + mouseDelta * scaleFactorRoF;
-            grabbedEntity_->rPos.x = entityNewPos.x();
-            grabbedEntity_->rPos.y = entityNewPos.y();
+            grabbedEntity_->setRenderPosition(entityNewPos.x(), entityNewPos.y());
             rerender = true;
         }
 
@@ -125,20 +124,20 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
         {
             grabbedEntity_ = focusedEntity_;
             mousePosWhenGrabbed_ = event->pos();
-            entityPosWhenGrabbed_.setX(focusedEntity_->rPos.x);
-            entityPosWhenGrabbed_.setY(focusedEntity_->rPos.y);
-            emit onEntitySelected(grabbedEntity_);
+            entityPosWhenGrabbed_.setX(focusedEntity_->renderPosition().x);
+            entityPosWhenGrabbed_.setY(focusedEntity_->renderPosition().y);
+            emit onEntitySelected(grabbedEntity_.get());
         }
     });
     connect(imgView_, &CvImageView::onMouseRelease, this, [this](QMouseEvent *event){
         if (grabbedEntity_)
         {
             // determine in the entity was moved while it was being held
-            QPoint moveVector(grabbedEntity_->rPos.x,grabbedEntity_->rPos.y);
+            QPoint moveVector(grabbedEntity_->renderPosition().x,grabbedEntity_->renderPosition().y);
             moveVector -= entityPosWhenGrabbed_;
             if (moveVector.manhattanLength() > 0)
             {
-                emit onEntityMoved(grabbedEntity_,moveVector);
+                emit onEntityMoved(grabbedEntity_.get(),moveVector);
             }
 
             grabbedEntity_ = nullptr;
@@ -183,5 +182,27 @@ void
 ScrubbableVideo::setEngine(
         gpo::RenderEnginePtr engine)
 {
+    if (engine_)
+    {
+        // no longer observe the old engine
+        engine_->removeObserver(this);
+    }
+
     engine_ = engine;
+    // release focused/grabbed entities that belonged to old engine
+    focusedEntity_ = nullptr;
+    grabbedEntity_ = nullptr;
+
+    if (engine_)
+    {
+        // begin observing the new engine
+        engine_->addObserver(this);
+    }
+}
+
+void
+ScrubbableVideo::onNeedsRedraw(
+        gpo::ModifiableDrawObject *drawable)
+{
+    showImage(engine_->getFrame());
 }

@@ -11,6 +11,7 @@
 
 #include "TelemetryPlotDialog.h"
 #include "progressdialog.h"
+#include "utils/QModifiableObjectObserver.h"
 #include "RenderEngineWizardSingleVideo.h"
 #include "renderenginewizard_topbottom.h"
 #include "renderentitypropertiestab.h"
@@ -119,10 +120,6 @@ private:
     void
     render();
 
-    void
-    setProjectDirty(
-            bool dirty);
-
     virtual
     void
     closeEvent(
@@ -176,7 +173,6 @@ private:
     QActionGroup *previewResolutionActionGroup_;
     QSettings settings;
 
-    std::string currProjectDir_;
     gpo::RenderProject proj_;
 
     QStandardItemModel *sourcesTableModel_;
@@ -188,9 +184,7 @@ private:
     RenderEngineWizardSingleVideo *reWizSingle_;
     RenderEngineWizard_TopBottom *reWizTopBot_;
 
-    // set true if anything in the project has been modified and could use
-    // a save to disk. set false once project is saved.
-    bool projectDirty_;
+    QModifiableObjectObserver projectObserver_;
 
     RenderThread *rThread_;
     ProgressDialog *progressDialog_;

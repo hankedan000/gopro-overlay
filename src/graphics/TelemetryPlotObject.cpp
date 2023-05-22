@@ -9,7 +9,7 @@ namespace gpo
     const int PLOT_RENDER_HEIGHT = 480;
 
 	TelemetryPlotObject::TelemetryPlotObject()
-	 : RenderedObject(PLOT_RENDER_WIDTH,PLOT_RENDER_HEIGHT)
+	 : RenderedObject("TelemetryPlotObject",PLOT_RENDER_WIDTH,PLOT_RENDER_HEIGHT)
 	 , fakeApp_()
 	 , plot_(nullptr)
 	 , plotWidthTime_sec_(6.0)
@@ -44,41 +44,10 @@ namespace gpo
 		}
 	}
 
-	std::string
-	TelemetryPlotObject::typeName() const
-	{
-		return "TelemetryPlotObject";
-	}
-
 	DataSourceRequirements
 	TelemetryPlotObject::dataSourceRequirements() const
 	{
         return DataSourceRequirements(0,gpo::DSR_ONE_OR_MORE,0);
-	}
-
-	void
-	TelemetryPlotObject::render()
-	{
-		if (tSources_.size() > 0)
-		{
-			auto telemSrc = tSources_.front();
-			auto seeker = telemSrc->seeker();
-			auto offsetFromAlignment = (long long)(seeker->seekedIdx()) - seeker->getAlignmentIdx();
-
-			// compute x-range to have right side aligned with 1st dataset's current
-			// seeked location, and the width sized to fit N amount of seconds worth of data.
-			size_t windowWidthSamples = std::round(plotWidthTime_sec_ * calculatedFPS_);
-			double xRangeUpper = offsetFromAlignment;
-			double xRangeLower = xRangeUpper - windowWidthSamples;
-			plot_->xAxis->setRange(xRangeLower, xRangeUpper);
-			plot_->replot(QCustomPlot::RefreshPriority::rpImmediateRefresh);
-		}
-
-        auto pixmap = plot_->toPixmap(PLOT_RENDER_WIDTH,PLOT_RENDER_HEIGHT);
-        auto image = pixmap.toImage();
-        // make a temporary cv::Mat with the QImage's memory
-        cv::Mat tmpMat(image.height(), image.width(), CV_8UC4, (cv::Scalar*)image.scanLine(0));
-        tmpMat.copyTo(outImg_);
 	}
 
 	void
@@ -87,6 +56,8 @@ namespace gpo
 		QColor color)
 	{
 		plot_->setTelemetryColor(telemSrc,color,false);// hold off replot until render()
+		markNeedsRedraw();
+		markObjectModified(false,true);
 	}
 
 	std::pair<bool,QColor>
@@ -102,6 +73,8 @@ namespace gpo
 		const std::string &label)
 	{
 		plot_->setTelemetryLabel(telemSrc,label,false);// hold off replot until render()
+		markNeedsRedraw();
+		markObjectModified(false,true);
 	}
 
 	std::pair<bool,std::string>
@@ -116,6 +89,8 @@ namespace gpo
 			TelemetryPlot::X_Component comp)
 	{
 		plot_->setX_Component(comp,false);// hold off replot until render()
+		markNeedsRedraw();
+		markObjectModified(false,true);
 	}
 
 	TelemetryPlot::X_Component
@@ -144,6 +119,8 @@ namespace gpo
 				// leave TelemetryPlot's default title
 				break;
 		}
+		markNeedsRedraw();
+		markObjectModified(false,true);
 	}
 
 	TelemetryPlot::Y_Component
@@ -157,6 +134,8 @@ namespace gpo
 		double duration_sec)
 	{
 		plotWidthTime_sec_ = duration_sec;
+		markNeedsRedraw();
+		markObjectModified(false,true);
 	}
 
 	double
@@ -193,6 +172,31 @@ namespace gpo
             }
 			// FIXME add a way to remove sources too
         }
+	}
+
+	void
+	TelemetryPlotObject::subRender()
+	{
+		if (tSources_.size() > 0)
+		{
+			auto telemSrc = tSources_.front();
+			auto seeker = telemSrc->seeker();
+			auto offsetFromAlignment = (long long)(seeker->seekedIdx()) - seeker->getAlignmentIdx();
+
+			// compute x-range to have right side aligned with 1st dataset's current
+			// seeked location, and the width sized to fit N amount of seconds worth of data.
+			size_t windowWidthSamples = std::round(plotWidthTime_sec_ * calculatedFPS_);
+			double xRangeUpper = offsetFromAlignment;
+			double xRangeLower = xRangeUpper - windowWidthSamples;
+			plot_->xAxis->setRange(xRangeLower, xRangeUpper);
+			plot_->replot(QCustomPlot::RefreshPriority::rpImmediateRefresh);
+		}
+
+        auto pixmap = plot_->toPixmap(PLOT_RENDER_WIDTH,PLOT_RENDER_HEIGHT);
+        auto image = pixmap.toImage();
+        // make a temporary cv::Mat with the QImage's memory
+        cv::Mat tmpMat(image.height(), image.width(), CV_8UC4, (cv::Scalar*)image.scanLine(0));
+        tmpMat.copyTo(outImg_);
 	}
 
 	YAML::Node

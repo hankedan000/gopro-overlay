@@ -1,16 +1,39 @@
 #include "GoProOverlay/data/ModifiableObject.h"
 
+#include "GoProOverlay/utils/misc/MiscUtils.h"
+
 #include <spdlog/spdlog.h>
 
 namespace gpo
 {
+
+    // init static member
+    bool ModifiableObject::globalShowModificationCallStack_ = false;
+
     ModifiableObject::ModifiableObject(
-            const std::string &className)
+            const std::string &className,
+            bool supportsApplyingModifications,
+            bool supportsSavingModifications)
      : className_(className)
+     , supportsApplyingModifications_(supportsApplyingModifications)
+     , supportsSavingModifications_(supportsSavingModifications)
      , hasApplyableEdits_(false)
      , hasSavableEdits_(false)
      , savePath_()
      , observers_()
+     , showModificationCallStack_(false)
+    {
+    }
+
+    ModifiableObject::ModifiableObject(
+        const ModifiableObject &other)
+     : className_(other.className_)
+     , supportsApplyingModifications_(other.supportsApplyingModifications_)
+     , supportsSavingModifications_(other.supportsSavingModifications_)
+     , hasApplyableEdits_(other.hasApplyableEdits_)
+     , hasSavableEdits_(other.hasApplyableEdits_)
+     , savePath_(other.savePath_)
+     , observers_()// don't copy observers. they should remain bound only to 'other'.
     {
     }
 
@@ -25,14 +48,14 @@ namespace gpo
             observer->onBeforeDestroy(this);
         }
 
-        if (isSavable() && hasSavableModifications())
+        if (supportsSavingModifications_ && hasSavableEdits_)
         {
             spdlog::warn(
                 "{}<{}> was destructed before changes were saved",
                 className_,
                 (void*)this);
         }
-        else if (isApplyable() && hasApplyableModifications())
+        else if (supportsApplyingModifications_ && hasApplyableEdits_)
         {
             spdlog::warn(
                 "{}<{}> was destructed before changes were applied",
@@ -64,36 +87,46 @@ namespace gpo
         return savePath_;
     }
 
-    bool
-    ModifiableObject::isApplyable(
-            bool noisy) const
+    void
+    ModifiableObject::markObjectModified(
+        bool needsApply,
+        bool needsSave)
     {
-        return true;
-    }
-
-    bool
-    ModifiableObject::isSavable(
-            bool noisy) const
-    {
-        if (savePath_.empty())
+        if (showModificationCallStack_ || globalShowModificationCallStack_)
         {
-            if (noisy)
+            // print the call stack that caused this object to be modified
+            spdlog::info("{}() - {}<{}>",__func__,className(),(void*)this);
+            utils::misc::printCallStack(stdout,10);
+        }
+
+        if (needsApply)
+        {
+            if (supportsApplyingModifications_)
+            {
+                hasApplyableEdits_ = hasApplyableEdits_ || needsApply;
+            }
+            else
             {
                 spdlog::error(
-                    "save path is not set. {}<{}> is not savable.",
-                    className_,
+                    "{}<{}> marked as 'needsApply' but it doesn't support applying modifications",
+                    className(),
                     (void*)this);
             }
-            return false;
         }
-        return true;
-    }
-
-    void
-    ModifiableObject::markObjectModified()
-    {
-        hasApplyableEdits_ = true;
-        hasSavableEdits_ = true;
+        if (needsSave)
+        {
+            if (supportsSavingModifications_)
+            {
+                hasSavableEdits_ = hasSavableEdits_ || needsSave;
+            }
+            else
+            {
+                spdlog::error(
+                    "{}<{}> marked as 'needsSave' but it doesn't support saving modifications",
+                    className(),
+                    (void*)this);
+            }
+        }
         for (auto &observer : observers_)
         {
             observer->onModified(this);
@@ -101,28 +134,30 @@ namespace gpo
     }
     
     bool
-    ModifiableObject::applyModifications()
+    ModifiableObject::applyModifications(
+        bool unnecessaryIsOkay)
     {
-        if ( ! isApplyable())
+        if ( ! supportsApplyingModifications_)
         {
             spdlog::error(
-                "{} does not support applying modifications",
-                className_);
+                "applyModifications() called, but {}<{}> does not support applying modifications",
+                className_,
+                (void*)this);
             return false;
         }
-        else if ( ! hasApplyableModifications())
+        else if ( ! hasApplyableEdits_ && ! unnecessaryIsOkay)
         {
             spdlog::warn(
-                "applyModifications() called, but {}<{}> doesn't have any modifications",
+                "applyModifications() called, but {}<{}> doesn't have any applyable modifications",
                 className_,
                 (void*)this);
             return false;
         }
 
-        bool applyOkay = subclassApplyModifications();
+        bool applyOkay = subclassApplyModifications(unnecessaryIsOkay);
         if (applyOkay)
         {
-            clearNeedsApply();
+            hasApplyableEdits_ = false;
             for (auto &observer : observers_)
             {
                 observer->onModificationsApplied(this);
@@ -132,33 +167,35 @@ namespace gpo
     }
 
     bool
-    ModifiableObject::saveModifications()
+    ModifiableObject::saveModifications(
+        bool unnecessaryIsOkay)
     {
-        if (hasApplyableModifications() && isApplyable())
+        if (supportsApplyingModifications_ && hasApplyableEdits_)
         {
             applyModifications();
         }
 
-        if ( ! isSavable())
+        if ( ! supportsSavingModifications_)
         {
-            spdlog::warn(
-                "{} does not support saving modifications",
-                className_);
+            spdlog::error(
+                "saveModifications() called, but {}<{}> does not support saving modifications",
+                className_,
+                (void*)this);
             return false;
         }
-        else if ( ! hasSavableModifications())
+        else if ( ! hasSavableEdits_ && ! unnecessaryIsOkay)
         {
             spdlog::warn(
-                "saveModifications() called, but {}<{}> doesn't have any modifications",
+                "applyModifications() called, but {}<{}> doesn't have any savable modifications",
                 className_,
                 (void*)this);
             return false;
         }
 
-        bool saveOkay = subclassSaveModifications();
+        bool saveOkay = subclassSaveModifications(unnecessaryIsOkay);
         if (saveOkay)
         {
-            clearNeedsSave();
+            hasSavableEdits_ = false;
             for (auto &observer : observers_)
             {
                 observer->onModificationsSaved(this);
@@ -206,6 +243,20 @@ namespace gpo
         observers_.erase(observer);
     }
 
+    void
+    ModifiableObject::setShowModificationCallStack(
+        bool show)
+    {
+        showModificationCallStack_ = show;
+    }
+
+    void
+    ModifiableObject::setGlobalShowModificationCallStack(
+        bool show)
+    {
+        globalShowModificationCallStack_ = show;
+    }
+
     //---------------------------------------------------------------
     // protected methods
     //---------------------------------------------------------------
@@ -219,6 +270,30 @@ namespace gpo
     ModifiableObject::clearNeedsSave()
     {
         hasSavableEdits_ = false;
+    }
+
+    bool
+    ModifiableObject::subclassApplyModifications(
+        bool unnecessaryIsOkay)
+    {
+        spdlog::warn(
+            "ModifiableObject's default apply was called on {}. Subclass should"
+            " override 'bool ModifiableObject::subclassApplyModifications()' if"
+            " they want to support applied changes tracking.",
+            className_);
+        return true;
+    }
+
+    bool
+    ModifiableObject::subclassSaveModifications(
+        bool unnecessaryIsOkay)
+    {
+        spdlog::warn(
+            "ModifiableObject's default save was called on {}. Subclass should"
+            " override 'bool ModifiableObject::subclassSaveModifications()' if"
+            " they want to support save changes tracking.",
+            className_);
+        return true;
     }
 
 }

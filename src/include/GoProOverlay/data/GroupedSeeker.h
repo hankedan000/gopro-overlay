@@ -8,7 +8,7 @@
 
 namespace gpo
 {
-	class GroupedSeeker
+	class GroupedSeeker : public ModifiableObject
 	{
 	public:
 		GroupedSeeker();
@@ -35,13 +35,27 @@ namespace gpo
 		removeSeeker(
 			size_t idx);
 
+		/**
+		 * Removes all seeker that match the following
+		 * 
+		 * @param[in] seeker
+		 * the seeker pointer to remove
+		 * 
+		 * @return
+		 * true if any were removed. false otherwise.
+		 */
+		bool
+		removeAllSeekers(
+			TelemetrySeekerPtr seeker);
+
 		void
 		prevAll(
 			bool onlyIfAllHavePrev = true);
 
 		void
 		nextAll(
-			bool onlyIfAllHaveNext = true);
+			bool onlyIfAllHaveNext = true,
+			bool sendModificationEvent = true);
 
 		void
 		seekToAlignmentInfo(
@@ -114,6 +128,15 @@ namespace gpo
 		 */
 		std::pair<double, double>
 		relativeSeekLimitsTime() const;
+
+	protected:
+        bool
+        subclassApplyModifications(
+       		bool unnecessaryIsOkay) override;
+
+        bool
+        subclassSaveModifications(
+        	bool unnecessaryIsOkay) override;
 
 	private:
 		std::vector<TelemetrySeekerPtr> seekers_;

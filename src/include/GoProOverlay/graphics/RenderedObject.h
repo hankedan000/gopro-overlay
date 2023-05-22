@@ -2,12 +2,14 @@
 
 #include <opencv2/opencv.hpp>
 #include <spdlog/spdlog.h>
+#include <unordered_set>
 #include <vector>
 
 #include "GoProOverlay/data/DataSource.h"
-#include "GoProOverlay/data/VideoSource.h"
+#include "GoProOverlay/data/ModifiableObject.h"
 #include "GoProOverlay/data/TelemetrySource.h"
 #include "GoProOverlay/data/TrackDataObjects.h"
+#include "GoProOverlay/data/VideoSource.h"
 
 namespace gpo
 {
@@ -20,6 +22,9 @@ namespace gpo
 
 	const int DSR_ONE_OR_MORE = -1;
 	const int DSR_ZERO_OR_MORE = -2;
+
+	#define BACKGROUND_COLOR RGBA_COLOR(0,0,0,100)
+	const int BACKGROUND_RADIUS = 50;
 
 	struct DataSourceRequirements
 	{
@@ -69,24 +74,108 @@ namespace gpo
 		int numTelemetrySources;
 		int numTracks;
 	};
+	
+	// forward declaration
+	class ModifiableDrawObject;
 
-	class RenderedObject
+	class ModifiableDrawObjectObserver
+    {
+    public:
+        virtual
+        void
+        onNeedsRedraw(
+            ModifiableDrawObject *drawable)
+		{}
+    };
+
+	class ModifiableDrawObject : public ModifiableObject
+	{
+	public:
+        /**
+         * Constructor
+         * 
+         * @param[in] className
+         * the object's class name. useful for debugging
+         * 
+         * @param[in] supportsApplyingModifications
+         * true if the class supports applying changes
+         * (ie. the applyModifications() method is allowed to be called)
+         * 
+         * @param[in] supportsSavingModifications
+         * true if the class supports saving modifications itself
+         * (ie. the saveModifications() method is allowed to be called)
+         */
+        ModifiableDrawObject(
+            const std::string &className,
+            bool supportsApplyingModifications,
+            bool supportsSavingModifications);
+		
+        /**
+         * Copy constructor
+         * 
+         * @param[in] other
+         * the object to copy
+         */
+        ModifiableDrawObject(
+            const ModifiableDrawObject &other);
+
+        virtual
+        ~ModifiableDrawObject();
+
+		/**
+		 * Call this method to flag if the object has been modified in some way that
+		 * would require a redraw of it.
+		 */
+        void
+        markNeedsRedraw();
+
+		/**
+		 * @return
+		 * true if the object has been modified in some way (since the last render() call),
+		 * that would require the object to be redrawn. false otherwise.
+		 */
+		bool
+		needsRedraw() const;
+
+		using ModifiableObject::addObserver;
+
+        void
+        addObserver(
+            ModifiableDrawObjectObserver *observer);
+
+		using ModifiableObject::removeObserver;
+
+        void
+        removeObserver(
+            ModifiableDrawObjectObserver *observer);
+
+		void
+		clearNeedsRedraw();
+
+	private:
+		// set true if the object has been modified since the last render call.
+		bool needsRedraw_;
+
+        std::unordered_set<ModifiableDrawObjectObserver *> observers_;
+
+	};
+
+	class RenderedObject : public ModifiableDrawObject
 	{
 	public:
 		RenderedObject(
+			const std::string &typeName,
 			int width,
 			int height);
 
-		virtual
-		std::string
-		typeName() const = 0;
+		const std::string &
+		typeName() const;
 
 		const cv::UMat &
 		getImage() const;
 
-		virtual
 		void
-		render() = 0;
+		render();
 
 		virtual
 		void
@@ -189,6 +278,16 @@ namespace gpo
 		const Track *
 		getTrack() const;
 
+		template <class DerivedRenderedObject>
+		DerivedRenderedObject *
+		as()
+		{
+			static_assert(
+				std::is_convertible<DerivedRenderedObject*, RenderedObject*>::value,
+				"DerivedRenderedObject must inherit RenderedObject as public");
+			return (DerivedRenderedObject*)(this);
+		}
+
 		YAML::Node
 		encode() const;
 
@@ -213,6 +312,10 @@ namespace gpo
 		trackReqsMet() const;
 
 		virtual
+		void
+		subRender() = 0;
+
+		virtual
 		YAML::Node
 		subEncode() const = 0;
 
@@ -221,12 +324,18 @@ namespace gpo
 		subDecode(
 			const YAML::Node& node) = 0;
 
+		bool
+		subclassSaveModifications(
+        	bool unnecessaryIsOkay) override;
+
 	private:
 
 		void
 		checkAndNotifyRequirementsMet();
 
 	protected:
+		std::string typeName_;
+
 		// final rendered image
 		cv::UMat outImg_;
 
@@ -236,6 +345,7 @@ namespace gpo
 
 		std::vector<VideoSourcePtr> vSources_;
 		std::vector<TelemetrySourcePtr> tSources_;
+		// TODO use shared_ptr here?
 		const Track *track_;
 
 	private:

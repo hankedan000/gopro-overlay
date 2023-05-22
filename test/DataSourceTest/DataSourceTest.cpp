@@ -96,6 +96,53 @@ DataSourceTest::testLoadFromMegaSquirtLog()
 }
 
 void
+DataSourceTest::testLoadFromSoloStormCSV()
+{
+	auto srcFromMsq = gpo::DataSource::loadDataFromSoloStormCSV(
+		test_data::solostorm::AUTOCROSS);
+	CPPUNIT_ASSERT(srcFromMsq != nullptr);
+
+	CPPUNIT_ASSERT_EQUAL(
+		std::string(test_data::solostorm::AUTOCROSS),
+		srcFromMsq->getOrigin());
+
+	CPPUNIT_ASSERT_DOUBLES_EQUAL(10.0, srcFromMsq->getTelemetryRate_hz(), 0.1);
+
+	// should have ECU data available
+	gpo::DataAvailableBitSet expectedAvail;
+	bitset_clear(expectedAvail);
+	bitset_set_bit(expectedAvail, gpo::eDA_GOPRO_ACCL);
+	bitset_set_bit(expectedAvail, gpo::eDA_GOPRO_GPS_ALTITUDE);
+	bitset_set_bit(expectedAvail, gpo::eDA_GOPRO_GPS_SPEED2D);
+	bitset_set_bit(expectedAvail, gpo::eDA_GOPRO_GPS_LATLON);
+	bitset_set_bit(expectedAvail, gpo::eDA_ECU_ENGINE_SPEED);
+	bitset_set_bit(expectedAvail, gpo::eDA_ECU_TPS);
+	bitset_set_bit(expectedAvail, gpo::eDA_CALC_ON_TRACK_LATLON);
+	bitset_set_bit(expectedAvail, gpo::eDA_CALC_LAP);
+	bitset_set_bit(expectedAvail, gpo::eDA_CALC_LAP_TIME_OFFSET);
+	bitset_set_bit(expectedAvail, gpo::eDA_CALC_SECTOR);
+	bitset_set_bit(expectedAvail, gpo::eDA_CALC_SECTOR_TIME_OFFSET);
+	CPPUNIT_ASSERT(bitset_equal(srcFromMsq->dataAvailable(), expectedAvail));
+
+	// check samples were parsed correctly (trivial range check)
+	auto tSrc = srcFromMsq->telemSrc;
+	CPPUNIT_ASSERT_EQUAL((size_t)(349), tSrc->size());
+	for (size_t i=0; i<tSrc->size(); i++)
+	{
+		const auto &tSamp = tSrc->at(i);
+		CPPUNIT_ASSERT((-1.5 * 9.81) < tSamp.gpSamp.accl.x && tSamp.gpSamp.accl.x < (+1.5 * 9.81));
+		CPPUNIT_ASSERT((-1.5 * 9.81) < tSamp.gpSamp.accl.y && tSamp.gpSamp.accl.y < (+1.5 * 9.81));
+		CPPUNIT_ASSERT((+0.5 * 9.81) < tSamp.gpSamp.accl.z && tSamp.gpSamp.accl.z < (+1.5 * 9.81));
+		CPPUNIT_ASSERT(+28.751000 < tSamp.gpSamp.gps.coord.lat && tSamp.gpSamp.gps.coord.lat < +28.754000);
+		CPPUNIT_ASSERT(-81.743000 < tSamp.gpSamp.gps.coord.lon && tSamp.gpSamp.gps.coord.lon < -81.741000);
+		CPPUNIT_ASSERT(tSamp.ecuSamp.engineSpeed_rpm > 600.0);
+		CPPUNIT_ASSERT(tSamp.ecuSamp.engineSpeed_rpm < 7200.0);
+		CPPUNIT_ASSERT(tSamp.ecuSamp.tps > -5.0);
+		CPPUNIT_ASSERT(tSamp.ecuSamp.tps < 105.0);
+	}
+}
+
+void
 DataSourceTest::testTelemetryMerge()
 {
 	const double SAMP_RATE_HZ = 10.0;

@@ -13,16 +13,8 @@ namespace gpo
 		~TelemetryPlotObject();
 
 		virtual
-		std::string
-		typeName() const override;
-
-		virtual
 		DataSourceRequirements
 		dataSourceRequirements() const override;
-
-		virtual
-		void
-		render() override;
 
 		void
 		setTelemetryColor(
@@ -64,6 +56,10 @@ namespace gpo
 		getPlotWidthSeconds() const;
 
 	protected:
+		virtual
+		void
+		subRender() override;
+
 		// callback from RenderedObject class when all source requirements are met
 		virtual
 		void

@@ -1,49 +1,12 @@
-#include "GoProOverlay/utils/io/CSV_Utils.h"
+#include "GoProOverlay/utils/io/csv.h"
 
-#include <csv.hpp>
 #include <fstream>
 #include <spdlog/spdlog.h>
-#include <tuple>
 
 namespace utils
 {
 namespace io
 {
-
-	template <typename STRUCT_T, typename MEMBER_T, size_t FIELD_OFFSET>
-	void
-	csvRowToStruct(
-		const csv::CSVRow &row,
-		size_t colIdx,
-		void *structOut)
-	{
-		*reinterpret_cast<MEMBER_T *>(reinterpret_cast<uint8_t*>(structOut) + FIELD_OFFSET) =
-			row[colIdx].get<MEMBER_T>();
-	}
-
-	template <typename STRUCT_T, typename MEMBER_T, size_t FIELD_OFFSET>
-	void
-	structToCsvRow(
-		const void *structIn,
-		std::vector<std::string> &row)
-	{
-		row.push_back(std::to_string(*reinterpret_cast<const MEMBER_T *>(reinterpret_cast<const uint8_t*>(structIn) + FIELD_OFFSET)));
-	}
-
-	struct CSV_ColumnParser
-	{
-		const char *columnTitle;
-		void (*toStruct)(const csv::CSVRow &/*row*/, size_t/*colIdx*/, void */*structOut*/);
-		void (*fromStruct)(const void */*structOut*/, std::vector<std::string> &/*row*/);
-	};
-
-	#define typeof(STRUCT_T,MEMBER) decltype(reinterpret_cast<STRUCT_T*>(0)->MEMBER)
-
-	#define MAKE_PARSER(STRUCT_T, MEMBER, COLUMN_TITLE) {\
-		COLUMN_TITLE,\
-		csvRowToStruct<STRUCT_T, typeof(STRUCT_T,MEMBER), offsetof(STRUCT_T,MEMBER)>,\
-		structToCsvRow<STRUCT_T, typeof(STRUCT_T,MEMBER), offsetof(STRUCT_T,MEMBER)>\
-	}
 
 	static constexpr CSV_ColumnParser CSVPARSER_T_OFFSET = MAKE_PARSER(gpo::TelemetrySample, t_offset, "t_offset");
 
@@ -70,12 +33,17 @@ namespace io
 	static constexpr CSV_ColumnParser CSVPARSER_ECU_TPS = MAKE_PARSER(gpo::TelemetrySample, ecuSamp.tps, "tps");
 	static constexpr CSV_ColumnParser CSVPARSER_ECU_BOOST = MAKE_PARSER(gpo::TelemetrySample, ecuSamp.boost_psi, "boost");
 
-	static constexpr CSV_ColumnParser CSVPARSER_TRACK_ON_TRACK_LAT = MAKE_PARSER(gpo::TelemetrySample, trackData.onTrackLL.lat, "onTrackLL_lat");
-	static constexpr CSV_ColumnParser CSVPARSER_TRACK_ON_TRACK_LON = MAKE_PARSER(gpo::TelemetrySample, trackData.onTrackLL.lon, "onTrackLL_lon");
-	static constexpr CSV_ColumnParser CSVPARSER_TRACK_LAP = MAKE_PARSER(gpo::TelemetrySample, trackData.lap, "lap");
-	static constexpr CSV_ColumnParser CSVPARSER_TRACK_LAP_TIME_OFFSET = MAKE_PARSER(gpo::TelemetrySample, trackData.lapTimeOffset, "lapTimeOffset");
-	static constexpr CSV_ColumnParser CSVPARSER_TRACK_SECTOR = MAKE_PARSER(gpo::TelemetrySample, trackData.sector, "sector");
-	static constexpr CSV_ColumnParser CSVPARSER_TRACK_SECTOR_TIME_OFFSET = MAKE_PARSER(gpo::TelemetrySample, trackData.sectorTimeOffset, "sectorTimeOffset");
+	static constexpr CSV_ColumnParser CSVPARSER_CALC_ON_TRACK_LAT = MAKE_PARSER(gpo::TelemetrySample, calcSamp.onTrackLL.lat, "onTrackLL_lat");
+	static constexpr CSV_ColumnParser CSVPARSER_CALC_ON_TRACK_LON = MAKE_PARSER(gpo::TelemetrySample, calcSamp.onTrackLL.lon, "onTrackLL_lon");
+	static constexpr CSV_ColumnParser CSVPARSER_CALC_LAP = MAKE_PARSER(gpo::TelemetrySample, calcSamp.lap, "lap");
+	static constexpr CSV_ColumnParser CSVPARSER_CALC_LAP_TIME_OFFSET = MAKE_PARSER(gpo::TelemetrySample, calcSamp.lapTimeOffset, "lapTimeOffset");
+	static constexpr CSV_ColumnParser CSVPARSER_CALC_SECTOR = MAKE_PARSER(gpo::TelemetrySample, calcSamp.sector, "sector");
+	static constexpr CSV_ColumnParser CSVPARSER_CALC_SECTOR_TIME_OFFSET = MAKE_PARSER(gpo::TelemetrySample, calcSamp.sectorTimeOffset, "sectorTimeOffset");
+	static constexpr CSV_ColumnParser CSVPARSER_CALC_SMOOTH_ACCL_X = MAKE_PARSER(gpo::TelemetrySample, calcSamp.smoothAccl.x, "smoothAccl_x");
+	static constexpr CSV_ColumnParser CSVPARSER_CALC_SMOOTH_ACCL_Y = MAKE_PARSER(gpo::TelemetrySample, calcSamp.smoothAccl.y, "smoothAccl_y");
+	static constexpr CSV_ColumnParser CSVPARSER_CALC_SMOOTH_ACCL_Z = MAKE_PARSER(gpo::TelemetrySample, calcSamp.smoothAccl.z, "smoothAccl_z");
+	static constexpr CSV_ColumnParser CSVPARSER_CALC_VEHI_ACCL_LAT = MAKE_PARSER(gpo::TelemetrySample, calcSamp.vehiAccl.lat_g, "vehiAcclLat");
+	static constexpr CSV_ColumnParser CSVPARSER_CALC_VEHI_ACCL_LON = MAKE_PARSER(gpo::TelemetrySample, calcSamp.vehiAccl.lon_g, "vehiAcclLon");
 
 	bool
     writeTelemetryToCSV(
@@ -153,28 +121,39 @@ namespace io
 		}
 
 		// -----------------------------
-		// Processed telemetery
+		// Calculated telemetery
 		// -----------------------------
-		if (bitset_is_set(avail, gpo::eDA_TRACK_ON_TRACK_LATLON))
+		if (bitset_is_set(avail, gpo::eDA_CALC_ON_TRACK_LATLON))
 		{
-			columns.push_back(CSVPARSER_TRACK_ON_TRACK_LAT);
-			columns.push_back(CSVPARSER_TRACK_ON_TRACK_LON);
+			columns.push_back(CSVPARSER_CALC_ON_TRACK_LAT);
+			columns.push_back(CSVPARSER_CALC_ON_TRACK_LON);
 		}
-		if (bitset_is_set(avail, gpo::eDA_TRACK_LAP))
+		if (bitset_is_set(avail, gpo::eDA_CALC_LAP))
 		{
-			columns.push_back(CSVPARSER_TRACK_LAP);
+			columns.push_back(CSVPARSER_CALC_LAP);
 		}
-		if (bitset_is_set(avail, gpo::eDA_TRACK_LAP_TIME_OFFSET))
+		if (bitset_is_set(avail, gpo::eDA_CALC_LAP_TIME_OFFSET))
 		{
-			columns.push_back(CSVPARSER_TRACK_LAP_TIME_OFFSET);
+			columns.push_back(CSVPARSER_CALC_LAP_TIME_OFFSET);
 		}
-		if (bitset_is_set(avail, gpo::eDA_TRACK_SECTOR))
+		if (bitset_is_set(avail, gpo::eDA_CALC_SECTOR))
 		{
-			columns.push_back(CSVPARSER_TRACK_SECTOR);
+			columns.push_back(CSVPARSER_CALC_SECTOR);
 		}
-		if (bitset_is_set(avail, gpo::eDA_TRACK_SECTOR_TIME_OFFSET))
+		if (bitset_is_set(avail, gpo::eDA_CALC_SECTOR_TIME_OFFSET))
 		{
-			columns.push_back(CSVPARSER_TRACK_SECTOR_TIME_OFFSET);
+			columns.push_back(CSVPARSER_CALC_SECTOR_TIME_OFFSET);
+		}
+		if (bitset_is_set(avail, gpo::eDA_CALC_SMOOTH_ACCL))
+		{
+			columns.push_back(CSVPARSER_CALC_SMOOTH_ACCL_X);
+			columns.push_back(CSVPARSER_CALC_SMOOTH_ACCL_Y);
+			columns.push_back(CSVPARSER_CALC_SMOOTH_ACCL_Z);
+		}
+		if (bitset_is_set(avail, gpo::eDA_CALC_VEHI_ACCL))
+		{
+			columns.push_back(CSVPARSER_CALC_VEHI_ACCL_LAT);
+			columns.push_back(CSVPARSER_CALC_VEHI_ACCL_LON);
 		}
 
 		std::vector<std::string> headings;
@@ -210,8 +189,6 @@ namespace io
 		std::ofstream fs(csvFilepath,std::ios_base::trunc);
 		return writeTelemetryToCSV(tSamps,fs,avail);
 	}
-
-	#define CSV_ROW_ITR_GET(OUT_VAR,ROW_ITR,COL_IDX) OUT_VAR = (*ROW_ITR)[COL_IDX].get<std::remove_reference<decltype(OUT_VAR)>::type>()
 
 	bool
     readTelemetryFromCSV(
@@ -345,37 +322,62 @@ namespace io
 				bitset_set_bit(avail, gpo::eDA_ECU_BOOST);
 			}
 			// ----------------------
-			// TrackData telemetry
+			// Calculated telemetry
 			// ----------------------
-			else if (colName == CSVPARSER_TRACK_ON_TRACK_LAT.columnTitle)
+			else if (colName == CSVPARSER_CALC_ON_TRACK_LAT.columnTitle)
 			{
-				columns.push_back(CSVPARSER_TRACK_ON_TRACK_LAT);
-				bitset_set_bit(avail, gpo::eDA_TRACK_ON_TRACK_LATLON);
+				columns.push_back(CSVPARSER_CALC_ON_TRACK_LAT);
+				bitset_set_bit(avail, gpo::eDA_CALC_ON_TRACK_LATLON);
 			}
-			else if (colName == CSVPARSER_TRACK_ON_TRACK_LON.columnTitle)
+			else if (colName == CSVPARSER_CALC_ON_TRACK_LON.columnTitle)
 			{
-				columns.push_back(CSVPARSER_TRACK_ON_TRACK_LON);
-				bitset_set_bit(avail, gpo::eDA_TRACK_ON_TRACK_LATLON);
+				columns.push_back(CSVPARSER_CALC_ON_TRACK_LON);
+				bitset_set_bit(avail, gpo::eDA_CALC_ON_TRACK_LATLON);
 			}
-			else if (colName == CSVPARSER_TRACK_LAP.columnTitle)
+			else if (colName == CSVPARSER_CALC_LAP.columnTitle)
 			{
-				columns.push_back(CSVPARSER_TRACK_LAP);
-				bitset_set_bit(avail, gpo::eDA_TRACK_LAP);
+				columns.push_back(CSVPARSER_CALC_LAP);
+				bitset_set_bit(avail, gpo::eDA_CALC_LAP);
 			}
-			else if (colName == CSVPARSER_TRACK_LAP_TIME_OFFSET.columnTitle)
+			else if (colName == CSVPARSER_CALC_LAP_TIME_OFFSET.columnTitle)
 			{
-				columns.push_back(CSVPARSER_TRACK_LAP_TIME_OFFSET);
-				bitset_set_bit(avail, gpo::eDA_TRACK_LAP_TIME_OFFSET);
+				columns.push_back(CSVPARSER_CALC_LAP_TIME_OFFSET);
+				bitset_set_bit(avail, gpo::eDA_CALC_LAP_TIME_OFFSET);
 			}
-			else if (colName == CSVPARSER_TRACK_SECTOR.columnTitle)
+			else if (colName == CSVPARSER_CALC_SECTOR.columnTitle)
 			{
-				columns.push_back(CSVPARSER_TRACK_SECTOR);
-				bitset_set_bit(avail, gpo::eDA_TRACK_SECTOR);
+				columns.push_back(CSVPARSER_CALC_SECTOR);
+				bitset_set_bit(avail, gpo::eDA_CALC_SECTOR);
 			}
-			else if (colName == CSVPARSER_TRACK_SECTOR_TIME_OFFSET.columnTitle)
+			else if (colName == CSVPARSER_CALC_SECTOR_TIME_OFFSET.columnTitle)
 			{
-				columns.push_back(CSVPARSER_TRACK_SECTOR_TIME_OFFSET);
-				bitset_set_bit(avail, gpo::eDA_TRACK_SECTOR_TIME_OFFSET);
+				columns.push_back(CSVPARSER_CALC_SECTOR_TIME_OFFSET);
+				bitset_set_bit(avail, gpo::eDA_CALC_SECTOR_TIME_OFFSET);
+			}
+			else if (colName == CSVPARSER_CALC_SMOOTH_ACCL_X.columnTitle)
+			{
+				columns.push_back(CSVPARSER_CALC_SMOOTH_ACCL_X);
+				bitset_set_bit(avail, gpo::eDA_CALC_SMOOTH_ACCL);
+			}
+			else if (colName == CSVPARSER_CALC_SMOOTH_ACCL_Y.columnTitle)
+			{
+				columns.push_back(CSVPARSER_CALC_SMOOTH_ACCL_Y);
+				bitset_set_bit(avail, gpo::eDA_CALC_SMOOTH_ACCL);
+			}
+			else if (colName == CSVPARSER_CALC_SMOOTH_ACCL_Z.columnTitle)
+			{
+				columns.push_back(CSVPARSER_CALC_SMOOTH_ACCL_Z);
+				bitset_set_bit(avail, gpo::eDA_CALC_SMOOTH_ACCL);
+			}
+			else if (colName == CSVPARSER_CALC_VEHI_ACCL_LAT.columnTitle)
+			{
+				columns.push_back(CSVPARSER_CALC_VEHI_ACCL_LAT);
+				bitset_set_bit(avail, gpo::eDA_CALC_VEHI_ACCL);
+			}
+			else if (colName == CSVPARSER_CALC_VEHI_ACCL_LON.columnTitle)
+			{
+				columns.push_back(CSVPARSER_CALC_VEHI_ACCL_LON);
+				bitset_set_bit(avail, gpo::eDA_CALC_VEHI_ACCL);
 			}
 			else
 			{
@@ -398,103 +400,6 @@ namespace io
 		}
 
 		return true;
-	}
-
-	std::pair<bool, gpo::DataAvailableBitSet>
-	readMegaSquirtLog(
-		const std::string mslPath,
-		std::vector<gpo::ECU_TimedSample> &ecuTelem)
-	{
-		std::pair<bool, gpo::DataAvailableBitSet> ret;
-		auto &okay = ret.first;
-		auto &ecuDataAvail = ret.second;
-		okay = true;
-		bitset_clear(ecuDataAvail);
-
-		csv::CSVReader reader(mslPath);
-
-		auto colNames = reader.get_col_names();
-		int timeColIdx = -1;
-		int engineRPM_ColIdx = -1;
-		int tpsColIdx = -1;
-		int boostColIdx = -1;
-		for (size_t cc=0; cc<colNames.size(); cc++)
-		{
-			const auto &colName = colNames.at(cc);
-			if (timeColIdx < 0 && colName.compare("Time") == 0)
-			{
-				bitset_set_bit(ecuDataAvail,gpo::eDA_ECU_TIME);
-				timeColIdx = cc;
-			}
-			else if (engineRPM_ColIdx < 0 && colName.compare("RPM") == 0)
-			{
-				bitset_set_bit(ecuDataAvail,gpo::eDA_ECU_ENGINE_SPEED);
-				engineRPM_ColIdx = cc;
-			}
-			else if (tpsColIdx < 0 && colName.compare("TPS") == 0)
-			{
-				bitset_set_bit(ecuDataAvail,gpo::eDA_ECU_TPS);
-				tpsColIdx = cc;
-			}
-			else if (boostColIdx < 0 && colName.compare("Boost psi") == 0)
-			{
-				bitset_set_bit(ecuDataAvail,gpo::eDA_ECU_BOOST);
-				boostColIdx = cc;
-			}
-		}
-		spdlog::debug("timeColIdx = {}", timeColIdx);
-		spdlog::debug("engineRPM_ColIdx = {}", engineRPM_ColIdx);
-		spdlog::debug("tpsColIdx = {}", tpsColIdx);
-		spdlog::debug("boostColIdx = {}", boostColIdx);
-		if (timeColIdx < 0)
-		{
-			spdlog::warn("could not determine 't_offset' (time) column index");
-		}
-		if (engineRPM_ColIdx < 0)
-		{
-			spdlog::warn("could not determine 'engineRPM' column index");
-		}
-		if (tpsColIdx < 0)
-		{
-			spdlog::warn("could not determine 'tps' column index");
-		}
-		if (boostColIdx < 0)
-		{
-			spdlog::warn("could not determine 'boost_psi' column index");
-		}
-
-		size_t rowIdx = 0;
-		ecuTelem.clear();
-		ecuTelem.reserve(1024);// prealloc memory for ~100s log (assume 10Hz data rate)
-		for (auto rowItr=reader.begin(); rowItr!=reader.end(); rowItr++,rowIdx++)
-		{
-			if (rowIdx == 0)
-			{
-				// 2nd row contains units
-				continue;
-			}
-
-			gpo::ECU_TimedSample ecuSamp;
-			if (timeColIdx >= 0)
-			{
-				CSV_ROW_ITR_GET(ecuSamp.t_offset, rowItr, timeColIdx);
-			}
-			if (engineRPM_ColIdx >= 0)
-			{
-				CSV_ROW_ITR_GET(ecuSamp.sample.engineSpeed_rpm, rowItr, engineRPM_ColIdx);
-			}
-			if (tpsColIdx >= 0)
-			{
-				CSV_ROW_ITR_GET(ecuSamp.sample.tps, rowItr, tpsColIdx);
-			}
-			if (boostColIdx >= 0)
-			{
-				CSV_ROW_ITR_GET(ecuSamp.sample.boost_psi, rowItr, boostColIdx);
-			}
-			ecuTelem.push_back(ecuSamp);
-		}
-
-		return ret;
 	}
 
 }
