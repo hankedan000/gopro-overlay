@@ -1,5 +1,7 @@
 #include "GoProOverlay/graphics/VideoObject.h"
 
+#include <easy/profiler.h>
+
 namespace gpo
 {
 	VideoObject::VideoObject()
@@ -47,6 +49,7 @@ namespace gpo
 	void
 	VideoObject::subRender()
 	{
+		EASY_BLOCK("VideoObject::subRender()");
 		if ( ! requirementsMet())
 		{
 			return;

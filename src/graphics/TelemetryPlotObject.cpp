@@ -1,5 +1,6 @@
 #include "GoProOverlay/graphics/TelemetryPlotObject.h"
 
+#include <easy/profiler.h>
 #include <spdlog/spdlog.h>
 
 namespace gpo
@@ -177,6 +178,7 @@ namespace gpo
 	void
 	TelemetryPlotObject::subRender()
 	{
+		EASY_BLOCK("TelemetryPlotObject::subRender()");
 		if (tSources_.size() > 0)
 		{
 			auto telemSrc = tSources_.front();
