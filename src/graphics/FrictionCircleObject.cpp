@@ -1,5 +1,7 @@
 #include "GoProOverlay/graphics/FrictionCircleObject.h"
 
+#include <easy/profiler.h>
+
 #include "GoProOverlay/utils/OpenCV_Utils.h"
 
 namespace gpo
@@ -92,6 +94,7 @@ namespace gpo
 	void
 	FrictionCircleObject::subRender()
 	{
+		EASY_BLOCK("FrictionCircleObject::subRender()");
 		outlineImg_.copyTo(outImg_);
 		if ( ! requirementsMet())
 		{

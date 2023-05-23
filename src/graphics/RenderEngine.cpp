@@ -1,5 +1,6 @@
 #include "GoProOverlay/graphics/RenderEngine.h"
 
+#include <easy/profiler.h>
 #include <spdlog/spdlog.h>
 
 #include "GoProOverlay/graphics/FrictionCircleObject.h"
@@ -294,6 +295,7 @@ namespace gpo
 		rFrame_.setTo(cv::Scalar(0,0,0));// clear frame
 
 		// render all entities. this can be done in parallel
+		EASY_BLOCK("RenderEngine::render() - render loop");
 		#pragma omp parallel for
 		for (const auto &ent : entities_)
 		{
@@ -318,8 +320,10 @@ namespace gpo
 					ent->renderObject()->typeName().c_str());
 			}
 		}
+		EASY_END_BLOCK;
 
 		// draw all entities into frame
+		EASY_BLOCK("RenderEngine::render() - drawInto loop");
 		for (const auto &ent : entities_)
 		{
 			if ( ! ent->renderObject()->isVisible())
@@ -343,6 +347,7 @@ namespace gpo
 					ent->renderObject()->typeName().c_str());
 			}
 		}
+		EASY_END_BLOCK;
 	}
 
 	const cv::UMat &

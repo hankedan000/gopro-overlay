@@ -1,5 +1,7 @@
 #include "GoProOverlay/graphics/TextObject.h"
 
+#include <easy/profiler.h>
+
 namespace gpo
 {
 	TextObject::TextObject()
@@ -62,6 +64,7 @@ namespace gpo
 		cv::UMat &intoImg,
 		int originX, int originY)
 	{
+		EASY_BLOCK("TextObject::drawInto()");
 		cv::putText(
 			intoImg,
 			text_.c_str(),

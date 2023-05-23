@@ -1,5 +1,6 @@
 #include "renderthread.h"
 
+#include <easy/profiler.h>
 #include <filesystem>
 #include "GoProOverlay/graphics/RenderEngine.h"
 #include <spdlog/spdlog.h>
@@ -76,8 +77,12 @@ RenderThread::run()
     qulonglong total = seekLimits.second;
     while (vWriter_.isOpened() && ! stop_ && progress < total)
     {
+        EASY_BLOCK("render frame");
         engine->render();
+        EASY_END_BLOCK;
+        EASY_BLOCK("write frame", profiler::colors::Magenta);
         vWriter_.write(engine->getFrame());
+        EASY_END_BLOCK;
         gSeeker->nextAll(true,false);
         emit progressChanged(progress++,total);
     }

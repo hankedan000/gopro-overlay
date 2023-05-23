@@ -1,5 +1,7 @@
 #include "GoProOverlay/graphics/SpeedometerObject.h"
 
+#include <easy/profiler.h>
+
 #include "GoProOverlay/utils/OpenCV_Utils.h"
 
 namespace gpo
@@ -22,6 +24,7 @@ namespace gpo
 	void
 	SpeedometerObject::subRender()
 	{
+		EASY_BLOCK("SpeedometerObject::subRender()");
 		if ( ! requirementsMet())
 		{
 			return;

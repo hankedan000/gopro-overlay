@@ -1,5 +1,7 @@
 #include "GoProOverlay/graphics/LapTimerObject.h"
 
+#include <easy/profiler.h>
+
 namespace gpo
 {
 
@@ -23,6 +25,7 @@ namespace gpo
 	void
 	LapTimerObject::subRender()
 	{
+		EASY_BLOCK("LapTimerObject::subRender()");
 		bgImg_.copyTo(outImg_);
 		if ( ! requirementsMet())
 		{
