@@ -153,6 +153,10 @@ namespace gpo
 		getSeeker();
 
 		void
+		renderInto(
+			cv::UMat &frame);
+
+		void
 		render();
 
 		const cv::UMat &

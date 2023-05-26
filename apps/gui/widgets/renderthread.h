@@ -1,6 +1,7 @@
 #ifndef RENDERTHREAD_H
 #define RENDERTHREAD_H
 
+#include <concrt/ResourcePool.h>
 #include <opencv2/opencv.hpp>
 #include <QThread>
 
@@ -14,6 +15,12 @@ class RenderThread : public QThread
 public:
     static const std::string DEFAULT_EXPORT_DIR;
     static const std::string DEFAULT_EXPORT_FILENAME;
+
+    struct RenderResources
+    {
+        cv::UMat frame;
+    };
+    using ResPool = concrt::ResourcePool<RenderResources, concrt::PC_Model::SPSC>;
 
 public:
     RenderThread(
@@ -36,6 +43,14 @@ signals:
         qulonglong total);
 
 private:
+    void
+    renderThreadMain(
+        gpo::RenderEnginePtr engine,
+        gpo::GroupedSeekerPtr gSeeker);
+
+    void
+    writerThreadMain();
+
     bool
     exportAudioSingleSource(
         gpo::GroupedSeekerPtr gSeeker,
@@ -61,7 +76,12 @@ private:
     cv::VideoWriter vWriter_;
     double renderFPS_;
 
-    bool stop_;
+    ResPool pool_;
+    std::thread renderThread_;
+    std::thread writerThread_;
+
+    bool stopRenderThread_;
+    bool stopWriterThread_;
 
 };
 

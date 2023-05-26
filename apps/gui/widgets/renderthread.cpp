@@ -12,6 +12,8 @@ const std::filesystem::path RAW_RENDER_FILENAME = "raw_render.mp4";
 const std::string RenderThread::DEFAULT_EXPORT_DIR = "/tmp/gopro_overlay_render/";
 const std::string RenderThread::DEFAULT_EXPORT_FILENAME = "render.mp4";
 
+const size_t N_RESOURCES = 4;
+
 RenderThread::RenderThread(
         gpo::RenderProject *project,
         QString exportDir,
@@ -22,7 +24,11 @@ RenderThread::RenderThread(
  , exportFilename_(exportFilename)
  , vWriter_()
  , renderFPS_(fps)
- , stop_(false)
+ , pool_(N_RESOURCES)
+ , renderThread_()
+ , writerThread_()
+ , stopRenderThread_(false)
+ , stopWriterThread_(false)
 {
 }
 
@@ -70,22 +76,32 @@ RenderThread::run()
         renderFPS_,
         engine->getRenderSize(),
         true);// isColor
-    
-    // get new limits after lead-in seeking
-    auto seekLimits = gSeeker->relativeSeekLimits();
-    qulonglong progress = 0;
-    qulonglong total = seekLimits.second;
-    while (vWriter_.isOpened() && ! stop_ && progress < total)
+    if ( ! vWriter_.isOpened())
     {
-        EASY_BLOCK("render frame");
-        engine->render();
-        EASY_END_BLOCK;
-        EASY_BLOCK("write frame", profiler::colors::Magenta);
-        vWriter_.write(engine->getFrame());
-        EASY_END_BLOCK;
-        gSeeker->nextAll(true,false);
-        emit progressChanged(progress++,total);
+        spdlog::error("failed to open {}", rawRenderFilePath.c_str());
+        return;
     }
+
+    // startup our render/writer threads
+    stopRenderThread_ = false;
+    stopWriterThread_ = false;
+    renderThread_ = std::thread(&RenderThread::renderThreadMain, this, engine, gSeeker);
+    writerThread_ = std::thread(&RenderThread::writerThreadMain, this);
+
+    // wait for render thread to finish
+    //  * will stop naturely when no more frames to render
+    //  * or when stopped via `stopRenderThread_`
+    renderThread_.join();
+
+    // wait for writer to consume any queued frames
+    while (pool_.available() < pool_.capacity())
+    {
+    }
+
+    // notify writer thread to stop and join
+    stopWriterThread_ = true;
+    writerThread_.join();
+
     vWriter_.release();
 
     // export final video with audio
@@ -119,7 +135,49 @@ RenderThread::run()
 void
 RenderThread::stopRender()
 {
-    stop_ = true;
+    stopRenderThread_ = true;
+}
+
+void
+RenderThread::renderThreadMain(
+    gpo::RenderEnginePtr engine,
+    gpo::GroupedSeekerPtr gSeeker)
+{
+    // get new limits after lead-in seeking
+    auto seekLimits = gSeeker->relativeSeekLimits();
+    qulonglong progress = 0;
+    qulonglong total = seekLimits.second;
+    while ( ! stopRenderThread_ && progress < total)
+    {
+        RenderResources *res = nullptr;
+        int ret = pool_.acquire_busy(res, 1000);
+        if (ret == concrt::OK)
+        {
+            EASY_BLOCK("render frame");
+            engine->renderInto(res->frame);
+            EASY_END_BLOCK;
+            gSeeker->nextAll(true,false);
+            emit progressChanged(progress++,total);
+            pool_.produce(res);
+        }
+    }
+}
+
+void
+RenderThread::writerThreadMain()
+{
+    while ( ! stopWriterThread_)
+    {
+        RenderResources *res = nullptr;
+        int ret = pool_.consume_wait(res, 1);// 1s timeout
+        if (ret == concrt::OK)
+        {
+            EASY_BLOCK("write frame", profiler::colors::Magenta);
+            vWriter_.write(res->frame);
+            EASY_END_BLOCK;
+            pool_.release(res);
+        }
+    }
 }
 
 bool

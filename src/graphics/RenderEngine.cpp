@@ -289,14 +289,24 @@ namespace gpo
 	}
 
 	void
-	RenderEngine::render()
+	RenderEngine::renderInto(
+		cv::UMat &frame)
 	{
 		spdlog::trace(__func__);
-		rFrame_.setTo(cv::Scalar(0,0,0));// clear frame
+
+		// make sure passed frame matches the render size
+		const cv::Size frameSize = frame.size();
+		const cv::Size renderSize = getRenderSize();
+		if (frameSize.width != renderSize.width || frameSize.height != renderSize.height)
+		{
+			// FIXME also check for CV_8UC3 too
+			frame.create(renderSize,CV_8UC3);
+		}
+
+		frame.setTo(cv::Scalar(0,0,0));// clear frame
 
 		// render all entities. this can be done in parallel
-		EASY_BLOCK("RenderEngine::render() - render loop");
-		#pragma omp parallel for
+		EASY_BLOCK("RenderEngine::renderInto() - render loop");
 		for (const auto &ent : entities_)
 		{
 			if ( ! ent->renderObject()->isVisible())
@@ -323,7 +333,7 @@ namespace gpo
 		EASY_END_BLOCK;
 
 		// draw all entities into frame
-		EASY_BLOCK("RenderEngine::render() - drawInto loop");
+		EASY_BLOCK("RenderEngine::renderInto() - drawInto loop");
 		for (const auto &ent : entities_)
 		{
 			if ( ! ent->renderObject()->isVisible())
@@ -333,7 +343,7 @@ namespace gpo
 
 			try
 			{
-				ent->renderObject()->drawInto(rFrame_,ent->renderPosition().x, ent->renderPosition().y,ent->renderSize());
+				ent->renderObject()->drawInto(frame,ent->renderPosition().x, ent->renderPosition().y,ent->renderSize());
 			}
 			catch (const std::exception &e)
 			{
@@ -348,6 +358,13 @@ namespace gpo
 			}
 		}
 		EASY_END_BLOCK;
+	}
+
+	void
+	RenderEngine::render()
+	{
+		spdlog::trace(__func__);
+		renderInto(rFrame_);
 	}
 
 	const cv::UMat &
