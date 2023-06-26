@@ -16,3 +16,6 @@
 [submodule "extern/easy_profiler"]
 	path = extern/easy_profiler
 	url = https://github.com/yse/easy_profiler.git
+[submodule "extern/concrt-cpp"]
+	path = extern/concrt-cpp
+	url = https://github.com/hankedan000/concrt-cpp.git

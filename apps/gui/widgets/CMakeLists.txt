@@ -64,4 +64,5 @@ target_link_libraries(AppWidgets PUBLIC
 	GoProOverlay
 	QCustomPlot
 	spdlog::spdlog
+	ConcrtCpp::concrt
 )

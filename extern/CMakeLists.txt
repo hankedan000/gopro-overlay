@@ -3,6 +3,7 @@ add_subdirectory(yaml-cpp)
 add_subdirectory(qcustomplot)
 add_subdirectory(spdlog)
 add_subdirectory(easy_profiler)
+add_subdirectory(concrt-cpp)
 
 # create header-only target for tqdm (if it was cloned correctly)
 find_path(TQDM_INCLUDE_DIR
