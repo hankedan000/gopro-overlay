@@ -616,13 +616,25 @@ namespace gpo
 		return findClosestPointWithIdx(p,0,{0,path_.size()});
 	}
 
+	// return the squared distance between two points.
+	// take square root if you want the distance.
+	double
+	distSquared(
+		const cv::Vec2d &p1,
+		const cv::Vec2d &p2)
+	{
+		const double dx = p2[0] - p1[0];
+		const double dy = p2[1] - p1[1];
+		return (dx*dx) + (dy*dy);
+	}
+
 	std::tuple<bool,cv::Vec2d, size_t>
 	Track::findClosestPointWithIdx(
 		cv::Vec2d p,
 		size_t initialIdx,
 		std::pair<size_t,size_t> window) const
 	{
-		double closestDist = -1;
+		double closestDistSqr = -1;
 		cv::Vec2d closestPoint;
 		size_t closestIdx;
 		size_t startIdx = initialIdx - window.first;
@@ -634,15 +646,15 @@ namespace gpo
 		for (size_t i=startIdx; i<endIdx; i++)
 		{
 			const auto &point = path_[i];
-			double dist = cv::norm(p,point,cv::NORM_L2);
-			if (closestDist < 0 || dist < closestDist)
+			double distSqr = distSquared(p,point);
+			if (closestDistSqr < 0 || distSqr < closestDistSqr)
 			{
-				closestDist = dist;
+				closestDistSqr = distSqr;
 				closestPoint = point;
 				closestIdx = i;
 			}
 		}
-		return std::tuple(closestDist!=-1,closestPoint,closestIdx);
+		return std::tuple(closestDistSqr!=-1,closestPoint,closestIdx);
 	}
 
 	bool

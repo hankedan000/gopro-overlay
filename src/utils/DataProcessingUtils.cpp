@@ -253,12 +253,25 @@ namespace utils
 		gpo::GateType_E gateType = (*tpoItr)->getGateType();
 		gpo::DetectionGate gate = (*tpoItr)->getEntryGate();
 		size_t onTrackFindInitialIdx = 0;
-		std::pair<size_t,size_t> onTrackFindWindow = {0,tSamps->size()};// search everywhere initially
 		for (size_t ii=0; ii<tSamps->size(); ii++)
 		{
 			auto &samp = tSamps->at(ii);
 			auto &calcSamp = samp.calcSamp;
 			cv::Vec2d currCoord(samp.gpSamp.gps.coord.lat,samp.gpSamp.gps.coord.lon);
+			std::pair<size_t,size_t> onTrackFindWindow = {5,100};
+			if (samp.gpSamp.gps.speed2D < 0.447)// 0.447m/s ~= 1mph
+			{
+				// search everywhere when speed is low or stationary. we do this because we
+				// can get can have "clumps" of points to search through. this can result
+				// in us getting stuck inside the clump and never being able to search past
+				// if the search window isn't wide enough
+				onTrackFindWindow = {tSamps->size(),tSamps->size()};
+			}
+			else if (samp.gpSamp.gps.speed2D < 2.25)// 2.25m/s ~= 5mph
+			{
+				onTrackFindWindow = {100,500};
+			}
+			// TODO might want to look into quadtrees to improve this search algorithm
 			auto findRes = track->findClosestPointWithIdx(
 						currCoord,
 						onTrackFindInitialIdx,
@@ -268,7 +281,6 @@ namespace utils
 			calcSamp.onTrackLL.lon = foundCoord[1];
 			bitset_set_bit(avail, gpo::eDA_CALC_ON_TRACK_LATLON);
 			onTrackFindInitialIdx = std::get<2>(findRes);
-			onTrackFindWindow = {5,100};// reduce search space once we've found initial location
 
 			// see if we crossed 'gate'. if so, then move to the next logical gate in the 'trackObjs'
 			// list. we check these in a loop because sectors can have gates that are back-to-back,
