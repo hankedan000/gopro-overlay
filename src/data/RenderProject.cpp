@@ -24,6 +24,7 @@ namespace gpo
 	 , exportFilePath_("")
 	{
 		engine_->addObserver((ModifiableObjectObserver*)this);
+		dsm_.addObserver(this);
 	}
 
 	RenderProject::~RenderProject()
@@ -383,6 +384,7 @@ namespace gpo
 		}
 
 		engine_->saveModifications(unnecessaryIsOkay);
+		dsm_.saveModifications(unnecessaryIsOkay);
 
 		return true;
 	}
@@ -430,6 +432,12 @@ namespace gpo
 				modifiable->hasSavableModifications());
 		}
 		else if (modifiable == track_)
+		{
+			markObjectModified(
+				modifiable->hasApplyableModifications(),
+				modifiable->hasSavableModifications());
+		}
+		else if (modifiable == &dsm_)
 		{
 			markObjectModified(
 				modifiable->hasApplyableModifications(),

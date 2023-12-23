@@ -3,7 +3,6 @@
 
 #include <QActionGroup>
 #include <QMainWindow>
-#include <QSettings>
 #include <QStandardItemModel>
 
 #include "GoProOverlay/data/ModifiableObject.h"
@@ -132,10 +131,6 @@ private:
     askToOverwriteExport();
 
     void
-    addProjectToRecentHistory(
-            const std::string &projectDir);
-
-    void
     plotTelemetry(
             gpo::DataSourcePtr dataSrc);
 
@@ -171,7 +166,6 @@ private slots:
 private:
     Ui::ProjectWindow *ui;
     QActionGroup *previewResolutionActionGroup_;
-    QSettings settings;
 
     gpo::RenderProject proj_;
 

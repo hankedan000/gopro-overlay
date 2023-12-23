@@ -11,6 +11,7 @@ TrackView::TrackView(QWidget *parent) :
     QFrame(parent),
     ui(new Ui::TrackView),
     track_(nullptr),
+    sources_(),
     mliValid_(false),
     pan_(),
     pMode_(PlacementMode::ePM_None),
@@ -56,6 +57,14 @@ TrackView::paintEvent(
     QPainter painter(this);
 
     drawTrackPath(painter,track_);
+
+    for (const auto &srcObjs : sources_)
+    {
+        if (srcObjs.visible)
+        {
+            drawTelemetryPath(painter, srcObjs.telemSrc);
+        }
+    }
 
     // draw start/finish gates
     if (pMode_ != PlacementMode::ePM_StartGate)
@@ -248,7 +257,8 @@ TrackView::getPanningEnabled() const
 
 void
 TrackView::setTrack(
-        gpo::Track *track)
+        gpo::Track *track,
+        bool redraw)
 {
     track_ = track;
     mliValid_ = false;
@@ -282,7 +292,95 @@ TrackView::setTrack(
         }
     }
 
-    fitTrackToView(true);// redraw
+    fitTrackToView(redraw);
+}
+
+void
+TrackView::addSource(
+    gpo::TelemetrySourcePtr telemSrc,
+    bool redraw)
+{
+	// prevent telemSrc from being added again
+	for (const auto &srcObjs : sources_)
+	{
+		if (srcObjs.telemSrc.get() == telemSrc.get())
+		{
+			return;
+		}
+	}
+
+    SourceObjects newSrcObjs;
+    newSrcObjs.telemSrc = telemSrc;
+    newSrcObjs.visible = true;
+    sources_.push_back(newSrcObjs);
+
+    if (redraw)
+    {
+        update();
+    }
+}
+
+const gpo::TelemetrySourcePtr &
+TrackView::getSource(
+    size_t idx) const
+{
+    return sources_.at(idx).telemSrc;
+}
+
+void
+TrackView::removeSource(
+    gpo::TelemetrySourcePtr telemSrc,
+    bool redraw)
+{
+	for (size_t i=0; i<numSources();)
+	{
+		if (sources_.at(i).telemSrc.get() == telemSrc.get())
+		{
+			removeSource(i,redraw);
+		}
+		else
+		{
+			i++;
+		}
+	}
+}
+
+void
+TrackView::removeSource(
+    size_t idx,
+    bool redraw)
+{
+	auto sourceItr = std::next(sources_.begin(),idx);
+	if (sourceItr != sources_.end())
+	{
+		sources_.erase(sourceItr);
+	}
+
+	if (redraw)
+	{
+        update();
+	}
+}
+
+void
+TrackView::clearSources(
+    bool redraw)
+{
+	while ( ! sources_.empty())
+	{
+		removeSource(0,false);// hold off redrawting until the end
+	}
+
+	if (redraw)
+	{
+        update();
+	}
+}
+
+size_t
+TrackView::numSources() const
+{
+    return sources_.size();
 }
 
 void
@@ -307,6 +405,20 @@ TrackView::fitTrackToView(
         // track is wider than it is tall
         pxPerDeg_ = (width() - PX_MARGIN * 2) / deltaLon;
     }
+
+    if (redraw)
+    {
+        update();
+    }
+}
+
+void
+TrackView::setSourceVisible(
+    size_t sourceIdx,
+    bool visible,
+    bool redraw)
+{
+    sources_.at(sourceIdx).visible = visible;
 
     if (redraw)
     {
@@ -409,6 +521,31 @@ TrackView::drawTrackPath(
     {
         auto pathPoint = track->getPathPoint(i);
         auto currPoint = coordToPx(pathPoint);
+
+        if (i != 0)
+        {
+            painter.drawLine(prevPoint,currPoint);
+        }
+
+        prevPoint = currPoint;
+    }
+}
+    
+void
+TrackView::drawTelemetryPath(
+        QPainter &painter,
+        const gpo::TelemetrySourcePtr &telemSrc)
+{
+    painter.setPen(Qt::white);
+
+    QPoint prevPoint;
+    for (size_t i=0; i<telemSrc->size(); i++)
+    {
+        auto tSamp = telemSrc->at(i);
+        cv::Vec2d coord;
+        coord[0] = tSamp.gpSamp.gps.coord.lat;
+        coord[1] = tSamp.gpSamp.gps.coord.lon;
+        auto currPoint = coordToPx(coord);
 
         if (i != 0)
         {
