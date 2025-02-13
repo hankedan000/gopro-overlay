@@ -636,7 +636,7 @@ namespace gpo
 	{
 		double closestDistSqr = -1;
 		cv::Vec2d closestPoint;
-		size_t closestIdx;
+		size_t closestIdx = initialIdx;
 		size_t startIdx = initialIdx - window.first;
 		if (window.first > initialIdx)
 		{
