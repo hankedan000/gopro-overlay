@@ -1,6 +1,6 @@
 #include "renderthread.h"
 
-#include <easy/profiler.h>
+#include <tracy/Tracy.hpp>
 #include <filesystem>
 #include "GoProOverlay/graphics/RenderEngine.h"
 #include <spdlog/spdlog.h>
@@ -153,9 +153,11 @@ RenderThread::renderThreadMain(
         int ret = pool_.acquire_busy(res, 1000);
         if (ret == concrt::OK)
         {
-            EASY_BLOCK("render frame");
-            engine->renderInto(res->frame);
-            EASY_END_BLOCK;
+            {
+                FrameMark;// marks beginning of frame in tracy profiler
+                ZoneScopedN("render frame");
+                engine->renderInto(res->frame);
+            }
             gSeeker->nextAll(true,false);
             emit progressChanged(progress++,total);
             pool_.produce(res);
@@ -172,9 +174,10 @@ RenderThread::writerThreadMain()
         int ret = pool_.consume_wait(res, 1);// 1s timeout
         if (ret == concrt::OK)
         {
-            EASY_BLOCK("write frame", profiler::colors::Magenta);
-            vWriter_.write(res->frame);
-            EASY_END_BLOCK;
+            {
+                ZoneScopedNC("write frame", tracy::Color::Magenta);
+                vWriter_.write(res->frame);
+            }
             pool_.release(res);
         }
     }

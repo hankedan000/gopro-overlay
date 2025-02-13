@@ -2,8 +2,13 @@ add_subdirectory(gopro-telem)
 add_subdirectory(yaml-cpp)
 add_subdirectory(qcustomplot)
 add_subdirectory(spdlog)
-add_subdirectory(easy_profiler)
 add_subdirectory(concrt-cpp)
+
+set(TRACY_ENABLE          OFF CACHE BOOL "" FORCE)
+set(TRACY_DELAYED_INIT    ON  CACHE BOOL "" FORCE)
+set(TRACY_MANUAL_LIFETIME ON  CACHE BOOL "" FORCE)
+set(TRACY_ON_DEMAND       ON  CACHE BOOL "" FORCE)
+add_subdirectory(tracy)
 
 # create header-only target for tqdm (if it was cloned correctly)
 find_path(TQDM_INCLUDE_DIR

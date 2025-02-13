@@ -1,6 +1,6 @@
 #include "GoProOverlay/graphics/TelemetryPrintoutObject.h"
 
-#include <easy/profiler.h>
+#include <tracy/Tracy.hpp>
 
 namespace gpo
 {
@@ -42,7 +42,7 @@ namespace gpo
 	void
 	TelemetryPrintoutObject::subRender()
 	{
-		EASY_BLOCK("TelemetryPrintoutObject::subRender()");
+		ZoneScopedN("TelemetryPrintoutObject::subRender()");
 		if ( ! requirementsMet())
 		{
 			return;

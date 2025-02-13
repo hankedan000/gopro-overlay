@@ -1,6 +1,6 @@
 #include "GoProOverlay/graphics/RenderEngine.h"
 
-#include <easy/profiler.h>
+#include <tracy/Tracy.hpp>
 #include <spdlog/spdlog.h>
 
 #include "GoProOverlay/graphics/FrictionCircleObject.h"
@@ -306,58 +306,60 @@ namespace gpo
 		frame.setTo(cv::Scalar(0,0,0));// clear frame
 
 		// render all entities. this can be done in parallel
-		EASY_BLOCK("RenderEngine::renderInto() - render loop");
-		for (const auto &ent : entities_)
 		{
-			if ( ! ent->renderObject()->isVisible())
+			ZoneScopedN("RenderEngine::renderInto() - render loop");
+			for (const auto &ent : entities_)
 			{
-				continue;
-			}
+				if ( ! ent->renderObject()->isVisible())
+				{
+					continue;
+				}
 
-			try
-			{
-				ent->renderObject()->render();
-			}
-			catch (const std::exception &e)
-			{
-				spdlog::error("caught std::exception while processing rObj<{}>. what({}",
-					ent->renderObject()->typeName().c_str(),
-					e.what());
-			}
-			catch (...)
-			{
-				spdlog::error("caught unknown exception while processing rObj<{}>.",
-					ent->renderObject()->typeName().c_str());
+				try
+				{
+					ent->renderObject()->render();
+				}
+				catch (const std::exception &e)
+				{
+					spdlog::error("caught std::exception while processing rObj<{}>. what({}",
+						ent->renderObject()->typeName().c_str(),
+						e.what());
+				}
+				catch (...)
+				{
+					spdlog::error("caught unknown exception while processing rObj<{}>.",
+						ent->renderObject()->typeName().c_str());
+				}
 			}
 		}
-		EASY_END_BLOCK;
 
 		// draw all entities into frame
-		EASY_BLOCK("RenderEngine::renderInto() - drawInto loop");
-		for (const auto &ent : entities_)
 		{
-			if ( ! ent->renderObject()->isVisible())
+			ZoneScopedN("RenderEngine::renderInto() - drawInto loop");
+			for (const auto &ent : entities_)
 			{
-				continue;
-			}
+				if ( ! ent->renderObject()->isVisible())
+				{
+					continue;
+				}
 
-			try
-			{
-				ent->renderObject()->drawInto(frame,ent->renderPosition().x, ent->renderPosition().y,ent->renderSize());
-			}
-			catch (const std::exception &e)
-			{
-				spdlog::error("caught std::exception while processing rObj<{}>. what({}",
-					ent->renderObject()->typeName().c_str(),
-					e.what());
-			}
-			catch (...)
-			{
-				spdlog::error("caught unknown exception while processing rObj<{}>.",
-					ent->renderObject()->typeName().c_str());
+				try
+				{
+					ent->renderObject()->drawInto(frame,ent->renderPosition().x, ent->renderPosition().y,ent->renderSize());
+				}
+				catch (const std::exception &e)
+				{
+					spdlog::error("caught std::exception while processing rObj<{}>. what({}",
+						ent->renderObject()->typeName().c_str(),
+						e.what());
+				}
+				catch (...)
+				{
+					spdlog::error("caught unknown exception while processing rObj<{}>.",
+						ent->renderObject()->typeName().c_str());
+				}
 			}
 		}
-		EASY_END_BLOCK;
 	}
 
 	void

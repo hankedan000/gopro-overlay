@@ -1,12 +1,14 @@
 #include "projectwindow.h"
 
-#include <easy/profiler.h>
+#include <tracy/Tracy.hpp>
 #include <QApplication>
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    profiler::startListen();
+#ifdef TRACY_ENABLE
+    tracy::StartupProfiler();
+#endif
 
     ProjectWindow pw;
     pw.setWindowIcon(QIcon(":/icons/gpo_icon.ico"));

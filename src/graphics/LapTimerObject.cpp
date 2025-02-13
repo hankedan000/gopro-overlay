@@ -1,6 +1,6 @@
 #include "GoProOverlay/graphics/LapTimerObject.h"
 
-#include <easy/profiler.h>
+#include <tracy/Tracy.hpp>
 
 namespace gpo
 {
@@ -25,7 +25,7 @@ namespace gpo
 	void
 	LapTimerObject::subRender()
 	{
-		EASY_BLOCK("LapTimerObject::subRender()");
+		ZoneScopedN("LapTimerObject::subRender()");
 		bgImg_.copyTo(outImg_);
 		if ( ! requirementsMet())
 		{

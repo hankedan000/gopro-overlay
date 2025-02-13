@@ -1,6 +1,6 @@
 #include "GoProOverlay/graphics/VideoObject.h"
 
-#include <easy/profiler.h>
+#include <tracy/Tracy.hpp>
 
 namespace gpo
 {
@@ -49,7 +49,7 @@ namespace gpo
 	void
 	VideoObject::subRender()
 	{
-		EASY_BLOCK("VideoObject::subRender()");
+		ZoneScopedN("VideoObject::subRender()");
 		if ( ! requirementsMet())
 		{
 			return;

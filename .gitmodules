@@ -13,9 +13,9 @@
 [submodule "extern/csv-parser"]
 	path = extern/csv-parser
 	url = https://github.com/vincentlaucsb/csv-parser.git
-[submodule "extern/easy_profiler"]
-	path = extern/easy_profiler
-	url = https://github.com/yse/easy_profiler.git
 [submodule "extern/concrt-cpp"]
 	path = extern/concrt-cpp
 	url = https://github.com/hankedan000/concrt-cpp.git
+[submodule "extern/tracy"]
+	path = extern/tracy
+	url = https://github.com/wolfpld/tracy.git

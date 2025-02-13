@@ -49,11 +49,11 @@ target_include_directories("${LIBNAME}"
 target_link_libraries("${LIBNAME}"
 	PUBLIC
 		csv
-		easy_profiler
 		GoProTelem::GoProTelem
 		${OpenCV_LIBS}
 		QCustomPlot
 		spdlog::spdlog
+		Tracy::TracyClient
 		yaml-cpp)
 
 # optionally use OpenMP for parallel processing

@@ -1,6 +1,6 @@
 #include "GoProOverlay/graphics/TrackMapObject.h"
 
-#include <easy/profiler.h>
+#include <tracy/Tracy.hpp>
 
 #include "GoProOverlay/utils/OpenCV_Utils.h"
 
@@ -152,7 +152,7 @@ namespace gpo
 	void
 	TrackMapObject::subRender()
 	{
-		EASY_BLOCK("TrackMapObject::subRender()");
+		ZoneScopedN("TrackMapObject::subRender()");
 		outlineImg_.copyTo(outImg_);
 		if ( ! requirementsMet())
 		{
