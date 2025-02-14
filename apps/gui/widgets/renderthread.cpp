@@ -168,6 +168,27 @@ RenderThread::renderThreadMain(
 void
 RenderThread::writerThreadMain()
 {
+    const auto fps = static_cast<unsigned int>(renderFPS_);
+    auto engine = project_->getEngine();
+    const auto renderSize = engine->getRenderSize();
+    std::array<char, 1024> ffmpegCommand;
+    snprintf(
+        ffmpegCommand.data(), ffmpegCommand.size(),
+        "ffmpeg -y -f rawvideo -vcodec rawvideo -framerate %d -pix_fmt bgr24 -s %dx%d -i - -c:v h264 -crf 14 -maxrate:v 10M -r %d myVideoFile.mkv",
+        fps,
+        renderSize.width,
+        renderSize.height,
+        fps);
+
+    FILE * pipeout = popen(ffmpegCommand.data(), "w");
+    if ( ! pipeout)
+    {
+        spdlog::error(
+            "failed to open ffmpeg pipe!\nffmpegCommand: '{}'",
+            ffmpegCommand.data());
+        return;
+    }
+
     while ( ! stopWriterThread_)
     {
         RenderResources *res = nullptr;
@@ -176,11 +197,16 @@ RenderThread::writerThreadMain()
         {
             {
                 ZoneScopedNC("write frame", tracy::Color::Magenta);
-                vWriter_.write(res->frame);
+                const auto mat = res->frame.getMat(cv::AccessFlag::ACCESS_READ);
+                const size_t matSize_bytes = mat.total() * mat.elemSize();
+                fwrite(mat.data, 1, matSize_bytes, pipeout);
             }
             pool_.release(res);
         }
     }
+
+    fflush(pipeout);
+    pclose(pipeout);
 }
 
 bool
