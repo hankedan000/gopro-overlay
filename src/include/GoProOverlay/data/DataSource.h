@@ -30,10 +30,10 @@ namespace gpo
 
 		bool
 		setDatumTrack(
-			const Track *track,
+			std::shared_ptr<const Track> track,
 			bool processNow = true);
 
-		const Track *
+		const std::shared_ptr<const Track> &
 		getDatumTrack() const;
 
 		bool
@@ -97,7 +97,7 @@ namespace gpo
 		 * If successful, a pointer to a newed Track object.
 		 * nullptr on failure or if telemetry data is not present.
 		 */
-		Track *
+		TrackPtr
 		makeTrack() const;
 
 		/**
@@ -220,7 +220,7 @@ namespace gpo
 
 		std::string sourceName_;
 		std::string originFile_;
-		const Track *datumTrack_;
+		std::shared_ptr<const Track> datumTrack_;
 
 	};
 

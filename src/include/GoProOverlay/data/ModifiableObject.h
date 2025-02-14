@@ -176,6 +176,18 @@ namespace gpo
         setGlobalShowModificationCallStack(
             bool show);
 
+        ModifiableObject *
+        toModifiableObject()
+        {
+            return this;
+        }
+
+        const ModifiableObject *
+        toModifiableObject() const
+        {
+            return this;
+        }
+
     protected:
         /**
          * Subclasses can call this method to clear 'hasApplyableEdits_'

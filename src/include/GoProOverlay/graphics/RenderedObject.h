@@ -273,9 +273,9 @@ namespace gpo
 
 		bool
 		setTrack(
-			const Track *track);
+			std::shared_ptr<const Track> track);
 
-		const Track *
+		const std::shared_ptr<const Track> &
 		getTrack() const;
 
 		template <class DerivedRenderedObject>
@@ -345,8 +345,7 @@ namespace gpo
 
 		std::vector<VideoSourcePtr> vSources_;
 		std::vector<TelemetrySourcePtr> tSources_;
-		// TODO use shared_ptr here?
-		const Track *track_;
+		std::shared_ptr<const Track> track_;
 
 	private:
 		cv::UMat scaledImg_;

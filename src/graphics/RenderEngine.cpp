@@ -294,9 +294,15 @@ namespace gpo
 	{
 		spdlog::trace(__func__);
 
+		// if our render size hasn't been set yet, then there's nothing to render yet
+		const cv::Size renderSize = getRenderSize();
+		if (renderSize.width == 0 || renderSize.height == 0)
+		{
+			return;
+		}
+
 		// make sure passed frame matches the render size
 		const cv::Size frameSize = frame.size();
-		const cv::Size renderSize = getRenderSize();
 		if (frameSize.width != renderSize.width || frameSize.height != renderSize.height)
 		{
 			// FIXME also check for CV_8UC3 too
@@ -573,13 +579,13 @@ namespace gpo
 		}
 
 		// check for similar Track datums
-		const Track *topTrackDatum = topData->getDatumTrack();
-		const Track *botTrackDatum = botData->getDatumTrack();
-		if (topTrackDatum == nullptr)
+		const auto topTrackDatum = topData->getDatumTrack();
+		const auto botTrackDatum = botData->getDatumTrack();
+		if ( ! topTrackDatum)
 		{
 			throw std::runtime_error("topData has no Track datum set");
 		}
-		else if (botTrackDatum == nullptr)
+		else if ( ! botTrackDatum)
 		{
 			throw std::runtime_error("botData has no Track datum set");
 		}

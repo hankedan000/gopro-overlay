@@ -1,5 +1,6 @@
 #include "renderthread.h"
 
+#include <array>
 #include <tracy/Tracy.hpp>
 #include <filesystem>
 #include "GoProOverlay/graphics/RenderEngine.h"
@@ -193,7 +194,7 @@ RenderThread::exportAudioSingleSource(
     const std::filesystem::path &finalExportFile)
 {
     bool audioOkay = true;
-    char ffmpegCmd[10000];
+    std::array<char, 10000> ffmpegCmd;
     spdlog::info("exporting single-source audio...");
 
     const auto seekerCount = gSeeker->seekerCount();
@@ -212,28 +213,32 @@ RenderThread::exportAudioSingleSource(
 
     // extract audio from seeked source file using ffmpeg
     const std::filesystem::path tmpAudioPath = tmpDir / "tmp_audio.wav";
-    sprintf(ffmpegCmd,"ffmpeg -ss %0.6fs -i %s -y %s > %s 2>&1",
+    snprintf(
+        ffmpegCmd.data(), ffmpegCmd.size(),
+        "ffmpeg -ss %0.6fs -i %s -y %s > %s 2>&1",
         sourceStartTime_sec,
         audioSourceFile.c_str(),
         tmpAudioPath.c_str(),
         ffmpegLogFile.c_str());
-    spdlog::debug("extracting audio...\ncmd = {}",ffmpegCmd);
-    if (audioOkay && system(ffmpegCmd) != 0)
+    spdlog::debug("extracting audio...\ncmd = {}",ffmpegCmd.data());
+    if (audioOkay && system(ffmpegCmd.data()) != 0)
     {
-        spdlog::error("failed to extract audio. ffmpegCmd = '{}'",ffmpegCmd);
+        spdlog::error("failed to extract audio. ffmpegCmd = '{}'",ffmpegCmd.data());
         audioOkay = false;
     }
 
     // remux audio into raw render
-    sprintf(ffmpegCmd,"ffmpeg -i %s -i %s -map 0:v:0 -map 1:a:0 -c:v copy -y %s > %s 2>&1",
+    snprintf(
+        ffmpegCmd.data(), ffmpegCmd.size(),
+        "ffmpeg -i %s -i %s -map 0:v:0 -map 1:a:0 -c:v copy -y %s > %s 2>&1",
         rawRenderFilePath.c_str(),
         tmpAudioPath.c_str(),
         finalExportFile.c_str(),
         ffmpegLogFile.c_str());
-    spdlog::debug("remuxing audio...\ncmd = {}",ffmpegCmd);
-    if (audioOkay && system(ffmpegCmd) != 0)
+    spdlog::debug("remuxing audio...\ncmd = {}",ffmpegCmd.data());
+    if (audioOkay && system(ffmpegCmd.data()) != 0)
     {
-        spdlog::error("failed to produce final export with audio. ffmpegCmd = '{}'",ffmpegCmd);
+        spdlog::error("failed to produce final export with audio. ffmpegCmd = '{}'",ffmpegCmd.data());
         audioOkay = false;
     }
 
@@ -250,7 +255,7 @@ RenderThread::exportAudioMultiSourceLR(
     const std::filesystem::path &finalExportFile)
 {
     bool audioOkay = true;
-    char ffmpegCmd[10000];
+    std::array<char, 10000> ffmpegCmd;
     spdlog::info("exporting multi-source split audio...");
 
     const auto seekerCount = gSeeker->seekerCount();
@@ -269,15 +274,17 @@ RenderThread::exportAudioMultiSourceLR(
 
     // extract left audio from seeked source file using ffmpeg
     const std::filesystem::path tmpLeftAudioPath = tmpDir / "tmp_left_audio.wav";
-    sprintf(ffmpegCmd,"ffmpeg -ss %0.6fs -i %s -y %s > %s 2>&1",
+    snprintf(
+        ffmpegCmd.data(), ffmpegCmd.size(),
+        "ffmpeg -ss %0.6fs -i %s -y %s > %s 2>&1",
         leftStartTime_sec,
         leftSourceFile.c_str(),
         tmpLeftAudioPath.c_str(),
         ffmpegLogFile.c_str());
-    spdlog::debug("extracting audio...\ncmd = {}",ffmpegCmd);
-    if (audioOkay && system(ffmpegCmd) != 0)
+    spdlog::debug("extracting audio...\ncmd = {}",ffmpegCmd.data());
+    if (audioOkay && system(ffmpegCmd.data()) != 0)
     {
-        spdlog::error("failed to extract left audio. ffmpegCmd = '{}'",ffmpegCmd);
+        spdlog::error("failed to extract left audio. ffmpegCmd = '{}'",ffmpegCmd.data());
         audioOkay = false;
     }
 
@@ -290,42 +297,48 @@ RenderThread::exportAudioMultiSourceLR(
 
     // extract right audio from seeked source file using ffmpeg
     const std::filesystem::path tmpRightAudioPath = tmpDir / "tmp_right_audio.wav";
-    sprintf(ffmpegCmd,"ffmpeg -ss %0.6fs -i %s -y %s > %s 2>&1",
+    snprintf(
+        ffmpegCmd.data(), ffmpegCmd.size(),
+        "ffmpeg -ss %0.6fs -i %s -y %s > %s 2>&1",
         rightStartTime_sec,
         rightSourceFile.c_str(),
         tmpRightAudioPath.c_str(),
         ffmpegLogFile.c_str());
-    spdlog::debug("extracting audio...\ncmd = {}",ffmpegCmd);
-    if (audioOkay && system(ffmpegCmd) != 0)
+    spdlog::debug("extracting audio...\ncmd = {}",ffmpegCmd.data());
+    if (audioOkay && system(ffmpegCmd.data()) != 0)
     {
-        spdlog::error("failed to extract right audio. ffmpegCmd = '{}'",ffmpegCmd);
+        spdlog::error("failed to extract right audio. ffmpegCmd = '{}'",ffmpegCmd.data());
         audioOkay = false;
     }
 
     // merge audio sources into one
     const std::filesystem::path tmpMergedAudioPath = tmpDir / "tmp_audio_lr_merge.wav";
-    sprintf(ffmpegCmd,"ffmpeg -i %s -i %s -filter_complex \"amerge=inputs=2,pan=stereo|c0<c0+c1|c1<c2+c3\" -y %s > %s 2>&1",
+    snprintf(
+        ffmpegCmd.data(), ffmpegCmd.size(),
+        "ffmpeg -i %s -i %s -filter_complex \"amerge=inputs=2,pan=stereo|c0<c0+c1|c1<c2+c3\" -y %s > %s 2>&1",
         tmpLeftAudioPath.c_str(),
         tmpRightAudioPath.c_str(),
         tmpMergedAudioPath.c_str(),
         ffmpegLogFile.c_str());
-    spdlog::debug("merge left/right into one audio file...\ncmd = {}",ffmpegCmd);
-    if (audioOkay && system(ffmpegCmd) != 0)
+    spdlog::debug("merge left/right into one audio file...\ncmd = {}",ffmpegCmd.data());
+    if (audioOkay && system(ffmpegCmd.data()) != 0)
     {
-        spdlog::error("failed to merge left/right audio. ffmpegCmd = '{}'",ffmpegCmd);
+        spdlog::error("failed to merge left/right audio. ffmpegCmd = '{}'",ffmpegCmd.data());
         audioOkay = false;
     }
 
     // remux audio into raw render
-    sprintf(ffmpegCmd,"ffmpeg -i %s -i %s -map 0:v:0 -map 1:a:0 -c:v copy -y %s > %s 2>&1",
+    snprintf(
+        ffmpegCmd.data(), ffmpegCmd.size(),
+        "ffmpeg -i %s -i %s -map 0:v:0 -map 1:a:0 -c:v copy -y %s > %s 2>&1",
         rawRenderFilePath.c_str(),
         tmpMergedAudioPath.c_str(),
         finalExportFile.c_str(),
         ffmpegLogFile.c_str());
-    spdlog::debug("remuxing audio...\ncmd = {}",ffmpegCmd);
-    if (audioOkay && system(ffmpegCmd) != 0)
+    spdlog::debug("remuxing audio...\ncmd = {}",ffmpegCmd.data());
+    if (audioOkay && system(ffmpegCmd.data()) != 0)
     {
-        spdlog::error("failed to produce final export with audio. ffmpegCmd = '{}'",ffmpegCmd);
+        spdlog::error("failed to produce final export with audio. ffmpegCmd = '{}'",ffmpegCmd.data());
         audioOkay = false;
     }
 

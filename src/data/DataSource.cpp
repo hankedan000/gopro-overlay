@@ -41,7 +41,7 @@ namespace gpo
 
 	bool
 	DataSource::setDatumTrack(
-		const Track *track,
+		std::shared_ptr<const Track> track,
 		bool processNow)
 	{
 		datumTrack_ = track;
@@ -52,7 +52,7 @@ namespace gpo
 		return true;
 	}
 
-	const Track *
+	const std::shared_ptr<const Track> &
 	DataSource::getDatumTrack() const
 	{
 		return datumTrack_;
@@ -262,7 +262,7 @@ namespace gpo
 		return true;
 	}
 
-	Track *
+	TrackPtr
 	DataSource::makeTrack() const
 	{
 		if ( ! hasTelemetry())

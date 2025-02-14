@@ -1,5 +1,6 @@
 #include "GoProOverlay/data/TrackDataObjects.h"
 
+#include <memory>
 #include <spdlog/spdlog.h>
 #include <stdexcept>
 #include <fstream>
@@ -56,7 +57,7 @@ namespace gpo
 	}
 
 	TrackPathObject::TrackPathObject(
-		Track *track,
+		const Track *track,
 		std::string name)
 	 : track_(track)
 	 , name_(name)
@@ -67,8 +68,8 @@ namespace gpo
 	{
 	}
 
-	Track*
-	TrackPathObject::getTrack()
+	const Track *
+	TrackPathObject::getTrack() const
 	{
 		return track_;
 	}
@@ -106,7 +107,7 @@ namespace gpo
 
 
 	TrackSector::TrackSector(
-		Track *track,
+		const Track *track,
 		std::string name,
 		size_t entryIdx,
 		size_t exitIdx)
@@ -115,7 +116,7 @@ namespace gpo
 	}
 
 	TrackSector::TrackSector(
-		Track *track,
+		const Track *track,
 		std::string name,
 		size_t entryIdx,
 		size_t exitIdx,
@@ -124,10 +125,6 @@ namespace gpo
 	 , entryIdx_(entryIdx)
 	 , exitIdx_(exitIdx)
 	 , gateWidth_meters_(gateWidth_meters)
-	{
-	}
-
-	TrackSector::~TrackSector()
 	{
 	}
 
@@ -214,7 +211,7 @@ namespace gpo
 	}
 
 	TrackGate::TrackGate(
-		Track *track,
+		const Track *track,
 		std::string name,
 		size_t pathIdx,
 		GateType_E type)
@@ -223,7 +220,7 @@ namespace gpo
 	}
 
 	TrackGate::TrackGate(
-		Track *track,
+		const Track *track,
 		std::string name,
 		size_t pathIdx,
 		GateType_E type,
@@ -232,10 +229,6 @@ namespace gpo
 	 , pathIdx_(pathIdx)
 	 , type_(type)
 	 , gateWidth_meters_(gateWidth_meters)
-	{
-	}
-
-	TrackGate::~TrackGate()
 	{
 	}
 
@@ -326,21 +319,11 @@ namespace gpo
 	Track::Track(
 		const std::vector<cv::Vec2d> &path)
 	 : ModifiableObject("Track",true,true)
-	 , start_(new TrackGate(this, "startGate", 0, GateType_E::eGT_Start))
-	 , finish_(new TrackGate(this, "finishGate", path.size() - 1, GateType_E::eGT_Finish))
+	 , start_(this, "startGate", 0, GateType_E::eGT_Start)
+	 , finish_(this, "finishGate", path.size() - 1, GateType_E::eGT_Finish)
 	 , sectors_()
 	 , path_(path)
 	{
-	}
-
-	Track::~Track()
-	{
-		delete start_;
-		delete finish_;
-		for (auto sector : sectors_)
-		{
-			delete sector;
-		}
 	}
 
 	// start/finish related methods
@@ -348,11 +331,11 @@ namespace gpo
 	Track::setStart(
 		size_t pathIdx)
 	{
-		start_->setPathIdx(pathIdx);
+		start_.setPathIdx(pathIdx);
 		markObjectModified();
 	}
 
-	const TrackGate *
+	const TrackGate &
 	Track::getStart() const
 	{
 		return start_;
@@ -362,11 +345,11 @@ namespace gpo
 	Track::setFinish(
 		size_t pathIdx)
 	{
-		finish_->setPathIdx(pathIdx);
+		finish_.setPathIdx(pathIdx);
 		markObjectModified();
 	}
 
-	const TrackGate *
+	const TrackGate &
 	Track::getFinish() const
 	{
 		return finish_;
@@ -486,7 +469,7 @@ namespace gpo
 		{
 			sectors_.insert(
 				std::next(sectors_.begin(),res.second),
-				new TrackSector(this,name,entryIdx,exitIdx));
+				std::make_shared<TrackSector>(this,name,entryIdx,exitIdx));
 			markObjectModified();
 		}
 		return res;
@@ -509,9 +492,10 @@ namespace gpo
 		markObjectModified();
 	}
 
-	const TrackSector *
+
+	std::shared_ptr<const TrackSector>
 	Track::getSector(
-		size_t idx)
+		size_t idx) const
 	{
 		return sectors_.at(idx);
 	}
@@ -665,11 +649,11 @@ namespace gpo
 
 		// sort objects by entry path index
 		std::map<size_t,const TrackPathObject *> objsByEntryIdx;
-		objsByEntryIdx.insert({start_->getEntryIdx(),start_});
-		objsByEntryIdx.insert({finish_->getEntryIdx(),finish_});
+		objsByEntryIdx.insert({start_.getEntryIdx(), static_cast<const TrackPathObject *>(&start_)});
+		objsByEntryIdx.insert({finish_.getEntryIdx(), static_cast<const TrackPathObject *>(&finish_)});
 		for (const auto &sector : sectors_)
 		{
-			objsByEntryIdx.insert({sector->getEntryIdx(),sector});
+			objsByEntryIdx.insert({sector->getEntryIdx(), static_cast<const TrackPathObject *>(sector.get())});
 		}
 
 		for (auto entry : objsByEntryIdx)
@@ -685,8 +669,8 @@ namespace gpo
 	Track::encode() const
 	{
 		YAML::Node node;
-		node["start"] = start_->encode();
-		node["finish"] = finish_->encode();
+		node["start"] = start_.encode();
+		node["finish"] = finish_.encode();
 
 		YAML::Node ySectors = node["sectors"];
 		for (const auto &sector : sectors_)
@@ -708,8 +692,8 @@ namespace gpo
 		const YAML::Node& node)
 	{
 		bool okay = true;
-		okay = okay && start_->decode(node["start"]);
-		okay = okay && finish_->decode(node["finish"]);
+		okay = okay && start_.decode(node["start"]);
+		okay = okay && finish_.decode(node["finish"]);
 
 		sectors_.clear();
 		if (node["sectors"])// not all files will have sectors
@@ -719,14 +703,13 @@ namespace gpo
 			for (size_t ss=0; okay && ss<sectors_.size(); ss++)
 			{
 				const YAML::Node &ySector = ySectors[ss];
-				auto newSector = new TrackSector(this,"",0,0);
+				auto newSector = std::make_shared<TrackSector>(this,"",0,0);
 				if (newSector->decode(ySector))
 				{
-					sectors_.at(ss) = newSector;
+					sectors_.at(ss) = std::move(newSector);
 				}
 				else
 				{
-					delete newSector;
 					sectors_.clear();
 					okay = false;
 				}
@@ -778,7 +761,7 @@ namespace gpo
 		return true;
 	}
 
-	Track *
+	TrackPtr
 	makeTrackFromTelemetry(
 		TelemetrySourcePtr tSrc)
 	{
@@ -789,7 +772,7 @@ namespace gpo
 			path[i][0] = tSrc->at(i).gpSamp.gps.coord.lat;
 			path[i][1] = tSrc->at(i).gpSamp.gps.coord.lon;
 		}
-		return new Track(path);
+		return std::make_shared<Track>(path);
 	}
 
 }

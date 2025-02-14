@@ -15,11 +15,7 @@
 TrackEditor::TrackEditor(QWidget *parent)
  : QMainWindow(parent)
  , ui(new Ui::TrackEditor)
- , trackObserver_()
- , iOwnTrack_(false)
- , track_(nullptr)
  , sectorTableModel_(0,2,this)
- , ignoreInternalTableEdits_(false)
 {
     ui->setupUi(this);
     ui->menubar->setVisible(false);
@@ -72,7 +68,6 @@ TrackEditor::loadTrackFromVideo(
         setTrack(gpo::makeTrackFromTelemetry(data->telemSrc));
         if (track_)
         {
-            iOwnTrack_ = true;
             track_->setSavePath("");
         }
         configureFileMenuButtons();
@@ -89,7 +84,7 @@ TrackEditor::loadTrackFromYAML(
     YAML::Node trackNode = YAML::LoadFile(filepath);
     if ( ! trackNode.IsNull())
     {
-        gpo::Track *newTrack = new gpo::Track();
+        auto newTrack = std::make_shared<gpo::Track>();
         if (newTrack->decode(trackNode))
         {
             ui->statusbar->showMessage(
@@ -98,15 +93,10 @@ TrackEditor::loadTrackFromYAML(
             setTrack(newTrack);
             if (track_)
             {
-                iOwnTrack_ = true;
                 track_->setSavePath(filepath);
             }
             configureFileMenuButtons();
             okay = true;
-        }
-        else
-        {
-            delete newTrack;
         }
     }
     return okay;
@@ -143,15 +133,17 @@ TrackEditor::loadTrackFromFile(
 
 void
 TrackEditor::setTrack(
-        gpo::Track *track)
+    std::shared_ptr<gpo::Track> track)
 {
-    releaseTrack();// sets iOwnTrack_ to false
+    releaseTrack();
     track_ = track;
+    gpo::ModifiableObject * trackModObj = nullptr;
     if (track_)
     {
         track_->addObserver(this);
+        trackModObj = track_->toModifiableObject();
     }
-    trackObserver_.bindModifiable(track_);
+    trackObserver_.bindModifiable(trackModObj);
     ui->trackView->setTrack(track_);
     loadSectorsToTable();
     configureFileMenuButtons();
@@ -408,13 +400,8 @@ TrackEditor::releaseTrack()
     if (track_)
     {
         track_->removeObserver(this);
-        if (iOwnTrack_)
-        {
-            delete track_;
-        }
     }
     track_ = nullptr;
-    iOwnTrack_ = false;
     ui->trackView->setTrack(nullptr);
     clearSectorTable();
     configureFileMenuButtons();
@@ -424,7 +411,7 @@ void
 TrackEditor::configureFileMenuButtons()
 {
     ui->actionSave_Track->setEnabled(track_ != nullptr);
-    ui->actionSave_Track_as->setEnabled(track_ != nullptr && iOwnTrack_);
+    ui->actionSave_Track_as->setEnabled(track_ != nullptr);
     ui->actionLoad_Track->setEnabled(true);
 }
 
@@ -575,10 +562,7 @@ void
 TrackEditor::onModified(
     gpo::ModifiableObject *modifiable)
 {
-    spdlog::trace("{}({})",
-        __func__,
-        (void*)modifiable);
-    if (modifiable == track_)
+    if (track_ && modifiable == track_->toModifiableObject())
     {
         ui->apply_Button->setEnabled(true);
     }
@@ -594,10 +578,7 @@ void
 TrackEditor::onModificationsApplied(
     gpo::ModifiableObject *modifiable)
 {
-    spdlog::trace("{}({})",
-        __func__,
-        (void*)modifiable);
-    if (modifiable == track_)
+    if (track_ && modifiable == track_->toModifiableObject())
     {
         ui->apply_Button->setEnabled(false);
     }

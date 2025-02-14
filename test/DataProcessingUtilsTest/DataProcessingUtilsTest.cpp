@@ -36,15 +36,15 @@ DataProcessingUtilsTest::trackTimes()
 		samp.gpSamp.gps.coord.lon = 0;
 	}
 
-	gpo::Track track(path);
-	track.setStart(5);
-	track.setFinish(95);
-	track.addSector("Sector1",10,30);
-	track.addSector("Sector2",30,50);
-	track.addSector("Sector3",60,70);
+	auto track = std::make_shared<gpo::Track>(path);
+	track->setStart(5);
+	track->setFinish(95);
+	track->addSector("Sector1",10,30);
+	track->addSector("Sector2",30,50);
+	track->addSector("Sector3",60,70);
 
 	gpo::DataAvailableBitSet avail;
-	CPPUNIT_ASSERT_EQUAL(true, utils::computeTrackTimes(&track,tSamps,avail));
+	CPPUNIT_ASSERT_EQUAL(true, utils::computeTrackTimes(track,tSamps,avail));
 
 	CPPUNIT_ASSERT_EQUAL(PATH_LENGTH, tSamps->size());
 	for (size_t i=0; i<tSamps->size(); i++)

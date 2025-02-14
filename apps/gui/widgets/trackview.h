@@ -58,7 +58,7 @@ public:
 
     void
     setTrack(
-            gpo::Track *track);
+        std::shared_ptr<const gpo::Track> track);
 
     void
     fitTrackToView(
@@ -112,7 +112,7 @@ private:
     void
     drawTrackPath(
             QPainter &painter,
-            const gpo::Track *track);
+            std::shared_ptr<const gpo::Track> track);
 
     void
     drawDetectionGate(
@@ -123,7 +123,7 @@ private:
     void
     drawSector(
             QPainter &painter,
-            const gpo::TrackSector *sector,
+            const gpo::TrackSector &sector,
             QColor pathColor,
             QColor gateColor);
 
@@ -153,7 +153,7 @@ private:
     cv::Vec2d trackUL_coord_;
     cv::Vec2d trackLR_coord_;
     double pxPerDeg_;
-    gpo::Track *track_;
+    std::shared_ptr<const gpo::Track> track_;
 
     struct MouseLocationInfo
     {

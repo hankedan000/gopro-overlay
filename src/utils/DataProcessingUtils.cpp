@@ -3,6 +3,7 @@
 #include "GoProOverlay/utils/LineSegmentUtils.h"
 #include "GoProTelem/SampleMath.h"// for lerp()
 #include <spdlog/spdlog.h>
+#include <stdexcept>
 
 namespace utils
 {
@@ -206,10 +207,16 @@ namespace utils
 	
 	bool
 	computeTrackTimes(
-		const gpo::Track *track,
+		const std::shared_ptr<const gpo::Track> &track,
 		gpo::TelemetrySamplesPtr tSamps,
 		gpo::DataAvailableBitSet &avail)
 	{
+		if ( ! track)
+		{
+			spdlog::error("{} - track can't be null!", __func__);
+			return false;
+		}
+		
 		std::vector<const gpo::TrackPathObject *> trackObjs;
 		if ( ! track->getSortedPathObjects(trackObjs))
 		{

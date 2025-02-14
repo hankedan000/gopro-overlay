@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <opencv2/opencv.hpp>
 #include <tuple>
 #include <vector>
@@ -16,6 +17,7 @@ namespace gpo
 
 	// forward declarations
 	class Track;
+	using TrackPtr = std::shared_ptr<Track>;
 
 	class DetectionGate
 	{
@@ -79,14 +81,14 @@ namespace gpo
 	{
 	public:
 		TrackPathObject(
-			Track *track,
+			const Track *track,
 			std::string name);
 
 		virtual
 		~TrackPathObject();
 
-		Track*
-		getTrack();
+		const Track *
+		getTrack() const;
 
 		virtual
 		bool
@@ -134,7 +136,7 @@ namespace gpo
 			const YAML::Node& node) = 0;
 
 	protected:
-		Track* track_;
+		const Track *track_;
 		std::string name_;
 
 	};
@@ -144,20 +146,20 @@ namespace gpo
 	{
 	public:
 		TrackSector(
-			Track *track,
+			const Track *track,
 			std::string name,
 			size_t entryIdx,
 			size_t exitIdx);
 
 		TrackSector(
-			Track *track,
+			const Track *track,
 			std::string name,
 			size_t entryIdx,
 			size_t exitIdx,
 			double gateWidth_meters);
 
 		virtual
-		~TrackSector();
+		~TrackSector() = default;
 
 		void
 		setWidth(
@@ -215,20 +217,20 @@ namespace gpo
 	{
 	public:
 		TrackGate(
-			Track *track,
+			const Track *track,
 			std::string name,
 			size_t pathIdx,
 			GateType_E type);
 
 		TrackGate(
-			Track *track,
+			const Track *track,
 			std::string name,
 			size_t pathIdx,
 			GateType_E type,
 			double gateWidth_meters);
 
 		virtual
-		~TrackGate();
+		~TrackGate() = default;
 
 		void
 		setWidth(
@@ -296,24 +298,25 @@ namespace gpo
 	public:
 		Track();
 
+		explicit
 		Track(
 			const std::vector<cv::Vec2d> &path);
 
-		~Track();
+		~Track() = default;
 
 		// start/finish related methods
 		void
 		setStart(
 			size_t pathIdx);
 
-		const TrackGate *
+		const TrackGate &
 		getStart() const;
 
 		void
 		setFinish(
 			size_t pathIdx);
 
-		const TrackGate *
+		const TrackGate &
 		getFinish() const;
 
 		// sector related methods
@@ -373,9 +376,9 @@ namespace gpo
 			size_t idx,
 			std::string name);
 
-		const TrackSector *
+		std::shared_ptr<const TrackSector>
 		getSector(
-			size_t idx);
+			size_t idx) const;
 
 		size_t
 		sectorCount() const;
@@ -434,15 +437,15 @@ namespace gpo
         	bool unnecessaryIsOkay);
 
 	private:
-		TrackGate *start_;
-		TrackGate *finish_;
-		std::vector<TrackSector *> sectors_;
+		TrackGate start_;
+		TrackGate finish_;
+		std::vector<std::shared_ptr<TrackSector>> sectors_;
 		// list of lat/lon points making up the track's path
 		std::vector<cv::Vec2d> path_;
 
 	};
 
-	Track *
+	TrackPtr
 	makeTrackFromTelemetry(
 		TelemetrySourcePtr tSrc);
 

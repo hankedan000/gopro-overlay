@@ -48,7 +48,7 @@ void
 TrackView::paintEvent(
         QPaintEvent *event)
 {
-    if (track_ == nullptr)
+    if ( ! track_)
     {
         return;
     }
@@ -60,34 +60,29 @@ TrackView::paintEvent(
     // draw start/finish gates
     if (pMode_ != PlacementMode::ePM_StartGate)
     {
-        drawDetectionGate(painter,track_->getStart()->getEntryGate(),startGateColor_);
+        drawDetectionGate(painter,track_->getStart().getEntryGate(),startGateColor_);
     }
     if (pMode_ != PlacementMode::ePM_FinishGate)
     {
-        drawDetectionGate(painter,track_->getFinish()->getEntryGate(),finishGateColor_);
+        drawDetectionGate(painter,track_->getFinish().getEntryGate(),finishGateColor_);
     }
     if (pMode_ == PlacementMode::ePM_SectorExit &&
         spi_.entryValid && mliValid_ && track_ != nullptr)
     {
-        auto pathColor = sectorPathColor_;
-        auto gateColor = sectorGateColor_;
-        if ( ! placementValid_)
-        {
-            pathColor = placementWarnColor_;
-        }
+        const auto pathColor = placementValid_ ? sectorPathColor_ : placementWarnColor_;
         gpo::TrackSector tmpSector(
-            track_,
+            track_.get(),
             "tmpSector",
             spi_.entryIdx,
             mli_.path_idx);
-        drawSector(painter,&tmpSector,pathColor,gateColor);
+        drawSector(painter,tmpSector,pathColor,sectorGateColor_);
     }
 
     // draw all track sectors
     for (size_t ss=0; ss<track_->sectorCount(); ss++)
     {
         auto sector = track_->getSector(ss);
-        drawSector(painter,sector,sectorPathColor_,sectorGateColor_);
+        drawSector(painter,*sector,sectorPathColor_,sectorGateColor_);
     }
 
     if (mliValid_ && pMode_ != PlacementMode::ePM_None)
@@ -248,7 +243,7 @@ TrackView::getPanningEnabled() const
 
 void
 TrackView::setTrack(
-        gpo::Track *track)
+    std::shared_ptr<const gpo::Track> track)
 {
     track_ = track;
     mliValid_ = false;
@@ -400,7 +395,7 @@ TrackView::setSectorExitFilter(
 void
 TrackView::drawTrackPath(
         QPainter &painter,
-        const gpo::Track *track)
+        std::shared_ptr<const gpo::Track> track)
 {
     painter.setPen(Qt::white);
 
@@ -434,13 +429,13 @@ TrackView::drawDetectionGate(
 void
 TrackView::drawSector(
         QPainter &painter,
-        const gpo::TrackSector *sector,
+        const gpo::TrackSector &sector,
         QColor pathColor,
         QColor gateColor)
 {
     // draw entry/exit gates
-    drawDetectionGate(painter,sector->getEntryGate(),gateColor);
-    drawDetectionGate(painter,sector->getExitGate(),gateColor);
+    drawDetectionGate(painter,sector.getEntryGate(),gateColor);
+    drawDetectionGate(painter,sector.getExitGate(),gateColor);
 
     // highlight path between gates
     QPen pen;
@@ -449,8 +444,8 @@ TrackView::drawSector(
     pen.setCapStyle(Qt::PenCapStyle::FlatCap);
     painter.setPen(pen);
 
-    size_t entryIdx = sector->getEntryIdx();
-    size_t exitIdx = sector->getExitIdx();
+    size_t entryIdx = sector.getEntryIdx();
+    size_t exitIdx = sector.getExitIdx();
     size_t startIdx = std::min(entryIdx,exitIdx);
     size_t endIdx = std::max(entryIdx,exitIdx);
     QPoint prevPoint;

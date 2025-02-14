@@ -130,8 +130,6 @@ public:
 	RenderProject(
 		const RenderProject &other) = delete;
 
-	~RenderProject();
-
 	DataSourceManager &
 	dataSourceManager();
 
@@ -143,9 +141,9 @@ public:
 
 	void
 	setTrack(
-		Track *track);
+		TrackPtr track);
 
-	Track *
+	const TrackPtr &
 	getTrack();
 
 	bool
@@ -225,7 +223,7 @@ protected:
 private:
 	void
 	internalSetTrack(
-		Track *track);
+		TrackPtr track);
 	
 	void
 	onModified(
@@ -234,7 +232,7 @@ private:
 private:
 	DataSourceManager dsm_;
 	RenderEnginePtr engine_;
-	Track *track_;
+	TrackPtr track_;
 
 	// amount of time in seconds to start render before the alignment point
 	double renderLeadIn_sec_;

@@ -948,7 +948,7 @@ void
 ProjectWindow::onModified(
         gpo::ModifiableObject *modifiable)
 {
-    if (modifiable == proj_.getTrack())
+    if (proj_.hasTrack() && modifiable == proj_.getTrack()->toModifiableObject())
     {
         // do nothing
     }
@@ -966,7 +966,7 @@ void
 ProjectWindow::onModificationsApplied(
         gpo::ModifiableObject *modifiable)
 {
-    if (modifiable == proj_.getTrack())
+    if (proj_.hasTrack() && modifiable == proj_.getTrack()->toModifiableObject())
     {
         // TODO make RenderProject watch for track's change application event
         // and perform the reprocessDatumTrack() call

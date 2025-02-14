@@ -65,8 +65,8 @@ namespace gpo
 		// use first source as the basis for the track map outline
 		auto telemSrc = tSources_.front();
 
-		size_t trackStartIdx = track_->getStart()->getEntryIdx();
-		size_t trackEndIdx = track_->getFinish()->getEntryIdx();
+		size_t trackStartIdx = track_->getStart().getEntryIdx();
+		size_t trackEndIdx = track_->getFinish().getEntryIdx();
 
 		ulCoord_.lat = -10000;
 		lrCoord_.lat = +10000;

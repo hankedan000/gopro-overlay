@@ -26,15 +26,6 @@ namespace gpo
 		engine_->addObserver((ModifiableObjectObserver*)this);
 	}
 
-	RenderProject::~RenderProject()
-	{
-		if (track_)
-		{
-			delete track_;
-			track_ = nullptr;
-		}
-	}
-
 	DataSourceManager &
 	RenderProject::dataSourceManager()
 	{
@@ -60,13 +51,13 @@ namespace gpo
 
 	void
 	RenderProject::setTrack(
-		Track *track)
+		TrackPtr track)
 	{
 		internalSetTrack(track);
 		markObjectModified();
 	}
 
-	Track *
+	const TrackPtr &
 	RenderProject::getTrack()
 	{
 		return track_;
@@ -244,7 +235,7 @@ namespace gpo
 			YAML::Node trackNode = YAML::LoadFile(trackPath);
 			if ( ! trackNode.IsNull())
 			{
-				gpo::Track *newTrack = new gpo::Track();
+				auto newTrack = std::make_shared<Track>();
 				if (newTrack->decode(trackNode))
 				{
 					newTrack->setSavePath(trackPath);
@@ -255,7 +246,6 @@ namespace gpo
 				}
 				else
 				{
-					delete newTrack;
 					trackOkay = false;
 				}
 			}
@@ -389,12 +379,11 @@ namespace gpo
 
 	void
 	RenderProject::internalSetTrack(
-		Track *track)
+		TrackPtr track)
 	{
 		if (track_)
 		{
 			track_->removeObserver(this);
-			delete track_;
 		}
 		track_ = track;
 		if (track_)
@@ -405,7 +394,7 @@ namespace gpo
 		#pragma omp parallel for
 		for (size_t i=0; i<dsm_.sourceCount(); i++)
 		{
-			dsm_.getSource(i)->setDatumTrack(track,true);// true - process immediately
+			dsm_.getSource(i)->setDatumTrack(track_,true);// true - process immediately
 		}
 
 		for (size_t e=0; e<engine_->entityCount(); e++)
@@ -429,7 +418,7 @@ namespace gpo
 				modifiable->hasApplyableModifications(),
 				modifiable->hasSavableModifications());
 		}
-		else if (modifiable == track_)
+		else if (modifiable == static_cast<ModifiableObject *>(track_.get()))
 		{
 			markObjectModified(
 				modifiable->hasApplyableModifications(),

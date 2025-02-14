@@ -34,7 +34,7 @@ public:
 
     void
     setTrack(
-            gpo::Track *track);
+        std::shared_ptr<gpo::Track> track);
 
     void
     setMenuBarVisible(
@@ -55,7 +55,7 @@ private slots:
     void
     trackViewGatePlaced(
         TrackView::PlacementMode pMode,
-            size_t pathIdx);
+        size_t pathIdx);
 
     void
     addSectorPressed();
@@ -156,20 +156,19 @@ private:
     static constexpr int SECTOR_TABLE_COL_IDX_ENTRY = 1;
     static constexpr int SECTOR_TABLE_COL_IDX_EXIT = 2;
 
-    Ui::TrackEditor *ui;
-    QModifiableObjectObserver trackObserver_;
+    Ui::TrackEditor *ui = nullptr;
+    QModifiableObjectObserver trackObserver_ = {};
 
-    bool iOwnTrack_;
-    gpo::Track *track_;
+    std::shared_ptr<gpo::Track> track_ = nullptr;
 
     QStandardItemModel sectorTableModel_;
 
     // when building a new sector this variable stores the entry
     // gate's index. we won't add the sector until the user places
     // the exit gate.
-    size_t sectorEntryIdx_;
+    size_t sectorEntryIdx_ = 0;
 
     // used to ignore events when we internal edit the sector table
-    bool ignoreInternalTableEdits_;
+    bool ignoreInternalTableEdits_ = false;
 
 };

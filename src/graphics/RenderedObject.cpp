@@ -397,7 +397,7 @@ namespace gpo
 
 	bool
 	RenderedObject::setTrack(
-		const Track *track)
+		std::shared_ptr<const Track> track)
 	{
 		if (trackReqsMet())
 		{
@@ -410,7 +410,7 @@ namespace gpo
 		return true;
 	}
 
-	const Track *
+	const std::shared_ptr<const Track> &
 	RenderedObject::getTrack() const
 	{
 		return track_;

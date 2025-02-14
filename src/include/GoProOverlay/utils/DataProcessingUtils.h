@@ -81,7 +81,7 @@ namespace utils
 
 	bool
 	computeTrackTimes(
-		const gpo::Track *track,
+		const std::shared_ptr<const gpo::Track> &track,
 		gpo::TelemetrySamplesPtr tSamps,
 		gpo::DataAvailableBitSet &avail);
 
