@@ -397,53 +397,53 @@ TelemetryPlot::getAvailY_ComponentInfo(
 	infos.reserve(NUM_Y_COMP_ENUM_INFOS);
 
     const auto &avail = tSrc->dataAvailable();
-    if (bitset_is_set(avail, gpo::eDA_GOPRO_ACCL))
+    if (avail.test(gpo::eDA_GOPRO_ACCL))
     {
 		infos.push_back(&YCEI_ACCL_X);
 		infos.push_back(&YCEI_ACCL_Y);
 		infos.push_back(&YCEI_ACCL_Z);
     }
-    if (bitset_is_set(avail, gpo::eDA_GOPRO_GYRO))
+    if (avail.test(gpo::eDA_GOPRO_GYRO))
     {
 		infos.push_back(&YCEI_GYRO_X);
 		infos.push_back(&YCEI_GYRO_Y);
 		infos.push_back(&YCEI_GYRO_Z);
     }
-    if (bitset_is_set(avail, gpo::eDA_GOPRO_GRAV))
+    if (avail.test(gpo::eDA_GOPRO_GRAV))
     {
 		infos.push_back(&YCEI_GRAV_X);
 		infos.push_back(&YCEI_GRAV_Y);
 		infos.push_back(&YCEI_GRAV_Z);
     }
-    if (bitset_is_set(avail, gpo::eDA_GOPRO_CORI))
+    if (avail.test(gpo::eDA_GOPRO_CORI))
     {
 		infos.push_back(&YCEI_CORI_W);
 		infos.push_back(&YCEI_CORI_X);
 		infos.push_back(&YCEI_CORI_Y);
 		infos.push_back(&YCEI_CORI_Z);
     }
-    if (bitset_is_set(avail, gpo::eDA_GOPRO_GPS_LATLON))
+    if (avail.test(gpo::eDA_GOPRO_GPS_LATLON))
     {
 		infos.push_back(&YCEI_GPS_LAT);
 		infos.push_back(&YCEI_GPS_LON);
     }
-    if (bitset_is_set(avail, gpo::eDA_GOPRO_GPS_SPEED2D))
+    if (avail.test(gpo::eDA_GOPRO_GPS_SPEED2D))
     {
 		infos.push_back(&YCEI_GPS_SPEED2D);
     }
-    if (bitset_is_set(avail, gpo::eDA_GOPRO_GPS_SPEED3D))
+    if (avail.test(gpo::eDA_GOPRO_GPS_SPEED3D))
     {
 		infos.push_back(&YCEI_GPS_SPEED3D);
     }
-    if (bitset_is_set(avail, gpo::eDA_ECU_ENGINE_SPEED))
+    if (avail.test(gpo::eDA_ECU_ENGINE_SPEED))
     {
 		infos.push_back(&YCEI_ECU_ENGINE_SPEED);
     }
-    if (bitset_is_set(avail, gpo::eDA_ECU_TPS))
+    if (avail.test(gpo::eDA_ECU_TPS))
     {
 		infos.push_back(&YCEI_ECU_TPS);
     }
-    if (bitset_is_set(avail, gpo::eDA_ECU_BOOST))
+    if (avail.test(gpo::eDA_ECU_BOOST))
     {
 		infos.push_back(&YCEI_ECU_BOOST);
     }

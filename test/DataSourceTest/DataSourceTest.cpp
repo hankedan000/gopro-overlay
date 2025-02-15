@@ -46,7 +46,7 @@ DataSourceTest::testLoadFromTelemetry()
 	CPPUNIT_ASSERT_DOUBLES_EQUAL(SAMP_RATE_HZ, srcFromTelem->getTelemetryRate_hz(), 0.1);
 
 	// when importing from raw telemetry, we have no idea what's available.... (for now)
-	CPPUNIT_ASSERT_EQUAL(false, bitset_is_any_set(srcFromTelem->dataAvailable()));
+	CPPUNIT_ASSERT_EQUAL(false, srcFromTelem->dataAvailable().any());
 
 	// check samples were parsed correctly (trivial range check)
 	auto tSrc = srcFromTelem->telemSrc;
@@ -74,11 +74,11 @@ DataSourceTest::testLoadFromMegaSquirtLog()
 
 	// should have ECU data available
 	gpo::DataAvailableBitSet expectedAvail;
-	bitset_clear(expectedAvail);
-	bitset_set_bit(expectedAvail, gpo::eDA_ECU_ENGINE_SPEED);
-	bitset_set_bit(expectedAvail, gpo::eDA_ECU_TPS);
-	bitset_set_bit(expectedAvail, gpo::eDA_ECU_BOOST);
-	CPPUNIT_ASSERT(bitset_equal(srcFromMsq->dataAvailable(), expectedAvail));
+	expectedAvail.reset();
+	expectedAvail.set(gpo::eDA_ECU_ENGINE_SPEED);
+	expectedAvail.set(gpo::eDA_ECU_TPS);
+	expectedAvail.set(gpo::eDA_ECU_BOOST);
+	CPPUNIT_ASSERT((srcFromMsq->dataAvailable() == expectedAvail));
 
 	// check samples were parsed correctly (trivial range check)
 	auto tSrc = srcFromMsq->telemSrc;
@@ -110,19 +110,19 @@ DataSourceTest::testLoadFromSoloStormCSV()
 
 	// should have ECU data available
 	gpo::DataAvailableBitSet expectedAvail;
-	bitset_clear(expectedAvail);
-	bitset_set_bit(expectedAvail, gpo::eDA_GOPRO_ACCL);
-	bitset_set_bit(expectedAvail, gpo::eDA_GOPRO_GPS_ALTITUDE);
-	bitset_set_bit(expectedAvail, gpo::eDA_GOPRO_GPS_SPEED2D);
-	bitset_set_bit(expectedAvail, gpo::eDA_GOPRO_GPS_LATLON);
-	bitset_set_bit(expectedAvail, gpo::eDA_ECU_ENGINE_SPEED);
-	bitset_set_bit(expectedAvail, gpo::eDA_ECU_TPS);
-	bitset_set_bit(expectedAvail, gpo::eDA_CALC_ON_TRACK_LATLON);
-	bitset_set_bit(expectedAvail, gpo::eDA_CALC_LAP);
-	bitset_set_bit(expectedAvail, gpo::eDA_CALC_LAP_TIME_OFFSET);
-	bitset_set_bit(expectedAvail, gpo::eDA_CALC_SECTOR);
-	bitset_set_bit(expectedAvail, gpo::eDA_CALC_SECTOR_TIME_OFFSET);
-	CPPUNIT_ASSERT(bitset_equal(srcFromMsq->dataAvailable(), expectedAvail));
+	expectedAvail.reset();
+	expectedAvail.set(gpo::eDA_GOPRO_ACCL);
+	expectedAvail.set(gpo::eDA_GOPRO_GPS_ALTITUDE);
+	expectedAvail.set(gpo::eDA_GOPRO_GPS_SPEED2D);
+	expectedAvail.set(gpo::eDA_GOPRO_GPS_LATLON);
+	expectedAvail.set(gpo::eDA_ECU_ENGINE_SPEED);
+	expectedAvail.set(gpo::eDA_ECU_TPS);
+	expectedAvail.set(gpo::eDA_CALC_ON_TRACK_LATLON);
+	expectedAvail.set(gpo::eDA_CALC_LAP);
+	expectedAvail.set(gpo::eDA_CALC_LAP_TIME_OFFSET);
+	expectedAvail.set(gpo::eDA_CALC_SECTOR);
+	expectedAvail.set(gpo::eDA_CALC_SECTOR_TIME_OFFSET);
+	CPPUNIT_ASSERT((srcFromMsq->dataAvailable() == expectedAvail));
 
 	// check samples were parsed correctly (trivial range check)
 	auto tSrc = srcFromMsq->telemSrc;
@@ -188,7 +188,7 @@ DataSourceTest::testTelemetryMerge()
 	// get expected data available
 	// Note: needs to snapshot this before the merge or else srcFromTelem->*DataAvail() will
 	// already have the merged bits set.
-	const auto expectedAvail = bitset_or(srcFromTelem->dataAvailable(), srcFromMsq->dataAvailable());
+	const auto expectedAvail = (srcFromTelem->dataAvailable() | srcFromMsq->dataAvailable());
 	
 	// merge without growth
 	auto mergedSamps = srcFromTelem->mergeTelemetryIn(
@@ -198,7 +198,7 @@ DataSourceTest::testTelemetryMerge()
 		false);// no growth
 	CPPUNIT_ASSERT_EQUAL((size_t)(N_SAMPS),mergedSamps);
 
-	CPPUNIT_ASSERT(bitset_equal(expectedAvail, srcFromTelem->dataAvailable()));
+	CPPUNIT_ASSERT((expectedAvail == srcFromTelem->dataAvailable()));
 }
 
 int main()

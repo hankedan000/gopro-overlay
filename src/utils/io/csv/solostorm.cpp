@@ -37,7 +37,7 @@ namespace io
 		std::ifstream ifs(csvFilepath);
 		csv::CSVReader reader(ifs, csv::CSVFormat());
 
-		bitset_clear(avail);
+		avail.reset();
 
 		auto colNames = reader.get_col_names();
 		std::vector<CSV_ColumnParser> columns;
@@ -54,37 +54,37 @@ namespace io
 			else if (colName == CSVPARSER_SSTORM_ACCL_X.columnTitle)
 			{
 				columns.push_back(CSVPARSER_SSTORM_ACCL_X);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_ACCL);
+				avail.set(gpo::eDA_GOPRO_ACCL);
 			}
 			else if (colName == CSVPARSER_SSTORM_ACCL_Y.columnTitle)
 			{
 				columns.push_back(CSVPARSER_SSTORM_ACCL_Y);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_ACCL);
+				avail.set(gpo::eDA_GOPRO_ACCL);
 			}
 			else if (colName == CSVPARSER_SSTORM_ACCL_Z.columnTitle)
 			{
 				columns.push_back(CSVPARSER_SSTORM_ACCL_Z);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_ACCL);
+				avail.set(gpo::eDA_GOPRO_ACCL);
 			}
 			else if (colName == CSVPARSER_SSTORM_GPS_LAT.columnTitle)
 			{
 				columns.push_back(CSVPARSER_SSTORM_GPS_LAT);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_GPS_LATLON);
+				avail.set(gpo::eDA_GOPRO_GPS_LATLON);
 			}
 			else if (colName == CSVPARSER_SSTORM_GPS_LON.columnTitle)
 			{
 				columns.push_back(CSVPARSER_SSTORM_GPS_LON);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_GPS_LATLON);
+				avail.set(gpo::eDA_GOPRO_GPS_LATLON);
 			}
 			else if (colName == CSVPARSER_SSTORM_GPS_ALTITUDE.columnTitle)
 			{
 				columns.push_back(CSVPARSER_SSTORM_GPS_ALTITUDE);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_GPS_ALTITUDE);
+				avail.set(gpo::eDA_GOPRO_GPS_ALTITUDE);
 			}
 			else if (colName == CSVPARSER_SSTORM_GPS_SPEED2D.columnTitle)
 			{
 				columns.push_back(CSVPARSER_SSTORM_GPS_SPEED2D);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_GPS_SPEED2D);
+				avail.set(gpo::eDA_GOPRO_GPS_SPEED2D);
 			}
 			// ----------------------
 			// ECU telemetry
@@ -92,12 +92,12 @@ namespace io
 			else if (colName == CSVPARSER_SSTORM_ECU_ENGINE_SPEED.columnTitle)
 			{
 				columns.push_back(CSVPARSER_SSTORM_ECU_ENGINE_SPEED);
-				bitset_set_bit(avail, gpo::eDA_ECU_ENGINE_SPEED);
+				avail.set(gpo::eDA_ECU_ENGINE_SPEED);
 			}
 			else if (colName == CSVPARSER_SSTORM_ECU_TPS.columnTitle)
 			{
 				columns.push_back(CSVPARSER_SSTORM_ECU_TPS);
-				bitset_set_bit(avail, gpo::eDA_ECU_TPS);
+				avail.set(gpo::eDA_ECU_TPS);
 			}
 			// ----------------------
 			// TrackData telemetry
@@ -105,32 +105,32 @@ namespace io
 			else if (colName == CSVPARSER_SSTORM_CALC_ON_TRACK_LAT.columnTitle)
 			{
 				columns.push_back(CSVPARSER_SSTORM_CALC_ON_TRACK_LAT);
-				bitset_set_bit(avail, gpo::eDA_CALC_ON_TRACK_LATLON);
+				avail.set(gpo::eDA_CALC_ON_TRACK_LATLON);
 			}
 			else if (colName == CSVPARSER_SSTORM_CALC_ON_TRACK_LON.columnTitle)
 			{
 				columns.push_back(CSVPARSER_SSTORM_CALC_ON_TRACK_LON);
-				bitset_set_bit(avail, gpo::eDA_CALC_ON_TRACK_LATLON);
+				avail.set(gpo::eDA_CALC_ON_TRACK_LATLON);
 			}
 			else if (colName == CSVPARSER_SSTORM_CALC_LAP.columnTitle)
 			{
 				columns.push_back(CSVPARSER_SSTORM_CALC_LAP);
-				bitset_set_bit(avail, gpo::eDA_CALC_LAP);
+				avail.set(gpo::eDA_CALC_LAP);
 			}
 			else if (colName == CSVPARSER_SSTORM_CALC_LAP_TIME_OFFSET.columnTitle)
 			{
 				columns.push_back(CSVPARSER_SSTORM_CALC_LAP_TIME_OFFSET);
-				bitset_set_bit(avail, gpo::eDA_CALC_LAP_TIME_OFFSET);
+				avail.set(gpo::eDA_CALC_LAP_TIME_OFFSET);
 			}
 			else if (colName == CSVPARSER_SSTORM_CALC_SECTOR.columnTitle)
 			{
 				columns.push_back(CSVPARSER_SSTORM_CALC_SECTOR);
-				bitset_set_bit(avail, gpo::eDA_CALC_SECTOR);
+				avail.set(gpo::eDA_CALC_SECTOR);
 			}
 			else if (colName == CSVPARSER_SSTORM_CALC_SECTOR_TIME_OFFSET.columnTitle)
 			{
 				columns.push_back(CSVPARSER_SSTORM_CALC_SECTOR_TIME_OFFSET);
-				bitset_set_bit(avail, gpo::eDA_CALC_SECTOR_TIME_OFFSET);
+				avail.set(gpo::eDA_CALC_SECTOR_TIME_OFFSET);
 			}
 			else
 			{

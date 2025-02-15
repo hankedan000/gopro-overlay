@@ -1,12 +1,11 @@
 #pragma once
 
+#include <bitset>
 #include <GoProTelem/SampleTypes.h>
 #include <memory>
 #include <opencv2/opencv.hpp>
 #include <type_traits>
 #include <vector>
-
-#include "GoProOverlay/data/pod_bitset.hpp"
 
 namespace gpo
 {
@@ -38,7 +37,8 @@ namespace gpo
 		eDA_CALC_VEHI_ACCL = 198
 	};
 
-	using DataAvailableBitSet = pod_bitset<uint64_t,4>;
+	// must fit highest bit in DataAvailable enum
+	using DataAvailableBitSet = std::bitset<256>;
 
 	// Engine Control Unit telemetry sample
 	struct ECU_Sample

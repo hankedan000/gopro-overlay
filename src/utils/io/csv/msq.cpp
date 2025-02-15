@@ -19,7 +19,7 @@ namespace io
 		auto &okay = ret.first;
 		auto &ecuDataAvail = ret.second;
 		okay = true;
-		bitset_clear(ecuDataAvail);
+		ecuDataAvail.reset();
 
 		csv::CSVReader reader(mslPath);
 
@@ -33,22 +33,22 @@ namespace io
 			const auto &colName = colNames.at(cc);
 			if (timeColIdx < 0 && colName.compare("Time") == 0)
 			{
-				bitset_set_bit(ecuDataAvail,gpo::eDA_ECU_TIME);
+				ecuDataAvail.set(gpo::eDA_ECU_TIME);
 				timeColIdx = cc;
 			}
 			else if (engineRPM_ColIdx < 0 && colName.compare("RPM") == 0)
 			{
-				bitset_set_bit(ecuDataAvail,gpo::eDA_ECU_ENGINE_SPEED);
+				ecuDataAvail.set(gpo::eDA_ECU_ENGINE_SPEED);
 				engineRPM_ColIdx = cc;
 			}
 			else if (tpsColIdx < 0 && colName.compare("TPS") == 0)
 			{
-				bitset_set_bit(ecuDataAvail,gpo::eDA_ECU_TPS);
+				ecuDataAvail.set(gpo::eDA_ECU_TPS);
 				tpsColIdx = cc;
 			}
 			else if (boostColIdx < 0 && colName.compare("Boost psi") == 0)
 			{
-				bitset_set_bit(ecuDataAvail,gpo::eDA_ECU_BOOST);
+				ecuDataAvail.set(gpo::eDA_ECU_BOOST);
 				boostColIdx = cc;
 			}
 		}

@@ -267,14 +267,14 @@ AlignmentPlot::setBestY_Components()
     const auto &availB = srcB_->dataAvailable();
 
     // check for GPS_SPEED2D/ENGINE_SPEED
-    if (bitset_is_set(availA, gpo::DataAvailable::eDA_GOPRO_GPS_SPEED2D) &&
-        bitset_is_set(availB, gpo::DataAvailable::eDA_ECU_ENGINE_SPEED))
+    if (availA.test(gpo::DataAvailable::eDA_GOPRO_GPS_SPEED2D) &&
+        availB.test(gpo::DataAvailable::eDA_ECU_ENGINE_SPEED))
     {
         selectComboBoxY_Comp(ui->aData_ComboBox, TelemetryPlot::Y_Component::eYC_GPS_SPEED2D);
         selectComboBoxY_Comp(ui->bData_ComboBox, TelemetryPlot::Y_Component::eYC_ECU_ENGINE_SPEED);
     }
-    else if (bitset_is_set(availA, gpo::DataAvailable::eDA_ECU_ENGINE_SPEED) &&
-             bitset_is_set(availB, gpo::DataAvailable::eDA_GOPRO_GPS_SPEED2D))
+    else if (availA.test(gpo::DataAvailable::eDA_ECU_ENGINE_SPEED) &&
+             availB.test(gpo::DataAvailable::eDA_GOPRO_GPS_SPEED2D))
     {
         selectComboBoxY_Comp(ui->aData_ComboBox, TelemetryPlot::Y_Component::eYC_ECU_ENGINE_SPEED);
         selectComboBoxY_Comp(ui->bData_ComboBox, TelemetryPlot::Y_Component::eYC_GPS_SPEED2D);

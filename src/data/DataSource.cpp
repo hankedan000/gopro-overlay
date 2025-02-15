@@ -23,7 +23,7 @@ namespace gpo
 	 , originFile_("")
 	 , datumTrack_(nullptr)
 	{
-		bitset_clear(dataAvail_);
+		dataAvail_.reset();
 	}
 
 	std::string
@@ -85,7 +85,7 @@ namespace gpo
 			outFieldOffsets,
 			samples_->size(),
 			smoothingWindowSize);
-		bitset_set_bit(dataAvail_, DataAvailable::eDA_CALC_SMOOTH_ACCL);
+		dataAvail_.set(DataAvailable::eDA_CALC_SMOOTH_ACCL);
 
 		cv::Vec3f latDir = {};
 		cv::Vec3f lonDir = {};
@@ -345,26 +345,26 @@ namespace gpo
 		gpt::MP4_SensorInfo sensorInfo;
 		if (mp4.getSensorInfo(gpt::GPMF_KEY_ACCL, sensorInfo))
 		{
-			bitset_set_bit(newSrc->dataAvail_, gpo::eDA_GOPRO_ACCL);
+			newSrc->dataAvail_.set(gpo::eDA_GOPRO_ACCL);
 		}
 		if (mp4.getSensorInfo(gpt::GPMF_KEY_GYRO, sensorInfo))
 		{
-			bitset_set_bit(newSrc->dataAvail_, gpo::eDA_GOPRO_GYRO);
+			newSrc->dataAvail_.set(gpo::eDA_GOPRO_GYRO);
 		}
 		if (mp4.getSensorInfo(gpt::GPMF_KEY_GRAV, sensorInfo))
 		{
-			bitset_set_bit(newSrc->dataAvail_, gpo::eDA_GOPRO_GRAV);
+			newSrc->dataAvail_.set(gpo::eDA_GOPRO_GRAV);
 		}
 		if (mp4.getSensorInfo(gpt::GPMF_KEY_CORI, sensorInfo))
 		{
-			bitset_set_bit(newSrc->dataAvail_, gpo::eDA_GOPRO_CORI);
+			newSrc->dataAvail_.set(gpo::eDA_GOPRO_CORI);
 		}
 		if (mp4.getSensorInfo(gpt::GPMF_KEY_GPS5, sensorInfo))
 		{
-			bitset_set_bit(newSrc->dataAvail_, gpo::eDA_GOPRO_GPS_LATLON);
-			bitset_set_bit(newSrc->dataAvail_, gpo::eDA_GOPRO_GPS_ALTITUDE);
-			bitset_set_bit(newSrc->dataAvail_, gpo::eDA_GOPRO_GPS_SPEED2D);
-			bitset_set_bit(newSrc->dataAvail_, gpo::eDA_GOPRO_GPS_SPEED3D);
+			newSrc->dataAvail_.set(gpo::eDA_GOPRO_GPS_LATLON);
+			newSrc->dataAvail_.set(gpo::eDA_GOPRO_GPS_ALTITUDE);
+			newSrc->dataAvail_.set(gpo::eDA_GOPRO_GPS_SPEED2D);
+			newSrc->dataAvail_.set(gpo::eDA_GOPRO_GPS_SPEED3D);
 		}
 
 		// smooth acceleration and compute lateral/logitudinal acceleration
@@ -394,7 +394,7 @@ namespace gpo
 		newSrc->samples_ = std::make_shared<TelemetrySamples>();
 		newSrc->samples_->resize(ecuTelem.size());
 		newSrc->dataAvail_ = dataAvail;
-		bitset_clr_bit(newSrc->dataAvail_, eDA_ECU_TIME);// don't want to track this here
+		newSrc->dataAvail_.reset(eDA_ECU_TIME);// don't want to track this here
 		for (size_t i=0; i<ecuTelem.size(); i++)
 		{
 			auto &sampOut = newSrc->samples_->at(i);
@@ -493,11 +493,11 @@ namespace gpo
 	}
 
 	#define TAKE_DATA_IF_AVAIL(bitToTake, dataPath)    \
-			if (bitset_is_set(dataToTake, bitToTake))  \
+			if (dataToTake.test(bitToTake))  \
 			{                                          \
 				dstSamp.dataPath = srcSamp.dataPath; \
-				bitset_set_bit(dataAvail_, bitToTake); \
-				bitset_clr_bit(dataToTake, bitToTake); \
+				dataAvail_.set(bitToTake); \
+				dataToTake.reset(bitToTake); \
 			}
 
 	size_t
@@ -612,19 +612,19 @@ namespace gpo
 		}
 
 		// make sure everything was merged (future proofing logic in case fields are added)
-		if (bitset_is_any_set(dataToTake))
+		if (dataToTake.any())
 		{
 			spdlog::warn(
 				"unmerged GoPro samples remain. seems like {}() implementation is incomplete.",
 				__func__);
 		}
-		if (bitset_is_any_set(dataToTake))
+		if (dataToTake.any())
 		{
 			spdlog::warn(
 				"unmerged ECU samples remain. seems like {}() implementation is incomplete.",
 				__func__);
 		}
-		if (bitset_is_any_set(dataToTake))
+		if (dataToTake.any())
 		{
 			spdlog::warn(
 				"unmerged Track samples remain. seems like {}() implementation is incomplete.",

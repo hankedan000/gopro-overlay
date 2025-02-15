@@ -77,7 +77,7 @@ namespace utils
 		// tell you the vehicle's longitudinal direction.
 		lonDir[VEC3_Y] = -1.0;
 
-		if (bitset_is_set(avail, gpo::DataAvailable::eDA_GOPRO_GRAV))
+		if (avail.test(gpo::DataAvailable::eDA_GOPRO_GRAV))
 		{
 			// base lateral direction vectors on direction of gravity
 			// and our assumption on the vehicle's longitudinal direction.
@@ -152,11 +152,11 @@ namespace utils
 		};
 
 		AcclSource acclSource = AcclSource::eNormalAccl;
-		if (bitset_is_set(avail, gpo::DataAvailable::eDA_CALC_SMOOTH_ACCL))
+		if (avail.test(gpo::DataAvailable::eDA_CALC_SMOOTH_ACCL))
 		{
 			acclSource = AcclSource::eSmoothedAccl;
 		}
-		else if ( ! bitset_is_set(avail, gpo::DataAvailable::eDA_GOPRO_ACCL))
+		else if ( ! avail.test(gpo::DataAvailable::eDA_GOPRO_ACCL))
 		{
 			spdlog::error("{} - telemetry has no acceleration source", __func__);
 			return false;
@@ -186,7 +186,7 @@ namespace utils
 			}
 
 			// remove gravity vector if provided
-			if (bitset_is_set(avail, gpo::DataAvailable::eDA_GOPRO_GRAV))
+			if (avail.test(gpo::DataAvailable::eDA_GOPRO_GRAV))
 			{
 				accl[VEC3_X] -= samp.gpSamp.grav.x * constants::GRAVITY;
 				accl[VEC3_Y] -= samp.gpSamp.grav.y * constants::GRAVITY;
@@ -200,7 +200,7 @@ namespace utils
 			samp.calcSamp.vehiAccl.lon_g = lonProj[iiLon] / lonDirNorm[iiLon] / constants::GRAVITY;
 		}
 
-		bitset_set_bit(avail, gpo::DataAvailable::eDA_CALC_VEHI_ACCL);
+		avail.set(gpo::DataAvailable::eDA_CALC_VEHI_ACCL);
 
 		return true;
 	}
@@ -244,10 +244,10 @@ namespace utils
 			}
 		}
 
-		bitset_clr_bit(avail, gpo::eDA_CALC_LAP);
-		bitset_clr_bit(avail, gpo::eDA_CALC_LAP_TIME_OFFSET);
-		bitset_clr_bit(avail, gpo::eDA_CALC_SECTOR);
-		bitset_clr_bit(avail, gpo::eDA_CALC_SECTOR_TIME_OFFSET);
+		avail.reset(gpo::eDA_CALC_LAP);
+		avail.reset(gpo::eDA_CALC_LAP_TIME_OFFSET);
+		avail.reset(gpo::eDA_CALC_SECTOR);
+		avail.reset(gpo::eDA_CALC_SECTOR_TIME_OFFSET);
 		int currLap = -1;
 		int sectorSeq = 1;// increments everytime we exit a sector
 		int currSector = -1;
@@ -286,7 +286,7 @@ namespace utils
 			const auto &foundCoord = std::get<1>(findRes);
 			calcSamp.onTrackLL.lat = foundCoord[0];
 			calcSamp.onTrackLL.lon = foundCoord[1];
-			bitset_set_bit(avail, gpo::eDA_CALC_ON_TRACK_LATLON);
+			avail.set(gpo::eDA_CALC_ON_TRACK_LATLON);
 			onTrackFindInitialIdx = std::get<2>(findRes);
 
 			// see if we crossed 'gate'. if so, then move to the next logical gate in the 'trackObjs'
@@ -396,15 +396,15 @@ namespace utils
 			calcSamp.lapTimeOffset = (currLap == -1 ? 0.0 : samp.t_offset - lapStartTimeOffset);
 			if (currLap != -1)
 			{
-				bitset_set_bit(avail, gpo::eDA_CALC_LAP);
-				bitset_set_bit(avail, gpo::eDA_CALC_LAP_TIME_OFFSET);
+				avail.set(gpo::eDA_CALC_LAP);
+				avail.set(gpo::eDA_CALC_LAP_TIME_OFFSET);
 			}
 			calcSamp.sector = currSector;
 			calcSamp.sectorTimeOffset = (currSector == -1 ? 0.0 : samp.t_offset - sectorStartTimeOffset);
 			if (currSector != -1)
 			{
-				bitset_set_bit(avail, gpo::eDA_CALC_SECTOR);
-				bitset_set_bit(avail, gpo::eDA_CALC_SECTOR_TIME_OFFSET);
+				avail.set(gpo::eDA_CALC_SECTOR);
+				avail.set(gpo::eDA_CALC_SECTOR_TIME_OFFSET);
 			}
 
 			prevCoord = foundCoord;

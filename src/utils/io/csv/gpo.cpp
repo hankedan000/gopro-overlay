@@ -61,45 +61,45 @@ namespace io
 		// -----------------------------
 		// GoPro telemetery
 		// -----------------------------
-		if (bitset_is_set(avail, gpo::eDA_GOPRO_ACCL))
+		if (avail.test(gpo::eDA_GOPRO_ACCL))
 		{
 			columns.push_back(CSVPARSER_GP_ACCL_X);
 			columns.push_back(CSVPARSER_GP_ACCL_Y);
 			columns.push_back(CSVPARSER_GP_ACCL_Z);
 		}
-		if (bitset_is_set(avail, gpo::eDA_GOPRO_GYRO))
+		if (avail.test(gpo::eDA_GOPRO_GYRO))
 		{
 			columns.push_back(CSVPARSER_GP_GYRO_X);
 			columns.push_back(CSVPARSER_GP_GYRO_Y);
 			columns.push_back(CSVPARSER_GP_GYRO_Z);
 		}
-		if (bitset_is_set(avail, gpo::eDA_GOPRO_GRAV))
+		if (avail.test(gpo::eDA_GOPRO_GRAV))
 		{
 			columns.push_back(CSVPARSER_GP_GRAV_X);
 			columns.push_back(CSVPARSER_GP_GRAV_Y);
 			columns.push_back(CSVPARSER_GP_GRAV_Z);
 		}
-		if (bitset_is_set(avail, gpo::eDA_GOPRO_CORI))
+		if (avail.test(gpo::eDA_GOPRO_CORI))
 		{
 			columns.push_back(CSVPARSER_GP_CORI_W);
 			columns.push_back(CSVPARSER_GP_CORI_X);
 			columns.push_back(CSVPARSER_GP_CORI_Y);
 			columns.push_back(CSVPARSER_GP_CORI_Z);
 		}
-		if (bitset_is_set(avail, gpo::eDA_GOPRO_GPS_LATLON))
+		if (avail.test(gpo::eDA_GOPRO_GPS_LATLON))
 		{
 			columns.push_back(CSVPARSER_GP_GPS_LAT);
 			columns.push_back(CSVPARSER_GP_GPS_LON);
 		}
-		if (bitset_is_set(avail, gpo::eDA_GOPRO_GPS_ALTITUDE))
+		if (avail.test(gpo::eDA_GOPRO_GPS_ALTITUDE))
 		{
 			columns.push_back(CSVPARSER_GP_GPS_ALTITUDE);
 		}
-		if (bitset_is_set(avail, gpo::eDA_GOPRO_GPS_SPEED2D))
+		if (avail.test(gpo::eDA_GOPRO_GPS_SPEED2D))
 		{
 			columns.push_back(CSVPARSER_GP_GPS_SPEED2D);
 		}
-		if (bitset_is_set(avail, gpo::eDA_GOPRO_GPS_SPEED3D))
+		if (avail.test(gpo::eDA_GOPRO_GPS_SPEED3D))
 		{
 			columns.push_back(CSVPARSER_GP_GPS_SPEED3D);
 		}
@@ -107,15 +107,15 @@ namespace io
 		// -----------------------------
 		// ECU telemetery
 		// -----------------------------
-		if (bitset_is_set(avail, gpo::eDA_ECU_ENGINE_SPEED))
+		if (avail.test(gpo::eDA_ECU_ENGINE_SPEED))
 		{
 			columns.push_back(CSVPARSER_ECU_ENGINE_SPEED);
 		}
-		if (bitset_is_set(avail, gpo::eDA_ECU_TPS))
+		if (avail.test(gpo::eDA_ECU_TPS))
 		{
 			columns.push_back(CSVPARSER_ECU_TPS);
 		}
-		if (bitset_is_set(avail, gpo::eDA_ECU_BOOST))
+		if (avail.test(gpo::eDA_ECU_BOOST))
 		{
 			columns.push_back(CSVPARSER_ECU_BOOST);
 		}
@@ -123,34 +123,34 @@ namespace io
 		// -----------------------------
 		// Calculated telemetery
 		// -----------------------------
-		if (bitset_is_set(avail, gpo::eDA_CALC_ON_TRACK_LATLON))
+		if (avail.test(gpo::eDA_CALC_ON_TRACK_LATLON))
 		{
 			columns.push_back(CSVPARSER_CALC_ON_TRACK_LAT);
 			columns.push_back(CSVPARSER_CALC_ON_TRACK_LON);
 		}
-		if (bitset_is_set(avail, gpo::eDA_CALC_LAP))
+		if (avail.test(gpo::eDA_CALC_LAP))
 		{
 			columns.push_back(CSVPARSER_CALC_LAP);
 		}
-		if (bitset_is_set(avail, gpo::eDA_CALC_LAP_TIME_OFFSET))
+		if (avail.test(gpo::eDA_CALC_LAP_TIME_OFFSET))
 		{
 			columns.push_back(CSVPARSER_CALC_LAP_TIME_OFFSET);
 		}
-		if (bitset_is_set(avail, gpo::eDA_CALC_SECTOR))
+		if (avail.test(gpo::eDA_CALC_SECTOR))
 		{
 			columns.push_back(CSVPARSER_CALC_SECTOR);
 		}
-		if (bitset_is_set(avail, gpo::eDA_CALC_SECTOR_TIME_OFFSET))
+		if (avail.test(gpo::eDA_CALC_SECTOR_TIME_OFFSET))
 		{
 			columns.push_back(CSVPARSER_CALC_SECTOR_TIME_OFFSET);
 		}
-		if (bitset_is_set(avail, gpo::eDA_CALC_SMOOTH_ACCL))
+		if (avail.test(gpo::eDA_CALC_SMOOTH_ACCL))
 		{
 			columns.push_back(CSVPARSER_CALC_SMOOTH_ACCL_X);
 			columns.push_back(CSVPARSER_CALC_SMOOTH_ACCL_Y);
 			columns.push_back(CSVPARSER_CALC_SMOOTH_ACCL_Z);
 		}
-		if (bitset_is_set(avail, gpo::eDA_CALC_VEHI_ACCL))
+		if (avail.test(gpo::eDA_CALC_VEHI_ACCL))
 		{
 			columns.push_back(CSVPARSER_CALC_VEHI_ACCL_LAT);
 			columns.push_back(CSVPARSER_CALC_VEHI_ACCL_LON);
@@ -199,7 +199,7 @@ namespace io
 		std::ifstream ifs(csvFilepath);
 		csv::CSVReader reader(ifs, csv::CSVFormat());
 
-		bitset_clear(avail);
+		avail.reset();
 
 		auto colNames = reader.get_col_names();
 		std::vector<CSV_ColumnParser> columns;
@@ -216,92 +216,92 @@ namespace io
 			else if (colName == CSVPARSER_GP_ACCL_X.columnTitle)
 			{
 				columns.push_back(CSVPARSER_GP_ACCL_X);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_ACCL);
+				avail.set(gpo::eDA_GOPRO_ACCL);
 			}
 			else if (colName == CSVPARSER_GP_ACCL_Y.columnTitle)
 			{
 				columns.push_back(CSVPARSER_GP_ACCL_Y);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_ACCL);
+				avail.set(gpo::eDA_GOPRO_ACCL);
 			}
 			else if (colName == CSVPARSER_GP_ACCL_Z.columnTitle)
 			{
 				columns.push_back(CSVPARSER_GP_ACCL_Z);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_ACCL);
+				avail.set(gpo::eDA_GOPRO_ACCL);
 			}
 			else if (colName == CSVPARSER_GP_GYRO_X.columnTitle)
 			{
 				columns.push_back(CSVPARSER_GP_GYRO_X);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_GYRO);
+				avail.set(gpo::eDA_GOPRO_GYRO);
 			}
 			else if (colName == CSVPARSER_GP_GYRO_Y.columnTitle)
 			{
 				columns.push_back(CSVPARSER_GP_GYRO_Y);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_GYRO);
+				avail.set(gpo::eDA_GOPRO_GYRO);
 			}
 			else if (colName == CSVPARSER_GP_GYRO_Z.columnTitle)
 			{
 				columns.push_back(CSVPARSER_GP_GYRO_Z);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_GYRO);
+				avail.set(gpo::eDA_GOPRO_GYRO);
 			}
 			else if (colName == CSVPARSER_GP_GRAV_X.columnTitle)
 			{
 				columns.push_back(CSVPARSER_GP_GRAV_X);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_GRAV);
+				avail.set(gpo::eDA_GOPRO_GRAV);
 			}
 			else if (colName == CSVPARSER_GP_GRAV_Y.columnTitle)
 			{
 				columns.push_back(CSVPARSER_GP_GRAV_Y);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_GRAV);
+				avail.set(gpo::eDA_GOPRO_GRAV);
 			}
 			else if (colName == CSVPARSER_GP_GRAV_Z.columnTitle)
 			{
 				columns.push_back(CSVPARSER_GP_GRAV_Z);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_GRAV);
+				avail.set(gpo::eDA_GOPRO_GRAV);
 			}
 			else if (colName == CSVPARSER_GP_CORI_W.columnTitle)
 			{
 				columns.push_back(CSVPARSER_GP_CORI_W);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_CORI);
+				avail.set(gpo::eDA_GOPRO_CORI);
 			}
 			else if (colName == CSVPARSER_GP_CORI_X.columnTitle)
 			{
 				columns.push_back(CSVPARSER_GP_CORI_X);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_CORI);
+				avail.set(gpo::eDA_GOPRO_CORI);
 			}
 			else if (colName == CSVPARSER_GP_CORI_Y.columnTitle)
 			{
 				columns.push_back(CSVPARSER_GP_CORI_Y);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_CORI);
+				avail.set(gpo::eDA_GOPRO_CORI);
 			}
 			else if (colName == CSVPARSER_GP_CORI_Z.columnTitle)
 			{
 				columns.push_back(CSVPARSER_GP_CORI_Z);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_CORI);
+				avail.set(gpo::eDA_GOPRO_CORI);
 			}
 			else if (colName == CSVPARSER_GP_GPS_LAT.columnTitle)
 			{
 				columns.push_back(CSVPARSER_GP_GPS_LAT);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_GPS_LATLON);
+				avail.set(gpo::eDA_GOPRO_GPS_LATLON);
 			}
 			else if (colName == CSVPARSER_GP_GPS_LON.columnTitle)
 			{
 				columns.push_back(CSVPARSER_GP_GPS_LON);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_GPS_LATLON);
+				avail.set(gpo::eDA_GOPRO_GPS_LATLON);
 			}
 			else if (colName == CSVPARSER_GP_GPS_ALTITUDE.columnTitle)
 			{
 				columns.push_back(CSVPARSER_GP_GPS_ALTITUDE);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_GPS_ALTITUDE);
+				avail.set(gpo::eDA_GOPRO_GPS_ALTITUDE);
 			}
 			else if (colName == CSVPARSER_GP_GPS_SPEED2D.columnTitle)
 			{
 				columns.push_back(CSVPARSER_GP_GPS_SPEED2D);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_GPS_SPEED2D);
+				avail.set(gpo::eDA_GOPRO_GPS_SPEED2D);
 			}
 			else if (colName == CSVPARSER_GP_GPS_SPEED3D.columnTitle)
 			{
 				columns.push_back(CSVPARSER_GP_GPS_SPEED3D);
-				bitset_set_bit(avail, gpo::eDA_GOPRO_GPS_SPEED3D);
+				avail.set(gpo::eDA_GOPRO_GPS_SPEED3D);
 			}
 			// ----------------------
 			// ECU telemetry
@@ -309,17 +309,17 @@ namespace io
 			else if (colName == CSVPARSER_ECU_ENGINE_SPEED.columnTitle)
 			{
 				columns.push_back(CSVPARSER_ECU_ENGINE_SPEED);
-				bitset_set_bit(avail, gpo::eDA_ECU_ENGINE_SPEED);
+				avail.set(gpo::eDA_ECU_ENGINE_SPEED);
 			}
 			else if (colName == CSVPARSER_ECU_TPS.columnTitle)
 			{
 				columns.push_back(CSVPARSER_ECU_TPS);
-				bitset_set_bit(avail, gpo::eDA_ECU_TPS);
+				avail.set(gpo::eDA_ECU_TPS);
 			}
 			else if (colName == CSVPARSER_ECU_BOOST.columnTitle)
 			{
 				columns.push_back(CSVPARSER_ECU_BOOST);
-				bitset_set_bit(avail, gpo::eDA_ECU_BOOST);
+				avail.set(gpo::eDA_ECU_BOOST);
 			}
 			// ----------------------
 			// Calculated telemetry
@@ -327,57 +327,57 @@ namespace io
 			else if (colName == CSVPARSER_CALC_ON_TRACK_LAT.columnTitle)
 			{
 				columns.push_back(CSVPARSER_CALC_ON_TRACK_LAT);
-				bitset_set_bit(avail, gpo::eDA_CALC_ON_TRACK_LATLON);
+				avail.set(gpo::eDA_CALC_ON_TRACK_LATLON);
 			}
 			else if (colName == CSVPARSER_CALC_ON_TRACK_LON.columnTitle)
 			{
 				columns.push_back(CSVPARSER_CALC_ON_TRACK_LON);
-				bitset_set_bit(avail, gpo::eDA_CALC_ON_TRACK_LATLON);
+				avail.set(gpo::eDA_CALC_ON_TRACK_LATLON);
 			}
 			else if (colName == CSVPARSER_CALC_LAP.columnTitle)
 			{
 				columns.push_back(CSVPARSER_CALC_LAP);
-				bitset_set_bit(avail, gpo::eDA_CALC_LAP);
+				avail.set(gpo::eDA_CALC_LAP);
 			}
 			else if (colName == CSVPARSER_CALC_LAP_TIME_OFFSET.columnTitle)
 			{
 				columns.push_back(CSVPARSER_CALC_LAP_TIME_OFFSET);
-				bitset_set_bit(avail, gpo::eDA_CALC_LAP_TIME_OFFSET);
+				avail.set(gpo::eDA_CALC_LAP_TIME_OFFSET);
 			}
 			else if (colName == CSVPARSER_CALC_SECTOR.columnTitle)
 			{
 				columns.push_back(CSVPARSER_CALC_SECTOR);
-				bitset_set_bit(avail, gpo::eDA_CALC_SECTOR);
+				avail.set(gpo::eDA_CALC_SECTOR);
 			}
 			else if (colName == CSVPARSER_CALC_SECTOR_TIME_OFFSET.columnTitle)
 			{
 				columns.push_back(CSVPARSER_CALC_SECTOR_TIME_OFFSET);
-				bitset_set_bit(avail, gpo::eDA_CALC_SECTOR_TIME_OFFSET);
+				avail.set(gpo::eDA_CALC_SECTOR_TIME_OFFSET);
 			}
 			else if (colName == CSVPARSER_CALC_SMOOTH_ACCL_X.columnTitle)
 			{
 				columns.push_back(CSVPARSER_CALC_SMOOTH_ACCL_X);
-				bitset_set_bit(avail, gpo::eDA_CALC_SMOOTH_ACCL);
+				avail.set(gpo::eDA_CALC_SMOOTH_ACCL);
 			}
 			else if (colName == CSVPARSER_CALC_SMOOTH_ACCL_Y.columnTitle)
 			{
 				columns.push_back(CSVPARSER_CALC_SMOOTH_ACCL_Y);
-				bitset_set_bit(avail, gpo::eDA_CALC_SMOOTH_ACCL);
+				avail.set(gpo::eDA_CALC_SMOOTH_ACCL);
 			}
 			else if (colName == CSVPARSER_CALC_SMOOTH_ACCL_Z.columnTitle)
 			{
 				columns.push_back(CSVPARSER_CALC_SMOOTH_ACCL_Z);
-				bitset_set_bit(avail, gpo::eDA_CALC_SMOOTH_ACCL);
+				avail.set(gpo::eDA_CALC_SMOOTH_ACCL);
 			}
 			else if (colName == CSVPARSER_CALC_VEHI_ACCL_LAT.columnTitle)
 			{
 				columns.push_back(CSVPARSER_CALC_VEHI_ACCL_LAT);
-				bitset_set_bit(avail, gpo::eDA_CALC_VEHI_ACCL);
+				avail.set(gpo::eDA_CALC_VEHI_ACCL);
 			}
 			else if (colName == CSVPARSER_CALC_VEHI_ACCL_LON.columnTitle)
 			{
 				columns.push_back(CSVPARSER_CALC_VEHI_ACCL_LON);
-				bitset_set_bit(avail, gpo::eDA_CALC_VEHI_ACCL);
+				avail.set(gpo::eDA_CALC_VEHI_ACCL);
 			}
 			else
 			{
