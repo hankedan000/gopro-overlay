@@ -1,7 +1,6 @@
 #include "GoProOverlay/data/ModifiableObject.h"
 
 #include "GoProOverlay/utils/misc/MiscUtils.h"
-
 #include <spdlog/spdlog.h>
 
 namespace gpo
@@ -11,7 +10,7 @@ namespace gpo
     bool ModifiableObject::globalShowModificationCallStack_ = false;
 
     ModifiableObject::ModifiableObject(
-            const std::string &className,
+            const std::string_view &className,
             bool supportsApplyingModifications,
             bool supportsSavingModifications)
      : className_(className)
@@ -64,7 +63,7 @@ namespace gpo
         }
     }
 
-    const std::string &
+    const std::string_view &
     ModifiableObject::className() const
     {
         return className_;

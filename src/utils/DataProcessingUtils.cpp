@@ -63,19 +63,19 @@ namespace utils
 		}
 
 		// default init
-		latDir[Vec3::x] = +0.0;
-		latDir[Vec3::y] = +0.0;
-		latDir[Vec3::z] = +0.0;
-		lonDir[Vec3::x] = +0.0;
-		lonDir[Vec3::y] = +0.0;
-		lonDir[Vec3::z] = +0.0;
+		latDir[VEC3_X] = +0.0;
+		latDir[VEC3_Y] = +0.0;
+		latDir[VEC3_Z] = +0.0;
+		lonDir[VEC3_X] = +0.0;
+		lonDir[VEC3_Y] = +0.0;
+		lonDir[VEC3_Z] = +0.0;
 
 		// Assume camera is always recording toward the vehicle's direction of motion
 		// TODO if we wanted to improve this, we could detect when the vehicle's GPS
 		// speed is increasing while there is no gyroscopic motion (acceleration in
 		// a straight line). The direction of the average acceleration vector would
 		// tell you the vehicle's longitudinal direction.
-		lonDir[Vec3::y] = -1.0;
+		lonDir[VEC3_Y] = -1.0;
 
 		if (bitset_is_set(avail, gpo::DataAvailable::eDA_GOPRO_GRAV))
 		{
@@ -85,30 +85,30 @@ namespace utils
 			const float G_THRESHOLD = 0.5;// half G
 			if (grav0.x > G_THRESHOLD)
 			{
-				latDir[Vec3::z] = -1.0;
+				latDir[VEC3_Z] = -1.0;
 			}
 			else if (grav0.x < -G_THRESHOLD)
 			{
-				latDir[Vec3::z] = +1.0;
+				latDir[VEC3_Z] = +1.0;
 			}
 			else if (grav0.z > G_THRESHOLD)
 			{
-				latDir[Vec3::x] = +1.0;
+				latDir[VEC3_X] = +1.0;
 			}
 			else if (grav0.z < -G_THRESHOLD)
 			{
-				latDir[Vec3::x] = -1.0;
+				latDir[VEC3_X] = -1.0;
 			}
 			else
 			{
 				spdlog::warn("lateral direction vector is indeterminate based on gravity");
-				latDir[Vec3::x] = -1.0;
+				latDir[VEC3_X] = -1.0;
 			}
 		}
 		else
 		{
 			spdlog::warn("telemetry doesn't have gravity vector. using default lateral direction vectors");
-			latDir[Vec3::x] = -1.0;
+			latDir[VEC3_X] = -1.0;
 		}
 
 		return true;
@@ -174,23 +174,23 @@ namespace utils
 			switch (acclSource)
 			{
 				case AcclSource::eNormalAccl:
-					accl[Vec3::x] = samp.gpSamp.accl.x;
-					accl[Vec3::y] = samp.gpSamp.accl.y;
-					accl[Vec3::z] = samp.gpSamp.accl.z;
+					accl[VEC3_X] = samp.gpSamp.accl.x;
+					accl[VEC3_Y] = samp.gpSamp.accl.y;
+					accl[VEC3_Z] = samp.gpSamp.accl.z;
 					break;
 				case AcclSource::eSmoothedAccl:
-					accl[Vec3::x] = samp.calcSamp.smoothAccl.x;
-					accl[Vec3::y] = samp.calcSamp.smoothAccl.y;
-					accl[Vec3::z] = samp.calcSamp.smoothAccl.z;
+					accl[VEC3_X] = samp.calcSamp.smoothAccl.x;
+					accl[VEC3_Y] = samp.calcSamp.smoothAccl.y;
+					accl[VEC3_Z] = samp.calcSamp.smoothAccl.z;
 					break;
 			}
 
 			// remove gravity vector if provided
 			if (bitset_is_set(avail, gpo::DataAvailable::eDA_GOPRO_GRAV))
 			{
-				accl[Vec3::x] -= samp.gpSamp.grav.x * constants::GRAVITY;
-				accl[Vec3::y] -= samp.gpSamp.grav.y * constants::GRAVITY;
-				accl[Vec3::z] -= samp.gpSamp.grav.z * constants::GRAVITY;
+				accl[VEC3_X] -= samp.gpSamp.grav.x * constants::GRAVITY;
+				accl[VEC3_Y] -= samp.gpSamp.grav.y * constants::GRAVITY;
+				accl[VEC3_Z] -= samp.gpSamp.grav.z * constants::GRAVITY;
 			}
 
 			// compute lateral & longitudinal g-force vectors based on directionality

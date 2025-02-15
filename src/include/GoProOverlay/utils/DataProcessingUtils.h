@@ -1,20 +1,19 @@
 #pragma once
 
+#include <array>
 #include "GoProOverlay/data/TelemetrySample.h"
 #include "GoProOverlay/data/TrackDataObjects.h"
 #include "GoProOverlay/utils/RingFIFO.hpp"
+#include <vector>
 
 namespace constants
 {
 	inline const double GRAVITY = 9.80665;
 }
 
-enum Vec3
-{
-	x = 0,
-	y = 1,
-	z = 2
-};
+static constexpr size_t VEC3_X = 0;
+static constexpr size_t VEC3_Y = 1;
+static constexpr size_t VEC3_Z = 2;
 
 namespace utils
 {
@@ -90,10 +89,10 @@ namespace utils
 	smoothMovingAvg(
 		const void *inVector,
 		void *outVector,
-		size_t nElements,
+		const size_t nElements,
 		size_t windowSize,
-		size_t inStride = sizeof(T),
-		size_t outStride = sizeof(T))
+		const size_t inStride = sizeof(T),
+		const size_t outStride = sizeof(T))
 	{
 		// ensure window size is odd
 		if (windowSize % 2 == 0)
@@ -101,17 +100,16 @@ namespace utils
 			windowSize++;
 		}
 
-		T windowBuffer[windowSize];
-		RingFIFO windowFIFO(windowBuffer, windowSize);
+		std::vector<T> windowBuffer(windowSize);
+		RingFIFO windowFIFO(windowBuffer.data(), windowBuffer.size());
 		T windowSum = 0;
-		size_t halfWindow = (windowSize - 1) / 2;
+		const size_t halfWindow = (windowSize - 1) / 2;
 
 		// calculate the start and end indices for the moving average window
-		size_t startIdx = 0;
 		size_t endIdx = std::min(halfWindow, nElements - 1);
 
 		// prefill averaging filter
-		const T *inElement = (const T *)(inVector);
+		auto inElement = static_cast<const T *>(inVector);
 		for (size_t i=0; i<=endIdx; i++)
 		{
 			windowFIFO.push(*inElement);
@@ -119,13 +117,13 @@ namespace utils
 			inElement = (const T *)((const char *)(inElement) + inStride);
 		}
 
-		T *outElement = (T *)(outVector);
+		auto outElement = static_cast<T *>(outVector);
 		size_t i = 0;
 		for (i=0; i<(nElements - halfWindow); i++)
 		{
 			// compute the mean and place in i'th position
 			*outElement = windowSum / windowFIFO.size();
-			outElement = (T *)((char *)(outElement) + outStride);
+			outElement = reinterpret_cast<T *>(reinterpret_cast<char *>(outElement) + outStride);
 
 			if (i < (nElements - halfWindow - 1))
 			{
@@ -133,15 +131,9 @@ namespace utils
 				{
 					windowSum -= windowFIFO.back();
 					windowFIFO.pop();
-
-					startIdx++;
-					endIdx++;
 				}
-				else
-				{
-					endIdx++;
-				}
-				const T *endElement = (const T *)((const char *)(inVector) + endIdx * inStride);
+				endIdx++;
+				auto endElement = reinterpret_cast<const T *>(static_cast<const char *>(inVector) + endIdx * inStride);
 				windowSum += *endElement;
 				windowFIFO.push(*endElement);
 			}
@@ -152,22 +144,21 @@ namespace utils
 			windowSum -= windowFIFO.back();
 			windowFIFO.pop();
 			*outElement = windowSum / windowFIFO.size();
-			outElement = (T *)((char *)(outElement) + outStride);
+			outElement = reinterpret_cast<T *>(reinterpret_cast<char *>(outElement) + outStride);
 		}
 	}
 
-	template <typename STRUCT_T, typename FIELD_T>
+	template <typename STRUCT_T, typename FIELD_T, size_t N_FIELDS>
 	void
 	smoothMovingAvgStructured(
 		const STRUCT_T *inVector,
 		STRUCT_T *outVector,
-		size_t *inFieldOffsets,
-		size_t *outFieldOffsets,
-		size_t nFields,
+		const std::array<size_t, N_FIELDS> &inFieldOffsets,
+		const std::array<size_t, N_FIELDS> &outFieldOffsets,
 		size_t nElements,
 		size_t windowSize)
 	{
-		for (size_t ff=0; ff<nFields; ff++)
+		for (size_t ff=0; ff<N_FIELDS; ff++)
 		{
 			smoothMovingAvg<FIELD_T>(
 				(const void *)((const char *)(inVector) + inFieldOffsets[ff]),

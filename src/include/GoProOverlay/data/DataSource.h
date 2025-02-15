@@ -82,7 +82,7 @@ namespace gpo
 		deleteTelemetryBackup();
 
 		bool
-		hasBackup();
+		hasBackup() const;
 
 		/**
 		 * Restores the previously saved backup samples.
@@ -152,8 +152,8 @@ namespace gpo
 		size_t
 		mergeTelemetryIn(
 			const DataSourcePtr srcData,
-			size_t srcStartIdx,
-			size_t dstStartIdx,
+			const size_t srcStartIdx,
+			const size_t dstStartIdx,
 			bool growVector);
 
 		/**
@@ -190,10 +190,10 @@ namespace gpo
 		size_t
 		mergeTelemetryIn(
 			const DataSourcePtr srcData,
-			size_t srcStartIdx,
-			size_t dstStartIdx,
+			const size_t srcStartIdx,
+			const size_t dstStartIdx,
 			DataAvailableBitSet dataToTake,
-			bool growVector);
+			const bool growVector);
 
 	public:
 		TelemetrySeekerPtr seeker;
@@ -227,7 +227,7 @@ namespace gpo
 	class DataSourceManager
 	{
 	public:
-		DataSourceManager();
+		DataSourceManager() = default;
 
 		void
 		clear();
@@ -287,7 +287,7 @@ namespace gpo
 			const std::string &name);
 
 	private:
-		std::vector<DataSourcePtr> sources_;
+		std::vector<DataSourcePtr> sources_ = {};
 
 	};
 }

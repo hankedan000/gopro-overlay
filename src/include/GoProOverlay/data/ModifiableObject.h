@@ -1,7 +1,7 @@
 #pragma once
 
 #include <filesystem>
-#include <string>
+#include <string_view>
 #include <unordered_set>
 
 namespace gpo
@@ -13,34 +13,47 @@ namespace gpo
     {
     public:
         virtual
+        ~ModifiableObjectObserver() = default;
+
+        virtual
         void
         onModified(
             ModifiableObject *modifiable)
-        {}
+        {
+            // base impl does nothing. child class can override if needed.
+        }
         
         virtual
         void
         onModificationsApplied(
             ModifiableObject *modifiable)
-        {}
+        {
+            // base impl does nothing. child class can override if needed.
+        }
         
         virtual
         void
         onModificationsSaved(
             ModifiableObject *modifiable)
-        {}
+        {
+            // base impl does nothing. child class can override if needed.
+        }
 
         virtual
         void
         onSavePathChanged(
             ModifiableObject *modifiable)
-        {}
+        {
+            // base impl does nothing. child class can override if needed.
+        }
 
         virtual
         void
         onBeforeDestroy(
             ModifiableObject *modifiable)
-        {}
+        {
+            // base impl does nothing. child class can override if needed.
+        }
     };
 
     class ModifiableObject
@@ -61,7 +74,7 @@ namespace gpo
          * (ie. the saveModifications() method is allowed to be called)
          */
         ModifiableObject(
-            const std::string &className,
+            const std::string_view &className,
             bool supportsApplyingModifications,
             bool supportsSavingModifications);
         
@@ -77,7 +90,7 @@ namespace gpo
         virtual
         ~ModifiableObject();
 
-        const std::string &
+        const std::string_view &
         className() const;
 
         void
@@ -224,7 +237,7 @@ namespace gpo
             bool unnecessaryIsOkay);
 
     private:
-        const std::string className_;
+        const std::string_view className_;
 
         // true if the class supports applying changes
         // (ie. the applyModifications() method is allowed to be called)

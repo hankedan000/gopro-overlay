@@ -8,7 +8,6 @@
 #include <GoProTelem/SampleMath.h>
 #include <GoProOverlay/utils/DataProcessingUtils.h>
 #include <GoProOverlay/utils/io/csv.h>
-#include "GoProOverlay/utils/TickTockUtils.h"
 
 namespace gpo
 {
@@ -69,12 +68,12 @@ namespace gpo
 		}
 
 		// smooth accelerometer data
-		size_t inFieldOffsets[] = {
+		const std::array<size_t, 3> inFieldOffsets = {
 			offsetof(gpo::TelemetrySample, gpSamp.accl.x),
 			offsetof(gpo::TelemetrySample, gpSamp.accl.y),
 			offsetof(gpo::TelemetrySample, gpSamp.accl.z)
 		};
-		size_t outFieldOffsets[] = {
+		const std::array<size_t, 3> outFieldOffsets = {
 			offsetof(gpo::TelemetrySample, calcSamp.smoothAccl.x),
 			offsetof(gpo::TelemetrySample, calcSamp.smoothAccl.y),
 			offsetof(gpo::TelemetrySample, calcSamp.smoothAccl.z)
@@ -84,12 +83,12 @@ namespace gpo
 			samples_->data(),
 			inFieldOffsets,
 			outFieldOffsets,
-			3,// 3 fields; x,y,z
 			samples_->size(),
 			smoothingWindowSize);
 		bitset_set_bit(dataAvail_, DataAvailable::eDA_CALC_SMOOTH_ACCL);
 
-		cv::Vec3f latDir, lonDir;
+		cv::Vec3f latDir = {};
+		cv::Vec3f lonDir = {};
 		bool okay = utils::computeVehicleDirectionVectors(samples_,dataAvail_,latDir,lonDir);
 		okay = okay && utils::computeVehicleAcceleration(samples_,dataAvail_,latDir,lonDir);
 
@@ -181,9 +180,7 @@ namespace gpo
 		double outTime_sec = 0.0;
 		for (size_t outIdx=0; outIdx<nSampsOut; outIdx++)
 		{
-			bool found = gpt::findLerpIndex(takeIdx,oldSamps,outTime_sec);
-
-			if (found)
+			if (gpt::findLerpIndex(takeIdx,oldSamps,outTime_sec))
 			{
 				const auto &sampA = oldSamps.at(takeIdx);
 				const auto &sampB = oldSamps.at(takeIdx+1);
@@ -246,7 +243,7 @@ namespace gpo
 	}
 
 	bool
-	DataSource::hasBackup()
+	DataSource::hasBackup() const
 	{
 		return backupSamples_.size() > 0;
 	}
@@ -258,7 +255,7 @@ namespace gpo
 		{
 			return false;
 		}
-		*(samples_) = backupSamples_;
+		*samples_ = backupSamples_;
 		return true;
 	}
 
@@ -385,8 +382,8 @@ namespace gpo
 		const std::filesystem::path &logFile)
 	{
 		std::vector<gpo::ECU_TimedSample> ecuTelem;
-		auto res = utils::io::readMegaSquirtLog(logFile,ecuTelem);
-		if ( ! res.first)
+		auto [readOkay, dataAvail] = utils::io::readMegaSquirtLog(logFile,ecuTelem);
+		if ( ! readOkay)
 		{
 			return nullptr;
 		}
@@ -396,7 +393,7 @@ namespace gpo
 		newSrc->sourceName_ = logFile.filename();
 		newSrc->samples_ = std::make_shared<TelemetrySamples>();
 		newSrc->samples_->resize(ecuTelem.size());
-		newSrc->dataAvail_ = res.second;
+		newSrc->dataAvail_ = dataAvail;
 		bitset_clr_bit(newSrc->dataAvail_, eDA_ECU_TIME);// don't want to track this here
 		for (size_t i=0; i<ecuTelem.size(); i++)
 		{
@@ -483,8 +480,8 @@ namespace gpo
 	size_t
 	DataSource::mergeTelemetryIn(
 		const DataSourcePtr srcData,
-		size_t srcStartIdx,
-		size_t dstStartIdx,
+		const size_t srcStartIdx,
+		const size_t dstStartIdx,
 		bool growVector)
 	{
 		return mergeTelemetryIn(
@@ -495,13 +492,21 @@ namespace gpo
 			growVector);
 	}
 
+	#define TAKE_DATA_IF_AVAIL(bitToTake, dataPath)    \
+			if (bitset_is_set(dataToTake, bitToTake))  \
+			{                                          \
+				dstSamp.dataPath = srcSamp.dataPath; \
+				bitset_set_bit(dataAvail_, bitToTake); \
+				bitset_clr_bit(dataToTake, bitToTake); \
+			}
+
 	size_t
 	DataSource::mergeTelemetryIn(
 		const DataSourcePtr srcData,
-		size_t srcStartIdx,
-		size_t dstStartIdx,
+		const size_t srcStartIdx,
+		const size_t dstStartIdx,
 		DataAvailableBitSet dataToTake,
-		bool growVector)
+		const bool growVector)
 	{
 		if ( ! hasTelemetry())
 		{
@@ -520,7 +525,7 @@ namespace gpo
 			return 0;
 		}
 
-		auto &dstSamps = samples_;
+		const auto &dstSamps = samples_;
 		if (dstStartIdx >= dstSamps->size())
 		{
 			spdlog::error(
@@ -584,122 +589,26 @@ namespace gpo
 			const auto &srcSamp = srcSamps->at(srcStartIdx + i);
 
 			// merge in GoPro samples
-			auto bitToTake = eDA_GOPRO_ACCL;
-			if (bitset_is_set(dataToTake, bitToTake))
-			{
-				dstSamp.gpSamp.accl = srcSamp.gpSamp.accl;
-				bitset_set_bit(dataAvail_, bitToTake);
-				bitset_clr_bit(dataToTake, bitToTake);
-			}
-			bitToTake = eDA_GOPRO_GYRO;
-			if (bitset_is_set(dataToTake, bitToTake))
-			{
-				dstSamp.gpSamp.gyro = srcSamp.gpSamp.gyro;
-				bitset_set_bit(dataAvail_, bitToTake);
-				bitset_clr_bit(dataToTake, bitToTake);
-			}
-			bitToTake = eDA_GOPRO_GRAV;
-			if (bitset_is_set(dataToTake, bitToTake))
-			{
-				dstSamp.gpSamp.grav = srcSamp.gpSamp.grav;
-				bitset_set_bit(dataAvail_, bitToTake);
-				bitset_clr_bit(dataToTake, bitToTake);
-			}
-			bitToTake = eDA_GOPRO_CORI;
-			if (bitset_is_set(dataToTake, bitToTake))
-			{
-				dstSamp.gpSamp.cori = srcSamp.gpSamp.cori;
-				bitset_set_bit(dataAvail_, bitToTake);
-				bitset_clr_bit(dataToTake, bitToTake);
-			}
-			bitToTake = eDA_GOPRO_GPS_LATLON;
-			if (bitset_is_set(dataToTake, bitToTake))
-			{
-				dstSamp.gpSamp.gps.coord = srcSamp.gpSamp.gps.coord;
-				bitset_set_bit(dataAvail_, bitToTake);
-				bitset_clr_bit(dataToTake, bitToTake);
-			}
-			bitToTake = eDA_GOPRO_GPS_ALTITUDE;
-			if (bitset_is_set(dataToTake, bitToTake))
-			{
-				dstSamp.gpSamp.gps.altitude = srcSamp.gpSamp.gps.altitude;
-				bitset_set_bit(dataAvail_, bitToTake);
-				bitset_clr_bit(dataToTake, bitToTake);
-			}
-			bitToTake = eDA_GOPRO_GPS_SPEED2D;
-			if (bitset_is_set(dataToTake, bitToTake))
-			{
-				dstSamp.gpSamp.gps.speed2D = srcSamp.gpSamp.gps.speed3D;
-				bitset_set_bit(dataAvail_, bitToTake);
-				bitset_clr_bit(dataToTake, bitToTake);
-			}
-			bitToTake = eDA_GOPRO_GPS_SPEED3D;
-			if (bitset_is_set(dataToTake, bitToTake))
-			{
-				dstSamp.gpSamp.gps.speed3D = srcSamp.gpSamp.gps.speed3D;
-				bitset_set_bit(dataAvail_, bitToTake);
-				bitset_clr_bit(dataToTake, bitToTake);
-			}
+			TAKE_DATA_IF_AVAIL(eDA_GOPRO_ACCL, gpSamp.accl)
+			TAKE_DATA_IF_AVAIL(eDA_GOPRO_GRAV, gpSamp.gyro)
+			TAKE_DATA_IF_AVAIL(eDA_GOPRO_GYRO, gpSamp.grav)
+			TAKE_DATA_IF_AVAIL(eDA_GOPRO_CORI, gpSamp.cori)
+			TAKE_DATA_IF_AVAIL(eDA_GOPRO_GPS_LATLON, gpSamp.gps.coord)
+			TAKE_DATA_IF_AVAIL(eDA_GOPRO_GPS_ALTITUDE, gpSamp.gps.altitude)
+			TAKE_DATA_IF_AVAIL(eDA_GOPRO_GPS_SPEED2D, gpSamp.gps.speed2D)
+			TAKE_DATA_IF_AVAIL(eDA_GOPRO_GPS_SPEED3D, gpSamp.gps.speed3D)
 
 			// merge in ECU samples
-			bitToTake = eDA_ECU_ENGINE_SPEED;
-			if (bitset_is_set(dataToTake, bitToTake))
-			{
-				dstSamp.ecuSamp.engineSpeed_rpm = srcSamp.ecuSamp.engineSpeed_rpm;
-				bitset_set_bit(dataAvail_, bitToTake);
-				bitset_clr_bit(dataToTake, bitToTake);
-			}
-			bitToTake = eDA_ECU_TPS;
-			if (bitset_is_set(dataToTake, bitToTake))
-			{
-				dstSamp.ecuSamp.tps = srcSamp.ecuSamp.tps;
-				bitset_set_bit(dataAvail_, bitToTake);
-				bitset_clr_bit(dataToTake, bitToTake);
-			}
-			bitToTake = eDA_ECU_BOOST;
-			if (bitset_is_set(dataToTake, bitToTake))
-			{
-				dstSamp.ecuSamp.boost_psi = srcSamp.ecuSamp.boost_psi;
-				bitset_set_bit(dataAvail_, bitToTake);
-				bitset_clr_bit(dataToTake, bitToTake);
-			}
+			TAKE_DATA_IF_AVAIL(eDA_ECU_ENGINE_SPEED, ecuSamp.engineSpeed_rpm)
+			TAKE_DATA_IF_AVAIL(eDA_ECU_TPS, ecuSamp.tps)
+			TAKE_DATA_IF_AVAIL(eDA_ECU_BOOST, ecuSamp.boost_psi)
 
 			// merge in Track samples
-			bitToTake = eDA_CALC_ON_TRACK_LATLON;
-			if (bitset_is_set(dataToTake, bitToTake))
-			{
-				dstSamp.calcSamp.onTrackLL = srcSamp.calcSamp.onTrackLL;
-				bitset_set_bit(dataAvail_, bitToTake);
-				bitset_clr_bit(dataToTake, bitToTake);
-			}
-			bitToTake = eDA_CALC_LAP;
-			if (bitset_is_set(dataToTake, bitToTake))
-			{
-				dstSamp.calcSamp.lap = srcSamp.calcSamp.lap;
-				bitset_set_bit(dataAvail_, bitToTake);
-				bitset_clr_bit(dataToTake, bitToTake);
-			}
-			bitToTake = eDA_CALC_LAP_TIME_OFFSET;
-			if (bitset_is_set(dataToTake, bitToTake))
-			{
-				dstSamp.calcSamp.lapTimeOffset = srcSamp.calcSamp.lapTimeOffset;
-				bitset_set_bit(dataAvail_, bitToTake);
-				bitset_clr_bit(dataToTake, bitToTake);
-			}
-			bitToTake = eDA_CALC_SECTOR;
-			if (bitset_is_set(dataToTake, bitToTake))
-			{
-				dstSamp.calcSamp.sector = srcSamp.calcSamp.sector;
-				bitset_set_bit(dataAvail_, bitToTake);
-				bitset_clr_bit(dataToTake, bitToTake);
-			}
-			bitToTake = eDA_CALC_SECTOR_TIME_OFFSET;
-			if (bitset_is_set(dataToTake, bitToTake))
-			{
-				dstSamp.calcSamp.sectorTimeOffset = srcSamp.calcSamp.sectorTimeOffset;
-				bitset_set_bit(dataAvail_, bitToTake);
-				bitset_clr_bit(dataToTake, bitToTake);
-			}
+			TAKE_DATA_IF_AVAIL(eDA_CALC_ON_TRACK_LATLON, calcSamp.onTrackLL)
+			TAKE_DATA_IF_AVAIL(eDA_CALC_LAP, calcSamp.lap)
+			TAKE_DATA_IF_AVAIL(eDA_CALC_LAP_TIME_OFFSET, calcSamp.lapTimeOffset)
+			TAKE_DATA_IF_AVAIL(eDA_CALC_SECTOR, calcSamp.sector)
+			TAKE_DATA_IF_AVAIL(eDA_CALC_SECTOR_TIME_OFFSET, calcSamp.sectorTimeOffset)
 		}
 
 		// make sure everything was merged (future proofing logic in case fields are added)
@@ -723,11 +632,6 @@ namespace gpo
 		}
 
 		return mergedSamples;
-	}
-
-	DataSourceManager::DataSourceManager()
-	 : sources_()
-	{
 	}
 
 	void
