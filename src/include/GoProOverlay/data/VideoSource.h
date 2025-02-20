@@ -3,7 +3,6 @@
 #include <memory>
 #include <opencv2/opencv.hpp>
 
-#include "TelemetrySample.h"
 #include "TelemetrySeeker.h"
 
 namespace gpo
@@ -15,6 +14,7 @@ namespace gpo
 	class VideoSource
 	{
 	public:
+		explicit
 		VideoSource(
 			DataSourcePtr dSrc);
 

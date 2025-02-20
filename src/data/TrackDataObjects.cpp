@@ -1,6 +1,6 @@
 #include "GoProOverlay/data/TrackDataObjects.h"
 
-#include <memory>
+#include <opencv2/core/matx.hpp>
 #include <spdlog/spdlog.h>
 #include <stdexcept>
 #include <fstream>
@@ -27,7 +27,7 @@ namespace gpo
 	bool
 	DetectionGate::detect(
 		cv::Vec2d c1,
-		cv::Vec2d c2)
+		cv::Vec2d c2) const
 	{
 		return utils::doIntersect(a_,b_,c1,c2);
 	}
@@ -58,13 +58,9 @@ namespace gpo
 
 	TrackPathObject::TrackPathObject(
 		const Track *track,
-		std::string name)
+		const std::string &name)
 	 : track_(track)
 	 , name_(name)
-	{
-	}
-
-	TrackPathObject::~TrackPathObject()
 	{
 	}
 
@@ -100,7 +96,7 @@ namespace gpo
 
 	void
 	TrackPathObject::setName(
-		std::string name)
+		const std::string &name)
 	{
 		name_ = name;
 	}
@@ -108,7 +104,7 @@ namespace gpo
 
 	TrackSector::TrackSector(
 		const Track *track,
-		std::string name,
+		const std::string &name,
 		size_t entryIdx,
 		size_t exitIdx)
 	 : TrackSector(track,name,entryIdx,exitIdx,DEFAULT_GATE_WIDTH)
@@ -117,7 +113,7 @@ namespace gpo
 
 	TrackSector::TrackSector(
 		const Track *track,
-		std::string name,
+		const std::string &name,
 		size_t entryIdx,
 		size_t exitIdx,
 		double gateWidth_meters)
@@ -176,13 +172,13 @@ namespace gpo
 	DetectionGate
 	TrackSector::getEntryGate() const
 	{
-		return track_->getDetectionGate(entryIdx_,gateWidth_meters_);
+		return getTrack()->getDetectionGate(entryIdx_,gateWidth_meters_);
 	}
 
 	DetectionGate
 	TrackSector::getExitGate() const
 	{
-		return track_->getDetectionGate(exitIdx_,gateWidth_meters_);
+		return getTrack()->getDetectionGate(exitIdx_,gateWidth_meters_);
 	}
 
 	// YAML encode/decode
@@ -190,7 +186,7 @@ namespace gpo
 	TrackSector::encode() const
 	{
 		YAML::Node node;
-		node["name"] = name_;
+		node["name"] = getName();
 		node["entryPathIdx"] = entryIdx_;
 		node["exitPathIdx"] = exitIdx_;
 		node["gateWidth_meters"] = gateWidth_meters_;
@@ -202,7 +198,7 @@ namespace gpo
 	TrackSector::decode(
 		const YAML::Node& node)
 	{
-		name_ = node["name"].as<std::string>();
+		setName(node["name"].as<std::string>());
 		entryIdx_ = node["entryPathIdx"].as<size_t>();
 		exitIdx_ = node["exitPathIdx"].as<size_t>();
 		gateWidth_meters_ = node["gateWidth_meters"].as<double>();
@@ -212,7 +208,7 @@ namespace gpo
 
 	TrackGate::TrackGate(
 		const Track *track,
-		std::string name,
+		const std::string &name,
 		size_t pathIdx,
 		GateType_E type)
 	 : TrackGate::TrackGate(track,name,pathIdx,type,DEFAULT_GATE_WIDTH)
@@ -221,7 +217,7 @@ namespace gpo
 
 	TrackGate::TrackGate(
 		const Track *track,
-		std::string name,
+		const std::string &name,
 		size_t pathIdx,
 		GateType_E type,
 		double gateWidth_meters)
@@ -279,13 +275,13 @@ namespace gpo
 	DetectionGate
 	TrackGate::getEntryGate() const
 	{
-		return track_->getDetectionGate(pathIdx_,gateWidth_meters_);
+		return getTrack()->getDetectionGate(pathIdx_,gateWidth_meters_);
 	}
 
 	DetectionGate
 	TrackGate::getExitGate() const
 	{
-		return track_->getDetectionGate(pathIdx_,gateWidth_meters_);
+		return getTrack()->getDetectionGate(pathIdx_,gateWidth_meters_);
 	}
 
 	// YAML encode/decode
@@ -293,7 +289,7 @@ namespace gpo
 	TrackGate::encode() const
 	{
 		YAML::Node node;
-		node["name"] = name_;
+		node["name"] = getName();
 		node["pathIdx"] = pathIdx_;
 		node["gateWidth_meters"] = gateWidth_meters_;
 
@@ -304,7 +300,7 @@ namespace gpo
 	TrackGate::decode(
 		const YAML::Node& node)
 	{
-		name_ = node["name"].as<std::string>();
+		setName(node["name"].as<std::string>());
 		pathIdx_ = node["pathIdx"].as<size_t>();
 		gateWidth_meters_ = node["gateWidth_meters"].as<double>();
 
@@ -460,9 +456,9 @@ namespace gpo
 
 	std::pair<Track::RetCode, size_t>
 	Track::addSector(
-		std::string name,
-		size_t entryIdx,
-		size_t exitIdx)
+		const std::string &name,
+		const size_t entryIdx,
+		const size_t exitIdx)
 	{
 		auto res = findSectorInsertionIdx(entryIdx,exitIdx);
 		if (res.first == RetCode::SUCCESS)
@@ -477,7 +473,7 @@ namespace gpo
 
 	void
 	Track::removeSector(
-		size_t idx)
+		const size_t idx)
 	{
 		sectors_.erase(std::next(sectors_.begin(), idx));
 		markObjectModified();
@@ -485,8 +481,8 @@ namespace gpo
 
 	void
 	Track::setSectorName(
-		size_t idx,
-		std::string name)
+		const size_t idx,
+		const std::string &name)
 	{
 		sectors_.at(idx)->setName(name);
 		markObjectModified();
@@ -495,7 +491,7 @@ namespace gpo
 
 	std::shared_ptr<const TrackSector>
 	Track::getSector(
-		size_t idx) const
+		const size_t idx) const
 	{
 		return sectors_.at(idx);
 	}
@@ -527,8 +523,8 @@ namespace gpo
 		// find two points before and after the pathIdx point.
 		// we'll use the points to form a line and then find its normal.
 		// the normal will be used to base the DetectionGate from.
-		cv::Vec2d pA,pB;
-		pA = pB = path_.at(pathIdx);
+		cv::Vec2d pA = path_.at(pathIdx);
+		cv::Vec2d pB = pA;
 		if (pathIdx != 0)
 		{
 			pA = path_.at(pathIdx-1);
@@ -539,7 +535,8 @@ namespace gpo
 		}
 
 		double halfGateWidth_dd = m2dd(width_meters) / 2.0;
-		double a,b;
+		double a = 0.0;
+		double b = 0.0;
 		if (pA[0] == pB[0])
 		{
 			// latitudes equal; path is a horizontal line at pathIdx
@@ -574,28 +571,28 @@ namespace gpo
 
 	DetectionGate
 	Track::getNearestDetectionGate(
-		cv::Vec2d p,
-		double width_meters) const
+		const cv::Vec2d &p,
+		const double width_meters) const
 	{
-		auto findRes = findClosestPointWithIdx(p);
-		if (std::get<0>(findRes))
+		auto [found, point, pathIdx] = findClosestPointWithIdx(p);
+		if (found)
 		{
-			return getDetectionGate(std::get<2>(findRes),width_meters);
+			return getDetectionGate(pathIdx, width_meters);
 		}
 		throw std::runtime_error("nearest detection gate not found!");
 	}
 
-	std::pair<bool,cv::Vec2d>
+	std::pair<bool, cv::Vec2d>
 	Track::findClosestPoint(
-		cv::Vec2d p) const
+		const cv::Vec2d &p) const
 	{
-		auto res = findClosestPointWithIdx(p);
-		return std::pair(std::get<0>(res),std::get<1>(res));
+		auto [found, point, pathIdx] = findClosestPointWithIdx(p);
+		return std::pair(found, point);
 	}
 
-	std::tuple<bool,cv::Vec2d, size_t>
+	std::tuple<bool, cv::Vec2d, size_t>
 	Track::findClosestPointWithIdx(
-		cv::Vec2d p) const
+		const cv::Vec2d &p) const
 	{
 		return findClosestPointWithIdx(p,0,{0,path_.size()});
 	}
@@ -614,9 +611,9 @@ namespace gpo
 
 	std::tuple<bool,cv::Vec2d, size_t>
 	Track::findClosestPointWithIdx(
-		cv::Vec2d p,
-		size_t initialIdx,
-		std::pair<size_t,size_t> window) const
+		const cv::Vec2d &p,
+		const size_t initialIdx,
+		const std::pair<size_t,size_t> &window) const
 	{
 		double closestDistSqr = -1;
 		cv::Vec2d closestPoint;
@@ -626,7 +623,7 @@ namespace gpo
 		{
 			startIdx = 0;
 		}
-		size_t endIdx = std::min(initialIdx + window.second,path_.size());
+		const size_t endIdx = std::min(initialIdx + window.second,path_.size());
 		for (size_t i=startIdx; i<endIdx; i++)
 		{
 			const auto &point = path_[i];
@@ -656,9 +653,10 @@ namespace gpo
 			objsByEntryIdx.insert({sector->getEntryIdx(), static_cast<const TrackPathObject *>(sector.get())});
 		}
 
-		for (auto entry : objsByEntryIdx)
+		objs.reserve(objsByEntryIdx.size());
+		for (auto [entryIdx, pathObj] : objsByEntryIdx)
 		{
-			objs.push_back(entry.second);
+			objs.push_back(pathObj);
 		}
 
 		return true;

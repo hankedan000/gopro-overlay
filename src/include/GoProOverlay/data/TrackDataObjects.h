@@ -7,7 +7,7 @@
 #include <yaml-cpp/yaml.h>
 
 #include "GoProOverlay/data/ModifiableObject.h"
-#include "GoProOverlay/utils/YAML_Utils.h"
+#include "GoProOverlay/utils/YAML_Utils.h"// for YAML::convert<cv::Vec2d>
 #include "TelemetrySource.h"
 
 namespace gpo
@@ -31,7 +31,7 @@ namespace gpo
 		bool
 		detect(
 			cv::Vec2d c1,
-			cv::Vec2d c2);
+			cv::Vec2d c2) const;
 
 		const cv::Vec2d &
 		a() const;
@@ -48,6 +48,7 @@ namespace gpo
 	private:
 		cv::Vec2d a_;
 		cv::Vec2d b_;
+	
 	};
 
 	// conversion factor from decimal degrees to meter (on earth)
@@ -82,10 +83,7 @@ namespace gpo
 	public:
 		TrackPathObject(
 			const Track *track,
-			std::string name);
-
-		virtual
-		~TrackPathObject();
+			const std::string &name);
 
 		const Track *
 		getTrack() const;
@@ -123,7 +121,7 @@ namespace gpo
 
 		void
 		setName(
-			std::string name);
+			const std::string &name);
 
 		// YAML encode/decode
 		virtual
@@ -135,7 +133,7 @@ namespace gpo
 		decode(
 			const YAML::Node& node) = 0;
 
-	protected:
+	private:
 		const Track *track_;
 		std::string name_;
 
@@ -147,19 +145,16 @@ namespace gpo
 	public:
 		TrackSector(
 			const Track *track,
-			std::string name,
+			const std::string &name,
 			size_t entryIdx,
 			size_t exitIdx);
 
 		TrackSector(
 			const Track *track,
-			std::string name,
+			const std::string &name,
 			size_t entryIdx,
 			size_t exitIdx,
 			double gateWidth_meters);
-
-		virtual
-		~TrackSector() = default;
 
 		void
 		setWidth(
@@ -168,43 +163,36 @@ namespace gpo
 		double
 		getWidth() const;
 
-		virtual
 		bool
-		isSector() const override;
+		isSector() const final;
 
 		void
 		setEntryIdx(
 			size_t pathIdx);
 
-		virtual
 		size_t
-		getEntryIdx() const override;
+		getEntryIdx() const final;
 
 		void
 		setExitIdx(
 			size_t pathIdx);
 
-		virtual
 		size_t
-		getExitIdx() const override;
+		getExitIdx() const final;
 
-		virtual
 		DetectionGate
-		getEntryGate() const override;
+		getEntryGate() const final;
 
-		virtual
 		DetectionGate
-		getExitGate() const override;
+		getExitGate() const final;
 
 		// YAML encode/decode
-		virtual
 		YAML::Node
-		encode() const override;
+		encode() const final;
 
-		virtual
 		bool
 		decode(
-			const YAML::Node& node) override;
+			const YAML::Node& node) final;
 
 	private:
 		size_t entryIdx_;
@@ -218,19 +206,16 @@ namespace gpo
 	public:
 		TrackGate(
 			const Track *track,
-			std::string name,
+			const std::string &name,
 			size_t pathIdx,
 			GateType_E type);
 
 		TrackGate(
 			const Track *track,
-			std::string name,
+			const std::string &name,
 			size_t pathIdx,
 			GateType_E type,
 			double gateWidth_meters);
-
-		virtual
-		~TrackGate() = default;
 
 		void
 		setWidth(
@@ -239,43 +224,35 @@ namespace gpo
 		double
 		getWidth() const;
 
-		virtual
 		bool
-		isGate() const override;
+		isGate() const final;
 
-		virtual
 		GateType_E
-		getGateType() const override;
+		getGateType() const final;
 
 		void
 		setPathIdx(
 			size_t pathIdx);
 
-		virtual
 		size_t
-		getEntryIdx() const override;
+		getEntryIdx() const final;
 
-		virtual
 		size_t
-		getExitIdx() const override;
+		getExitIdx() const final;
 
-		virtual
 		DetectionGate
-		getEntryGate() const override;
+		getEntryGate() const final;
 
-		virtual
 		DetectionGate
-		getExitGate() const override;
+		getExitGate() const final;
 
 		// YAML encode/decode
-		virtual
 		YAML::Node
-		encode() const override;
+		encode() const final;
 
-		virtual
 		bool
 		decode(
-			const YAML::Node& node) override;
+			const YAML::Node &node) final;
 
 	private:
 		size_t pathIdx_;
@@ -301,8 +278,6 @@ namespace gpo
 		explicit
 		Track(
 			const std::vector<cv::Vec2d> &path);
-
-		~Track() = default;
 
 		// start/finish related methods
 		void
@@ -363,22 +338,22 @@ namespace gpo
 		 */
 		std::pair<Track::RetCode, size_t>
 		addSector(
-			std::string name,
-			size_t entryIdx,
-			size_t exitIdx);
+			const std::string &name,
+			const size_t entryIdx,
+			const size_t exitIdx);
 
 		void
 		removeSector(
-			size_t idx);
+			const size_t idx);
 
 		void
 		setSectorName(
-			size_t idx,
-			std::string name);
+			const size_t idx,
+			const std::string &name);
 
 		std::shared_ptr<const TrackSector>
 		getSector(
-			size_t idx) const;
+			const size_t idx) const;
 
 		size_t
 		sectorCount() const;
@@ -398,22 +373,22 @@ namespace gpo
 
 		DetectionGate
 		getNearestDetectionGate(
-			cv::Vec2d p,
-			double width_meters) const;
+			const cv::Vec2d &p,
+			const double width_meters) const;
 
-		std::pair<bool,cv::Vec2d>
+		std::pair<bool, cv::Vec2d>
 		findClosestPoint(
-			cv::Vec2d p) const;
+			const cv::Vec2d &p) const;
 
-		std::tuple<bool,cv::Vec2d, size_t>
+		std::tuple<bool, cv::Vec2d, size_t>
 		findClosestPointWithIdx(
-			cv::Vec2d p) const;
+			const cv::Vec2d &p) const;
 
-		std::tuple<bool,cv::Vec2d, size_t>
+		std::tuple<bool, cv::Vec2d, size_t>
 		findClosestPointWithIdx(
-			cv::Vec2d p,
-			size_t initialIdx,
-			std::pair<size_t,size_t> window) const;
+			const cv::Vec2d &p,
+			const size_t initialIdx,
+			const std::pair<size_t,size_t> &window) const;
 
 		bool
 		getSortedPathObjects(
@@ -430,11 +405,11 @@ namespace gpo
 	protected:
         bool
         subclassApplyModifications(
-        	bool unnecessaryIsOkay);
+        	bool unnecessaryIsOkay) final;
 
         bool
         subclassSaveModifications(
-        	bool unnecessaryIsOkay);
+        	bool unnecessaryIsOkay) final;
 
 	private:
 		TrackGate start_;

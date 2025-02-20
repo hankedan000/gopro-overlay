@@ -2,6 +2,7 @@
 
 #include <GoProOverlay/data/DataSource.h>
 #include <GoProOverlay/data/TrackDataObjects.h>
+#include <GoProOverlay/utils/YAML_Utils.h>
 #include <yaml-cpp/yaml.h>
 
 namespace gpo
@@ -322,11 +323,11 @@ namespace YAML
 			Node node;
 
 			Node idxBySourceNameNode;
-			for (const auto &idxBySourceEntry : rhs.idxBySourceName)
+			for (const auto &[srcName, srcIndex] : rhs.idxBySourceName)
 			{
 				Node newEntry;
-				newEntry["sourceName"] = idxBySourceEntry.first;
-				newEntry["index"] = idxBySourceEntry.second;
+				newEntry["sourceName"] = srcName;
+				newEntry["index"] = srcIndex;
 				idxBySourceNameNode.push_back(newEntry);
 			}
 			node["idxBySourceName"] = idxBySourceNameNode;
@@ -343,9 +344,9 @@ namespace YAML
 			auto &idxBySourceNameNode = node["idxBySourceName"];
 			for (auto &item : idxBySourceNameNode)
 			{
-				auto sourceName = item["sourceName"].as<std::string>();
-				auto index = item["index"].as<size_t>();
-				rhs.idxBySourceName.insert({sourceName,index});
+				const auto srcName = item["sourceName"].as<std::string>();
+				const auto srcIndex = item["index"].as<size_t>();
+				rhs.idxBySourceName.try_emplace(srcName, srcIndex);
 			}
 
 			return true;

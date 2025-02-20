@@ -14,6 +14,7 @@ namespace gpo
 	class TelemetrySource
 	{
 	public:
+		explicit
 		TelemetrySource(
 			DataSourcePtr dSrc);
 
