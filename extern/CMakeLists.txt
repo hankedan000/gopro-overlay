@@ -1,5 +1,8 @@
 add_subdirectory(gopro-telem)
+
+set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE) # don't build command line tools (just do library)
 add_subdirectory(yaml-cpp)
+
 add_subdirectory(qcustomplot)
 add_subdirectory(spdlog)
 add_subdirectory(concrt-cpp)
