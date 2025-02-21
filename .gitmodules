@@ -19,3 +19,6 @@
 [submodule "extern/tracy"]
 	path = extern/tracy
 	url = https://github.com/wolfpld/tracy.git
+[submodule "extern/argparse"]
+	path = extern/argparse
+	url = https://github.com/p-ranav/argparse.git

@@ -2,34 +2,24 @@ add_subdirectory(widgets)
 
 set(CMAKE_AUTORCC ON)
 
-add_executable(TrackEditorApp
-	TrackEditorApp.cpp
-)
-target_link_libraries(TrackEditorApp PUBLIC
-	GoProOverlay
-	AppWidgets
-)
+add_executable(gpo
+	gpo.cpp
 
-add_executable(AlignmentPlotStandalone
-	AlignmentPlotStandalone.cpp
-)
-target_link_libraries(AlignmentPlotStandalone PUBLIC
-	GoProOverlay
-	AppWidgets
-)
+	cmds/AlignmentPlotCmd.cpp
+	cmds/Command.cpp
+	cmds/ListOpenCL_DevicesCmd.cpp
+	cmds/SingleOverlayCmd.cpp
+	cmds/TelemetryMergeCmd.cpp
+	cmds/TopBottomOverlayCmd.cpp
+	cmds/TrackEditorCmd.cpp
 
-add_executable(TelemetryMergerStandalone
-	TelemetryMergerStandalone.cpp
-)
-target_link_libraries(TelemetryMergerStandalone PUBLIC
-	AppWidgets
-)
-
-add_executable(ProjectApp
-	ProjectApp.cpp
 	"${CMAKE_CURRENT_SOURCE_DIR}/res/resources.qrc"
 )
-target_link_libraries(ProjectApp PUBLIC
-	GoProOverlay
+target_include_directories(gpo PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(gpo PUBLIC
 	AppWidgets
+	argparse::argparse
+	GoProOverlay
+	tqdm
 )
