@@ -25,11 +25,12 @@ target_link_libraries(TelemetryMergerStandalone PUBLIC
 	AppWidgets
 )
 
-add_executable(ProjectApp
-	ProjectApp.cpp
+add_executable(gopro_overlay
+gopro_overlay.cpp
 	"${CMAKE_CURRENT_SOURCE_DIR}/res/resources.qrc"
 )
-target_link_libraries(ProjectApp PUBLIC
-	GoProOverlay
+target_link_libraries(gopro_overlay PUBLIC
 	AppWidgets
+	argparse::argparse
+	GoProOverlay
 )
