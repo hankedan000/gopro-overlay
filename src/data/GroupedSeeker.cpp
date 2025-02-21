@@ -15,7 +15,8 @@ namespace gpo
 	GroupedSeeker::clear()
 	{
 		seekers_.clear();
-		markObjectModified(false,true);
+		clearNeedsApply();
+		clearNeedsSave();
 	}
 
 	void

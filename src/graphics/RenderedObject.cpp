@@ -6,7 +6,7 @@ namespace gpo
 {
 
 	ModifiableDrawObject::ModifiableDrawObject(
-		const std::string &className,
+		const std::string_view &className,
 		bool supportsApplyingModifications,
 		bool supportsSavingModifications)
 	 : ModifiableObject(className,supportsApplyingModifications,supportsSavingModifications)
@@ -20,10 +20,6 @@ namespace gpo
 	 : ModifiableObject(other)
 	 , needsRedraw_(other.needsRedraw_)
 	 , observers_()// don't copy observers. they should remain bound only to 'other'.
-	{
-	}
-
-	ModifiableDrawObject::~ModifiableDrawObject()
 	{
 	}
 

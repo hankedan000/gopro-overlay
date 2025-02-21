@@ -2,6 +2,7 @@
 
 #include <opencv2/opencv.hpp>
 #include <spdlog/spdlog.h>
+#include <string_view>
 #include <unordered_set>
 #include <vector>
 
@@ -106,7 +107,7 @@ namespace gpo
          * (ie. the saveModifications() method is allowed to be called)
          */
         ModifiableDrawObject(
-            const std::string &className,
+            const std::string_view &className,
             bool supportsApplyingModifications,
             bool supportsSavingModifications);
 		
@@ -118,9 +119,6 @@ namespace gpo
          */
         ModifiableDrawObject(
             const ModifiableDrawObject &other);
-
-        virtual
-        ~ModifiableDrawObject();
 
 		/**
 		 * Call this method to flag if the object has been modified in some way that

@@ -134,7 +134,8 @@ namespace gpo
 		entities_.clear();
 		gSeeker_->clear();
 		markNeedsRedraw();
-		markObjectModified(false,true);
+		clearNeedsApply();
+		clearNeedsSave();
 	}
 
 	void
@@ -328,13 +329,13 @@ namespace gpo
 				catch (const std::exception &e)
 				{
 					spdlog::error("caught std::exception while processing rObj<{}>. what({}",
-						ent->renderObject()->typeName().c_str(),
+						ent->renderObject()->typeName(),
 						e.what());
 				}
 				catch (...)
 				{
 					spdlog::error("caught unknown exception while processing rObj<{}>.",
-						ent->renderObject()->typeName().c_str());
+						ent->renderObject()->typeName());
 				}
 			}
 		}
@@ -356,13 +357,13 @@ namespace gpo
 				catch (const std::exception &e)
 				{
 					spdlog::error("caught std::exception while processing rObj<{}>. what({}",
-						ent->renderObject()->typeName().c_str(),
+						ent->renderObject()->typeName(),
 						e.what());
 				}
 				catch (...)
 				{
 					spdlog::error("caught unknown exception while processing rObj<{}>.",
-						ent->renderObject()->typeName().c_str());
+						ent->renderObject()->typeName());
 				}
 			}
 		}
@@ -491,7 +492,7 @@ namespace gpo
 		// give entity a unique name if it doesn't have one already
 		if (re->name().empty())
 		{
-			re->setName(re->renderObject()->typeName() + "<" + std::to_string((size_t)&re) + ">");
+			re->setName(std::string(re->renderObject()->typeName()) + "<" + std::to_string((size_t)&re) + ">");
 		}
 
 		re->addObserver((ModifiableDrawObjectObserver*)this);
