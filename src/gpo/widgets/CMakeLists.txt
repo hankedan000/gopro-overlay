@@ -44,22 +44,17 @@ set(QT_WIDGETS_SOURCES
 
 	utils/QModifiableObjectObserver.h
 	utils/QModifiableObjectObserver.cpp
-
-	# grumble grumble... MOC needs to know where these are
-	# see https://stackoverflow.com/questions/14010922/qt-undefined-reference-to-vtable
-	"${CMAKE_CURRENT_SOURCE_DIR}/../../../src/include/GoProOverlay/graphics/TelemetryPlot.h"
-	"${CMAKE_CURRENT_SOURCE_DIR}/utils/QModifiableObjectObserver.h"
 )
 
-add_library(AppWidgets STATIC
+add_library(GoProOverlayWidgets STATIC
 	${QT_WIDGETS_SOURCES}
 )
 
-target_include_directories(AppWidgets PUBLIC
+target_include_directories(GoProOverlayWidgets PUBLIC
 	"${CMAKE_CURRENT_SOURCE_DIR}"
 )
 
-target_link_libraries(AppWidgets PUBLIC
+target_link_libraries(GoProOverlayWidgets PUBLIC
 	Qt${QT_VERSION_MAJOR}::Widgets
 	GoProOverlay
 	QCustomPlot

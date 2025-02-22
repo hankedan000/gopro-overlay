@@ -1,4 +1,5 @@
-#pragma once
+#ifndef QMODIFIABLEOBJECTOBSERVER_H
+#define QMODIFIABLEOBJECTOBSERVER_H
 
 #include <QWidget>
 
@@ -74,3 +75,5 @@ private:
     gpo::ModifiableObject *modifiable_;
 
 };
+
+#endif

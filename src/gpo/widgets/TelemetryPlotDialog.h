@@ -1,4 +1,5 @@
-#pragma once
+#ifndef TELEMETRYPLOTDIALOG_H
+#define TELEMETRYPLOTDIALOG_H
 
 #include <QDialog>
 
@@ -24,3 +25,5 @@ public:
 private:
     Ui::TelemetryPlotDialog *ui;
 };
+
+#endif

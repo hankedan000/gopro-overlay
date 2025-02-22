@@ -1,4 +1,5 @@
-#pragma once
+#ifndef TELEMETRYPLOT_H
+#define TELEMETRYPLOT_H
 
 #include <vector>
 
@@ -298,3 +299,5 @@ private:
 	QCPTextElement *plotTitle_;
 
 };
+
+#endif

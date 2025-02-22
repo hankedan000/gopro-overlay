@@ -18,8 +18,8 @@ add_executable(gpo
 target_include_directories(gpo PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(gpo PUBLIC
-	AppWidgets
 	argparse::argparse
 	GoProOverlay
+	GoProOverlayWidgets
 	tqdm
 )

@@ -71,14 +71,6 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
 
 add_subdirectory(src)
 
-# ---------------------------------------------------------------------------------------
-# Build binaries
-# ---------------------------------------------------------------------------------------
-if (GOPROOVERLAY_BUILD_APPS OR GOPROOVERLAY_BUILD_ALL)
-	message(STATUS "${PROJECT_NAME} - Generating apps")
-	add_subdirectory(apps)
-endif()
-
 if (GOPROOVERLAY_BUILD_TESTS OR GOPROOVERLAY_BUILD_ALL)
 	message(STATUS "${PROJECT_NAME} - Generating tests")
 	include(CTest)

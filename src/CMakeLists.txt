@@ -78,3 +78,9 @@ install(
 	PUBLIC_HEADER
 		DESTINATION "include/${LIBNAME}"
 )
+
+# build binary applications
+if (GOPROOVERLAY_BUILD_APPS OR GOPROOVERLAY_BUILD_ALL)
+	message(STATUS "${PROJECT_NAME} - Generating apps")
+	add_subdirectory(gpo)
+endif()
