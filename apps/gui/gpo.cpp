@@ -1,6 +1,7 @@
 #include <argparse/argparse.hpp>
 #include "cmds/AlignmentPlotCmd.h"
 #include "cmds/Command.h"
+#include "cmds/TelemetryMergeCmd.h"
 #include "cmds/TrackEditorCmd.h"
 #include <memory>
 #include "projectwindow.h"
@@ -26,6 +27,7 @@ public:
     {
         addSubCmd(std::make_shared<gpo::TrackEditorCmd>());
         addSubCmd(std::make_shared<gpo::AlignmentPlotCmd>());
+        addSubCmd(std::make_shared<gpo::TelemetryMergeCmd>());
 
         parser().add_argument(Args::PROJECT_DIR)
             .help("path to a project directory to open")

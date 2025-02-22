@@ -2,17 +2,11 @@ add_subdirectory(widgets)
 
 set(CMAKE_AUTORCC ON)
 
-add_executable(TelemetryMergerStandalone
-	TelemetryMergerStandalone.cpp
-)
-target_link_libraries(TelemetryMergerStandalone PUBLIC
-	AppWidgets
-)
-
 add_executable(gpo
 	gpo.cpp
 
 	cmds/AlignmentPlotCmd.cpp
+	cmds/TelemetryMergeCmd.cpp
 	cmds/TrackEditorCmd.cpp
 
 	"${CMAKE_CURRENT_SOURCE_DIR}/res/resources.qrc"
