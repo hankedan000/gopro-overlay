@@ -6,6 +6,8 @@ add_executable(gpo
 	gpo.cpp
 
 	cmds/AlignmentPlotCmd.cpp
+	cmds/Command.cpp
+	cmds/SingleOverlayCmd.cpp
 	cmds/TelemetryMergeCmd.cpp
 	cmds/TrackEditorCmd.cpp
 
@@ -17,4 +19,5 @@ target_link_libraries(gpo PUBLIC
 	AppWidgets
 	argparse::argparse
 	GoProOverlay
+	tqdm
 )

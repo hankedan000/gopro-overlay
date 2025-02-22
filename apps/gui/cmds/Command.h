@@ -10,13 +10,12 @@ namespace gpo
     public:
         explicit
         Command(
-            const std::string & cmdName)
-         : parser_(cmdName)
-        {}
+            const std::string & cmdName);
 
         virtual
         ~Command() = default;
 
+        inline
         argparse::ArgumentParser &
         parser()
         {
@@ -26,8 +25,25 @@ namespace gpo
         virtual
         int
         exec() = 0;
+
+        static
+        bool
+        stopRequested()
+        {
+            return stopRequested_;
+        }
+
+        static
+        void
+        requestStop()
+        {
+            stopRequested_ = true;
+        }
     
     private:
+        // set true when application is requested to stop (ie. via Ctrl+C or another signal)
+        static bool stopRequested_;
+
         argparse::ArgumentParser parser_;
 
     };

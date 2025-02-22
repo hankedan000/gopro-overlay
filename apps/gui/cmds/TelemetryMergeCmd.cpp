@@ -11,7 +11,7 @@ namespace gpo
 
     struct Args
     {
-        static constexpr std::string_view TELEM_FILES = "telem_file";
+        static constexpr std::string_view TELEM_FILES = "telem-file";
     };
 
     TelemetryMergeCmd::TelemetryMergeCmd()

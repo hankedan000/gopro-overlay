@@ -10,7 +10,7 @@ namespace gpo
 
     struct Args
     {
-        static constexpr std::string_view TRACK_FILE = "track_file";
+        static constexpr std::string_view TRACK_FILE = "track-file";
     };
 
     TrackEditorCmd::TrackEditorCmd()

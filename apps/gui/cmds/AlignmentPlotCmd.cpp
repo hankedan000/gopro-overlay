@@ -11,8 +11,8 @@ namespace gpo
 
     struct Args
     {
-        static constexpr std::string_view SRC_A_FILE = "srcA_file";
-        static constexpr std::string_view SRC_B_FILE = "srcB_file";
+        static constexpr std::string_view SRC_A_FILE = "src-a-file";
+        static constexpr std::string_view SRC_B_FILE = "src-b-file";
     };
 
     AlignmentPlotCmd::AlignmentPlotCmd()
