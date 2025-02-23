@@ -14,7 +14,7 @@ TelemetryPlotDialog::~TelemetryPlotDialog()
     delete ui;
 }
 
-TelemetryPlot *
+QTelemetryPlot *
 TelemetryPlotDialog::plot()
 {
     return ui->plot;

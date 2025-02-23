@@ -2,6 +2,7 @@
 #include "ui_TelemetryMerger.h"
 
 #include <algorithm>
+#include <QFileDialog>
 #include <spdlog/spdlog.h>
 #include <string>
 

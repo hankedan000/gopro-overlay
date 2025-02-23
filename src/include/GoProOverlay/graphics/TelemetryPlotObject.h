@@ -1,7 +1,14 @@
 #pragma once
 
+#include <memory>
+#include <QApplication>
+#include <QColor>
+
 #include "GoProOverlay/graphics/RenderedObject.h"
-#include "GoProOverlay/graphics/TelemetryPlot.h"
+#include "GoProOverlay/graphics/TelemetryPlotTypes.h"
+
+// forward declare
+class QTelemetryPlot;
 
 namespace gpo
 {
@@ -10,9 +17,8 @@ namespace gpo
 	public:
 		TelemetryPlotObject();
 
-		~TelemetryPlotObject();
+		~TelemetryPlotObject() override;
 
-		virtual
 		DataSourceRequirements
 		dataSourceRequirements() const override;
 
@@ -56,20 +62,16 @@ namespace gpo
 		getPlotWidthSeconds() const;
 
 	protected:
-		virtual
 		void
 		subRender() override;
 
 		// callback from RenderedObject class when all source requirements are met
-		virtual
 		void
 		sourcesValid() override;
         
-		virtual
 		YAML::Node
 		subEncode() const override;
 
-		virtual
 		bool
 		subDecode(
 			const YAML::Node& node) override;
@@ -90,7 +92,7 @@ namespace gpo
     		QApplication *app;
 		} fakeApp_;
 
-        TelemetryPlot *plot_;
+		std::unique_ptr<QTelemetryPlot> plot_;
 
 		// the number of visible samples to display horizontally (in seconds)
 		double plotWidthTime_sec_;

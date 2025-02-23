@@ -3,6 +3,8 @@
 #include <tracy/Tracy.hpp>
 #include <spdlog/spdlog.h>
 
+#include "GoProOverlay/graphics/QTelemetryPlot.h"
+
 namespace gpo
 {
 
@@ -24,7 +26,7 @@ namespace gpo
 			strcpy(fakeApp_.argv[0],"FakeQtApp");
             fakeApp_.app = new QApplication(fakeApp_.argc,fakeApp_.argv);
         }
-		plot_ = new TelemetryPlot(nullptr);
+		plot_ = std::make_unique<QTelemetryPlot>(nullptr);
 		plot_->setMaximumSize(PLOT_RENDER_WIDTH, PLOT_RENDER_HEIGHT);
 		plot_->setMinimumSize(PLOT_RENDER_WIDTH, PLOT_RENDER_HEIGHT);
 		// default to plotting GPS speed
@@ -34,10 +36,6 @@ namespace gpo
 
 	TelemetryPlotObject::~TelemetryPlotObject()
 	{
-		if (plot_)
-		{
-			delete(plot_);
-		}
 		if (fakeApp_.app)
 		{
 			delete(fakeApp_.app);

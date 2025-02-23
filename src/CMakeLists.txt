@@ -14,10 +14,10 @@ add_library("${LIBNAME}" STATIC
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/LapTimerObject.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/FrictionCircleObject.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/LapTimerObject.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/QTelemetryPlot.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/RenderedObject.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/RenderEngine.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/SpeedometerObject.cpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/TelemetryPlot.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/TelemetryPlotObject.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/TelemetryPrintoutObject.cpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/graphics/TextObject.cpp"
@@ -33,7 +33,7 @@ add_library("${LIBNAME}" STATIC
 	
 	# MOC needs to know where this... grumble grumble
 	# see https://stackoverflow.com/questions/14010922/qt-undefined-reference-to-vtable
-	"${CMAKE_CURRENT_SOURCE_DIR}/include/GoProOverlay/graphics/TelemetryPlot.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/include/GoProOverlay/graphics/QTelemetryPlot.h"
 )
 
 target_compile_features(${LIBNAME} PRIVATE cxx_std_17)

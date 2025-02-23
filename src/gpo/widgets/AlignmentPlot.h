@@ -6,7 +6,7 @@
 #include <QWidget>
 
 #include <GoProOverlay/data/TelemetrySource.h>
-#include <GoProOverlay/graphics/TelemetryPlot.h>
+#include <GoProOverlay/graphics/TelemetryPlotTypes.h>
 
 namespace Ui {
 class AlignmentPlot;
@@ -18,7 +18,8 @@ class AlignmentPlot : public QWidget
 
 public:
     explicit AlignmentPlot(QWidget *parent = nullptr);
-    ~AlignmentPlot();
+
+    ~AlignmentPlot() override;
 
     void
     setSourceA(
@@ -49,7 +50,7 @@ private:
     bool
     selectComboBoxY_Comp(
         QComboBox *combobox,
-        TelemetryPlot::Y_Component yComp);
+        gpo::TelemetryPlot::Y_Component yComp);
     
 private:
     Ui::AlignmentPlot *ui;

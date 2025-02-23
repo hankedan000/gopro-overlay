@@ -2,6 +2,7 @@
 #include "ui_renderentitypropertiestab.h"
 
 #include "GoProOverlay/graphics/FrictionCircleObject.h"
+#include "GoProOverlay/graphics/QTelemetryPlot.h"
 #include "GoProOverlay/graphics/TelemetryPlotObject.h"
 
 RenderEntityPropertiesTab::RenderEntityPropertiesTab(
@@ -104,12 +105,12 @@ RenderEntityPropertiesTab::RenderEntityPropertiesTab(
     // TelemetryPlotObject
     // =============================================
     // init y-component combobox
-    for (const auto &info : TelemetryPlot::Y_COMP_ENUM_INFOS)
+    for (const auto &info : QTelemetryPlot::Y_COMP_ENUM_INFOS)
     {
         ui->yComponent_ComboBox->addItem(info->name,(qulonglong)info->yComp);
     }
     connect(ui->yComponent_ComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index){
-        auto yComp = (TelemetryPlot::Y_Component)ui->yComponent_ComboBox->itemData(index).toULongLong();
+        auto yComp = (gpo::TelemetryPlot::Y_Component)ui->yComponent_ComboBox->itemData(index).toULongLong();
         if (entity_)
         {
             entity_->renderObject()->as<gpo::TelemetryPlotObject>()->setY_Component(yComp);
@@ -250,7 +251,7 @@ RenderEntityPropertiesTab::setEntity(
             for (int i=0; i<ui->yComponent_ComboBox->count(); i++)
             {
                 int yCompInt = ui->yComponent_ComboBox->itemData(i).toInt();
-                auto yComp = (TelemetryPlot::Y_Component)yCompInt;
+                auto yComp = (gpo::TelemetryPlot::Y_Component)yCompInt;
                 if (yComp == plotsY_Comp)
                 {
                     ui->yComponent_ComboBox->setCurrentIndex(i);

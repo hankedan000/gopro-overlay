@@ -1,10 +1,11 @@
 #include "AlignmentPlot.h"
 #include "ui_AlignmentPlot.h"
 
+#include <GoProOverlay/graphics/QTelemetryPlot.h>
 #include <QSpinBox>
 #include <spdlog/spdlog.h>
 
-#define GET_COMBOBOX_Y_COMP(COMBOBOX_PTR,INDEX) (TelemetryPlot::Y_Component)COMBOBOX_PTR->itemData(INDEX).toULongLong()
+#define GET_COMBOBOX_Y_COMP(COMBOBOX_PTR,INDEX) (gpo::TelemetryPlot::Y_Component)COMBOBOX_PTR->itemData(INDEX).toULongLong()
 
 AlignmentPlot::AlignmentPlot(QWidget *parent) :
     QWidget(parent),
@@ -167,7 +168,7 @@ AlignmentPlot::setSourceA(
             srcA_,
             name,
             Qt::red,
-            TelemetryPlot::AxisSide::eAS_Side1,
+            gpo::TelemetryPlot::AxisSide::eAS_Side1,
             true);// replot
 
         for (int gg=0; gg<ui->plot->graphCount(); gg++)
@@ -214,7 +215,7 @@ AlignmentPlot::setSourceB(
             srcB_,
             name,
             Qt::blue,
-            TelemetryPlot::AxisSide::eAS_Side2,
+            gpo::TelemetryPlot::AxisSide::eAS_Side2,
             true);// replot
 
         for (int gg=0; gg<ui->plot->graphCount(); gg++)
@@ -240,7 +241,7 @@ AlignmentPlot::populateComboBox(
         return;
     }
 
-    auto availY_Comps = TelemetryPlot::getAvailY_ComponentInfo(tSrc);
+    auto availY_Comps = QTelemetryPlot::getAvailY_ComponentInfo(tSrc);
     for (const auto &yInfo : availY_Comps)
     {
         combobox->addItem(yInfo->name,(qulonglong)(yInfo->yComp));
@@ -270,21 +271,21 @@ AlignmentPlot::setBestY_Components()
     if (availA.test(gpo::DataAvailable::eDA_GOPRO_GPS_SPEED2D) &&
         availB.test(gpo::DataAvailable::eDA_ECU_ENGINE_SPEED))
     {
-        selectComboBoxY_Comp(ui->aData_ComboBox, TelemetryPlot::Y_Component::eYC_GPS_SPEED2D);
-        selectComboBoxY_Comp(ui->bData_ComboBox, TelemetryPlot::Y_Component::eYC_ECU_ENGINE_SPEED);
+        selectComboBoxY_Comp(ui->aData_ComboBox, gpo::TelemetryPlot::Y_Component::eYC_GPS_SPEED2D);
+        selectComboBoxY_Comp(ui->bData_ComboBox, gpo::TelemetryPlot::Y_Component::eYC_ECU_ENGINE_SPEED);
     }
     else if (availA.test(gpo::DataAvailable::eDA_ECU_ENGINE_SPEED) &&
              availB.test(gpo::DataAvailable::eDA_GOPRO_GPS_SPEED2D))
     {
-        selectComboBoxY_Comp(ui->aData_ComboBox, TelemetryPlot::Y_Component::eYC_ECU_ENGINE_SPEED);
-        selectComboBoxY_Comp(ui->bData_ComboBox, TelemetryPlot::Y_Component::eYC_GPS_SPEED2D);
+        selectComboBoxY_Comp(ui->aData_ComboBox, gpo::TelemetryPlot::Y_Component::eYC_ECU_ENGINE_SPEED);
+        selectComboBoxY_Comp(ui->bData_ComboBox, gpo::TelemetryPlot::Y_Component::eYC_GPS_SPEED2D);
     }
 }
 
 bool
 AlignmentPlot::selectComboBoxY_Comp(
     QComboBox *combobox,
-    TelemetryPlot::Y_Component yComp)
+    gpo::TelemetryPlot::Y_Component yComp)
 {
     for (int i=0; i<combobox->count(); i++)
     {

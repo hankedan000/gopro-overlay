@@ -1,12 +1,12 @@
-#include "GoProOverlay/graphics/TelemetryPlot.h"
+#include "GoProOverlay/graphics/QTelemetryPlot.h"
 
 #include <spdlog/spdlog.h>
 
-TelemetryPlot::TelemetryPlot(
+QTelemetryPlot::QTelemetryPlot(
 		QWidget *parent)
 : QCustomPlot(parent)
-, xComponent_(X_Component::eXC_Samples)
-, yComponent_(Y_Component::eYC_UNKNOWN)
+, xComponent_(gpo::TelemetryPlot::X_Component::eXC_Samples)
+, yComponent_(gpo::TelemetryPlot::Y_Component::eYC_UNKNOWN)
 , plotTitle_(new QCPTextElement(this,"",15))
 {
 	setInteraction(QCP::Interaction::iRangeDrag,true);
@@ -35,11 +35,11 @@ TelemetryPlot::TelemetryPlot(
 	});
 }
 
-TelemetryPlot::~TelemetryPlot()
+QTelemetryPlot::~QTelemetryPlot()
 {}
 
 void
-TelemetryPlot::applyDarkTheme()
+QTelemetryPlot::applyDarkTheme()
 {
 	const auto BORDER_COLOR = Qt::gray;
 	const auto TICK_COLOR = Qt::gray;
@@ -68,37 +68,37 @@ TelemetryPlot::applyDarkTheme()
 }
 
 void
-TelemetryPlot::addSource(
+QTelemetryPlot::addSource(
 		gpo::TelemetrySourcePtr telemSrc,
 		bool replot)
 {
 	QColor color = DEFAULT_COLORS[sources_.size() % DEFAULT_COLORS.size()];
-	addSource_(telemSrc,telemSrc->getDataSourceName(),color,AxisSide::eAS_Side1,replot);
+	addSource_(telemSrc,telemSrc->getDataSourceName(),color,gpo::TelemetryPlot::AxisSide::eAS_Side1,replot);
 }
 			
 void
-TelemetryPlot::addSource(
+QTelemetryPlot::addSource(
 		gpo::TelemetrySourcePtr telemSrc,
 		const std::string &label,
 		QColor color,
 		bool replot)
 {
-	addSource_(telemSrc,label,color,AxisSide::eAS_Side1,replot);
+	addSource_(telemSrc,label,color,gpo::TelemetryPlot::AxisSide::eAS_Side1,replot);
 }
 
 void
-TelemetryPlot::addSource(
+QTelemetryPlot::addSource(
 	gpo::TelemetrySourcePtr telemSrc,
 	const std::string &label,
 	QColor color,
-	AxisSide yAxisSide,
+	gpo::TelemetryPlot::AxisSide yAxisSide,
 	bool replot)
 {
 	addSource_(telemSrc,label,color,yAxisSide,replot);
 }
 
 void
-TelemetryPlot::removeSource(
+QTelemetryPlot::removeSource(
 	gpo::TelemetrySourcePtr telemSrc,
 	bool replot)
 {
@@ -116,7 +116,7 @@ TelemetryPlot::removeSource(
 }
 
 void
-TelemetryPlot::removeSource(
+QTelemetryPlot::removeSource(
 		size_t idx,
 		bool replot)
 {
@@ -136,7 +136,7 @@ TelemetryPlot::removeSource(
 }
 
 void
-TelemetryPlot::clear(
+QTelemetryPlot::clear(
 		bool replot)
 {
 	while ( ! sources_.empty())
@@ -151,14 +151,14 @@ TelemetryPlot::clear(
 }
 
 gpo::TelemetrySourcePtr
-TelemetryPlot::getSource(
+QTelemetryPlot::getSource(
 		size_t idx)
 {
 	return sources_.at(idx).telemSrc;
 }
 
 gpo::TelemetrySourcePtr
-TelemetryPlot::getSource(
+QTelemetryPlot::getSource(
 	QCPGraph *graph)
 {
 	for (const auto &srcObjs : sources_)
@@ -172,13 +172,13 @@ TelemetryPlot::getSource(
 }
 
 size_t
-TelemetryPlot::numSources() const
+QTelemetryPlot::numSources() const
 {
 	return sources_.size();
 }
 
 void
-TelemetryPlot::realignData(
+QTelemetryPlot::realignData(
 		bool replot)
 {
 	for (auto &sourceObjs : sources_)
@@ -193,7 +193,7 @@ TelemetryPlot::realignData(
 }
 
 void
-TelemetryPlot::setTelemetryColor(
+QTelemetryPlot::setTelemetryColor(
 	gpo::TelemetrySourcePtr telemSrc,
 	QColor color,
 	bool replot)
@@ -220,7 +220,7 @@ TelemetryPlot::setTelemetryColor(
 }
 
 std::pair<bool,QColor>
-TelemetryPlot::getTelemetryColor(
+QTelemetryPlot::getTelemetryColor(
 	gpo::TelemetrySourcePtr telemSrc) const
 {
 	for (const auto &sourceObjs : sources_)
@@ -234,7 +234,7 @@ TelemetryPlot::getTelemetryColor(
 }
 
 void
-TelemetryPlot::setTelemetryLabel(
+QTelemetryPlot::setTelemetryLabel(
 	gpo::TelemetrySourcePtr telemSrc,
 	const std::string &label,
 	bool replot)
@@ -254,7 +254,7 @@ TelemetryPlot::setTelemetryLabel(
 }
 
 std::pair<bool,std::string>
-TelemetryPlot::getTelemetryLabel(
+QTelemetryPlot::getTelemetryLabel(
 	gpo::TelemetrySourcePtr telemSrc) const
 {
 	for (const auto &sourceObjs : sources_)
@@ -268,9 +268,9 @@ TelemetryPlot::getTelemetryLabel(
 }
 
 void
-TelemetryPlot::setX_Component(
-		X_Component comp,
-		bool replot)
+QTelemetryPlot::setX_Component(
+	gpo::TelemetryPlot::X_Component comp,
+	bool replot)
 {
 	if (xComponent_ == comp)
 	{
@@ -292,16 +292,16 @@ TelemetryPlot::setX_Component(
 	}
 }
 
-TelemetryPlot::X_Component
-TelemetryPlot::getX_Component() const
+gpo::TelemetryPlot::X_Component
+QTelemetryPlot::getX_Component() const
 {
 	return xComponent_;
 }
 
 void
-TelemetryPlot::setY_Component(
-		Y_Component comp,
-		bool replot)
+QTelemetryPlot::setY_Component(
+	gpo::TelemetryPlot::Y_Component comp,
+	bool replot)
 {
 	if (yComponent_ == comp)
 	{
@@ -313,7 +313,7 @@ TelemetryPlot::setY_Component(
 	yComponent_ = comp;
 	for (auto &sourceObjs : sources_)
 	{
-		if (sourceObjs.yAxisSide == AxisSide::eAS_Side1)
+		if (sourceObjs.yAxisSide == gpo::TelemetryPlot::AxisSide::eAS_Side1)
 		{
 			setY_Data(sourceObjs,comp);
 		}
@@ -331,15 +331,15 @@ TelemetryPlot::setY_Component(
 	}
 }
 
-TelemetryPlot::Y_Component
-TelemetryPlot::getY_Component() const
+gpo::TelemetryPlot::Y_Component
+QTelemetryPlot::getY_Component() const
 {
 	return yComponent_;
 }
 
 void
-TelemetryPlot::setY_Component2(
-	Y_Component comp,
+QTelemetryPlot::setY_Component2(
+	gpo::TelemetryPlot::Y_Component comp,
 	bool replot)
 {
 	if (yComponent2_ == comp)
@@ -352,7 +352,7 @@ TelemetryPlot::setY_Component2(
 	yComponent2_ = comp;
 	for (auto &sourceObjs : sources_)
 	{
-		if (sourceObjs.yAxisSide == AxisSide::eAS_Side2)
+		if (sourceObjs.yAxisSide == gpo::TelemetryPlot::AxisSide::eAS_Side2)
 		{
 			setY_Data(sourceObjs,comp);
 		}
@@ -370,30 +370,30 @@ TelemetryPlot::setY_Component2(
 	}
 }
 
-TelemetryPlot::Y_Component
-TelemetryPlot::getY_Component2() const
+gpo::TelemetryPlot::Y_Component
+QTelemetryPlot::getY_Component2() const
 {
 	return yComponent2_;
 }
 
 void
-TelemetryPlot::setPlotTitle(
+QTelemetryPlot::setPlotTitle(
 	const std::string &title)
 {
 	plotTitle_->setText(title.c_str());
 }
 
 std::string
-TelemetryPlot::getPlotTitle() const
+QTelemetryPlot::getPlotTitle() const
 {
 	return plotTitle_->text().toStdString();
 }
 
-std::vector<const TelemetryPlot::Y_ComponentEnumInfo *>
-TelemetryPlot::getAvailY_ComponentInfo(
+std::vector<const gpo::TelemetryPlot::Y_ComponentEnumInfo *>
+QTelemetryPlot::getAvailY_ComponentInfo(
 	gpo::TelemetrySourcePtr tSrc)
 {
-	std::vector<const TelemetryPlot::Y_ComponentEnumInfo *> infos;
+	std::vector<const gpo::TelemetryPlot::Y_ComponentEnumInfo *> infos;
 	infos.reserve(Y_COMP_ENUM_INFOS.size());
 
     const auto &avail = tSrc->dataAvailable();
@@ -451,9 +451,9 @@ TelemetryPlot::getAvailY_ComponentInfo(
 	return infos;
 }
 
-const TelemetryPlot::Y_ComponentEnumInfo *
-TelemetryPlot::getY_ComponentInfo(
-	const TelemetryPlot::Y_Component &comp)
+const gpo::TelemetryPlot::Y_ComponentEnumInfo *
+QTelemetryPlot::getY_ComponentInfo(
+	const gpo::TelemetryPlot::Y_Component &comp)
 {
 	for (const auto &info : Y_COMP_ENUM_INFOS)
 	{
@@ -466,11 +466,11 @@ TelemetryPlot::getY_ComponentInfo(
 }
 
 void
-TelemetryPlot::addSource_(
+QTelemetryPlot::addSource_(
 		gpo::TelemetrySourcePtr telemSrc,
 		const std::string &label,
 		QColor color,
-		AxisSide yAxisSide,
+		gpo::TelemetryPlot::AxisSide yAxisSide,
 		bool replot)
 {
 	// prevent telemSrc from being added again
@@ -484,7 +484,7 @@ TelemetryPlot::addSource_(
 
 	auto yCompSelected = yComponent_;
 	auto yAxisSelected = yAxis;
-	if (yAxisSide == AxisSide::eAS_Side2)
+	if (yAxisSide == gpo::TelemetryPlot::AxisSide::eAS_Side2)
 	{
 		yCompSelected = yComponent2_;
 		yAxisSelected = yAxis2;
@@ -514,9 +514,9 @@ TelemetryPlot::addSource_(
 }
 
 void
-TelemetryPlot::setX_Data(
-		SourceObjects &sourceObjs,
-		X_Component comp)
+QTelemetryPlot::setX_Data(
+	SourceObjects &sourceObjs,
+	gpo::TelemetryPlot::X_Component comp)
 {
 	auto telemSrc = sourceObjs.telemSrc;
 	auto seeker = telemSrc->seeker();
@@ -528,11 +528,11 @@ TelemetryPlot::setX_Data(
 	{
 		switch (comp)
 		{
-		case X_Component::eXC_Samples:
+		case gpo::TelemetryPlot::X_Component::eXC_Samples:
 			dataItr->key = (double)(i) - alignmentIdx;
 			xAxis->setLabel("samples");
 			break;
-		case X_Component::eXC_Time:
+		case gpo::TelemetryPlot::X_Component::eXC_Time:
 			dataItr->key = telemSrc->at(i).t_offset - alignmentSamp.t_offset;
 			xAxis->setLabel("time (s)");
 			break;
@@ -541,9 +541,9 @@ TelemetryPlot::setX_Data(
 }
 
 void
-TelemetryPlot::setY_Data(
-		SourceObjects &sourceObjs,
-		Y_Component comp)
+QTelemetryPlot::setY_Data(
+	SourceObjects &sourceObjs,
+	gpo::TelemetryPlot::Y_Component comp)
 {
 	auto dataPtr = sourceObjs.graph->data();
 	auto dataItr = dataPtr->begin();
@@ -552,70 +552,70 @@ TelemetryPlot::setY_Data(
 		auto &tSamp = sourceObjs.telemSrc->at(i);
 		switch (comp)
 		{
-		case Y_Component::eYC_UNKNOWN:
+		case gpo::TelemetryPlot::Y_Component::eYC_UNKNOWN:
 			dataItr->value = 0;
 			break;
-		case Y_Component::eYC_TIME:
+		case gpo::TelemetryPlot::Y_Component::eYC_TIME:
 			dataItr->value = tSamp.t_offset;
 			break;
-		case Y_Component::eYC_ACCL_X:
+		case gpo::TelemetryPlot::Y_Component::eYC_ACCL_X:
 			dataItr->value = tSamp.gpSamp.accl.x;
 			break;
-		case Y_Component::eYC_ACCL_Y:
+		case gpo::TelemetryPlot::Y_Component::eYC_ACCL_Y:
 			dataItr->value = tSamp.gpSamp.accl.y;
 			break;
-		case Y_Component::eYC_ACCL_Z:
+		case gpo::TelemetryPlot::Y_Component::eYC_ACCL_Z:
 			dataItr->value = tSamp.gpSamp.accl.z;
 			break;
-		case Y_Component::eYC_GYRO_X:
+		case gpo::TelemetryPlot::Y_Component::eYC_GYRO_X:
 			dataItr->value = tSamp.gpSamp.gyro.x;
 			break;
-		case Y_Component::eYC_GYRO_Y:
+		case gpo::TelemetryPlot::Y_Component::eYC_GYRO_Y:
 			dataItr->value = tSamp.gpSamp.gyro.y;
 			break;
-		case Y_Component::eYC_GYRO_Z:
+		case gpo::TelemetryPlot::Y_Component::eYC_GYRO_Z:
 			dataItr->value = tSamp.gpSamp.gyro.z;
 			break;
-		case Y_Component::eYC_GRAV_X:
+		case gpo::TelemetryPlot::Y_Component::eYC_GRAV_X:
 			dataItr->value = tSamp.gpSamp.grav.x;
 			break;
-		case Y_Component::eYC_GRAV_Y:
+		case gpo::TelemetryPlot::Y_Component::eYC_GRAV_Y:
 			dataItr->value = tSamp.gpSamp.grav.y;
 			break;
-		case Y_Component::eYC_GRAV_Z:
+		case gpo::TelemetryPlot::Y_Component::eYC_GRAV_Z:
 			dataItr->value = tSamp.gpSamp.grav.z;
 			break;
-		case Y_Component::eYC_CORI_W:
+		case gpo::TelemetryPlot::Y_Component::eYC_CORI_W:
 			dataItr->value = tSamp.gpSamp.cori.w;
 			break;
-		case Y_Component::eYC_CORI_X:
+		case gpo::TelemetryPlot::Y_Component::eYC_CORI_X:
 			dataItr->value = tSamp.gpSamp.cori.x;
 			break;
-		case Y_Component::eYC_CORI_Y:
+		case gpo::TelemetryPlot::Y_Component::eYC_CORI_Y:
 			dataItr->value = tSamp.gpSamp.cori.y;
 			break;
-		case Y_Component::eYC_CORI_Z:
+		case gpo::TelemetryPlot::Y_Component::eYC_CORI_Z:
 			dataItr->value = tSamp.gpSamp.cori.z;
 			break;
-		case Y_Component::eYC_GPS_LAT:
+		case gpo::TelemetryPlot::Y_Component::eYC_GPS_LAT:
 			dataItr->value = tSamp.gpSamp.gps.coord.lat;
 			break;
-		case Y_Component::eYC_GPS_LON:
+		case gpo::TelemetryPlot::Y_Component::eYC_GPS_LON:
 			dataItr->value = tSamp.gpSamp.gps.coord.lon;
 			break;
-		case Y_Component::eYC_GPS_SPEED2D:
+		case gpo::TelemetryPlot::Y_Component::eYC_GPS_SPEED2D:
 			dataItr->value = tSamp.gpSamp.gps.speed2D;
 			break;
-		case Y_Component::eYC_GPS_SPEED3D:
+		case gpo::TelemetryPlot::Y_Component::eYC_GPS_SPEED3D:
 			dataItr->value = tSamp.gpSamp.gps.speed3D;
 			break;
-		case Y_Component::eYC_ECU_ENGINE_SPEED:
+		case gpo::TelemetryPlot::Y_Component::eYC_ECU_ENGINE_SPEED:
 			dataItr->value = tSamp.ecuSamp.engineSpeed_rpm;
 			break;
-		case Y_Component::eYC_ECU_TPS:
+		case gpo::TelemetryPlot::Y_Component::eYC_ECU_TPS:
 			dataItr->value = tSamp.ecuSamp.tps;
 			break;
-		case Y_Component::eYC_ECU_BOOST:
+		case gpo::TelemetryPlot::Y_Component::eYC_ECU_BOOST:
 			dataItr->value = tSamp.ecuSamp.boost_psi;
 			break;
 		}

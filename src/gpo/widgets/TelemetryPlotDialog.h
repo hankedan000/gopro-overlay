@@ -3,7 +3,7 @@
 
 #include <QDialog>
 
-#include "GoProOverlay/graphics/TelemetryPlot.h"
+#include "GoProOverlay/graphics/QTelemetryPlot.h"
 
 namespace Ui {
 class TelemetryPlotDialog;
@@ -17,9 +17,9 @@ public:
     explicit TelemetryPlotDialog(
             QWidget *parent = nullptr);
 
-    ~TelemetryPlotDialog();
+    ~TelemetryPlotDialog() override;
 
-    TelemetryPlot *
+    QTelemetryPlot *
     plot();
 
 private:

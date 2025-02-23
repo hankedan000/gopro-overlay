@@ -95,15 +95,15 @@
     </widget>
    </item>
    <item>
-    <widget class="TelemetryPlot" name="plot" native="true"/>
+    <widget class="QTelemetryPlot" name="plot" native="true"/>
    </item>
   </layout>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>TelemetryPlot</class>
+   <class>QTelemetryPlot</class>
    <extends>QWidget</extends>
-   <header>GoProOverlay/graphics/TelemetryPlot.h</header>
+   <header>GoProOverlay/graphics/QTelemetryPlot.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

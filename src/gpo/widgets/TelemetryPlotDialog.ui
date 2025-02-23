@@ -17,7 +17,7 @@
    <item row="0" column="0">
     <layout class="QVBoxLayout" name="verticalLayout" stretch="1">
      <item>
-      <widget class="TelemetryPlot" name="plot" native="true"/>
+      <widget class="QTelemetryPlot" name="plot" native="true"/>
      </item>
     </layout>
    </item>
@@ -25,9 +25,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>TelemetryPlot</class>
+   <class>QTelemetryPlot</class>
    <extends>QWidget</extends>
-   <header>GoProOverlay/graphics/TelemetryPlot.h</header>
+   <header>GoProOverlay/graphics/QTelemetryPlot.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>
