@@ -82,6 +82,9 @@ namespace gpo
 	class ModifiableDrawObjectObserver
     {
     public:
+		virtual
+		~ModifiableDrawObjectObserver() = default;
+		
         virtual
         void
         onNeedsRedraw(

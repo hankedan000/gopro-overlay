@@ -84,6 +84,9 @@ namespace gpo
 		TrackPathObject(
 			const Track *track,
 			const std::string &name);
+		
+		virtual
+		~TrackPathObject() = default;
 
 		const Track *
 		getTrack() const;

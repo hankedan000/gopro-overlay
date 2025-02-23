@@ -5,7 +5,11 @@
 
 #include <QFileDialog>
 #include <QMessageBox>
+#include <qchar.h>
+#include <qlist.h>
+#include <qvector.h>
 #include <spdlog/spdlog.h>
+#include <vector>
 
 const QString RECENT_PROJECT_KEY = "RECENT_PROJECTS";
 const int MAX_RECENT_PROJECTS = 10;
@@ -274,6 +278,7 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     });
     connect(ui->jumpToLeadOut_ToolButton, &QToolButton::clicked, this, [this]{
         spdlog::warn("jump to lead-out not implemented");
+        (void)this;
     });
     connect(ui->audioApproach_ComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this](int index){
         proj_.setAudioExportApproach((gpo::AudioExportApproach_E)index);
@@ -543,7 +548,7 @@ ProjectWindow::addSourceToTable(
     if (dSrc->hasTelemetry())
     {
         showTrackButton->setEnabled(true);
-        connect(showTrackButton, &QPushButton::pressed, this, [this,dSrc]{
+        connect(showTrackButton, &QPushButton::pressed, this, [dSrc]{
             auto trackview = new TrackView();
             trackview->setTrack(dSrc->makeTrack());
             trackview->setWindowTitle(QStringLiteral("Track View - %1").arg(dSrc->getSourceName().c_str()));
@@ -611,7 +616,11 @@ void
 ProjectWindow::clearRenderEntitiesTable()
 {
     entitiesTableModel_->clear();
-    entitiesTableModel_->setHorizontalHeaderLabels({"Name", "Type", "Visible"});
+    QVector<QString> hLabels(3);
+    hLabels[ENTITY_NAME_COLUMN] = "Name";
+    hLabels[ENTITY_TYPE_COLUMN] = "Type";
+    hLabels[ENTITY_VISIBILITY_COLUMN] = "Visible";
+    entitiesTableModel_->setHorizontalHeaderLabels(hLabels.toList());
     renderEntityPropertiesTab_->setEntity(nullptr);
 }
 

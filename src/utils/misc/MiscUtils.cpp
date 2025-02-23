@@ -1,8 +1,9 @@
 #include "GoProOverlay/utils/misc/MiscUtils.h"
 
+#include <cstdlib>
 #include <cxxabi.h>
 #include <execinfo.h>
-#include <cstdlib>
+#include <vector>
 
 namespace utils
 {
@@ -14,10 +15,10 @@ namespace misc
         unsigned int depth)
     {
         // storage array for stack trace address data
-        void* addrlist[depth+1];
+        std::vector<void *> addrlist(depth+1);
 
         // retrieve current stack addresses
-        int addrlen = backtrace(addrlist, sizeof(addrlist) / sizeof(void*));
+        int addrlen = backtrace(addrlist.data(), static_cast<int>(addrlist.size()));
 
         if (addrlen == 0)
         {
@@ -27,17 +28,19 @@ namespace misc
 
         // resolve addresses into strings containing "filename(function+address)",
         // this array must be free()-ed
-        char** symbollist = backtrace_symbols(addrlist, addrlen);
+        char** symbollist = backtrace_symbols(addrlist.data(), addrlen);
 
         // allocate string which will be filled with the demangled function name
         size_t funcnamesize = 256;
-        char* funcname = (char*)malloc(funcnamesize);
+        auto funcname = (char*)malloc(funcnamesize);
 
         // iterate over the returned symbol lines. skip the first, it is the
         // address of this function.
         for (int i = 1; i < addrlen; i++)
         {
-            char *begin_name = 0, *begin_offset = 0, *end_offset = 0;
+            char *begin_name = nullptr;
+            char *begin_offset = nullptr;
+            char *end_offset = nullptr;
 
             // find parentheses and +address offset surrounding the mangled name:
             // ./module(function+0x15c) [0x8048a6d]

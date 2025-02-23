@@ -32,29 +32,24 @@ namespace gpo
 		setThickness(
 			int thickness);
 
-		virtual
 		void
 		drawInto(
 			cv::UMat &intoImg,
-			int originX, int originY);
+			int originX, int originY) override;
 
-		virtual
 		void
 		drawInto(
 			cv::UMat &intoImg,
 			int originX, int originY,
-			cv::Size renderSize);
+			cv::Size renderSize) override;
 
 	protected:
-		virtual
 		void
 		subRender() override;
 
-		virtual
 		YAML::Node
 		subEncode() const override;
 
-		virtual
 		bool
 		subDecode(
 			const YAML::Node& node) override;
