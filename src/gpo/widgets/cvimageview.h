@@ -3,7 +3,7 @@
 
 #include <QLabel>
 
-#include <opencv2/opencv.hpp>
+#include <opencv2/core/mat.hpp>
 
 namespace Ui {
 class CvImageView;
@@ -15,33 +15,29 @@ class CvImageView : public QLabel
 
 public:
     explicit CvImageView(QWidget *parent = nullptr);
-    ~CvImageView();
+
+    ~CvImageView() override;
 
     void
     setImage(
             cv::UMat img);
 
-    virtual
     void
     mouseMoveEvent(
             QMouseEvent *event) override;
 
-    virtual
     void
     mousePressEvent(
             QMouseEvent *event) override;
 
-    virtual
     void
     mouseReleaseEvent(
             QMouseEvent *event) override;
 
-    virtual
     void
     enterEvent(
             QEvent *event) override;
 
-    virtual
     void
     leaveEvent(
             QEvent *event) override;

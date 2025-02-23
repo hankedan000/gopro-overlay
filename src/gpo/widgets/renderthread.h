@@ -2,7 +2,7 @@
 #define RENDERTHREAD_H
 
 #include <concrt/ResourcePool.h>
-#include <opencv2/opencv.hpp>
+#include <opencv2/videoio.hpp>
 #include <QThread>
 
 #include "GoProOverlay/data/GroupedSeeker.h"

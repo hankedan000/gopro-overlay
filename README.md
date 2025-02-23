@@ -11,6 +11,9 @@ cmake ..
 make
 ```
 
+Note: To profile the compilation, you can get timing statistics by using clang with the `-ftime-trace` flag. This can be achieved by using the following CMake command.
+`cmake -E env CXXFLAGS="-ftime-trace" CXX=clang++ CC=clang cmake ..`
+
 ## Testing
 ### Unit Tests
 The repo contains a few cppunit tests. You can run them all after a build with `make test`. You should get output similar to this.

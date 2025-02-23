@@ -1,7 +1,7 @@
 #pragma once
 
 #include <memory>
-#include <opencv2/opencv.hpp>
+#include <opencv2/core/matx.hpp> // for cv::Vec2d
 #include <tuple>
 #include <vector>
 #include <yaml-cpp/yaml.h>

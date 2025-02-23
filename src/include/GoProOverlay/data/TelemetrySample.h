@@ -3,8 +3,6 @@
 #include <bitset>
 #include <GoProTelem/SampleTypes.h>
 #include <memory>
-#include <opencv2/opencv.hpp>
-#include <type_traits>
 #include <vector>
 
 namespace gpo
@@ -112,8 +110,6 @@ namespace gpo
 
 		CalcSample calcSamp;
 	};
-
-	static_assert(std::is_standard_layout<TelemetrySample>::value && std::is_trivial<TelemetrySample>::value, "TelemetrySample must be a POD type");
 
 	using TelemetrySamples = std::vector<TelemetrySample>;
 	using TelemetrySamplesPtr = std::shared_ptr<TelemetrySamples>;

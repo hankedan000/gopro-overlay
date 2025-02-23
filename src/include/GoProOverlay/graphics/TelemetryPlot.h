@@ -1,10 +1,11 @@
 #ifndef TELEMETRYPLOT_H
 #define TELEMETRYPLOT_H
 
+#include <array>
+#include <qcustomplot.h>
 #include <vector>
 
 #include "GoProOverlay/data/DataSource.h"
-#include "qcustomplot.h"
 
 class TelemetryPlot : public QCustomPlot
 {
@@ -85,7 +86,7 @@ public:
 	static constexpr Y_ComponentEnumInfo YCEI_ECU_TPS          = {eYC_ECU_TPS,          "eYC_ECU_TPS",          "Throttle Position",    "throttle position",     "%"      };
 	static constexpr Y_ComponentEnumInfo YCEI_ECU_BOOST        = {eYC_ECU_BOOST,        "eYC_ECU_BOOST",        "Boost",                "boost",                 "psi"    };
 
-	static constexpr const Y_ComponentEnumInfo *Y_COMP_ENUM_INFOS[] = {
+	static constexpr std::array<const Y_ComponentEnumInfo *, 22> Y_COMP_ENUM_INFOS = {
 		&YCEI_UNKNOWN,
 		&YCEI_TIME,
 		&YCEI_ACCL_X,
@@ -109,10 +110,9 @@ public:
 		&YCEI_ECU_TPS,
 		&YCEI_ECU_BOOST
 	};
-	static constexpr size_t NUM_Y_COMP_ENUM_INFOS = sizeof(Y_COMP_ENUM_INFOS) / sizeof(Y_COMP_ENUM_INFOS[0]);
 
 private:
-	static constexpr Qt::GlobalColor DEFAULT_COLORS[] = {
+	static constexpr std::array<Qt::GlobalColor, 8> DEFAULT_COLORS = {
 		Qt::red,
 		Qt::green,
 		Qt::blue,
@@ -122,7 +122,6 @@ private:
 		Qt::black,
 		Qt::gray,
 	};
-	static constexpr size_t N_DEFAULT_COLORS = sizeof(DEFAULT_COLORS) / sizeof(DEFAULT_COLORS[0]);
 
 	struct SourceObjects
 	{

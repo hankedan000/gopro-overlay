@@ -5,7 +5,7 @@
 
 #include <functional>
 #include <GoProOverlay/data/TrackDataObjects.h>
-#include <opencv2/opencv.hpp>
+#include <opencv2/core/matx.hpp>
 
 namespace Ui {
 class TrackView;

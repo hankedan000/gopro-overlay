@@ -4,19 +4,20 @@
 #include <QColorDialog>
 #include <QPushButton>
 
-#include <opencv2/opencv.hpp>
+#include <opencv2/core/types.hpp> // for cv::Size
 
 namespace Ui {
 class ColorPicker;
 }
 
-class ColorPicker : public QPushButton
+class ColorPicker final : public QPushButton
 {
     Q_OBJECT
 
 public:
     explicit ColorPicker(QWidget *parent = nullptr);
-    ~ColorPicker();
+
+    ~ColorPicker() final;
 
     void
     setColor(

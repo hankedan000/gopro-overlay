@@ -1,6 +1,6 @@
 #pragma once
 
-#include <opencv2/opencv.hpp>
+#include <opencv2/core/matx.hpp> // for cv::Vec2d
 
 namespace utils
 {

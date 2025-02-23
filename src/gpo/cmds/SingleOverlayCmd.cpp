@@ -1,13 +1,15 @@
 #include "cmds/SingleOverlayCmd.h"
 
 #include <chrono>
+#include <cmath>
+#include <iostream>
+#include <opencv2/highgui.hpp>
+#include <spdlog/spdlog.h>
+#include <tqdm.h>
+
 #include "GoProOverlay/data/DataSource.h"
 #include "GoProOverlay/graphics/RenderEngine.h"
 #include "GoProOverlay/graphics/VideoObject.h"
-#include <cmath>
-#include <iostream>
-#include <spdlog/spdlog.h>
-#include <tqdm.h>
 
 namespace gpo
 {

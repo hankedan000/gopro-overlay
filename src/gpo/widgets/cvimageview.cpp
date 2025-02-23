@@ -1,6 +1,7 @@
 #include "cvimageview.h"
 #include "ui_cvimageview.h"
 
+#include <opencv2/imgproc.hpp>
 #include <QMouseEvent>
 
 CvImageView::CvImageView(QWidget *parent) :

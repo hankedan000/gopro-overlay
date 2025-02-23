@@ -72,7 +72,7 @@ TelemetryPlot::addSource(
 		gpo::TelemetrySourcePtr telemSrc,
 		bool replot)
 {
-	QColor color = DEFAULT_COLORS[sources_.size() % N_DEFAULT_COLORS];
+	QColor color = DEFAULT_COLORS[sources_.size() % DEFAULT_COLORS.size()];
 	addSource_(telemSrc,telemSrc->getDataSourceName(),color,AxisSide::eAS_Side1,replot);
 }
 			
@@ -394,7 +394,7 @@ TelemetryPlot::getAvailY_ComponentInfo(
 	gpo::TelemetrySourcePtr tSrc)
 {
 	std::vector<const TelemetryPlot::Y_ComponentEnumInfo *> infos;
-	infos.reserve(NUM_Y_COMP_ENUM_INFOS);
+	infos.reserve(Y_COMP_ENUM_INFOS.size());
 
     const auto &avail = tSrc->dataAvailable();
     if (avail.test(gpo::eDA_GOPRO_ACCL))

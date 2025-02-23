@@ -1,7 +1,8 @@
 #pragma once
 
-#include <opencv2/opencv.hpp>
-#include <spdlog/spdlog.h>
+#include <opencv2/core/mat.hpp>
+#include <opencv2/core/types.hpp> // for cv::Size
+#include <opencv2/imgproc.hpp>    // for cv::resize
 #include <string_view>
 #include <unordered_set>
 #include <vector>

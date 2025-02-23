@@ -1,6 +1,6 @@
 #pragma once
 
-#include <opencv2/opencv.hpp>
+#include <opencv2/core/types.hpp>
 #include <yaml-cpp/yaml.h>
 
 #define YAML_TO_FIELD(yaml_node, field_name, field) field = yaml_node[field_name].as<decltype(field)>()
