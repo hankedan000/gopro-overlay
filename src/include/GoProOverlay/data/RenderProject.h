@@ -1,9 +1,10 @@
 #pragma once
 
-#include <GoProOverlay/data/DataSource.h>
-#include <GoProOverlay/data/TrackDataObjects.h>
-#include <GoProOverlay/utils/YAML_Utils.h>
 #include <yaml-cpp/yaml.h>
+
+#include "GoProOverlay/data/DataSource.h"
+#include "GoProOverlay/data/TrackDataObjects.h"
+#include "GoProOverlay/utils/YAML_Utils.h"
 
 namespace gpo
 {

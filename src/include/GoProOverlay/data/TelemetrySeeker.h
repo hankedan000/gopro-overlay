@@ -97,13 +97,8 @@ namespace gpo
 
 		struct LapIndices
 		{
-			LapIndices()
-			 : entryIdx(-1)
-			 , exitIdx(-1)
-			{}
-
-			size_t entryIdx;
-			size_t exitIdx;
+			size_t entryIdx = -1;
+			size_t exitIdx = -1;
 		};
 		std::unordered_map<unsigned int, LapIndices> lapIndicesMap_;
 

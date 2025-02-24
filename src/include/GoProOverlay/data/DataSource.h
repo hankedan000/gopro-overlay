@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <memory>
 #include <vector>
-#include <yaml-cpp/yaml.h>
+#include <yaml-cpp/node/node.h>
 
 #include "TelemetrySeeker.h"
 #include "TelemetrySource.h"

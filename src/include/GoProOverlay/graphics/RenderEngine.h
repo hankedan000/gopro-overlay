@@ -21,7 +21,7 @@ namespace gpo
 	public:
 		RenderedEntity();
 
-		~RenderedEntity();
+		~RenderedEntity() override;
 
 		template<class DerivedRenderedObject>
 		static

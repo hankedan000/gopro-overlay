@@ -1,9 +1,10 @@
 #include "GoProOverlay/data/TrackDataObjects.h"
 
+#include <fstream>
+#include <map>
 #include <opencv2/core/matx.hpp>
 #include <spdlog/spdlog.h>
 #include <stdexcept>
-#include <fstream>
 
 #include "GoProOverlay/utils/LineSegmentUtils.h"
 
