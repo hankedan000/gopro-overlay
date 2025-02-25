@@ -1,5 +1,6 @@
 #include "GoProOverlay/graphics/TelemetryPrintoutObject.h"
 
+#include <opencv2/imgproc.hpp>
 #include <tracy/Tracy.hpp>
 
 namespace gpo

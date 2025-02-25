@@ -1,6 +1,7 @@
 #include "scrubbablevideo.h"
 #include "ui_scrubbablevideo.h"
 
+#include <opencv2/imgproc.hpp>
 #include <QMouseEvent>
 #include <spdlog/spdlog.h>
 

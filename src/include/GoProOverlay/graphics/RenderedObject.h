@@ -2,7 +2,6 @@
 
 #include <opencv2/core/mat.hpp>
 #include <opencv2/core/types.hpp> // for cv::Size
-#include <opencv2/imgproc.hpp>    // for cv::resize
 #include <string_view>
 #include <unordered_set>
 #include <vector>
@@ -17,10 +16,11 @@ namespace gpo
 {
 	#define RGBA_COLOR(R,G,B,A) cv::Scalar(B,G,R,A)
 
-	// use INTER_NEAREST because images that contain alpha channels tend
-	// to get distortion around edges with default of INTER_LINEAR
-	#define ALPHA_SAFE_RESIZE(SRC_IMG,DST_IMG,DST_SIZE) \
-		cv::resize(SRC_IMG,DST_IMG,DST_SIZE,0,0,cv::INTER_NEAREST)
+	void
+	alphaSafeResize(
+		cv::InputArray src,
+		cv::OutputArray dst,
+		cv::Size dsize);
 
 	const int DSR_ONE_OR_MORE = -1;
 	const int DSR_ZERO_OR_MORE = -2;

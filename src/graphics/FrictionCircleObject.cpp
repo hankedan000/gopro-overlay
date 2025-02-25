@@ -1,5 +1,6 @@
 #include "GoProOverlay/graphics/FrictionCircleObject.h"
 
+#include <opencv2/imgproc.hpp>
 #include <tracy/Tracy.hpp>
 
 #include "GoProOverlay/utils/OpenCV_Utils.h"

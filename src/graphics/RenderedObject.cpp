@@ -1,9 +1,21 @@
 #include "GoProOverlay/graphics/RenderedObject.h"
 
+#include <opencv2/imgproc.hpp> // for cv::resize
 #include <spdlog/spdlog.h>
 
 namespace gpo
 {
+
+	void
+	alphaSafeResize(
+		cv::InputArray src,
+		cv::OutputArray dst,
+		cv::Size dstSize)
+	{
+		// use INTER_NEAREST because images that contain alpha channels tend
+		// to get distortion around edges with default of INTER_LINEAR
+		cv::resize(src,dst,dstSize,0,0,cv::INTER_NEAREST);
+	}
 
 	ModifiableDrawObject::ModifiableDrawObject(
 		const std::string_view &className,
@@ -118,7 +130,7 @@ namespace gpo
 		cv::UMat *imgToRender = &outImg_;
 		if (renderSize.width != getNativeWidth() || renderSize.height != getNativeHeight())
 		{
-			ALPHA_SAFE_RESIZE(outImg_,scaledImg_,renderSize);
+			alphaSafeResize(outImg_,scaledImg_,renderSize);
 			imgToRender = &scaledImg_;
 		}
 
