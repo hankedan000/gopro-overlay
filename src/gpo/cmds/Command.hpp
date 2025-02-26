@@ -10,7 +10,9 @@ namespace gpo
     public:
         explicit
         Command(
-            const std::string & cmdName);
+            const std::string cmdName)
+         : parser_(cmdName, "1.0", argparse::default_arguments::help)
+        {}
 
         virtual
         ~Command() = default;
