@@ -26,9 +26,9 @@ set(QT_WIDGETS_SOURCES
 	renderentitypropertiestab.ui
 	renderthread.h
 	renderthread.cpp
-	scrubbablevideo.h
-	scrubbablevideo.cpp
-	scrubbablevideo.ui
+	ScrubbableVideo.h
+	ScrubbableVideo.cpp
+	ScrubbableVideo.ui
 	TelemetryMerger.h
 	TelemetryMerger.cpp
 	TelemetryMerger.ui

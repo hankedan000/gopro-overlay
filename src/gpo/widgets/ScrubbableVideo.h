@@ -15,6 +15,9 @@ class ScrubbableVideo : public QWidget, private gpo::ModifiableDrawObjectObserve
     Q_OBJECT
 
 public:
+    static constexpr unsigned int DEFAULT_WIDTH = 960;
+    static constexpr unsigned int DEFAULT_HEIGHT = 540;
+
     explicit ScrubbableVideo(QWidget *parent = nullptr);
 
     ~ScrubbableVideo();

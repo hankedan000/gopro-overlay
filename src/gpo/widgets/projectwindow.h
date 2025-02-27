@@ -16,7 +16,7 @@
 #include "renderenginewizard_topbottom.h"
 #include "renderentitypropertiestab.h"
 #include "renderthread.h"
-#include "scrubbablevideo.h"
+#include "ScrubbableVideo.h"
 #include "TelemetryPlotDialog.h"
 #include "trackeditor.h"
 

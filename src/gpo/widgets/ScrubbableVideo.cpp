@@ -1,6 +1,8 @@
-#include "scrubbablevideo.h"
-#include "ui_scrubbablevideo.h"
+#include "ScrubbableVideo.h"
+#include "cvimageview.h"
+#include "ui_ScrubbableVideo.h"
 
+#include <memory>
 #include <opencv2/imgproc.hpp>
 #include <QMouseEvent>
 #include <spdlog/spdlog.h>
@@ -48,10 +50,12 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
         // video preview displays a scaled version of the engine's rendered image.
         // for the mouse event location to be comparable, we need to map it into
         // render image's coordinate space. (RoF - Render over Frame)
-        auto renderSize = engine_->getRenderSize();
-        auto frameSize = getSize();
-        double scaleFactorRoF = (double)(renderSize.height) / frameSize.height;
-        auto evtPosMapped = QPoint(scaleFactorRoF * event->x(), scaleFactorRoF * event->y());
+        const auto renderSize = engine_->getRenderSize();
+        const auto frameSize = getSize();
+        const double scaleFactorRoF = static_cast<double>(renderSize.height) / frameSize.height;
+        const auto evtPosMapped = QPoint(
+            static_cast<int>(scaleFactorRoF * event->x()),
+            static_cast<int>(scaleFactorRoF * event->y()));
         spdlog::debug("=======================");
         spdlog::debug("frameSize_: w = {}; h = {};",frameSize.width,frameSize.height);
         spdlog::debug("renderSize: w = {}; h = {};",renderSize.width,renderSize.height);
@@ -64,16 +68,12 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
 
         if (grabbedEntity_ == nullptr)
         {
-            // this is computed such that the bounding box will be at least 1px
-            // thick even in the scaled preview image size.
-            unsigned int boundingBoxThickness = std::ceil(scaleFactorRoF * 1);
-
             // not holding an entity yet, so perform mouse focusing logic
             bool focusAcquired = false;
-            auto prevFocusedEntity = focusedEntity_;
+            const auto prevFocusedEntity = focusedEntity_;
             // iterate backwards because entities that are rendered above others
             // should grab the mouse first
-            for (int e=(engine_->entityCount()-1); e>=0; e--)
+            for (auto e=static_cast<ssize_t>(engine_->entityCount()-1); e>=0; e--)
             {
                 const auto &entity = engine_->getEntity(e);
                 if ( ! entity->renderObject()->isVisible())
@@ -85,9 +85,13 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
                     evtPosMapped.x() >= entity->renderPosition().x && evtPosMapped.x() <= (entity->renderPosition().x + entity->renderSize().width) &&
                     evtPosMapped.y() >= entity->renderPosition().y && evtPosMapped.y() <= (entity->renderPosition().y + entity->renderSize().height))
                 {
+                    // this is computed such that the bounding box will be at least 1px
+                    // thick even in the scaled preview image size.
+                    const auto thickness = static_cast<unsigned int>(std::ceil(scaleFactorRoF * 1));
+                    
                     focusedEntity_ = entity;
                     entity->renderObject()->setBoundingBoxVisible(true);
-                    entity->renderObject()->setBoundingBoxThickness(boundingBoxThickness);
+                    entity->renderObject()->setBoundingBoxThickness(thickness);
                     focusAcquired = true;
                 }
                 else
@@ -107,8 +111,8 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
         else
         {
             // holding an entity, so move entity based on mouse location
-            QPoint mouseDelta = event->pos() - mousePosWhenGrabbed_;
-            QPoint entityNewPos = entityPosWhenGrabbed_ + mouseDelta * scaleFactorRoF;
+            const QPoint mouseDelta = event->pos() - mousePosWhenGrabbed_;
+            const QPoint entityNewPos = entityPosWhenGrabbed_ + mouseDelta * scaleFactorRoF;
             grabbedEntity_->setRenderPosition(entityNewPos.x(), entityNewPos.y());
             rerender = true;
         }
@@ -133,7 +137,7 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
     connect(imgView_, &CvImageView::onMouseRelease, this, [this](QMouseEvent *event){
         if (grabbedEntity_)
         {
-            // determine in the entity was moved while it was being held
+            // determine if the entity was moved while it was being held
             QPoint moveVector(grabbedEntity_->renderPosition().x,grabbedEntity_->renderPosition().y);
             moveVector -= entityPosWhenGrabbed_;
             if (moveVector.manhattanLength() > 0)
@@ -145,7 +149,7 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
         }
     });
 
-    setSize(cv::Size(960,540));// default size
+    setSize(cv::Size(DEFAULT_WIDTH,DEFAULT_HEIGHT));
 }
 
 ScrubbableVideo::~ScrubbableVideo()
