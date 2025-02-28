@@ -5,15 +5,11 @@
 #include <memory>
 #include <opencv2/imgproc.hpp>
 #include <QMouseEvent>
-#include <spdlog/spdlog.h>
 
 ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::ScrubbableVideo),
-    imgView_(new CvImageView(this)),
-    engine_(nullptr),
-    focusedEntity_(nullptr),
-    grabbedEntity_(nullptr)
+    imgView_(new CvImageView(this))
 {
     ui->setupUi(this);
     ui->mainLayout->layout()->addWidget(imgView_);
@@ -40,6 +36,36 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
         showImage(engine_->getFrame());
     });
 
+    connect(ui->scrubSlider, &QSlider::valueChanged, this, [this](int newScrubPosition){
+        if (isInitialScrub_)
+        {
+            isInitialScrub_ = false;
+            return;
+        }
+        else if ( ! engine_)
+        {
+            return;
+        }
+
+        // compute seek direction and # of frames to seek by
+        bool seekForward = false;
+        size_t seekAmount = 0;
+        if (newScrubPosition > prevScrubPosition_)
+        {
+            seekForward = true;
+            seekAmount = newScrubPosition - prevScrubPosition_;
+        }
+        else
+        {
+            seekForward = false;
+            seekAmount = prevScrubPosition_ - newScrubPosition;
+        }
+
+        // seek to new position (rerender will automatically be queued upon modification)
+        engine_->getSeeker()->seekAllRelative(seekAmount, seekForward);
+        prevScrubPosition_ = newScrubPosition;
+    });
+
     // CvImageView mouse event handlers
     connect(imgView_, &CvImageView::onMouseMove, this, [this](QMouseEvent *event){
         if (engine_ == nullptr)
@@ -56,13 +82,6 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
         const auto evtPosMapped = QPoint(
             static_cast<int>(scaleFactorRoF * event->x()),
             static_cast<int>(scaleFactorRoF * event->y()));
-        spdlog::debug("=======================");
-        spdlog::debug("frameSize_: w = {}; h = {};",frameSize.width,frameSize.height);
-        spdlog::debug("renderSize: w = {}; h = {};",renderSize.width,renderSize.height);
-        spdlog::debug("scaleFactorRoF = {};",scaleFactorRoF);
-        spdlog::debug("evtPosMapped: x = {}; y = {}",evtPosMapped.x(),evtPosMapped.y());
-        spdlog::debug("event: x = {}; y = {}",event->x(),event->y());
-        spdlog::debug("=======================");
 
         bool rerender = false;
 
@@ -159,7 +178,7 @@ ScrubbableVideo::~ScrubbableVideo()
 
 void
 ScrubbableVideo::setSize(
-        cv::Size size)
+    cv::Size size)
 {
     frameBuffer_.create(size.height,size.width,CV_8UC3);
 
@@ -177,7 +196,7 @@ ScrubbableVideo::getSize() const
 
 void
 ScrubbableVideo::showImage(
-        const cv::UMat &img)
+    const cv::UMat &img)
 {
     cv::resize(img,frameBuffer_,getSize());
     imgView_->setImage(frameBuffer_);
@@ -185,12 +204,13 @@ ScrubbableVideo::showImage(
 
 void
 ScrubbableVideo::setEngine(
-        gpo::RenderEnginePtr engine)
+    gpo::RenderEnginePtr engine)
 {
     if (engine_)
     {
-        // no longer observe the old engine
-        engine_->removeObserver(this);
+        // no longer observe the old engine and its seeker
+        engine_->removeObserver(static_cast<gpo::ModifiableDrawObjectObserver *>(this));
+        engine_->getSeeker()->removeObserver(this);
     }
 
     engine_ = engine;
@@ -200,14 +220,46 @@ ScrubbableVideo::setEngine(
 
     if (engine_)
     {
-        // begin observing the new engine
-        engine_->addObserver(this);
+        // observe new engine for changes so we can rerender when it's modified
+        engine_->addObserver(static_cast<gpo::ModifiableDrawObjectObserver *>(this));
+
+        // observe new GroupedSeeker so we can update our scrubBar's range
+        auto gSeeker = engine_->getSeeker();
+        gSeeker->addObserver(this);
+        updateScrubBarRange(gSeeker);// force update to scrubBar now
     }
 }
 
 void
 ScrubbableVideo::onNeedsRedraw(
-        gpo::ModifiableDrawObject *drawable)
+    gpo::ModifiableDrawObject *drawable)
 {
     showImage(engine_->getFrame());
+}
+
+void
+ScrubbableVideo::onModified(
+    gpo::ModifiableObject * /*modifiable*/)
+{
+    // only modifiable object we observe is the GroupedSeeker, so update
+    // the scrubBar's range to match any potential modifications
+    updateScrubBarRange(engine_->getSeeker());
+}
+
+void
+ScrubbableVideo::updateScrubBarRange(
+    const gpo::GroupedSeekerPtr & gSeeker)
+{
+    const auto[backLimit, forwardLimit] = gSeeker->relativeSeekLimits();
+    const auto newRange = backLimit + forwardLimit + 1;// +1 for current frame
+
+    const auto oldRange = ui->scrubSlider->maximum();
+    if (static_cast<int>(newRange) != oldRange)
+    {
+        // update with new range
+        isInitialScrub_ = true;
+        ui->scrubSlider->setRange(0, static_cast<int>(newRange));
+        ui->scrubSlider->setValue(static_cast<int>(backLimit));
+        prevScrubPosition_ = static_cast<int>(backLimit);
+    }
 }

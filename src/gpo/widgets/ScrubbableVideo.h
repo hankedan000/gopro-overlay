@@ -3,6 +3,8 @@
 
 #include <QWidget>
 
+#include "GoProOverlay/data/GroupedSeeker.h"
+#include "GoProOverlay/data/ModifiableObject.h"
 #include "cvimageview.h"
 #include "GoProOverlay/graphics/RenderEngine.h"
 
@@ -10,7 +12,10 @@ namespace Ui {
 class ScrubbableVideo;
 }
 
-class ScrubbableVideo : public QWidget, private gpo::ModifiableDrawObjectObserver
+class ScrubbableVideo :
+        public QWidget,
+        private gpo::ModifiableDrawObjectObserver,
+        private gpo::ModifiableObjectObserver
 {
     Q_OBJECT
 
@@ -20,37 +25,45 @@ public:
 
     explicit ScrubbableVideo(QWidget *parent = nullptr);
 
-    ~ScrubbableVideo();
+    ~ScrubbableVideo() override;
 
     void
     setSize(
-            cv::Size size);
+        cv::Size size);
 
     cv::Size
     getSize() const;
 
     void
     showImage(
-            const cv::UMat &img);
+        const cv::UMat &img);
 
     void
     setEngine(
-            gpo::RenderEnginePtr engine);
+        gpo::RenderEnginePtr engine);
 
 signals:
     void
     onEntitySelected(
-            gpo::RenderedEntity *entity);
+        gpo::RenderedEntity *entity);
 
     void
     onEntityMoved(
-            gpo::RenderedEntity *entity,
-            QPoint moveVector);
+        gpo::RenderedEntity *entity,
+        QPoint moveVector);
 
 private:
     void
     onNeedsRedraw(
-            gpo::ModifiableDrawObject *drawable) override;
+        gpo::ModifiableDrawObject *drawable) override;
+
+    void
+    onModified(
+        gpo::ModifiableObject *modifiable) override;
+
+    void
+    updateScrubBarRange(
+        const gpo::GroupedSeekerPtr & gSeeker);
 
 private:
     Ui::ScrubbableVideo *ui;
@@ -66,6 +79,15 @@ private:
     QPoint mousePosWhenGrabbed_;
     // the entities original render location when mouse press event occurred
     QPoint entityPosWhenGrabbed_;
+
+    // stores the value of the scrubBar from the previous onValueChanged() signal.
+    // used to compute a relative offset to advance the engine's GroupedSeeker.
+    int prevScrubPosition_ = 0;
+
+    // true if the scrubBar value update is from an initial change to the scrubBar's
+    // total range. we use this to avoid performing a double relative seek when
+    // RenderEngine is set.
+    bool isInitialScrub_ = true;
 
 };
 
