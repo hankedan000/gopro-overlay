@@ -145,9 +145,9 @@ RenderThread::renderThreadMain(
     gpo::GroupedSeekerPtr gSeeker)
 {
     // get new limits after lead-in seeking
-    auto seekLimits = gSeeker->relativeSeekLimits();
+    const auto seekLimits = gSeeker->relativeSeekLimits();
     qulonglong progress = 0;
-    qulonglong total = seekLimits.second;
+    qulonglong total = seekLimits.forwards;
     while ( ! stopRenderThread_ && progress < total)
     {
         RenderResources *res = nullptr;

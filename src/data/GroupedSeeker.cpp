@@ -2,6 +2,7 @@
 
 #include <limits>
 #include <spdlog/spdlog.h>
+#include <stdexcept>
 
 namespace gpo
 {
@@ -19,20 +20,12 @@ namespace gpo
 		clearNeedsSave();
 	}
 
-	void
+	bool
 	GroupedSeeker::addSeeker(
 		TelemetrySeekerPtr seeker)
 	{
-		seekers_.push_back(seeker);
-		markObjectModified(false,true);
-	}
-
-	bool
-	GroupedSeeker::addSeekerUnique(
-		TelemetrySeekerPtr seeker)
-	{
 		bool isNewSeeker = true;
-		for (auto mySeeker : seekers_)
+		for (const auto &mySeeker : seekers_)
 		{
 			if (mySeeker == seeker)
 			{
@@ -71,7 +64,7 @@ namespace gpo
 	}
 
 	bool
-	GroupedSeeker::removeAllSeekers(
+	GroupedSeeker::removeSeeker(
 		TelemetrySeekerPtr seeker)
 	{
 		bool removed = false;
@@ -100,7 +93,7 @@ namespace gpo
 	{
 		if (onlyIfAllHavePrev)
 		{
-			for (auto &seeker : seekers_)
+			for (const auto &seeker : seekers_)
 			{
 				if ( ! seeker->hasPrev())
 				{
@@ -109,7 +102,7 @@ namespace gpo
 			}
 		}
 
-		for (auto &seeker : seekers_)
+		for (const auto &seeker : seekers_)
 		{
 			seeker->prev();
 		}
@@ -123,7 +116,7 @@ namespace gpo
 	{
 		if (onlyIfAllHaveNext)
 		{
-			for (auto &seeker : seekers_)
+			for (const auto &seeker : seekers_)
 			{
 				if ( ! seeker->hasNext())
 				{
@@ -132,7 +125,7 @@ namespace gpo
 			}
 		}
 
-		for (auto &seeker : seekers_)
+		for (const auto &seeker : seekers_)
 		{
 			seeker->next();
 		}
@@ -178,41 +171,37 @@ namespace gpo
 			case gpo::RenderAlignmentType_E::eRAT_None:
 				seekAllToIdx(0);
 				break;
-			default:
-				spdlog::error("RenderAlignmentType_E ({}) is not supported!",(int)renderAlignInfo.type);
+			case gpo::RenderAlignmentType_E::eRAT_Sector:
+				throw std::invalid_argument("eRAT_Sector is not supported");
 				break;
 		}
 	}
 
 	void
-	GroupedSeeker::seekAllToIdx(
-		size_t idx)
-	{
-		for (auto &seeker : seekers_)
-		{
-			seeker->seekToIdx(idx);
-		}
-		markObjectModified(false,false);
-	}
-
-	void
 	GroupedSeeker::seekAllRelative(
 		size_t amount,
-		bool forward)
+		const SeekDirection dir)
 	{
-		auto limits = relativeSeekLimits();
-		if (forward && amount > limits.second)
+		const auto limits = relativeSeekLimits();
+		switch (dir)
 		{
-			amount = limits.second;
-		}
-		else if ( ! forward && amount > limits.first)
-		{
-			amount = limits.first;
+			case gpo::SeekDirection::Forward:
+				if (amount > limits.forwards)
+				{
+					amount = limits.forwards;
+				}
+				break;
+			case gpo::SeekDirection::Backward:
+				if (amount > limits.backwards)
+				{
+					amount = limits.backwards;
+				}
+				break;
 		}
 
-		for (auto &seeker : seekers_)
+		for (const auto &seeker : seekers_)
 		{
-			seeker->seekRelative(amount,forward);
+			seeker->seekRelative(amount, dir);
 		}
 		markObjectModified(false,false);
 	}
@@ -222,16 +211,16 @@ namespace gpo
 		double offset_secs)
 	{
 		auto limits = relativeSeekLimitsTime();
-		if (offset_secs > 0.0 && offset_secs > limits.second)
+		if (offset_secs > 0.0 && offset_secs > limits.forwards())
 		{
-			offset_secs = limits.second;
+			offset_secs = limits.forwards();
 		}
-		else if (offset_secs < 0.0 && offset_secs < limits.first)
+		else if (offset_secs < 0.0 && offset_secs < limits.backwards())
 		{
-			offset_secs = limits.first;
+			offset_secs = limits.backwards();
 		}
 
-		for (auto &seeker : seekers_)
+		for (const auto &seeker : seekers_)
 		{
 			seeker->seekRelativeTime(offset_secs);
 		}
@@ -241,7 +230,7 @@ namespace gpo
 	void
 	GroupedSeeker::setAlignmentHere()
 	{
-		for (auto &seeker : seekers_)
+		for (const auto &seeker : seekers_)
 		{
 			seeker->setAlignmentIdx(seeker->seekedIdx());
 		}
@@ -302,7 +291,7 @@ namespace gpo
 			}
 		}
 
-		for (auto &seeker : seekers_)
+		for (const auto &seeker : seekers_)
 		{
 			seeker->seekToLapEntry(lap);
 		}
@@ -332,7 +321,7 @@ namespace gpo
 			}
 		}
 
-		for (auto &seeker : seekers_)
+		for (const auto &seeker : seekers_)
 		{
 			seeker->seekToLapExit(lap);
 		}
@@ -340,7 +329,7 @@ namespace gpo
 		return true;
 	}
 
-	std::pair<size_t, size_t>
+	RelativeFrameLimits
 	GroupedSeeker::relativeSeekLimits() const
 	{
 		if (seekers_.empty())
@@ -348,41 +337,41 @@ namespace gpo
 			return {0,0};
 		}
 
-		std::pair<size_t, size_t> limits;
-		limits.first = std::numeric_limits<decltype(limits.first)>::max();
-		limits.second = std::numeric_limits<decltype(limits.second)>::max();
+		RelativeFrameLimits limits;
+		limits.backwards = std::numeric_limits<decltype(limits.backwards)>::max();
+		limits.forwards = std::numeric_limits<decltype(limits.forwards)>::max();
 		for (auto &seeker : seekers_)
 		{
 			if (seeker->size() == 0)
 			{
 				return {0,0};// corner case where a seeker doesn't have any samples
 			}
-			limits.first = std::min(limits.first, seeker->seekedIdx());
-			limits.second = std::min(limits.second, (seeker->size() - seeker->seekedIdx() - 1));
+			limits.backwards = std::min(limits.backwards, seeker->seekedIdx());
+			limits.forwards = std::min(limits.forwards, (seeker->size() - seeker->seekedIdx() - 1));
 		}
 		return limits;
 	}
 
-	std::pair<double, double>
+	RelativeTimeLimits
 	GroupedSeeker::relativeSeekLimitsTime() const
 	{
 		if (seekers_.empty())
 		{
-			return {0.0,0.0};
+			return RelativeTimeLimits();
 		}
 
-		std::pair<double,double> timeLimits;
-		timeLimits.first = std::numeric_limits<decltype(timeLimits.first)>::max();
-		timeLimits.second = std::numeric_limits<decltype(timeLimits.second)>::min();
-		auto limits = relativeSeekLimits();
+		RelativeTimeLimits timeLimits;
+		timeLimits.setBackwards(std::numeric_limits<decltype(timeLimits.backwards())>::max());
+		timeLimits.setForwards(std::numeric_limits<decltype(timeLimits.forwards())>::min());
+		const auto limits = relativeSeekLimits();
 		for (auto &seeker : seekers_)
 		{
 			const auto seekedIdx = seeker->seekedIdx();
 			const auto currTime = seeker->getTimeAt(seekedIdx);
-			const auto backwardsTimeLimit = seeker->getTimeAt(seekedIdx - limits.first) - currTime;
-			const auto forwardsTimeLimit = seeker->getTimeAt(seekedIdx + limits.second) - currTime;
-			timeLimits.first = std::min(timeLimits.first,backwardsTimeLimit);
-			timeLimits.second = std::max(timeLimits.second,forwardsTimeLimit);
+			const auto backwardsTimeLimit = seeker->getTimeAt(seekedIdx - limits.backwards) - currTime;
+			const auto forwardsTimeLimit = seeker->getTimeAt(seekedIdx + limits.forwards) - currTime;
+			timeLimits.setBackwards(std::min(timeLimits.backwards(), backwardsTimeLimit));
+			timeLimits.setForwards(std::max(timeLimits.forwards(),forwardsTimeLimit));
 		}
 		return timeLimits;
 	}
@@ -399,5 +388,16 @@ namespace gpo
         bool unnecessaryIsOkay)
 	{
 		return true;
+	}
+
+	void
+	GroupedSeeker::seekAllToIdx(
+		size_t idx)
+	{
+		for (const auto &seeker : seekers_)
+		{
+			seeker->seekToIdx(idx);
+		}
+		markObjectModified(false,false);
 	}
 }

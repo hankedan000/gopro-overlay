@@ -3,13 +3,16 @@
 #include <memory>
 #include <unordered_map>
 
-#include "TelemetrySample.h"
-
 namespace gpo
 {
 	// forward declaration
 	class DataSource;
 	using DataSourcePtr = std::shared_ptr<DataSource>;
+
+	enum struct SeekDirection
+	{
+		Forward, Backward
+	};
 
 	class TelemetrySeeker
 	{
@@ -45,8 +48,8 @@ namespace gpo
 
 		void
 		seekRelative(
-			size_t amount,
-			bool forward);
+			const size_t amount,
+			const SeekDirection dir);
 
 		void
 		seekRelativeTime(

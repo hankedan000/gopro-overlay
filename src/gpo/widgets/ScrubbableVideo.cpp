@@ -250,16 +250,15 @@ void
 ScrubbableVideo::updateScrubBarRange(
     const gpo::GroupedSeekerPtr & gSeeker)
 {
-    const auto[backLimit, forwardLimit] = gSeeker->relativeSeekLimits();
-    const auto newRange = backLimit + forwardLimit + 1;// +1 for current frame
-
+    const auto limits = gSeeker->relativeSeekLimits();
+    const auto newRange = limits.totalRange();
     const auto oldRange = ui->scrubSlider->maximum();
     if (static_cast<int>(newRange) != oldRange)
     {
         // update with new range
         isInitialScrub_ = true;
         ui->scrubSlider->setRange(0, static_cast<int>(newRange));
-        ui->scrubSlider->setValue(static_cast<int>(backLimit));
-        prevScrubPosition_ = static_cast<int>(backLimit);
+        ui->scrubSlider->setValue(static_cast<int>(limits.backwards));
+        prevScrubPosition_ = static_cast<int>(limits.backwards);
     }
 }

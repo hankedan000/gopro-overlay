@@ -78,30 +78,31 @@ namespace gpo
 
 	void
 	TelemetrySeeker::seekRelative(
-		size_t amount,
-		bool forward)
+		const size_t amount,
+		const SeekDirection dir)
 	{
-		if (forward)
+		switch (dir)
 		{
-			if ((amount + seekedIdx_) < size())
-			{
-				seekedIdx_ += amount;
-			}
-			else
-			{
-				seekedIdx_ = size() - 1;
-			}
-		}
-		else
-		{
-			if (amount > seekedIdx_)
-			{
-				seekedIdx_ = 0;
-			}
-			else
-			{
-				seekedIdx_ -= amount;
-			}
+			case gpo::SeekDirection::Forward:
+				if ((amount + seekedIdx_) < size())
+				{
+					seekedIdx_ += amount;
+				}
+				else
+				{
+					seekedIdx_ = size() - 1;
+				}
+				break;
+			case gpo::SeekDirection::Backward:
+				if (amount > seekedIdx_)
+				{
+					seekedIdx_ = 0;
+				}
+				else
+				{
+					seekedIdx_ -= amount;
+				}
+				break;
 		}
 	}
 

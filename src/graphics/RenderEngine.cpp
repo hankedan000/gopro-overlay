@@ -225,7 +225,7 @@ namespace gpo
 		{
 			if (refCountEntry.second == 1)
 			{
-				gSeeker_->removeAllSeekers(refCountEntry.first);
+				gSeeker_->removeSeeker(refCountEntry.first);
 			}
 		}
 
@@ -505,13 +505,13 @@ namespace gpo
 		{
 			auto vSrc = re->renderObject()->getVideoSource(i);
 			auto vSeeker = vSrc->seeker();
-			gSeeker_->addSeekerUnique(vSeeker);
+			gSeeker_->addSeeker(vSeeker);
 		}
 		for (size_t i=0; i<re->renderObject()->numTelemetrySources(); i++)
 		{
 			auto tSrc = re->renderObject()->getTelemetrySource(i);
 			auto tSeeker = tSrc->seeker();
-			gSeeker_->addSeekerUnique(tSeeker);
+			gSeeker_->addSeeker(tSeeker);
 		}
 	}
 

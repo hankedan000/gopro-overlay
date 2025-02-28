@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <stdexcept>
 #include <vector>
 
 #include <GoProOverlay/data/RenderProject.h>
@@ -8,6 +9,73 @@
 
 namespace gpo
 {
+	struct RelativeFrameLimits
+	{
+		size_t backwards = 0;
+		size_t forwards = 0;
+
+		RelativeFrameLimits() = default;
+
+		inline
+		size_t
+		totalRange() const
+		{
+			return backwards + forwards + 1;
+		}
+	};
+
+	struct RelativeTimeLimits
+	{
+		RelativeTimeLimits() = default;
+
+		RelativeTimeLimits(
+			const double backwards,
+			const double forwards)
+		{
+			setBackwards(backwards);
+			setForwards(forwards);
+		}
+
+		inline auto backwards() const {return backwards_;}
+		inline auto forwards() const {return forwards_;}
+
+		inline
+		void
+		setBackwards(
+			const double limit)
+		{
+			if (limit > 0.0)
+			{
+				throw std::invalid_argument("backwards limit can't be positive");
+			}
+			backwards_ = limit;
+		}
+
+		inline
+		void
+		setForwards(
+			const double limit)
+		{
+			if (limit < 0.0)
+			{
+				throw std::invalid_argument("forwards limit can't be negative");
+			}
+			forwards_ = limit;
+		}
+
+		inline
+		double
+		totalRange() const
+		{
+			return backwards_ + forwards_;
+		}
+
+	private:
+		double backwards_ = 0.0;
+		double forwards_ = 0.0;
+
+	};
+
 	class GroupedSeeker : public ModifiableObject
 	{
 	public:
@@ -16,12 +84,8 @@ namespace gpo
 		void
 		clear();
 
-		void
-		addSeeker(
-			TelemetrySeekerPtr seeker);
-
 		bool
-		addSeekerUnique(
+		addSeeker(
 			TelemetrySeekerPtr seeker);
 
 		size_t
@@ -36,7 +100,7 @@ namespace gpo
 			size_t idx);
 
 		/**
-		 * Removes all seeker that match the following
+		 * Removes seeker that match the following
 		 * 
 		 * @param[in] seeker
 		 * the seeker pointer to remove
@@ -45,7 +109,7 @@ namespace gpo
 		 * true if any were removed. false otherwise.
 		 */
 		bool
-		removeAllSeekers(
+		removeSeeker(
 			TelemetrySeekerPtr seeker);
 
 		void
@@ -62,13 +126,9 @@ namespace gpo
 			const RenderAlignmentInfo &renderAlignInfo);
 
 		void
-		seekAllToIdx(
-			size_t idx);
-
-		void
 		seekAllRelative(
 			size_t amount,
-			bool forward);
+			const SeekDirection dir);
 
 		void
 		seekAllRelativeTime(
@@ -118,7 +178,7 @@ namespace gpo
 		 *      <----- relative seek limits ---->
 		 *     +10        0                    +22
 		 */
-		std::pair<size_t, size_t>
+		RelativeFrameLimits
 		relativeSeekLimits() const;
 
 		/**
@@ -126,7 +186,7 @@ namespace gpo
 		 * Intended to be used with the seekAllRelativeTime().
 		 * Note: returned times are signed, so the first will be negative.
 		 */
-		std::pair<double, double>
+		RelativeTimeLimits
 		relativeSeekLimitsTime() const;
 
 	protected:
@@ -137,6 +197,10 @@ namespace gpo
         bool
         subclassSaveModifications(
         	bool unnecessaryIsOkay) override;
+
+		void
+		seekAllToIdx(
+			size_t idx);
 
 	private:
 		std::vector<TelemetrySeekerPtr> seekers_;
