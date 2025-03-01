@@ -9,7 +9,7 @@
 #include "GoProOverlay/graphics/RenderEngine.h"
 
 namespace Ui {
-class ScrubbableVideo;
+    class ScrubbableVideo;
 }
 
 class ScrubbableVideo :
@@ -84,10 +84,10 @@ private:
     // used to compute a relative offset to advance the engine's GroupedSeeker.
     int prevScrubPosition_ = 0;
 
-    // true if the scrubBar value update is from an initial change to the scrubBar's
-    // total range. we use this to avoid performing a double relative seek when
-    // RenderEngine is set.
-    bool isInitialScrub_ = true;
+    // true if the scrubBar value update is from an internal change to the scrubBar's
+    // range and/or vale. this avoids a double relative seek when we sync the scrub
+    // bar position within the GroupedSeeker's onModified() callback.
+    bool isInternalScrubUpdate_ = false;
 
 };
 

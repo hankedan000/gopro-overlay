@@ -2,7 +2,6 @@
 #include "cvimageview.h"
 #include "ui_ScrubbableVideo.h"
 
-#include <memory>
 #include <opencv2/imgproc.hpp>
 #include <QMouseEvent>
 
@@ -22,8 +21,6 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
         }
 
         engine_->getSeeker()->nextAll();
-        engine_->render();
-        showImage(engine_->getFrame());
     });
     connect(ui->prevFrameButton, &QToolButton::pressed, this, [this]{
         if ( ! engine_)
@@ -32,14 +29,12 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
         }
 
         engine_->getSeeker()->prevAll();
-        engine_->render();
-        showImage(engine_->getFrame());
     });
 
     connect(ui->scrubSlider, &QSlider::valueChanged, this, [this](int newScrubPosition){
-        if (isInitialScrub_)
+        if (isInternalScrubUpdate_)
         {
-            isInitialScrub_ = false;
+            isInternalScrubUpdate_ = false;
             return;
         }
         else if ( ! engine_)
@@ -48,21 +43,20 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
         }
 
         // compute seek direction and # of frames to seek by
-        bool seekForward = false;
+        auto seekDir = gpo::SeekDirection::Forward;
         size_t seekAmount = 0;
         if (newScrubPosition > prevScrubPosition_)
         {
-            seekForward = true;
             seekAmount = newScrubPosition - prevScrubPosition_;
         }
         else
         {
-            seekForward = false;
+            seekDir = gpo::SeekDirection::Backward;
             seekAmount = prevScrubPosition_ - newScrubPosition;
         }
 
         // seek to new position (rerender will automatically be queued upon modification)
-        engine_->getSeeker()->seekAllRelative(seekAmount, seekForward);
+        engine_->getSeeker()->seekAllRelative(seekAmount, seekDir);
         prevScrubPosition_ = newScrubPosition;
     });
 
@@ -252,13 +246,10 @@ ScrubbableVideo::updateScrubBarRange(
 {
     const auto limits = gSeeker->relativeSeekLimits();
     const auto newRange = limits.totalRange();
-    const auto oldRange = ui->scrubSlider->maximum();
-    if (static_cast<int>(newRange) != oldRange)
-    {
-        // update with new range
-        isInitialScrub_ = true;
-        ui->scrubSlider->setRange(0, static_cast<int>(newRange));
-        ui->scrubSlider->setValue(static_cast<int>(limits.backwards));
-        prevScrubPosition_ = static_cast<int>(limits.backwards);
-    }
+
+    // update with new range and scrub position
+    isInternalScrubUpdate_ = true;
+    ui->scrubSlider->setRange(0, static_cast<int>(newRange));
+    ui->scrubSlider->setValue(static_cast<int>(limits.backwards));
+    prevScrubPosition_ = static_cast<int>(limits.backwards);
 }
