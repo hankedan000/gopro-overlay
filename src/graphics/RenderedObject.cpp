@@ -78,7 +78,7 @@ namespace gpo
 	}
 
 	RenderedObject::RenderedObject(
-		const std::string &typeName,
+		const std::string_view &typeName,
 		int width,
 		int height)
 	 : ModifiableDrawObject(typeName,false,true)

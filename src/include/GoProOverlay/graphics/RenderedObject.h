@@ -166,7 +166,7 @@ namespace gpo
 	{
 	public:
 		RenderedObject(
-			const std::string &typeName,
+			const std::string_view &typeName,
 			int width,
 			int height);
 
