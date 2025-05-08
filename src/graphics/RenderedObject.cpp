@@ -17,6 +17,11 @@ namespace gpo
 		cv::resize(src,dst,dstSize,0,0,cv::INTER_NEAREST);
 	}
 
+	void
+	ModifiableDrawObjectObserver::onNeedsRedraw(
+		ModifiableDrawObject * /* drawable */)
+	{}
+
 	ModifiableDrawObject::ModifiableDrawObject(
 		const std::string_view &className,
 		bool supportsApplyingModifications,
@@ -578,9 +583,9 @@ namespace gpo
 
 	bool
 	RenderedObject::subclassSaveModifications(
-        bool unnecessaryIsOkay)
+        bool /* unnecessaryIsOkay */)
 	{
-		// we don't do any saving outself, but we assume the RenderEngine
+		// we don't do any saving ourself, but we assume the RenderEngine
 		// saved us correctly
 		return true;
 	}

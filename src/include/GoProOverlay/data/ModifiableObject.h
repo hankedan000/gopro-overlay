@@ -18,42 +18,27 @@ namespace gpo
         virtual
         void
         onModified(
-            ModifiableObject *modifiable)
-        {
-            // base impl does nothing. child class can override if needed.
-        }
+            ModifiableObject * modifiable);
         
         virtual
         void
         onModificationsApplied(
-            ModifiableObject *modifiable)
-        {
-            // base impl does nothing. child class can override if needed.
-        }
+            ModifiableObject * modifiable);
         
         virtual
         void
         onModificationsSaved(
-            ModifiableObject *modifiable)
-        {
-            // base impl does nothing. child class can override if needed.
-        }
+            ModifiableObject * modifiable);
 
         virtual
         void
         onSavePathChanged(
-            ModifiableObject *modifiable)
-        {
-            // base impl does nothing. child class can override if needed.
-        }
+            ModifiableObject * modifiable);
 
         virtual
         void
         onBeforeDestroy(
-            ModifiableObject *modifiable)
-        {
-            // base impl does nothing. child class can override if needed.
-        }
+            ModifiableObject * modifiable);
     };
 
     class ModifiableObject

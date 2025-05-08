@@ -46,7 +46,7 @@ TrackView::~TrackView()
 
 void
 TrackView::paintEvent(
-        QPaintEvent *event)
+        QPaintEvent * /* event */)
 {
     if ( ! track_)
     {
@@ -107,8 +107,8 @@ TrackView::paintEvent(
 
 bool
 TrackView::eventFilter(
-        QObject *obj,
-        QEvent *event)
+        QObject * /* obj */,
+        QEvent * event)
 {
     bool takeEvent = false;
     if (track_ == nullptr)
@@ -191,7 +191,7 @@ TrackView::eventFilter(
         if (pannable())
         {
             spdlog::debug("panning began");
-            QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
+            auto mouseEvent = static_cast<const QMouseEvent *>(event);
             pan_.mouseDownLoc_px = mouseEvent->pos();
             pan_.mouseDownLoc_coord = pxToCoord(pan_.mouseDownLoc_px);
             pan_.viewUL_Began_coord = viewUL_coord_;

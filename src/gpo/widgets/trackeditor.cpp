@@ -262,9 +262,9 @@ TrackEditor::removeSectorPressed()
 
 void
 TrackEditor::onSectorTableDataChanged(
-    const QModelIndex &topLeft,
-    const QModelIndex &bottomRight,
-    const QVector<int> &roles)
+    const QModelIndex & topLeft,
+    const QModelIndex & bottomRight,
+    const QVector<int> & /* roles */)
 {
     if (ignoreInternalTableEdits_)
     {
@@ -352,14 +352,14 @@ TrackEditor::keyPressEvent(
 
 bool
 TrackEditor::filterStartGate(
-    size_t pathIdx)
+    size_t /* pathIdx */)
 {
     return true;
 }
 
 bool
 TrackEditor::filterFinishGate(
-    size_t pathIdx)
+    size_t /* pathIdx */)
 {
     return true;
 }

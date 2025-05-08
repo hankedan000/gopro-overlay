@@ -75,8 +75,9 @@ namespace gpo
 
 	bool
 	VideoObject::subDecode(
-		const YAML::Node& node)
+		const YAML::Node & /* node */)
 	{
+		// nothing was encoded, so there's nothing to decode
 		return true;
 	}
 

@@ -731,7 +731,7 @@ namespace gpo
 	//--------------------------------------------------------------
 	bool
 	Track::subclassApplyModifications(
-        bool unnecessaryIsOkay)
+        bool /* unnecessaryIsOkay */)
 	{
 		// apply means nothing to use right now
 		return true;
@@ -739,7 +739,7 @@ namespace gpo
 
 	bool
 	Track::subclassSaveModifications(
-        bool unnecessaryIsOkay)
+        bool /* unnecessaryIsOkay */)
 	{
 		auto path = getSavePath();
 		try

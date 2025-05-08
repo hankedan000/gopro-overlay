@@ -120,12 +120,12 @@ QModifiableObjectObserver::onModified(
 
 void
 QModifiableObjectObserver::onModificationsApplied(
-    gpo::ModifiableObject *modifiable)
+    gpo::ModifiableObject * /* modifiable */)
 {}
 
 void
 QModifiableObjectObserver::onModificationsSaved(
-    gpo::ModifiableObject *modifiable)
+    gpo::ModifiableObject * modifiable)
 {
     spdlog::trace("{}({})",
         __func__,
@@ -138,7 +138,7 @@ QModifiableObjectObserver::onModificationsSaved(
 
 void
 QModifiableObjectObserver::onSavePathChanged(
-    gpo::ModifiableObject *modifiable)
+    gpo::ModifiableObject * modifiable)
 {
     spdlog::trace("{}({})",
         __func__,
@@ -153,7 +153,7 @@ QModifiableObjectObserver::onSavePathChanged(
 
 void
 QModifiableObjectObserver::onBeforeDestroy(
-    gpo::ModifiableObject *modifiable)
+    gpo::ModifiableObject * modifiable)
 {
     spdlog::trace("{}({})",
         __func__,

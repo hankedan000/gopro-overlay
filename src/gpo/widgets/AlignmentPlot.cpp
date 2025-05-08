@@ -110,7 +110,7 @@ AlignmentPlot::AlignmentPlot(QWidget *parent) :
         }
     });
     connect(ui->plot, &QCustomPlot::plottableClick, this,
-        [this](QCPAbstractPlottable *plottable, int dataIndex, QMouseEvent *event){
+        [this](QCPAbstractPlottable *plottable, int dataIndex, QMouseEvent * /* event */){
         spdlog::trace("plottableClick");
         spdlog::debug("plottable = {}; dataIndex = {}",
             (void*)plottable,

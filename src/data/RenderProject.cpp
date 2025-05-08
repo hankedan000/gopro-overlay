@@ -328,7 +328,7 @@ namespace gpo
 
 	bool
 	RenderProject::subclassApplyModifications(
-        bool unnecessaryIsOkay)
+        bool /* unnecessaryIsOkay */)
 	{
 		return false;
 	}

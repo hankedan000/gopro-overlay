@@ -14,6 +14,7 @@ namespace gpo
 	class TelemetrySeeker
 	{
 	public:
+		explicit
 		TelemetrySeeker(
 			DataSourcePtr dSrc);
 
@@ -54,10 +55,6 @@ namespace gpo
 			double quanta_secs = 0.0001);
 	
 		void
-		seekToTime(
-			double timeOffset);
-		
-		void
 		seekToLapEntry(
 			unsigned int lap);
 		
@@ -66,7 +63,7 @@ namespace gpo
 			unsigned int lap);
 		
 		size_t
-		seekedIdx();
+		seekedIdx() const;
 
 		size_t
 		size() const;

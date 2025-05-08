@@ -120,7 +120,7 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
             showImage(engine_->getFrame());
         }
     });
-    connect(imgView_, &CvImageView::onMousePress, this, [this](QMouseEvent *event){
+    connect(imgView_, &CvImageView::onMousePress, this, [this](QMouseEvent * event){
         if (focusedEntity_)
         {
             grabbedEntity_ = focusedEntity_;
@@ -130,7 +130,7 @@ ScrubbableVideo::ScrubbableVideo(QWidget *parent) :
             emit onEntitySelected(grabbedEntity_.get());
         }
     });
-    connect(imgView_, &CvImageView::onMouseRelease, this, [this](QMouseEvent *event){
+    connect(imgView_, &CvImageView::onMouseRelease, this, [this](QMouseEvent * /* event */){
         if (grabbedEntity_)
         {
             // determine in the entity was moved while it was being held
@@ -203,7 +203,7 @@ ScrubbableVideo::setEngine(
 
 void
 ScrubbableVideo::onNeedsRedraw(
-        gpo::ModifiableDrawObject *drawable)
+    gpo::ModifiableDrawObject * /* drawable */)
 {
     showImage(engine_->getFrame());
 }

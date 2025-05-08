@@ -80,7 +80,7 @@ namespace gpo
 	TextObject::drawInto(
 		cv::UMat &intoImg,
 		int originX, int originY,
-		cv::Size renderSize)
+		cv::Size /* renderSize */)
 	{
 		drawInto(intoImg,originX,originY);
 	}

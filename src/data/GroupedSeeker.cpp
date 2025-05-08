@@ -389,14 +389,14 @@ namespace gpo
 
 	bool
 	GroupedSeeker::subclassApplyModifications(
-        bool unnecessaryIsOkay)
+        bool /* unnecessaryIsOkay */)
 	{
 		return true;
 	}
 
 	bool
 	GroupedSeeker::subclassSaveModifications(
-        bool unnecessaryIsOkay)
+        bool /* unnecessaryIsOkay */)
 	{
 		return true;
 	}

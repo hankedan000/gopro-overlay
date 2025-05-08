@@ -89,8 +89,7 @@ namespace gpo
         virtual
         void
         onNeedsRedraw(
-            ModifiableDrawObject *drawable)
-		{}
+            ModifiableDrawObject * drawable);
     };
 
 	class ModifiableDrawObject : public ModifiableObject

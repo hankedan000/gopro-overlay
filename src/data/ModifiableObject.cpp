@@ -9,6 +9,41 @@ namespace gpo
     // init static member
     bool ModifiableObject::globalShowModificationCallStack_ = false;
 
+    void
+    ModifiableObjectObserver::onModified(
+        ModifiableObject * /* modifiable */)
+    {
+        // base impl does nothing. child class can override if needed.
+    }
+    
+    void
+    ModifiableObjectObserver::onModificationsApplied(
+        ModifiableObject * /* modifiable */)
+    {
+        // base impl does nothing. child class can override if needed.
+    }
+    
+    void
+    ModifiableObjectObserver::onModificationsSaved(
+        ModifiableObject * /* modifiable */)
+    {
+        // base impl does nothing. child class can override if needed.
+    }
+
+    void
+    ModifiableObjectObserver::onSavePathChanged(
+        ModifiableObject * /* modifiable */)
+    {
+        // base impl does nothing. child class can override if needed.
+    }
+
+    void
+    ModifiableObjectObserver::onBeforeDestroy(
+        ModifiableObject * /* modifiable */)
+    {
+        // base impl does nothing. child class can override if needed.
+    }
+
     ModifiableObject::ModifiableObject(
             const std::string_view &className,
             bool supportsApplyingModifications,
@@ -273,7 +308,7 @@ namespace gpo
 
     bool
     ModifiableObject::subclassApplyModifications(
-        bool unnecessaryIsOkay)
+        bool /* unnecessaryIsOkay */)
     {
         spdlog::warn(
             "ModifiableObject's default apply was called on {}. Subclass should"
@@ -285,7 +320,7 @@ namespace gpo
 
     bool
     ModifiableObject::subclassSaveModifications(
-        bool unnecessaryIsOkay)
+        bool /* unnecessaryIsOkay */)
     {
         spdlog::warn(
             "ModifiableObject's default save was called on {}. Subclass should"

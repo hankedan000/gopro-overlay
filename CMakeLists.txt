@@ -2,6 +2,11 @@ cmake_minimum_required (VERSION 3.1)
 
 project(GoProOverlay VERSION 1.0.0)
 
+# build for release if not set; otherwise, it's toolchain-dependant
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
 # ---------------------------------------------------------------------------------------
 # Set GOPROOVERLAY_MASTER_PROJECT to ON if we are building GoProOverlay
 # ---------------------------------------------------------------------------------------
@@ -66,8 +71,8 @@ find_package(Qt${QT_VERSION_MAJOR}
 
 add_subdirectory(extern)
 
-# enable compiler warnings and treat them as errors for this library
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
+# enable compiler warnings as errors
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror")
 
 add_subdirectory(src)
 

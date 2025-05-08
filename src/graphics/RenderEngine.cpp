@@ -548,7 +548,7 @@ namespace gpo
 
 	void
 	RenderEngine::onNeedsRedraw(
-		ModifiableDrawObject *drawable)
+		ModifiableDrawObject * /* drawable */)
 	{
 		render();
 		markNeedsRedraw();

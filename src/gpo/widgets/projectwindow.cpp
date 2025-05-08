@@ -338,9 +338,9 @@ ProjectWindow::ProjectWindow(QWidget *parent) :
     });
 
     connect(entitiesTableModel_, &QStandardItemModel::dataChanged, this, [this](
-            const QModelIndex &topLeft,
-            const QModelIndex &bottomRight,
-            const QVector<int> &roles){
+            const QModelIndex & topLeft,
+            const QModelIndex & bottomRight,
+            const QVector<int> & /* roles */){
         int editWidth = bottomRight.column() - topLeft.column();
         int editHeight = topLeft.row() - bottomRight.row();
         if (editWidth != 0 || editHeight != 0)
@@ -704,7 +704,7 @@ ProjectWindow::updateAlignmentPane()
         spinbox->setMinimum(0);
         spinbox->setMaximum(seeker->size());
         spinbox->setValue(seeker->seekedIdx());
-        connect(spinbox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, [this,seeker](int value){
+        connect(spinbox, static_cast<void (QSpinBox::*)(int)>(&QSpinBox::valueChanged), this, [this,seeker](int /* value */){
             if (ui->customAlignmentCheckBox->isChecked())
             {
                 ui->resetAlignment_PushButton->setEnabled(true);
@@ -850,7 +850,7 @@ ProjectWindow::render()
 
 void
 ProjectWindow::closeEvent(
-        QCloseEvent *event)
+        QCloseEvent * /* event */)
 {
     if (maybeSave())
     {

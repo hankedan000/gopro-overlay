@@ -147,13 +147,6 @@ namespace gpo
 	}
 
 	void
-	TelemetrySeeker::seekToTime(
-		double timeOffset)
-	{
-		throw std::runtime_error("seekToTime() is not implemented");
-	}
-	
-	void
 	TelemetrySeeker::seekToLapEntry(
 		unsigned int lap)
 	{
@@ -168,7 +161,7 @@ namespace gpo
 	}
 	
 	size_t
-	TelemetrySeeker::seekedIdx()
+	TelemetrySeeker::seekedIdx() const
 	{
 		return seekedIdx_;
 	}
@@ -182,7 +175,7 @@ namespace gpo
 	unsigned int
 	TelemetrySeeker::lapCount() const
 	{
-		return lapIndicesMap_.size();
+		return static_cast<unsigned int>(lapIndicesMap_.size());
 	}
 
 	double
@@ -216,7 +209,7 @@ namespace gpo
 		if (size() >= 2)
 		{
 			const auto cycles = size() - 1;
-			rate_hz_ = cycles / getTimeAt(cycles);
+			rate_hz_ = static_cast<double>(cycles) / getTimeAt(cycles);
 		}
 
 		LapIndices li;

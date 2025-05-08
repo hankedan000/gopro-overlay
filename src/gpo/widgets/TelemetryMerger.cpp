@@ -25,7 +25,7 @@ TelemetryMerger::TelemetryMerger(QWidget *parent) :
         "Source Name","Data Rate (Hz)"
     });
 
-    connect(ui->sources_TableView, &QTableView::activated, this, [this](const QModelIndex &index){
+    connect(ui->sources_TableView, &QTableView::activated, this, [this](const QModelIndex & /* index */){
         updateMergeButtons();
     });
     connect(ui->itemDown_ToolButton, &QToolButton::pressed, this, [this]{
