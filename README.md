@@ -5,6 +5,8 @@ Tools for overlaying telemetry data onto GoPro footage.
 Pretty standard CMake build procedure.
 
 ```bash
+sudo apt install qtbase5-dev libcppunit-dev libck-dev
+
 mkdir build
 cd build
 cmake ..
